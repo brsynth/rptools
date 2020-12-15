@@ -1,0 +1,71 @@
+1.3.0 - Dec 11, 2020
+    - add logger customisable from outside of the module
+
+1.2.1 - Dec 9, 2020
+    - fix file writing in convertToCobra()
+
+1.2.0 - Dec 9, 2020
+    - add addAnalysisResults() function
+
+1.1.0 - Dec 4, 2020
+    - add convertToCobra() function
+    - rename '_checklibSBML()' function into 'checklibSBML()'
+
+1.0.0 - Nov 20, 2020
+    - add rpGraph with tests
+    - add addiotional rpSBML tests
+    - replace "+'/'+" with "os.path.join()" to be compliant with non-UNIX computers
+
+0.5.1 - Nov 2, 2020
+    - add 'ci' toolkit for developpers
+    - rpSBML: handling parameters and modelName handling
+
+0.4.1 - Oct 23, 2020
+    - update testing phase by installing and starting redis server
+
+0.4.0 - Oct 21, 2020
+    - publish for python3.9
+    - publish for all platforms
+    - rpSBML.py::writeSBML takes now a filename rather than a folder
+
+0.3.1 - Oct 20, 2020
+    - switch to pure conda packaging
+
+0.3.0 - Oct 20, 2020
+    - add inchikeyMIRIAM class
+    - remove score computation from rpSBML.__init__(). Needs to call compute_score() when needed
+    - fix score initialisation before computing it
+    - choose pure conda to build test environment
+    - add 'doc' folder
+    - fix rpCache '_attributes' non-static call
+    - switch to pure conda test environments
+
+0.2.0 - Oct 10, 2020
+    - possibility to choose which attribute(s) to load when instantiate new rpCache
+    - add related tests
+
+0.1.6 - Sep 19, 2020
+    - rename src folder
+    - absolute imports
+
+0.1.5 - Sep 16, 2020
+    - replace self.model by self.document.getModel()
+    - optimize score handling
+
+0.1.4 - Sep 11, 2020
+    - type on logging level
+
+0.1.3 - Sep 11, 2020
+    - Overload >, < operators
+    - Overload print operator
+    - Change logging level to 'info' by default
+    - Comment 'logging.debug' lines
+
+0.1.2 - Sep 10, 2020
+    - Add _pubchem_species attribute
+
+0.1.1 - Sep 9, 2020
+    - Add '--store-mode'
+
+0.1.0 - Sep 9, 2020
+    - First version with rpSBML and rpCache
