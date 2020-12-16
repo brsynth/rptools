@@ -1,13 +1,11 @@
-#!/usr/bin/env python
-
 from os import path as os_path
 
-with open('.env', 'r', encoding='utf-8') as f:
-    for line in f:
-        if line.startswith('MODULES='):
-            modules = line.splitlines()[0].split('=')[1].lower().split(',')
-
 def _cli():
+
+    with open(os_path.join(os_path.dirname(os_path.abspath(__file__)), '.env'), 'r', encoding='utf-8') as f:
+        for line in f:
+            if line.startswith('MODULES='):
+                modules = line.splitlines()[0].split('=')[1].lower().split(',')
 
     print()
     print('Welcome to rpTools!')
@@ -22,7 +20,6 @@ def _cli():
 
     return 0
 
-
-
+import os
 if __name__ == '__main__':
     _cli()

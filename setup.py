@@ -15,6 +15,7 @@ with open(_release, 'r') as f:
     line = f.readline()
     while line:
         match = re_search("^## (\d\.\d\.\d)$", line)
+        print(match)
         if match:
             _version = match.group(1)
             break
