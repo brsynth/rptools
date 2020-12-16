@@ -1,10 +1,6 @@
-# rpTools
+# rpCompletion
 
-[![Anaconda-Server Badge](https://anaconda.org/brsynth/rptools/badges/latest_release_date.svg)](https://anaconda.org/brsynth/rptools)
-[![Anaconda-Server Badge](https://anaconda.org/brsynth/rptools/badges/version.svg)](https://anaconda.org/brsynth/rptools)
-![Test suite](https://github.com/brsynth/rpCompletion/workflows/Test%20suite/badge.svg)
-
-<!-- Completes mono-component reactions output by RetroPath2.0 with the appropriate cofactors. Creates sub-paths when multiple reaction rules are associated with a single reaction. Input is a single pathways file produced by RP2Paths. It stands on rpCache which store pre-computed data.
+Completes mono-component reactions output by RetroPath2.0 with the appropriate cofactors. Creates sub-paths when multiple reaction rules are associated with a single reaction. Input is a single pathways file produced by RP2Paths. It stands on rpCache which store pre-computed data.
 
 ## Input
 
@@ -80,7 +76,7 @@ Test can be run with the following commands:
 ```bash
 cd tests
 pytest -v
-``` -->
+```
 
 # CI/CD
 For further tests and development tools, a CI toolkit is provided in `ci` folder (see [ci/README.md](ci/README.md)).
