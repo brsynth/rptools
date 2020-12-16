@@ -6,10 +6,10 @@
 
 rpTools are dedicated to work around rpSBML data structure. Tools are the following:
 
-* rpCompletion: [rptools/rpcompletion/README.md](ci/README.md)
-* rpFBA: [rptools/rpfba/README.md](ci/README.md)
-* rpExtractSink: [rptools/rpextractsink/README.md](ci/README.md)
-* rpLibs: [rptools/rplibs/README.md](ci/README.md)
+* rpCompletion: [README.md](rptools/rpcompletion/README.md)
+* rpFBA: [README.md](rptools/rpfba/README.md)
+* rpExtractSink: [README.md](rptools/rpextractsink/README.md)
+* rpLibs: [rplibs/README.md](rptools/README.md)
 
 ## Install
 ```sh
