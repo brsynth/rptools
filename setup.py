@@ -33,12 +33,9 @@ with open(os_path.join(_extras_path, '.env'), 'r', encoding='utf-8') as f:
             _descr = line.splitlines()[0].split('=')[1].lower()
         if line.startswith('CORR_AUTHOR='):
             _corr_author = line.splitlines()[0].split('=')[1].lower()
-
-with open(os_path.join(_package, '.env'), 'r', encoding='utf-8') as f:
-    for line in f:
         if line.startswith('MODULES='):
             _modules = line.splitlines()[0].split('=')[1].lower().split(',')
-_packages = [_package] + [_package+'.'+m for m in _modules]
+            _packages = [_package] + [_package+'.'+m for m in _modules]
 
 setup(
     name                          = _package,
