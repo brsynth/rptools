@@ -39,6 +39,8 @@ with open(os_path.join(_package, '.env'), 'r', encoding='utf-8') as f:
         if line.startswith('MODULES='):
             _modules = line.splitlines()[0].split('=')[1].lower().split(',')
 
+_packages = [_package] + [_package+'.'+m for m in _modules]
+
 setup(
     name                          = _package,
     version                       = _version,
@@ -48,7 +50,7 @@ setup(
     long_description              = long_description,
     long_description_content_type = 'text/markdown',
     url                           = _url,
-    packages                      = [_package+'.'+m for m in _modules],
+    packages                      = _packages,
     # package_dir                   = {_package: _package},
     # py_modules                    = ['rpcompletion', _package+'.rpcompletion'],
     include_package_data          = True,
