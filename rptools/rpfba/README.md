@@ -30,10 +30,10 @@ Advanced options:
 * **output**: (string) Path to the output file
 
 
-## Installation
-### From Conda
+## Install
+rpFBA is part of rpTools suite:
 ```sh
-[sudo] conda install -c brsynth -c conda-forge -c bioconda rpfba
+[sudo] conda install -c brsynth -c conda-forge -c bioconda rptools
 ```
 
 ## Run
@@ -41,7 +41,7 @@ Advanced options:
 ### rpFBA process
 **From Python code**
 ```python
-from rpfba import runFBA, build_args_parser
+from rptools.rpfba import runFBA, build_args_parser
 
 parser = build_args_parser()
 args  = parser.parse_args()
@@ -66,7 +66,7 @@ result = runFBA(args.input_sbml, args.gem_sbml, args.outfile,
 ```
 **From CLI**
 ```sh
-python -m rpfba <input_sbml> <gem_sbml> <outfile>
+python -m rptools.rpfba <input_sbml> <gem_sbml> <outfile>
 ```
 
 ## Tests

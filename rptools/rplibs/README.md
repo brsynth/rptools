@@ -29,9 +29,10 @@ In order to save memory space, cache data can be loaded once in a database (redi
 
 
 ### Install
+rpLibs is part of rpTools suite:
 #### From Conda
 ```sh
-[sudo] conda install -c brsynth -c conda-forge brs_libs
+[sudo] conda install -c brsynth -c conda-forge -c bioconda rptools
 ```
 
 ### Use
@@ -39,7 +40,7 @@ In order to save memory space, cache data can be loaded once in a database (redi
 #### Load rpCache in memory
 **Full cache into files**
 ```python
-from brs_libs import rpCache
+from rptools.rplibs import rpCache
 
 rpcache = rpCache(db='file')
 print(rpcache.cid_src)
@@ -48,7 +49,7 @@ print(rpcache.cid_src)
 **Full cache into Redis DB**
 For multiple instances of rpCache simultaneously, rpCache can be loaded into one single Redis database:
 ```python
-from brs_libs import rpCache
+from rptools.rplibs import rpCache
 
 rpcache = rpCache(db='localhost')
 print(rpcache.cid_src)
@@ -58,7 +59,7 @@ print(rpcache.cid_src)
 **A part of cache**
 For less loading time and memory footprint, a part of the cache can be loaded:
 ```python
-from brs_libs import rpCache
+from rptools.rplibs import rpCache
 
 rpcache = rpCache(attrs='cid_strc')
 print(rpcache.cid_src)
@@ -67,15 +68,15 @@ print(rpcache.cid_src)
 #### (Re-)generate the cache
 **From Python code**
 ```python
-from brs_libs import rpCache
+from rptools.rplibs import rpCache
 
 rpCache.generate_cache(outdir)
 ```
 
 **From CLI**
-After having installed brs_libs Python module:
+After having installed rptools Python module:
 ```sh
-python -m brs_libs --gen_cache <folder>
+python -m rptools.rplibs --gen_cache <folder>
 ```
 
 

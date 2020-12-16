@@ -31,17 +31,9 @@ In order to save memory space, cache data can be loaded once in a database (redi
 
 
 ## Install
-rpCompletion requires [RDKit](https://www.RDKit.org) which is not available through pip. It can be installed through Conda:
+rpCompletion is part of rpTools suite:
 ```sh
-[sudo] conda install -c rdkit rdkit
-```
-### From pip
-```sh
-[sudo] python -m pip install rpcompletion
-```
-### From Conda
-```sh
-[sudo] conda install -c brsynth rpcompletion
+[sudo] conda install -c brsynth -c conda-forge -c bioconda rptools
 ```
 
 ## Run
@@ -49,7 +41,7 @@ rpCompletion requires [RDKit](https://www.RDKit.org) which is not available thro
 ### rpCompletion process
 **From Python code**
 ```python
-from rpcompletion import rpCompletion, build_args_parser
+from rptools.rpcompletion import rpCompletion, build_args_parser
 
 parser = build_args_parser()
 args  = parser.parse_args()
@@ -62,7 +54,7 @@ rpcompletion.rp2ToSBML(args.rp2_pathways,
 ```
 **From CLI**
 ```sh
-python -m rpcompletion \
+python -m rptools.rpcompletion \
   rp2_pathways.csv \
   rp2paths_compounds.csv \
   rp2paths_pathways.csv \
