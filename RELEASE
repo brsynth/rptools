@@ -1,4 +1,7 @@
 # Release history
 
+## 1.1.0
+- add __init__.py and __main__.py into files to embed in package. 'python -m rptools --help' is possible
+
 ## 1.0.0
 - first release of rpTools
