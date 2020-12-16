@@ -2,7 +2,7 @@
 
 from os import path as os_path
 
-with open(os_path.join('rptools', '.env'), 'r', encoding='utf-8') as f:
+with open('.env', 'r', encoding='utf-8') as f:
     for line in f:
         if line.startswith('MODULES='):
             modules = line.splitlines()[0].split('=')[1].lower().split(',')
