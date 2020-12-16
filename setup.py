@@ -38,7 +38,6 @@ with open(os_path.join(_package, '.env'), 'r', encoding='utf-8') as f:
     for line in f:
         if line.startswith('MODULES='):
             _modules = line.splitlines()[0].split('=')[1].lower().split(',')
-
 _packages = [_package] + [_package+'.'+m for m in _modules]
 
 setup(
@@ -51,8 +50,6 @@ setup(
     long_description_content_type = 'text/markdown',
     url                           = _url,
     packages                      = _packages,
-    # package_dir                   = {_package: _package},
-    # py_modules                    = ['rpcompletion', _package+'.rpcompletion'],
     include_package_data          = True,
     test_suite                    = 'pytest',
     license                       = 'MIT',
