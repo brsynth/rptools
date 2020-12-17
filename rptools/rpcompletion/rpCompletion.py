@@ -344,8 +344,7 @@ def _read_paths(cache, rp2paths_pathways, logger=None):
             current_path_id = int(row[0])
         except ValueError:
             logger.error('Cannot convert path_id to int ('+str(row[0])+')')
-            #return {}
-            return False
+            raise
         #################################
         ruleIds = row[2].split(',')
         if ruleIds==None:
