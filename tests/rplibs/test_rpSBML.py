@@ -20,6 +20,7 @@ class Test_rpSBML(TestCase):
     # To avoid limit in dictionaries comparison
     maxDiff = None
 
+
     def setUp(self):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(getattr(logging, 'ERROR'))
@@ -34,32 +35,40 @@ class Test_rpSBML(TestCase):
         with open(os_path.join(self.data_path, 'data.json'),      'r') as f:
             self.data = json_load(f)
 
+
     def test_initEmpty(self):
         rpSBML('rpSBML_test', logger=self.logger)
 
+
     def test_initWithInFile(self):
         self.assertEqual(self.rpsbml.getName(), self.rpsbml_name)
+
 
     def test_initWithDocument(self):
         rpsbml  = rpSBML(document=self.rpsbml.getDocument())
         self.assertEqual(rpsbml.getName(), self.rpsbml_name)
 
+
     def test_initWithModelName(self):
         rpsbml  = rpSBML(name=self.rpsbml.getName())
         self.assertEqual(rpsbml.getName(), self.rpsbml_name)
+
 
     def test_initWithNothing(self):
         rpsbml  = rpSBML()
         self.assertEqual(rpsbml.getName(), 'dummy')
 
+
     def test_score(self):
         self.rpsbml.compute_score()
         self.assertEqual(self.rpsbml.getScore(), self.rpsbml_score)
+
 
     '''
     def test_dictRPpathway(self):
         self.assertDictEqual(self.rpsbml._dictRPpathway(), self.data['dictrppathway'])
     '''
+
 
     def test_nameToSbmlId(self):
         self.assertEqual(
@@ -67,25 +76,31 @@ class Test_rpSBML(TestCase):
             'test123___________________'
         )
 
+
     def test_genMetaID(self):
         self.assertEqual(
             self.rpsbml._genMetaID('test123'),
             'ecd71870d1963316a97e3ac3408c9835ad8cf0f3c1bc703527c30265534f75ae'
         )
 
+
     def test_genJSON(self):
         self.assertDictEqual(self.rpsbml.genJSON(), self.data['asdict'])
 
+
     def test_readRPrules(self):
         self.assertDictEqual(self.rpsbml.readRPrules(), self.data['readrprules'])
+
 
     def test_readRPpathwayIDs(self):
         self.assertCountEqual(self.rpsbml.readRPpathwayIDs('rp_pathway'),
                               ['RP1', 'RP2', 'RP3'])
 
+
     def test_readRPspecies(self):
         self.assertDictEqual(self.rpsbml.readRPspecies(),
                              self.data['readrpspecies'])
+
 
     def test_readUniqueRPspecies(self):
         self.assertCountEqual(self.rpsbml.readUniqueRPspecies(),
@@ -102,13 +117,16 @@ class Test_rpSBML(TestCase):
                                'MNXM6__64__MNXC3',
                                'MNXM3__64__MNXC3'])
 
+
     def test_speciesExists(self):
         self.assertTrue(self.rpsbml.speciesExists('MNXM89557'))
         self.assertFalse(self.rpsbml.speciesExists('test'))
 
+
     def test_isSpeciesProduct(self):
         self.assertTrue(self.rpsbml.isSpeciesProduct('TARGET_0000000001__64__MNXC3'))
         self.assertFalse(self.rpsbml.isSpeciesProduct('MNXM1__64__MNXC3'))
+
 
     def test_compareBRSYNTHAnnotations(self):
         # self.assertTrue(self.rpsbml.compareBRSYNTHAnnotations(
@@ -121,6 +139,7 @@ class Test_rpSBML(TestCase):
             self.gem.getModel().getSpecies('M_2pg_c').getAnnotation(),
             self.gem.getModel().getSpecies('M_13dpg_c').getAnnotation()))
 
+
     def test_compareMIRIAMAnnotations(self):
         self.assertTrue(self.rpsbml.compareMIRIAMAnnotations(
             self.rpsbml.getModel().getSpecies('MNXM89557__64__MNXC3').getAnnotation(),
@@ -128,6 +147,7 @@ class Test_rpSBML(TestCase):
         self.assertFalse(self.rpsbml.compareMIRIAMAnnotations(
             self.rpsbml.getModel().getSpecies('MNXM89557__64__MNXC3').getAnnotation(),
             self.rpsbml.getModel().getSpecies('CMPD_0000000013__64__MNXC3').getAnnotation()))
+
 
     def test_createReturnFluxParameter(self):
         #return feature
@@ -140,6 +160,7 @@ class Test_rpSBML(TestCase):
         param = new.createReturnFluxParameter(8888.0)
         self.assertEqual(param.id, 'B_8888_0')
         self.assertEqual(param.value, 8888.0)
+
 
     def test_readMIRIAMAnnotation(self):
         self.assertDictEqual(self.rpsbml.readMIRIAMAnnotation(
@@ -155,6 +176,7 @@ class Test_rpSBML(TestCase):
                     'rhea':     ['28562', '28563', '28564', '28565']
                 })
 
+
     def test_readReactionSpecies(self):
         self.assertDictEqual(self.rpsbml.readReactionSpecies(
                 self.rpsbml.getModel().getReaction('RP1')),
@@ -164,6 +186,7 @@ class Test_rpSBML(TestCase):
                     'right': {'TARGET_0000000001__64__MNXC3': 1,
                               'MNXM13__64__MNXC3': 1}})
 
+
     def test_mergeSBMLFiles(self):
         with NamedTemporaryFile() as tempf:
             rpSBML.mergeSBMLFiles(os_path.join(self.data_path, 'rpsbml.xml'),
@@ -172,7 +195,8 @@ class Test_rpSBML(TestCase):
                                   logger=self.logger)
             self.assertTrue(Main._check_file_hash(tempf.name, 'e36cd98da717db385e42a15c901257192a6b1b1c861d9b4e5a56b052229a1e88'))
 
-    def test_print_rpSBML(self):
+
+    def test_print(self):
         rpsbml = rpSBML(name='rpSBML_test', logger=self.logger)
         rpsbml.genericModel('RetroPath_Pathway_test',
                             'RP_model_test',
@@ -187,3 +211,7 @@ class Test_rpSBML(TestCase):
             self.assertListEqual(list(io_open(tempf.name)),
                                  list(io_open(os_path.join(self.data_path, 'rpSBML_test_sbml.xml'))))
 
+
+    def test_GlobalScore(self):
+        global_score = self.rpsbml.compute_globalscore()
+        self.assertAlmostEqual(global_score, 0.5760957019721074)

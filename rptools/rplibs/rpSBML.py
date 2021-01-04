@@ -76,6 +76,7 @@ class rpSBML:
             self.modelName = 'dummy'
 
         self.score = {'value': -1, 'nb_rules': 0}
+        self.global_score = 0
 
         self.miriam_header = {'compartment': {'mnx': 'metanetx.compartment/', 'bigg': 'bigg.compartment/', 'seed': 'seed/', 'name': 'name/'}, 'reaction': {'mnx': 'metanetx.reaction/', 'rhea': 'rhea/', 'reactome': 'reactome/', 'bigg': 'bigg.reaction/', 'sabiork': 'sabiork.reaction/', 'ec': 'ec-code/', 'biocyc': 'biocyc/', 'lipidmaps': 'lipidmaps/', 'uniprot': 'uniprot/'}, 'species': {'inchikey': 'inchikey/', 'pubchem': 'pubchem.compound/','mnx': 'metanetx.chemical/', 'chebi': 'chebi/CHEBI:', 'bigg': 'bigg.metabolite/', 'hmdb': 'hmdb/', 'kegg_c': 'kegg.compound/', 'kegg_d': 'kegg.drug/', 'biocyc': 'biocyc/META:', 'seed': 'seed.compound/', 'metacyc': 'metacyc.compound/', 'sabiork': 'sabiork.compound/', 'reactome': 'reactome/R-ALL-'}}
         self.header_miriam = {'compartment': {'metanetx.compartment': 'mnx', 'bigg.compartment': 'bigg', 'seed': 'seed', 'name': 'name'}, 'reaction': {'metanetx.reaction': 'mnx', 'rhea': 'rhea', 'reactome': 'reactome', 'bigg.reaction': 'bigg', 'sabiork.reaction': 'sabiork', 'ec-code': 'ec', 'biocyc': 'biocyc', 'lipidmaps': 'lipidmaps', 'uniprot': 'uniprot'}, 'species': {'inchikey': 'inchikey', 'pubchem.compound': 'pubchem', 'metanetx.chemical': 'mnx', 'chebi': 'chebi', 'bigg.metabolite': 'bigg', 'hmdb': 'hmdb', 'kegg.compound': 'kegg_c', 'kegg.drug': 'kegg_d', 'biocyc': 'biocyc', 'seed.compound': 'seed', 'metacyc.compound': 'metacyc', 'sabiork.compound': 'sabiork', 'reactome': 'reactome'}}
@@ -114,6 +115,245 @@ class rpSBML:
     def add_rule_score(self, score):
         self.score['value']    += score
         self.score['nb_rules'] += 1
+
+
+    ## Extract the reaction SMILES from an SBML, query rule_score and write the results back to the SBML
+    #
+    # Higher is better
+    #
+    # NOTE: all the scores are normalised by their maximal and minimal, and normalised to be higher is better
+    # Higher is better
+    # TODO: try to standardize the values instead of normalisation.... Advantage: not bounded
+    def compute_globalscore(self,
+                            weight_rp_steps=0.10002239003499142,
+                            weight_rule_score=0.13346271414277305,
+                            weight_fba=0.6348436269211155,
+                            weight_thermo=0.13167126890112002,
+                            max_rp_steps=15, #TODO: add this as a limit in RP2
+                            thermo_ceil=5000.0,
+                            thermo_floor=-5000.0,
+                            fba_ceil=5.0,
+                            fba_floor=0.0,
+                            pathway_id='rp_pathway',
+                            objective_id='obj_fraction',
+                            thermo_id='dfG_prime_m'):
+        """From a rpsbml object, retreive the different characteristics of a pathway and combine them to calculate a global score.
+
+        Note that the results are written to the rpsbml directly
+
+        :param rpsbml: rpSBML object
+        :param weight_rp_steps: The weight associated with the number of steps (Default: 0.10002239003499142)
+        :param weight_rule_score: The weight associated with the mean of reaction rule scores (Default: 0.13346271414277305)
+        :param weight_fba: The weight associated with the flux of the target (Default: 0.6348436269211155)
+        :param weight_thermo: The weight associated with the sum of reaction Gibbs free energy (Default: 0.13167126890112002)
+        :param max_rp_steps: The maximal number of steps are run in RP2 (Default: 15)
+        :param thermo_ceil: The upper limit of Gibbs free energy for each reaction (Default: 5000.0)
+        :param thermo_floor: The lower limit of Gibbs free energy for each reaction (Default: -5000.0)
+        :param fba_ceil: The upper flux limit of the heterologous pathway (Default: 5.0)
+        :param fba_floor: The lower flux limit of the heterologous pathway (Default: 5.0)
+        :param pathway_id: The ID of the heterologous pathway (Default: rp_pathway)
+        :param objective_id: The ID of the FBA objective (Default: obj_fraction)
+        :param thermo_id: The ID of the Gibbs free energy that may be used. May be either dfG_prime_m or dfG_prime_o (Default: dfG_prime_m)
+
+        :rtype: float
+        :return: The global score
+        """
+        path_norm = {}
+        ####################################################################################################### 
+        ########################################### REACTIONS #################################################
+        ####################################################################################################### 
+        #WARNING: we do this because the list gets updated
+        self.logger.debug('thermo_ceil: '+str(thermo_ceil))
+        self.logger.debug('thermo_floor: '+str(thermo_floor))
+        self.logger.debug('fba_ceil: '+str(fba_ceil))
+        self.logger.debug('fba_floor: '+str(fba_floor))
+        rpsbml_json = self.genJSON(pathway_id)
+        list_reac_id = list(rpsbml_json['reactions'].keys())
+        for reac_id in list_reac_id:
+            list_bd_id = list(rpsbml_json['reactions'][reac_id]['brsynth'].keys())
+            for bd_id in list_bd_id:
+                ####### Thermo ############
+                #lower is better -> -1.0 to have highest better
+                #WARNING: we will only take the dfG_prime_m value
+                if bd_id[:4]=='dfG_':
+                    if bd_id not in path_norm:
+                        path_norm[bd_id] = []
+                    try:
+                        if thermo_ceil>=rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']>=thermo_floor:
+                            #min-max feature scaling
+                            norm_thermo = (rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']-thermo_floor)/(thermo_ceil-thermo_floor)
+                            norm_thermo = 1.0-norm_thermo
+                        elif rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']<thermo_floor:
+                            norm_thermo = 1.0
+                        elif rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']>thermo_ceil:
+                            norm_thermo = 0.0
+                    except (KeyError, TypeError) as e:
+                        self.logger.warning('Cannot find the thermo: '+str(bd_id)+' for the reaction: '+str(reac_id))
+                        norm_thermo = 1.0
+                    rpsbml_json['reactions'][reac_id]['brsynth']['norm_'+bd_id] = {}
+                    rpsbml_json['reactions'][reac_id]['brsynth']['norm_'+bd_id]['value'] = norm_thermo
+                    self.logger.debug(str(bd_id)+': '+str(rpsbml_json['reactions'][reac_id]['brsynth']['norm_'+bd_id]['value'])+' ('+str(norm_thermo)+')')
+                    path_norm[bd_id].append(norm_thermo)
+                ####### FBA ##############
+                #higher is better
+                #return all the FBA values
+                #------- reactions ----------
+                elif bd_id[:4]=='fba_':
+                    try:
+                        norm_fba = 0.0
+                        if fba_ceil>=rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']>=fba_floor:
+                            #min-max feature scaling
+                            norm_fba = (rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']-fba_floor)/(fba_ceil-fba_floor)
+                        elif rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']<=fba_floor:
+                            norm_fba = 0.0
+                        elif rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']>fba_ceil:
+                            norm_fba = 1.0
+                        rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value'] = norm_fba
+                    except (KeyError, TypeError) as e:
+                        norm_fba = 0.0
+                        self.logger.warning('Cannot find the objective: '+str(bd_id)+' for the reaction: '+str(reac_id))
+                    rpsbml_json['reactions'][reac_id]['brsynth']['norm_'+bd_id] = {}
+                    rpsbml_json['reactions'][reac_id]['brsynth']['norm_'+bd_id]['value'] = norm_fba
+                elif bd_id=='rule_score':
+                    if bd_id not in path_norm:
+                        path_norm[bd_id] = []
+                    #rule score higher is better
+                    path_norm[bd_id].append(rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value'])
+                else:
+                    self.logger.debug('Not normalising: '+str(bd_id))
+        ####################################################################################################### 
+        ########################################### PATHWAY ###################################################
+        ####################################################################################################### 
+        ############### FBA ################
+        #higher is better
+        list_path_id = list(rpsbml_json['pathway']['brsynth'].keys())
+        for bd_id in list_path_id:
+            if bd_id[:4]=='fba_':
+                norm_fba = 0.0
+                if fba_ceil>=rpsbml_json['pathway']['brsynth'][bd_id]['value']>=fba_floor:
+                    #min-max feature scaling
+                    norm_fba = (rpsbml_json['pathway']['brsynth'][bd_id]['value']-fba_floor)/(fba_ceil-fba_floor)
+                elif rpsbml_json['pathway']['brsynth'][bd_id]['value']<=fba_floor:
+                    norm_fba = 0.0
+                elif rpsbml_json['pathway']['brsynth'][bd_id]['value']>fba_ceil:
+                    norm_fba = 1.0
+                else:
+                    self.logger.warning('This flux event should never happen: '+str(rpsbml_json['pathway']['brsynth'][bd_id]['value']))
+                rpsbml_json['pathway']['brsynth']['norm_'+bd_id] = {}
+                rpsbml_json['pathway']['brsynth']['norm_'+bd_id]['value'] = norm_fba
+        ############# thermo ################
+        for bd_id in path_norm:
+            if bd_id[:4]=='dfG_':
+                rpsbml_json['pathway']['brsynth']['norm_'+bd_id] = {}
+                rpsbml_json['pathway']['brsynth']['var_'+bd_id] = {}
+                #here add weights based on std
+                self.logger.debug(str(bd_id)+': '+str(path_norm[bd_id]))
+                rpsbml_json['pathway']['brsynth']['norm_'+bd_id]['value'] = np.average([np.average(path_norm[bd_id]), 1.0-np.std(path_norm[bd_id])], weights=[0.5, 0.5])
+                #the score is higher is better - (-1 since we want lower variability)
+                #rpsbml_json['pathway']['brsynth']['var_'+bd_id]['value'] = 1.0-np.var(path_norm[bd_id])
+        ############# rule score ############
+        #higher is better
+        if not 'rule_score' in path_norm:
+            self.logger.warning('Cannot detect rule_score: '+str(path_norm))
+            rpsbml_json['pathway']['brsynth']['norm_'+bd_id] = {}
+            rpsbml_json['pathway']['brsynth']['norm_'+bd_id]['value'] = 0.0
+        else:
+            rpsbml_json['pathway']['brsynth']['norm_'+bd_id] = {}
+            rpsbml_json['pathway']['brsynth']['norm_'+bd_id]['value'] = np.average(path_norm[bd_id])
+        ##### length of pathway ####
+        #lower is better -> -1.0 to reverse it
+        norm_steps = 0.0
+        if len(rpsbml_json['reactions'])>max_rp_steps:
+            self.logger.warning('There are more steps than specified')
+            norm_steps = 0.0
+        else:
+            try:
+                norm_steps = (float(len(rpsbml_json['reactions']))-1.0)/(float(max_rp_steps)-1.0)
+                norm_steps = 1.0-norm_steps
+            except ZeroDivisionError:
+                norm_steps = 0.0
+        #################################################
+        ################# GLOBAL ########################
+        #################################################
+        ##### global score #########
+        try:
+            rpsbml_json['pathway']['brsynth']['norm_steps'] = {}
+            rpsbml_json['pathway']['brsynth']['norm_steps']['value'] = norm_steps
+            globalScore = np.average([rpsbml_json['pathway']['brsynth']['norm_rule_score']['value'],
+                                    rpsbml_json['pathway']['brsynth']['norm_'+str(thermo_id)]['value'],
+                                    rpsbml_json['pathway']['brsynth']['norm_steps']['value'],
+                                    rpsbml_json['pathway']['brsynth']['norm_fba_'+str(objective_id)]['value']],
+                                    weights=[weight_rule_score, weight_thermo, weight_rp_steps, weight_fba]
+                                    )
+            '''
+            globalScore = (rpsbml_json['pathway']['brsynth']['norm_rule_score']['value']*weight_rule_score+
+                        rpsbml_json['pathway']['brsynth']['norm_'+str(thermo_id)]['value']*weight_thermo+
+                        rpsbml_json['pathway']['brsynth']['norm_steps']['value']*weight_rp_steps+
+                        rpsbml_json['pathway']['brsynth']['norm_fba_'+str(objective_id)]['value']*weight_fba
+                        )/sum([weight_rule_score, weight_thermo, weight_rp_steps, weight_fba])
+            '''
+        except ZeroDivisionError:
+            globalScore = 0.0
+        except KeyError as e:
+            #logger.error(rpsbml_json['pathway']['brsynth'].keys())
+            self.logger.error('KeyError for :'+str(e))
+            self.logger.error('Make sure that you run both thermodynamics and FBA')
+            globalScore = 0.0
+        rpsbml_json['pathway']['brsynth']['global_score'] = {}
+        rpsbml_json['pathway']['brsynth']['global_score']['value'] = globalScore
+        self.global_score = globalScore
+
+        self.updateBRSynthPathway(rpsbml_json, pathway_id)
+
+        return self.getGlobalScore()
+
+
+    def getGlobalScore(self):
+        return self.global_score
+
+
+    def updateBRSynthPathway(self, rpsbml_json, pathway_id='rp_pathway'):
+        """Update the heterologous pathway from a dictionary to a rpsbml file
+
+        :param self: rpSBML object
+        :param rpsbml_json: The dictionary of the heterologous pathway
+        :param pathway_id: The ID of the heterologous pathway
+        
+        :return: None
+        """
+        self.logger.debug('rpsbml_json: '+str(rpsbml_json))
+        groups = self.getModel().getPlugin('groups')
+        rp_pathway = groups.getGroup(pathway_id)
+        for bd_id in rpsbml_json['pathway']['brsynth']:
+            if bd_id[:5]=='norm_' or bd_id=='global_score':
+                try:
+                    value = rpsbml_json['pathway']['brsynth'][bd_id]['value']
+                except KeyError:
+                    self.logger.warning('The entry '+str(bd_id)+' doesnt contain value')
+                    self.logger.warning('No" value", using the root')
+                try:
+                    units = rpsbml_json['pathway']['brsynth'][bd_id]['units']
+                except KeyError:
+                    units = None
+                self.addUpdateBRSynth(rp_pathway, bd_id, value, units, False)
+        for reac_id in rpsbml_json['reactions']:
+            reaction = self.getModel().getReaction(reac_id)
+            if reaction==None:
+                self.logger.warning('Skipping updating '+str(reac_id)+', cannot retreive it')
+                continue
+            for bd_id in rpsbml_json['reactions'][reac_id]['brsynth']:
+                if bd_id[:5]=='norm_':
+                    try:
+                        value = rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']
+                    except KeyError:
+                        value = rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]
+                        self.logger.warning('No" value", using the root')
+                    try:
+                        units = rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['units']
+                    except KeyError:
+                        units = None
+                    self.addUpdateBRSynth(reaction, bd_id, value, units, False)
+
 
     #############################################################################################################
     ############################################ MERGE ##########################################################
