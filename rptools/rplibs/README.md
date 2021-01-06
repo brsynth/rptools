@@ -1,10 +1,6 @@
-# brs-libs
+# rplibs
 
-[![Anaconda-Server Badge](https://anaconda.org/brsynth/brs_libs/badges/latest_release_date.svg)](https://anaconda.org/brsynth/brs_libs)
-[![Anaconda-Server Badge](https://anaconda.org/brsynth/brs_libs/badges/version.svg)](https://anaconda.org/brsynth/brs_libs)
-![Test suite)](https://github.com/brsynth/brs-libs/workflows/Test%20suite/badge.svg)
-
-Libraries for rpTools:
+Libraries for rpTools, contains:
 * rpSBML
 * rpCache
 * inchikeyMIRIAM

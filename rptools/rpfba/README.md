@@ -1,9 +1,5 @@
 # rpFBA
 
-[![Anaconda-Server Badge](https://anaconda.org/brsynth/rpfba/badges/latest_release_date.svg)](https://anaconda.org/brsynth/rpfba)
-[![Anaconda-Server Badge](https://anaconda.org/brsynth/rpfba/badges/version.svg)](https://anaconda.org/brsynth/rpfba)
-![Test suite](https://github.com/brsynth/rpFBA/workflows/Test%20suite/badge.svg)
-
 Perform FBA on a single or collection of SBML files containing heterologous pathways, as tar.xz archives. The package performs the following steps: 1) it merges a user defined GEM SBML model to a given heterologous pathway. 2) it performs FBA using the [cobrapy](https://opencobra.github.io/cobrapy/) package using a user defined mathod that include, FBA, parsimonious FBA or fraction of optimum of another reaction. For the first two, the user must know the reaction name that the model will optimise to, while the latter the use must provide the target reaction but also another reaction that will be restricted. The first step involves performing FBA using the "source" reaction as the objective. Then the flux of that reaction has its upper and lower bounds set to the same value, determined as a fraction of its FBA flux value. Thereafter the objective is set to the initial target reaction and FBA is performed once again. The tool uses the [FBC](https://co.mbine.org/specifications/sbml.level-3.version-1.fbc.version-2.release-1) package to manage the objective and flux bounds.
 
 ## Input
