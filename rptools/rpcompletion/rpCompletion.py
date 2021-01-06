@@ -610,7 +610,6 @@ def write_rp2paths_to_rpSBML(cache,
         logger.error('Could not Xref compartment_id ('+str(compartment_id)+')')
         return 1
 
-
     for pathNum in rp_paths:
 
         # first level is the list of lists of sub_steps
