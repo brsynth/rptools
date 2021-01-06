@@ -23,6 +23,8 @@ import logging
 # Collection of functions that convert the outputs from various sources to the SBML format (rpSBML) for further analyses
 
 class Species:
+ 
+ 
     def __init__(self, inchi, inchikey, smiles, xref):
         self.inchi = inchi
         self.inchikey = inchikey
@@ -30,17 +32,26 @@ class Species:
         self.xref = xref
 
 class SBML_Item:
+
+
     def __init__(self, score, index, rpsbml_obj):
         self.score = score
         self.index = index
         self.rpsbml_obj = rpsbml_obj
 
+
     def __eq__(self, sbml_item):
         return self.rpsbml_obj == sbml_item.rpsbml_obj
+
+
     def __lt__(self, sbml_item):
         return self.score < sbml_item.score
+
+
     def __gt__(self, sbml_item):
         return self.score > sbml_item.score
+
+
     def __str__(self):
         return 'SBML_Item' + '\n' \
              + '\t' + 'score:      ' + str(self.score)      + '\n' \
@@ -86,6 +97,7 @@ def _pubChemLimit(logger=None):
     elif time_time()-pubchem_min_start>60.0:
         pubchem_min_start = time_time()
         pubchem_min_count = 0
+
 
 ## Try to retreive the xref from an inchi structure using pubchem
 #
@@ -232,6 +244,7 @@ def rp2ToSBML(cache,
                                 pubchem_search,
                                 logger=logger)
 
+
 ## Function to parse the compounds.txt file
 #
 #  Extract the smile and the structure of each compounds of RP2Path output
@@ -311,6 +324,7 @@ def _transformation(path, logger=None):
     # logger.info(rp_transformation)
     # logger.info(sink_molecules)
     return rp_transformation, list(set(sink_molecules))
+
 
 ## Function that reads the pathway output of rp2paths
 #
@@ -414,6 +428,7 @@ def _read_paths(cache, rp2paths_pathways, logger=None):
             sub_path_step += 1
 
     return rp_paths
+
 
 def _unique_species(cache, meta, rp_strc, pubchem_search, logger=None):
 
@@ -545,7 +560,6 @@ def _unique_species(cache, meta, rp_strc, pubchem_search, logger=None):
 
 
     return (chemName, spe)
-
 
 
 ## Function to parse the out_paths.csv file
@@ -715,8 +729,6 @@ def add_species(rpsbml, meta, sink_molecules, compartment_id, chemName, spe, spe
 #############################################################################################
 ############################### TSV data tsv ################################################
 #############################################################################################
-
-
 
 ## Function to parse the TSV of measured heterologous pathways to SBML
 #
