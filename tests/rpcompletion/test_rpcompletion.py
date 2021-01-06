@@ -20,7 +20,7 @@ class Test_rpCompletion(TestCase):
         self.logger.setLevel(getattr(logging, 'ERROR'))
         self.logger.formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
 
-    def test_rp2ToSBML(self):
+    def test_rp_completion(self):
         with TemporaryDirectory() as temp_d:
             result = rp_completion(self.cache,
                                    self.rp2_pathways,
