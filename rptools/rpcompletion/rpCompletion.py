@@ -187,9 +187,9 @@ def _pubchemStrctSearch(strct, itype='inchi', logger=None):
 ############################ RP2paths entry functions #########
 ###############################################################
 
-## Function to group all the functions for parsing RP2 output to SBML files
+## Function to group all the functions for parsing RP2 output to rpSBML files
 #
-# Takes RP2paths's compounds.txt and out_paths.csv and RetroPaths's *_scope.csv files and generates SBML files, where each individual file contains a single heterologous file
+# Takes RP2paths's compounds.txt and out_paths.csv and RetroPaths's *_scope.csv files and generates rpSBML files, where each individual file contains a single heterologous file
 #
 # @param rp2_pathways Path (string) to the output file of RetroPath2.0
 # @param rp2paths_compounds Path (string) to the RP2paths compounds file
@@ -203,20 +203,20 @@ def _pubchemStrctSearch(strct, itype='inchi', logger=None):
 # @param species_group_id The Groups id of the central species of the heterologous pathway
 # @param species_group_id The Groups id of the sink species of the heterologous pathway
 # @return Boolean The success or failure of the function
-def rp2ToSBML(cache,
-              rp2_pathways,
-              rp2paths_compounds,
-              rp2paths_pathways,
-              outdir,
-              upper_flux_bound=999999,
-              lower_flux_bound=0,
-              max_subpaths_filter=10,
-              pathway_id='rp_pathway',
-              compartment_id='MNXC3',
-              species_group_id='central_species',
-              sink_species_group_id='rp_sink_species',
-              pubchem_search=False,
-              logger=None):
+def rp_completion(cache,
+                  rp2_pathways,
+                  rp2paths_compounds,
+                  rp2paths_pathways,
+                  outdir,
+                  upper_flux_bound=999999,
+                  lower_flux_bound=0,
+                  max_subpaths_filter=10,
+                  pathway_id='rp_pathway',
+                  compartment_id='MNXC3',
+                  species_group_id='central_species',
+                  sink_species_group_id='rp_sink_species',
+                  pubchem_search=False,
+                  logger=None):
 
     logger = logger or logging.getLogger(__name__)
 
@@ -228,21 +228,21 @@ def rp2ToSBML(cache,
 
     rp_strc = _compounds(cache, rp2paths_compounds, logger=logger)
     rp_transformation, sink_molecules = _transformation(rp2_pathways, logger=logger)
-    return Write_rp2pathsToSBML(cache,
-                                rp_strc,
-                                rp_transformation,
-                                sink_molecules,
-                                rp2paths_pathways,
-                                outdir,
-                                upper_flux_bound,
-                                lower_flux_bound,
-                                max_subpaths_filter,
-                                pathway_id,
-                                compartment_id,
-                                species_group_id,
-                                sink_species_group_id,
-                                pubchem_search,
-                                logger=logger)
+    return write_rp2paths_to_rpSBML(cache,
+                                    rp_strc,
+                                    rp_transformation,
+                                    sink_molecules,
+                                    rp2paths_pathways,
+                                    outdir,
+                                    upper_flux_bound,
+                                    lower_flux_bound,
+                                    max_subpaths_filter,
+                                    pathway_id,
+                                    compartment_id,
+                                    species_group_id,
+                                    sink_species_group_id,
+                                    pubchem_search,
+                                    logger=logger)
 
 
 ## Function to parse the compounds.txt file
@@ -574,20 +574,20 @@ def _unique_species(cache, meta, rp_strc, pubchem_search, logger=None):
 #  @max_subpaths_filter maximal numer of subpaths per paths
 #  @outFolder folder where to write files
 #  @return Boolean The success or failure of the function
-def Write_rp2pathsToSBML(cache,
-                         rp_strc, rp_transformation,
-                         sink_molecules,
-                         rp2paths_pathways,
-                         outFolder,
-                         upper_flux_bound=999999,
-                         lower_flux_bound=0,
-                         max_subpaths_filter=10,
-                         pathway_id='rp_pathway',
-                         compartment_id='MNXC3',
-                         species_group_id='central_species',
-                         sink_species_group_id='rp_sink_species',
-                         pubchem_search=False,
-                         logger=None):
+def write_rp2paths_to_rpSBML(cache,
+                             rp_strc, rp_transformation,
+                             sink_molecules,
+                             rp2paths_pathways,
+                             outFolder,
+                             upper_flux_bound=999999,
+                             lower_flux_bound=0,
+                             max_subpaths_filter=10,
+                             pathway_id='rp_pathway',
+                             compartment_id='MNXC3',
+                             species_group_id='central_species',
+                             sink_species_group_id='rp_sink_species',
+                             pubchem_search=False,
+                             logger=None):
     # TODO: make sure that you account for the fact that each reaction may have multiple associated reactions
 
     logger = logger or logging.getLogger(__name__)
@@ -686,7 +686,6 @@ def Write_rp2pathsToSBML(cache,
             sbml_item = SBML_Item(rpsbml.compute_score(),
                                   'rp_'+str(path_id)+'_'+str(altPathNum),
                                   rpsbml)
-
             local_SBMLItems = insert_and_or_replace_in_sorted_list(sbml_item, local_SBMLItems)
 
             # 8) Keep only topX

@@ -2,7 +2,7 @@
 
 import logging
 from rptools.rplibs       import rpCache
-from rptools.rpcompletion import rp2ToSBML, build_args_parser
+from rptools.rpcompletion import rp_completion, build_args_parser
 
 
 def _cli():
@@ -19,20 +19,20 @@ def _cli():
     cache = rpCache(db='file', logger=logger)
 
     try:
-        result = rp2ToSBML(cache,
-                           args.rp2_pathways,
-                           args.rp2paths_compounds,
-                           args.rp2paths_pathways,
-                           args.outdir,
-                           int(args.upper_flux_bound),
-                           int(args.lower_flux_bound),
-                           int(args.max_subpaths_filter),
-                           args.pathway_id,
-                           args.compartment_id,
-                           args.species_group_id,
-                           args.sink_species_group_id,
-                           args.pubchem_search,
-                           logger=logger)
+        result = rp_completion(cache,
+                               args.rp2_pathways,
+                               args.rp2paths_compounds,
+                               args.rp2paths_pathways,
+                               args.outdir,
+                               int(args.upper_flux_bound),
+                               int(args.lower_flux_bound),
+                               int(args.max_subpaths_filter),
+                               args.pathway_id,
+                               args.compartment_id,
+                               args.species_group_id,
+                               args.sink_species_group_id,
+                               args.pubchem_search,
+                               logger=logger)
         return result
     except ValueError as e:
         logging.error(str(e))

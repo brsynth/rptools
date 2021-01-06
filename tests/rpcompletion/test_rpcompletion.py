@@ -8,7 +8,7 @@ import logging
 from unittest             import TestCase
 from tempfile             import TemporaryDirectory
 from rptools.rplibs       import rpCache
-from rptools.rpcompletion import rp2ToSBML
+from rptools.rpcompletion import rp_completion
 from os                   import path as os_path
 from os                   import stat as os_stat
 
@@ -22,20 +22,20 @@ class Test_rpCompletion(TestCase):
 
     def test_rp2ToSBML(self):
         with TemporaryDirectory() as temp_d:
-            result = rp2ToSBML( self.cache,
-                                self.rp2_pathways,
-                                self.rp2paths_compounds,
-                                self.rp2paths_pathways,
-                                temp_d,
-                                upper_flux_bound=999999,
-                                lower_flux_bound=0,
-                                max_subpaths_filter=10,
-                                pathway_id='rp_pathway',
-                                compartment_id='MNXC3',
-                                species_group_id='central_species',
-                                sink_species_group_id='rp_sink_species',
-                                pubchem_search=False,
-                                logger=self.logger )
+            result = rp_completion(self.cache,
+                                   self.rp2_pathways,
+                                   self.rp2paths_compounds,
+                                   self.rp2paths_pathways,
+                                   temp_d,
+                                   upper_flux_bound=999999,
+                                   lower_flux_bound=0,
+                                   max_subpaths_filter=10,
+                                   pathway_id='rp_pathway',
+                                   compartment_id='MNXC3',
+                                   species_group_id='central_species',
+                                   sink_species_group_id='rp_sink_species',
+                                   pubchem_search=False,
+                                   logger=self.logger)
             # Useless to sort files since smiles could be equivalent and not equal, then checksum will be different
             for file, size in self.files:
                 self.assertTrue(os_path.isfile(os_path.join(temp_d, file)))
