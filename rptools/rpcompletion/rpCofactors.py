@@ -173,7 +173,7 @@ def addCofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway',
     pathway_cmp = {}
     spe_conv = {}
     rpsbml_json = rpsbml.genJSON(pathway_id)
-    rp_path = rpsbml.outPathsDict(pathway_id)
+    rp_path = rpsbml.convert_pathways_to_dict(pathway_id)
     ori_rp_path = deepcopy(rp_path)
     #We reverse the loop to ID the intermediate CMP to their original ones
     for stepNum in sorted(list(rp_path), reverse=True):

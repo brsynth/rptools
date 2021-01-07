@@ -2580,7 +2580,7 @@ class rpSBML:
     #########################################################################
 
 
-    def outPathsDict(self, pathway_id='rp_pathway'):
+    def convert_pathways_to_dict(self, pathway_id='rp_pathway'):
         """Function to return in a dictionary in the same format as the out_paths rp2paths file dictionary object
 
         Example format returned: {'rule_id': 'RR-01-503dbb54cf91-49-F', 'right': {'TARGET_0000000001': 1}, 'left': {'MNXM2': 1, 'MNXM376': 1}, 'pathway_id': 1, 'step': 1, 'sub_step': 1, 'transformation_id': 'TRS_0_0_17'}. Really used to complete the monocomponent reactions
@@ -3355,35 +3355,35 @@ class rpSBML:
         new_group.setAnnotation(self._defaultBRSynthAnnot(meta_id))
 
 
-    def createGene(self, reac, step_id, meta_id=None):
-        """Create libSBML gene
+    # def createGene(self, reac, step_id, meta_id=None):
+    #     """Create libSBML gene
 
-        Create a gene that is associated with a reaction
+    #     Create a gene that is associated with a reaction
 
-        :param reac: The id of the reaction that is associated with the gene
-        :param step_id: The id of the reaction to name the gene
-        :param meta_id: Meta id (Default: None)
+    #     :param reac: The id of the reaction that is associated with the gene
+    #     :param step_id: The id of the reaction to name the gene
+    #     :param meta_id: Meta id (Default: None)
 
-        :type reac: str
-        :type step_id: str
-        :type meta_id: str
+    #     :type reac: str
+    #     :type step_id: str
+    #     :type meta_id: str
 
-        :rtype: None
-        :return: None
-        """
-        # TODO: pass this function to Pablo for him to fill with parameters that are appropriate for his needs
-        geneName = 'RP'+str(step_id)+'_gene'
-        fbc_plugin = self.getModel().getPlugin('fbc')
-        # fbc_plugin = reac.getPlugin("fbc")
-        gp = fbc_plugin.createGeneProduct()
-        gp.setId(geneName)
-        if not meta_id:
-            meta_id = self._genMetaID(str(geneName))
-        gp.setMetaId(meta_id)
-        gp.setLabel('gene_'+str(step_id))
-        gp.setAssociatedSpecies('RP'+str(step_id))
-        ##### NOTE: The parameters here require the input from Pablo to determine what he needs
-        # gp.setAnnotation(self._defaultBothAnnot(meta_id))
+    #     :rtype: None
+    #     :return: None
+    #     """
+    #     # TODO: pass this function to Pablo for him to fill with parameters that are appropriate for his needs
+    #     geneName = 'RP'+str(step_id)+'_gene'
+    #     fbc_plugin = self.getModel().getPlugin('fbc')
+    #     # fbc_plugin = reac.getPlugin("fbc")
+    #     gp = fbc_plugin.createGeneProduct()
+    #     gp.setId(geneName)
+    #     if not meta_id:
+    #         meta_id = self._genMetaID(str(geneName))
+    #     gp.setMetaId(meta_id)
+    #     gp.setLabel('gene_'+str(step_id))
+    #     gp.setAssociatedSpecies('RP'+str(step_id))
+    #     ##### NOTE: The parameters here require the input from Pablo to determine what he needs
+    #     # gp.setAnnotation(self._defaultBothAnnot(meta_id))
 
 
     def createFluxObj(self, fluxobj_id, reactionName, coefficient, isMax=True, meta_id=None):
