@@ -337,7 +337,6 @@ def rp2paths_to_dict(cache, infile, logger=None):
     #     reader = csv_reader(StringIO(rp2paths_pathways.decode('utf-8')))
     # else:
     reader = csv_reader(open(infile, 'r'))
-
     next(reader)
 
     rp_paths = {}
@@ -358,16 +357,11 @@ def rp2paths_to_dict(cache, infile, logger=None):
         right           = row[4]
 
         #################################
-        rule_ids_dict = build_reac_dict_from_id(rule_ids, cache)
+        rule_ids_dict = reac_dict_from_id(rule_ids, cache)
         sub_path_step = 1
-        for singleRule in rule_ids_dict:
-            tmpReac = build_reac(singleRule, cache, current_path_id, path_step, unique_id)
-            #################################
-            if not current_path_id in rp_paths:
-                rp_paths[current_path_id] = {}
-            if not int(path_step) in rp_paths[current_path_id]:
-                rp_paths[current_path_id][int(path_step)] = {}
-            rp_paths[current_path_id][int(path_step)][int(sub_path_step)] = tmpReac
+        for rule_id in rule_ids_dict:
+            tmpReac = build_reac(rule_id, cache, current_path_id, path_step, unique_id)
+            rp_paths = update_rppaths(rp_paths, current_path_id, path_step, sub_path_step, tmpReac)
             sub_path_step += 1
 
         path_step += 1
@@ -381,7 +375,7 @@ def rp2paths_to_dict(cache, infile, logger=None):
 # @param rule_ids The reaction rule id
 # @param cache rpCache
 # @return Dictionnary of the reaction rule
-def build_reac_dict_from_id(rule_ids, cache):
+def reac_dict_from_id(rule_ids, cache):
     if not rule_ids:
         logger.warning('The ruleIds is empty')
     ruleIds = rule_ids.split(',')
@@ -402,6 +396,10 @@ def build_reac_dict_from_id(rule_ids, cache):
     return tmp_rr_reactions
 
 
+## Function that returns the left part of reaction as a dict
+#
+# @param left part read in pathways
+# @return Dictionnary of the left part of the reaction
 def build_left_reac(left):
  
     for l in left.split(':'):
@@ -425,6 +423,10 @@ def build_left_reac(left):
     return tmpReac
 
 
+## Function that returns the right part of reaction as a dict
+#
+# @param right part read in pathways
+# @return Dictionnary of the right part of the reaction
 def build_right_reac(right):
  
     for r in right.split(':'):
@@ -447,15 +449,25 @@ def build_right_reac(right):
     return tmpReac
 
 
-def build_reac(singleRule, cache, current_path_id, path_step, unique_id):
-    tmpReac = {'rule_id': singleRule.split('__')[0],
-                'rule_ori_reac': singleRule.split('__')[1],
-                'rule_score': cache.rr_reactions[singleRule.split('__')[0]][singleRule.split('__')[1]]['rule_score'],
+## Function that returns the reaction as a dict
+#
+# @param rule_id is the rule ID from which the reaction as been created
+# @param unique_id is the unique ID of he reaction
+# @param cache is the pre-computed rpCache
+# @param current_path_id is the id of the current pathway
+# @param path_step is the reaction number in the pathway
+# @return Dictionnary of the reaction
+def build_reac(rule_id, unique_id, cache, current_path_id, path_step):
+    tmpReac = {
+                'rule_id': rule_id.split('__')[0],
+                'rule_ori_reac': rule_id.split('__')[1],
+                'rule_score': cache.rr_reactions[rule_id.split('__')[0]][rule_id.split('__')[1]]['rule_score'],
                 'right': {},
                 'left': {},
                 'path_id': current_path_id,
                 'step': path_step,
-                'transformation_id': unique_id[:-2]}
+                'transformation_id': unique_id[:-2]
+                }
     ############ LEFT ##############
     # remove all illegal characters in SBML ids
     left = left.replace("'", "").replace('-', '_').replace('+', '')
@@ -464,6 +476,28 @@ def build_reac(singleRule, cache, current_path_id, path_step, unique_id):
     tmpReac['right'] = build_right_reac(right)
 
     return tmpReac
+
+
+## Function that returns the reaction as a dict
+#
+# @param rp_paths is the dictionnary of pathways already built
+# @param current_path_id is the id of the current pathway
+# @param path_step is the reaction number in the pathway
+# @param sub_path_step is the reaction number in the pathway
+# @param rxn is the reaction to add
+# @return Dictionnary of the reaction
+def update_rppaths(rp_paths, current_path_id, path_step, sub_path_step, rxn):
+
+    # init some keys
+    if not current_path_id in rp_paths:
+        rp_paths[current_path_id] = {}
+    if not int(path_step) in rp_paths[current_path_id]:
+        rp_paths[current_path_id][int(path_step)] = {}
+
+    # update rp_paths
+    rp_paths[current_path_id][int(path_step)][int(sub_path_step)] = rxn
+
+    return rp_paths
 
 
 def _unique_species(cache, meta, rp_strc, pubchem_search, logger=None):
