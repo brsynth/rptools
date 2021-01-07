@@ -250,7 +250,6 @@ def rp_completion(cache,
 #  Extract the smile and the structure of each compounds of RP2Path output
 #  Method to parse all the RP output compounds.
 #
-#  @param self Object pointer
 #  @param path The compounds.txt file path
 #  @return rp_compounds Dictionnary of smile and structure for each compound
 def _compounds(cache, path, logger=None):
@@ -294,7 +293,6 @@ def _compounds(cache, path, logger=None):
 #
 # Extract the reaction rules from the retroPath2.0 output using the scope.csv file
 #
-# @param self Object pointer
 # @param path The scope.csv file path
 # @return tuple with dictionnary of all the reactions rules and the list unique molecules that these apply them to
 def _transformation(path, logger=None):
@@ -328,106 +326,144 @@ def _transformation(path, logger=None):
 
 ## Function that reads the pathway output of rp2paths
 #
-# @param self Object pointer
 # @param rp2paths_pathways file parsing. Can either be a string of the file path or a bytes object
 # @return Dictionnary of the pathways
-def _read_paths(cache, rp2paths_pathways, logger=None):
+def rp2paths_to_dict(cache, infile, logger=None):
 
     logger = logger or logging.getLogger(__name__)
 
-    #### we might pass binary in the REST version
-    if isinstance(rp2paths_pathways, bytes):
-        reader = csv_reader(StringIO(rp2paths_pathways.decode('utf-8')))
-    else:
-        reader = csv_reader(open(rp2paths_pathways, 'r'))
+    # #### we might pass binary in the REST version
+    # if isinstance(rp2paths_pathways, bytes):
+    #     reader = csv_reader(StringIO(rp2paths_pathways.decode('utf-8')))
+    # else:
+    reader = csv_reader(open(infile, 'r'))
+
     next(reader)
-    current_path_id = 0
-    path_step = 1
 
     rp_paths = {}
 
+    path_step = 1
     for row in reader:
+
+        # read fields
         try:
-            #Remove all illegal characters in SBML ids
-            row[3] = row[3].replace("'", "").replace('-', '_').replace('+', '')
-            if not int(row[0])==current_path_id:
-                path_step = 1
-            else:
-                path_step += 1
-            #important to leave them in order
+            # important to leave them in order
             current_path_id = int(row[0])
         except ValueError:
             logger.error('Cannot convert path_id to int ('+str(row[0])+')')
             raise
+        unique_id       = row[1]
+        rule_ids        = row[2]
+        left            = row[3]
+        right           = row[4]
+
         #################################
-        ruleIds = row[2].split(',')
-        if ruleIds==None:
-            logger.warning('The rulesIds is None')
-            #pass # or continue
-            continue
-        ###WARNING: This is the part where we select some rules over others
-        # we do it by sorting the list according to their score and taking the topx
-        tmp_rr_reactions = {}
-        for r_id in ruleIds:
-            for rea_id in cache.rr_reactions[r_id]:
-                tmp_rr_reactions[str(r_id)+'__'+str(rea_id)] = cache.rr_reactions[r_id][rea_id]
-        # if len(ruleIds)>int(maxRuleIds):
-        #     logger.warning('There are too many rules, limiting the number to random top '+str(maxRuleIds))
-        #     try:
-        #         ruleIds = [y for y,_ in sorted([(i, tmp_rr_reactions[i]['rule_score']) for i in tmp_rr_reactions])][:int(maxRuleIds)]
-        #     except KeyError:
-        #         logger.warning('Could not select topX due inconsistencies between rules ids and rr_reactions... selecting random instead')
-        #         ruleIds = random.sample(tmp_rr_reactions, int(maxRuleIds))
-        # else:
-        ruleIds = tmp_rr_reactions
+        rule_ids_dict = build_reac_dict_from_id(rule_ids, cache)
         sub_path_step = 1
-        for singleRule in ruleIds:
-            tmpReac = {'rule_id': singleRule.split('__')[0],
-                       'rule_ori_reac': singleRule.split('__')[1],
-                       'rule_score': cache.rr_reactions[singleRule.split('__')[0]][singleRule.split('__')[1]]['rule_score'],
-                       'right': {},
-                       'left': {},
-                       'path_id': int(row[0]),
-                       'step': path_step,
-                       'transformation_id': row[1][:-2]}
-            ############ LEFT ##############
-            for l in row[3].split(':'):
-                tmp_l = l.split('.')
-                try:
-                    #tmpReac['left'].append({'stoichio': int(tmp_l[0]), 'name': tmp_l[1]})
-                    cid = '' #TODO: change this
-                    if tmp_l[1] in cache.deprecatedCID_cid:
-                        cid = cache.deprecatedCID_cid[tmp_l[1]]
-                    else:
-                        cid = tmp_l[1]
-                    tmpReac['left'][cid] = int(tmp_l[0])
-                except ValueError:
-                    logger.error('Cannot convert tmp_l[0] to int ('+str(tmp_l[0])+')')
-                    #return {}
-                    return False
-            ############## RIGHT ###########
-            for r in row[4].split(':'):
-                tmp_r = r.split('.')
-                try:
-                    #tmpReac['right'].append({'stoichio': int(tmp_r[0]), 'name': tmp_r[1]})
-                    cid = '' #TODO change this
-                    if tmp_r[1] in cache.deprecatedCID_cid:
-                        cid = cache.deprecatedCID_cid[tmp_r[1]]  #+':'+self.rr_reactions[tmpReac['rule_id']]['left']
-                    else:
-                        cid = tmp_r[1]  #+':'+self.rr_reactions[tmpReac['rule_id']]['left']
-                    tmpReac['right'][cid] = int(tmp_r[0])
-                except ValueError:
-                    logger.error('Cannot convert tmp_r[0] to int ('+str(tmp_r[0])+')')
-                    return {}
+        for singleRule in rule_ids_dict:
+            tmpReac = build_reac(singleRule, cache, current_path_id, path_step, unique_id)
             #################################
-            if not int(row[0]) in rp_paths:
-                rp_paths[int(row[0])] = {}
-            if not int(path_step) in rp_paths[int(row[0])]:
-                rp_paths[int(row[0])][int(path_step)] = {}
-            rp_paths[int(row[0])][int(path_step)][int(sub_path_step)] = tmpReac
+            if not current_path_id in rp_paths:
+                rp_paths[current_path_id] = {}
+            if not int(path_step) in rp_paths[current_path_id]:
+                rp_paths[current_path_id][int(path_step)] = {}
+            rp_paths[current_path_id][int(path_step)][int(sub_path_step)] = tmpReac
             sub_path_step += 1
 
+        path_step += 1
+
+
     return rp_paths
+
+
+## Function that returns an enriched dictionnary from a reaction rule id
+#
+# @param rule_ids The reaction rule id
+# @param cache rpCache
+# @return Dictionnary of the reaction rule
+def build_reac_dict_from_id(rule_ids, cache):
+    if not rule_ids:
+        logger.warning('The ruleIds is empty')
+    ruleIds = rule_ids.split(',')
+    ### WARNING: This is the part where we select some rules over others
+    # we do it by sorting the list according to their score and taking the topx
+    tmp_rr_reactions = {}
+    for r_id in ruleIds:
+        for rea_id in cache.rr_reactions[r_id]:
+            tmp_rr_reactions[str(r_id)+'__'+str(rea_id)] = cache.rr_reactions[r_id][rea_id]
+    # if len(ruleIds)>int(maxRuleIds):
+    #     logger.warning('There are too many rules, limiting the number to random top '+str(maxRuleIds))
+    #     try:
+    #         ruleIds = [y for y,_ in sorted([(i, tmp_rr_reactions[i]['rule_score']) for i in tmp_rr_reactions])][:int(maxRuleIds)]
+    #     except KeyError:
+    #         logger.warning('Could not select topX due inconsistencies between rules ids and rr_reactions... selecting random instead')
+    #         ruleIds = random.sample(tmp_rr_reactions, int(maxRuleIds))
+    # else:
+    return tmp_rr_reactions
+
+
+def build_left_reac(left):
+ 
+    for l in left.split(':'):
+ 
+        tmp_l = l.split('.')
+ 
+        try:
+            #tmpReac['left'].append({'stoichio': int(tmp_l[0]), 'name': tmp_l[1]})
+            cid = '' # TODO: change this
+            if tmp_l[1] in cache.deprecatedCID_cid:
+                cid = cache.deprecatedCID_cid[tmp_l[1]]
+            else:
+                cid = tmp_l[1]
+            tmpReac['left'][cid] = int(tmp_l[0])
+ 
+        except ValueError:
+            logger.error('Cannot convert tmp_l[0] to int ('+str(tmp_l[0])+')')
+            #return {}
+            raise
+ 
+    return tmpReac
+
+
+def build_right_reac(right):
+ 
+    for r in right.split(':'):
+ 
+        tmp_r = r.split('.')
+ 
+        try:
+            # tmpReac['right'].append({'stoichio': int(tmp_r[0]), 'name': tmp_r[1]})
+            cid = '' # TODO change this
+            if tmp_r[1] in cache.deprecatedCID_cid:
+                cid = cache.deprecatedCID_cid[tmp_r[1]]  # +':'+self.rr_reactions[tmpReac['rule_id']]['left']
+            else:
+                cid = tmp_r[1]  # +':'+self.rr_reactions[tmpReac['rule_id']]['left']
+            tmpReac['right'][cid] = int(tmp_r[0])
+ 
+        except ValueError:
+            logger.error('Cannot convert tmp_r[0] to int ('+str(tmp_r[0])+')')
+            raise
+ 
+    return tmpReac
+
+
+def build_reac(singleRule, cache, current_path_id, path_step, unique_id):
+    tmpReac = {'rule_id': singleRule.split('__')[0],
+                'rule_ori_reac': singleRule.split('__')[1],
+                'rule_score': cache.rr_reactions[singleRule.split('__')[0]][singleRule.split('__')[1]]['rule_score'],
+                'right': {},
+                'left': {},
+                'path_id': current_path_id,
+                'step': path_step,
+                'transformation_id': unique_id[:-2]}
+    ############ LEFT ##############
+    # remove all illegal characters in SBML ids
+    left = left.replace("'", "").replace('-', '_').replace('+', '')
+    tmpReac['left'] = build_left_reac(left)
+    ############## RIGHT ###########
+    tmpReac['right'] = build_right_reac(right)
+
+    return tmpReac
 
 
 def _unique_species(cache, meta, rp_strc, pubchem_search, logger=None):
@@ -592,7 +628,7 @@ def write_rp2paths_to_rpSBML(cache,
 
     logger = logger or logging.getLogger(__name__)
 
-    rp_paths = _read_paths(cache, rp2paths_pathways, logger=logger)
+    rp_paths = rp2paths_to_dict(cache, rp2paths_pathways, logger=logger)
     sink_species = []
 
     # for each line or rp2paths_pathways:
@@ -655,7 +691,7 @@ def write_rp2paths_to_rpSBML(cache,
                 # add the substep to the model
                 step['sub_step'] = altPathNum
                 rpsbml.createReaction(
-                        'RP'+str(step['step']), # parameter 'name' of the reaction deleted : 'RetroPath_Reaction_'+str(step['step']),
+                        'Rxn_'+str(step['step']), # parameter 'name' of the reaction deleted : 'RetroPath_Reaction_'+str(step['step']),
                         upper_flux_bound, lower_flux_bound, step, compartment_id,
                         rp_transformation[step['transformation_id']]['rule'],
                         {'ec': rp_transformation[step['transformation_id']]['ec']},
@@ -673,7 +709,7 @@ def write_rp2paths_to_rpSBML(cache,
                     'rule_score': None,
                     'rule_ori_reac': None
                     }
-            rpsbml.createReaction('RP1_sink',
+            rpsbml.createReaction('Rxn_sink',
                                   upper_flux_bound, lower_flux_bound,
                                   targetStep,
                                   compartment_id)
