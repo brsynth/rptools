@@ -321,21 +321,24 @@ class rpSBML:
         
         :return: None
         """
-        self.logger.debug('rpsbml_json: '+str(rpsbml_json))
-        groups = self.getModel().getPlugin('groups')
-        rp_pathway = groups.getGroup(pathway_id)
+
+        self.logger.debug('rpsbml_json: {0}'.format(rpsbml_json))
+
+        rp_pathway = self.getModel().getPlugin('groups').getGroup(pathway_id)
+
         for bd_id in rpsbml_json['pathway']['brsynth']:
-            if bd_id[:5]=='norm_' or bd_id=='global_score':
+            # if bd_id[:5]=='norm_' or bd_id=='global_score':
                 try:
                     value = rpsbml_json['pathway']['brsynth'][bd_id]['value']
                 except KeyError:
-                    self.logger.warning('The entry '+str(bd_id)+' doesnt contain value')
+                    self.logger.warning('The entry '+str(bd_id)+' does not contain any value')
                     self.logger.warning('No" value", using the root')
                 try:
                     units = rpsbml_json['pathway']['brsynth'][bd_id]['units']
                 except KeyError:
                     units = None
-                self.addUpdateBRSynth(rp_pathway, bd_id, value, units, False)
+                self.updateBRSynth(rp_pathway, bd_id, value, units, False)
+
         for reac_id in rpsbml_json['reactions']:
             reaction = self.getModel().getReaction(reac_id)
             if reaction==None:
@@ -352,7 +355,7 @@ class rpSBML:
                         units = rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['units']
                     except KeyError:
                         units = None
-                    self.addUpdateBRSynth(reaction, bd_id, value, units, False)
+                    self.updateBRSynth(reaction, bd_id, value, units, False)
 
 
     #############################################################################################################
@@ -1518,19 +1521,19 @@ class rpSBML:
         :return: None
         :rtype: None
         """
+
         logger = logger or logging.getLogger(__name__)
+        logger.debug('type('+str(value)+'): '+str(type(value)))
+
         if value is None:
            raise SystemExit('LibSBML returned a null value trying to ' + message + '.')
         elif type(value) is int:
-           if value == libsbml.LIBSBML_OPERATION_SUCCESS:
-               return
-           else:
+           if value != libsbml.LIBSBML_OPERATION_SUCCESS:
                err_msg = 'Error encountered trying to ' + message + '.' \
                          + 'LibSBML returned error code ' + str(value) + ': "' \
                          + libsbml.OperationReturnValue_toString(value).strip() + '"'
                raise SystemExit(err_msg)
-        else:
-         return
+
         # if value is None:
         #     self.logger.error('LibSBML returned a null value trying to ' + message + '.')
         #     raise AttributeError
@@ -1595,22 +1598,22 @@ class rpSBML:
         self.checklibSBML(rp_pathway, 'Getting RP pathway')
         #write the results to the rp_pathway
         self.logger.debug('Set '+str(pathway_id)+' with '+str('fba_'+str(objective_id))+' to '+str(cobra_results.objective_value))
-        self.addUpdateBRSynth(rp_pathway, 'fba_'+str(objective_id), str(cobra_results.objective_value), 'mmol_per_gDW_per_hr', False)
+        self.updateBRSynth(rp_pathway, 'fba_'+str(objective_id), str(cobra_results.objective_value), 'mmol_per_gDW_per_hr', False)
         #get the objective
         fbc_plugin = self.getModel().getPlugin('fbc')
         self.checklibSBML(fbc_plugin, 'Getting FBC plugin')
         obj = fbc_plugin.getObjective(objective_id)
         self.checklibSBML(obj, 'Getting objective '+str(objective_id))
-        self.addUpdateBRSynth(obj, 'flux_value', str(cobra_results.objective_value), 'mmol_per_gDW_per_hr', False)
+        self.updateBRSynth(obj, 'flux_value', str(cobra_results.objective_value), 'mmol_per_gDW_per_hr', False)
         self.logger.debug('Set the objective '+str(objective_id)+' a flux_value of '+str(cobra_results.objective_value))
         for flux_obj in obj.getListOfFluxObjectives():
             #sometimes flux cannot be returned
             if cobra_results.fluxes.get(flux_obj.getReaction())==None:
                 self.logger.warning('Cobra BUG: Cannot retreive '+str(flux_obj.getReaction())+' flux from cobrapy... setting to 0.0')
-                self.addUpdateBRSynth(flux_obj, 'flux_value', str(0.0), 'mmol_per_gDW_per_hr', False)
+                self.updateBRSynth(flux_obj, 'flux_value', str(0.0), 'mmol_per_gDW_per_hr', False)
                 self.logger.debug('Set the reaction '+str(flux_obj.getReaction())+' a flux_value of '+str(0.0))
             else:
-                self.addUpdateBRSynth(flux_obj, 'flux_value', str(cobra_results.fluxes.get(flux_obj.getReaction())), 'mmol_per_gDW_per_hr', False)
+                self.updateBRSynth(flux_obj, 'flux_value', str(cobra_results.fluxes.get(flux_obj.getReaction())), 'mmol_per_gDW_per_hr', False)
                 self.logger.debug('Set the reaction '+str(flux_obj.getReaction())+' a flux_value of '+str(cobra_results.fluxes.get(flux_obj.getReaction())))
         #write all the results to the reactions of pathway_id
         for member in rp_pathway.getListOfMembers():
@@ -1620,7 +1623,7 @@ class rpSBML:
                 #return False
                 continue
             self.logger.debug('Set the reaction '+str(member.getIdRef())+' a '+str('fba_'+str(objective_id))+' of '+str(cobra_results.fluxes.get(reac.getId())))
-            self.addUpdateBRSynth(reac, 'fba_'+str(objective_id), str(cobra_results.fluxes.get(reac.getId())), 'mmol_per_gDW_per_hr', False)
+            self.updateBRSynth(reac, 'fba_'+str(objective_id), str(cobra_results.fluxes.get(reac.getId())), 'mmol_per_gDW_per_hr', False)
 
 
     def _nameToSbmlId(self, name):
@@ -1767,7 +1770,7 @@ class rpSBML:
 
 
 
-    def addUpdateBRSynth(self, sbase_obj, annot_header, value, units=None, isAlone=False, isList=False, isSort=True, meta_id=None):
+    def updateBRSynth(self, sbase_obj, annot_header, value, units=None, isAlone=False, isList=False, isSort=True, meta_id=None):
         """Append or update an entry to the BRSynth annotation of the passed libsbml.SBase object.
 
         If the annot_header isn't contained in the annotation it is created. If it already exists it overwrites it
@@ -1793,7 +1796,7 @@ class rpSBML:
         :rtype: bool
         :return: Sucess or failure of the function
         """
-        # self.logger.debug('############### '+str(annot_header)+' ################')
+        self.logger.debug('############### '+str(annot_header)+' ################')
         if isList:
             annotation = '''<annotation>
       <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
@@ -1842,9 +1845,10 @@ class rpSBML:
         </rdf:BRSynth>
       </rdf:RDF>
     </annotation>'''
+        self.logger.debug('annotation: {0}'.format(annotation))
         annot_obj = libsbml.XMLNode.convertStringToXMLNode(annotation)
         if not annot_obj:
-            self.logger.error('Cannot conver this string to annotation object: '+str(annotation))
+            self.logger.error('Cannot convert this string to annotation object: '+str(annotation))
             return False
         #### retreive the annotation object
         brsynth_annot = None
@@ -1859,79 +1863,72 @@ class rpSBML:
         if not brsynth_annot:
              self.logger.error('Cannot find the BRSynth annotation')
              return False
-        # add the annotation and replace if it exists
-        isfound_target = False
-        # # self.logger.debug(brsynth_annot.toXMLString())
-        for i in range(brsynth_annot.getNumChildren()):
-            # self.logger.debug(annot_header+' -- '+str(brsynth_annot.getChild(i).getName()))
-            if annot_header == brsynth_annot.getChild(i).getName():
-                isfound_target = True
+
+
+        # try to update the annotation
+        target_found = self.updateBRSynthAnnot(brsynth_annot, annot_obj, annot_header)
+
+        # if target not found, then add the annotation as new
+        if not target_found:
+            source_found = self.addBRSynthAnnot(brsynth_annot, annot_obj, annot_header)
+            if not source_found:
+                self.logger.error('Cannot find '+str(annot_header)+' in source annotation')
+                return False
+
+        return True
+
+
+    def updateBRSynthAnnot(self, annot, annot_obj, annot_header):
+
+        target_found = False
+
+        for i in range(annot.getNumChildren()):
+
+            self.logger.debug(annot_header+' -- '+str(annot.getChild(i).getName()))
+
+            if annot_header == annot.getChild(i).getName():
+
+                target_found = True
                 '''
-                self.checklibSBML(brsynth_annot.removeChild(brsynth_annot.getIndex(i)),
+                self.checklibSBML(annot.removeChild(annot.getIndex(i)),
                     'Removing annotation '+str(annot_header))
                 '''
-                self.checklibSBML(brsynth_annot.removeChild(i), 'Removing annotation '+str(annot_header))
-                isfound_source = False
-                source_brsynth_annot = annot_obj.getChild('RDF').getChild('BRSynth').getChild('brsynth')
-                for y in range(source_brsynth_annot.getNumChildren()):
-                    # self.logger.debug('\t'+annot_header+' -- '+str(source_brsynth_annot.getChild(y).getName()))
-                    if str(annot_header)==str(source_brsynth_annot.getChild(y).getName()):
-                        isfound_source = True
-                        # self.logger.debug('Adding annotation to the brsynth annotation: '+str(source_brsynth_annot.getChild(y).toXMLString()))
-                        towrite_annot = source_brsynth_annot.getChild(y)
-                        # self.logger.debug(brsynth_annot.toXMLString())
-                        self.checklibSBML(brsynth_annot.addChild(towrite_annot), ' 1 - Adding annotation to the brsynth annotation')
-                        # self.logger.debug(brsynth_annot.toXMLString())
+                self.checklibSBML(annot.removeChild(i), 'Removing annotation '+str(annot_header), self.logger)
+                source_found = False
+                source_annot = annot_obj.getChild('RDF').getChild('BRSynth').getChild('brsynth')
+
+                for y in range(source_annot.getNumChildren()):
+                    self.logger.debug('\t'+annot_header+' -- '+str(source_annot.getChild(y).getName()))
+                    if str(annot_header)==str(source_annot.getChild(y).getName()):
+                        source_found = True
+                        self.logger.debug('Adding annotation to the brsynth annotation: '+str(source_annot.getChild(y).toXMLString()))
+                        towrite_annot = source_annot.getChild(y)
+                        self.checklibSBML(annot.addChild(towrite_annot), ' 1 - Adding annotation to the brsynth annotation', self.logger)
                         break
-                if not isfound_source:
+
+                if not source_found:
                     self.logger.error('Cannot find '+str(annot_header)+' in source annotation')
-        if not isfound_target:
-            # self.logger.debug('Cannot find '+str(annot_header)+' in target annotation')
-            isfound_source = False
-            source_brsynth_annot = annot_obj.getChild('RDF').getChild('BRSynth').getChild('brsynth')
-            for y in range(source_brsynth_annot.getNumChildren()):
-                # self.logger.debug('\t'+annot_header+' -- '+str(source_brsynth_annot.getChild(y).getName()))
-                if str(annot_header)==str(source_brsynth_annot.getChild(y).getName()):
-                    isfound_source = True
-                    # self.logger.debug('Adding annotation to the brsynth annotation: '+str(source_brsynth_annot.getChild(y).toXMLString()))
-                    towrite_annot = source_brsynth_annot.getChild(y)
-                    # self.logger.debug(brsynth_annot.toXMLString())
-                    self.checklibSBML(brsynth_annot.addChild(towrite_annot), '2 - Adding annotation to the brsynth annotation')
-                    # self.logger.debug(brsynth_annot.toXMLString())
-                    break
-            if not isfound_source:
-                self.logger.error('Cannot find '+str(annot_header)+' in source annotation')
-            # toWrite_annot = annot_obj.getChild('RDF').getChild('BRSynth').getChild('brsynth').getChild(annot_header)
-            # self.checklibSBML(brsynth_annot.addChild(toWrite_annot), 'Adding annotation to the brsynth annotation')
-                return False
-        '''
-        if brsynth_annot.getChild(annot_header).toXMLString()=='':
-            toWrite_annot = annot_obj.getChild('RDF').getChild('BRSynth').getChild('brsynth').getChild(annot_header)
-            self.checklibSBML(brsynth_annot.addChild(toWrite_annot), 'Adding annotation to the brsynth annotation')
-        else:
-            # try:
-            # self.logger.debug('==============================')
-            found_child = False
-            for i in range(brsynth_annot.getNumChildren()):
-                if annot_header == brsynth_annot.getChild(i).getName():
-                    # self.logger.debug('Found the same name to remove: '+str(annot_header))
-                    self.checklibSBML(brsynth_annot.removeChild(brsynth_annot.getIndex(i)),
-                        'Removing annotation '+str(annot_header))
-                    toWrite_annot = annot_obj.getChild('RDF').getChild('BRSynth').getChild('brsynth').getChild(annot_header)
-                    self.checklibSBML(brsynth_annot.addChild(toWrite_annot), 'Adding annotation to the brsynth annotation')
-                    found_child = True
-                    break
-            # cause by a bbug with string lookup
-            if not found_child:
-                self.logger.warning('Bug with lookup adding it now: '+str(annot_header))
-                toWrite_annot = annot_obj.getChild('RDF').getChild('BRSynth').getChild('brsynth').getChild(annot_header)
-                self.checklibSBML(brsynth_annot.addChild(toWrite_annot), 'Adding annotation to the brsynth annotation')
-            # except OverflowError:
-            #    self.logger.warning('TODO: Overflow error that must be dealt with')
-            #    self.logger.warning(brsynth_annot.getChild(annot_header).toXMLString())
-            #    return False
-        '''
-        return True
+
+        return target_found
+
+
+    def addBRSynthAnnot(self, brsynth_annot, annot_obj, annot_header):
+
+        self.logger.debug('Cannot find '+str(annot_header)+' in target annotation')
+
+        source_found = False
+        source_brsynth_annot = annot_obj.getChild('RDF').getChild('BRSynth').getChild('brsynth')
+
+        for y in range(source_brsynth_annot.getNumChildren()):
+            self.logger.debug('\t'+annot_header+' -- '+str(source_brsynth_annot.getChild(y).getName()))
+            if str(annot_header) == str(source_brsynth_annot.getChild(y).getName()):
+                source_found = True
+                self.logger.debug('Adding annotation to the brsynth annotation: '+str(source_brsynth_annot.getChild(y).toXMLString()))
+                towrite_annot = source_brsynth_annot.getChild(y)
+                self.checklibSBML(brsynth_annot.addChild(towrite_annot), '2 - Adding annotation to the brsynth annotation', self.logger)
+                break
+
+        return source_found
 
 
     def addUpdateMIRIAM(self, sbase_obj, type_param, xref, meta_id=None):
@@ -2048,8 +2045,8 @@ class rpSBML:
                 sbase_obj.unsetAnnotation()
                 sbase_obj.setAnnotation(miriam_annot)
             else:
-                rpSBML.checklibSBML(ori_miriam_annot.getChild('RDF').getChild('Description').getChild('is').removeChild(0), 'Removing annotation "is"')
-                rpSBML.checklibSBML(ori_miriam_annot.getChild('RDF').getChild('Description').getChild('is').addChild(miriam_annot), 'Adding annotation to the brsynth annotation')
+                rpSBML.checklibSBML(ori_miriam_annot.getChild('RDF').getChild('Description').getChild('is').removeChild(0), 'Removing annotation "is"', self.logger)
+                rpSBML.checklibSBML(ori_miriam_annot.getChild('RDF').getChild('Description').getChild('is').addChild(miriam_annot), 'Adding annotation to the brsynth annotation', self.logger)
         return True
 
 
@@ -2228,18 +2225,17 @@ class rpSBML:
     def readGroupMembers(self, group_id='rp_pathway'):
         """Return the members of a groups entry
 
-        :param pathway_id: The pathway ID (Default: rp_pathway)
+        :param group_id: The pathway ID (Default: rp_pathway)
 
-        :type pathway_id: str
+        :type group_id: str
 
         :rtype: list
         :return: List of member id's of a particular group
         """
-        groups = self.getModel().getPlugin('groups')
-        rp_pathway = groups.getGroup(pathway_id)
-        rpSBML.checklibSBML(rp_pathway, 'retreiving groups rp_pathway')
+        group = self.getModel().getPlugin('groups').getGroup(group_id)
+        rpSBML.checklibSBML(group, 'retreiving '+group_id+' group')
         toRet = []
-        for member in rp_pathway.getListOfMembers():
+        for member in group.getListOfMembers():
             toRet.append(member.getIdRef())
         return toRet
 
@@ -3189,23 +3185,23 @@ class rpSBML:
         self.addUpdateMIRIAM(reac, 'reaction', reacXref, meta_id)
         ###### BRSYNTH additional information ########
         if reaction_smiles:
-            self.addUpdateBRSynth(reac, 'smiles', reaction_smiles, None, True, False, False, meta_id)
+            self.updateBRSynth(reac, 'smiles', reaction_smiles, None, True, False, False, meta_id)
         if step['rule_id']:
-            self.addUpdateBRSynth(reac, 'rule_id', step['rule_id'], None, True, False, False, meta_id)
+            self.updateBRSynth(reac, 'rule_id', step['rule_id'], None, True, False, False, meta_id)
         # TODO: need to change the name and content (to dict) upstream
         if step['rule_ori_reac']:
-            self.addUpdateBRSynth(reac, 'rule_ori_reac', step['rule_ori_reac'], None, True, False, False, meta_id)
-            # self.addUpdateBRSynthList(reac, 'rule_ori_reac', step['rule_ori_reac'], True, False, meta_id)
+            self.updateBRSynth(reac, 'rule_ori_reac', step['rule_ori_reac'], None, True, False, False, meta_id)
+            # self.updateBRSynthList(reac, 'rule_ori_reac', step['rule_ori_reac'], True, False, meta_id)
             # sbase_obj, annot_header, value, units=None, isAlone=False, isList=False, isSort=True, meta_id=None)
         if step['rule_score']:
             self.add_rule_score(step['rule_score'])
-            self.addUpdateBRSynth(reac, 'rule_score', step['rule_score'], None, False, False, False, meta_id)
+            self.updateBRSynth(reac, 'rule_score', step['rule_score'], None, False, False, False, meta_id)
         # if step['path_id']:
-        #     self.addUpdateBRSynth(reac, 'path_id', step['path_id'], None, False, False, False, meta_id)
+        #     self.updateBRSynth(reac, 'path_id', step['path_id'], None, False, False, False, meta_id)
         if step['step']:
-            self.addUpdateBRSynth(reac, 'step_id', step['step'], None, False, False, False, meta_id)
+            self.updateBRSynth(reac, 'step_id', step['step'], None, False, False, False, meta_id)
         # if step['sub_step']:
-        #     self.addUpdateBRSynth(reac, 'sub_step_id', step['sub_step'], None, False, False, False, meta_id)
+        #     self.updateBRSynth(reac, 'sub_step_id', step['sub_step'], None, False, False, False, meta_id)
         #### GROUPS #####
         if pathway_id:
             groups_plugin = self.getModel().getPlugin('groups')
@@ -3297,12 +3293,12 @@ class rpSBML:
         self.addUpdateMIRIAM(spe, 'species', chemXref, meta_id)
         ###### BRSYNTH additional information ########
         if smiles:
-            self.addUpdateBRSynth(spe, 'smiles', smiles, None, True, False, False, meta_id)
+            self.updateBRSynth(spe, 'smiles', smiles, None, True, False, False, meta_id)
             #                   sbase_obj, annot_header, value, units=None, isAlone=False, isList=False, isSort=True, meta_id=None)
         if inchi:
-            self.addUpdateBRSynth(spe, 'inchi', inchi, None, True, False, False, meta_id)
+            self.updateBRSynth(spe, 'inchi', inchi, None, True, False, False, meta_id)
         if inchikey:
-            self.addUpdateBRSynth(spe, 'inchikey', inchikey, None, True, False, False, meta_id)
+            self.updateBRSynth(spe, 'inchikey', inchikey, None, True, False, False, meta_id)
         #### GROUPS #####
         # TODO: check that it actually exists
         if species_group_id:

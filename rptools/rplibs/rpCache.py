@@ -125,7 +125,7 @@ class rpCache:
         else:
             self.logger = logger
 
-        self.logger.info('Started instance of rpCache')
+        self.logger.info('New instance of rpCache')
 
         self.store_mode = db
         rpCache._db_timeout = 10

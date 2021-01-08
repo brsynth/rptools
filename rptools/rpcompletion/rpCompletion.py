@@ -525,40 +525,50 @@ def write_rp2paths_to_rpSBML(cache,
         logger.error('Could not Xref compartment_id ('+str(compartment_id)+')')
         return 1
 
-    for pathNum in rp_paths:
+    for path_id in rp_paths:
+
+        logger.debug('path_id: {0}'.format(path_id))
 
         # first level is the list of lists of sub_steps
         # second is itertools all possible combinations using product
-        altPathNum = 1
+
         # topX subpaths of the current rp2path pathway
         local_SBMLItems = []
 
-        # # add pathway id to the model
-        # rpsbml_json = self.genJSON(pathway_id)
-        # # add the substep to the model
-        # step['sub_step'] = altPathNum
-
-        for comb_path in list(itertools_product(*[[(i,y) for y in rp_paths[pathNum][i]] for i in rp_paths[pathNum]])):
+        alt_path_id = 1
+        for comb_path in list(itertools_product(*[[(i,y) for y in rp_paths[path_id][i]] for i in rp_paths[path_id]])):
             steps = []
             for i, y in comb_path:
-                steps.append(rp_paths[pathNum][i][y])
-            path_id = steps[0]['path_id']
-            rpsbml = rpSBML(name='rp_'+str(path_id)+'_'+str(altPathNum))
+                steps.append(rp_paths[path_id][i][y])
+            logger.debug('steps --> {0}'.format(steps))
+
+            rpsbml = rpSBML(name='rp_'+str(path_id)+'_'+str(alt_path_id), logger=logger)
 
             # 1) Create a generic Model, ie the structure and unit definitions that we will use the most
             ##### TODO: give the user more control over a generic model creation:
             # -> special attention to the compartment
             rpsbml.genericModel(
-                    'RetroPath_Pathway_'+str(path_id)+'_'+str(altPathNum),
-                    'RP_model_'+str(path_id)+'_'+str(altPathNum),
+                    'RetroPath_Pathway_'+str(path_id)+'_'+str(alt_path_id),
+                    'RP_model_'+str(path_id)+'_'+str(alt_path_id),
                     cache.comp_xref[compid],
                     compartment_id,
                     upper_flux_bound,
                     lower_flux_bound)
 
             # 2) Create the pathway (groups)
+            logger.debug('Create pathway group: '+pathway_id)
+            # create new group
             rpsbml.createGroup(pathway_id)
+            # add pathway id
+            rpsbml_json = rpsbml.genJSON(pathway_id)
+            rpsbml_json['pathway']['brsynth']['path_id'] = {}
+            rpsbml_json['pathway']['brsynth']['path_id']['value'] = path_id
+            rpsbml_json['pathway']['brsynth']['sub_step_id'] = {}
+            rpsbml_json['pathway']['brsynth']['sub_step_id']['value'] = alt_path_id
+            rpsbml.updateBRSynthPathway(rpsbml_json, pathway_id)
+            logger.debug('Create species group: '+species_group_id)
             rpsbml.createGroup(species_group_id)
+            logger.debug('Create sink species group: '+sink_species_group_id)
             rpsbml.createGroup(sink_species_group_id)
 
             # 3) Find all unique species and add them to the model
@@ -571,8 +581,11 @@ def write_rp2paths_to_rpSBML(cache,
             # 4) Add the complete reactions and their annotations
             for step in steps:
                 rpsbml.createReaction(
-                        'Rxn_'+str(step['step']), # parameter 'name' of the reaction deleted : 'RetroPath_Reaction_'+str(step['step']),
-                        upper_flux_bound, lower_flux_bound, step, compartment_id,
+                        # switch rxn number order from reverse to forward
+                        'Rxn_'+str(len(steps)+1-step['step']), # parameter 'name' of the reaction deleted : 'RetroPath_Reaction_'+str(step['step']),
+                        upper_flux_bound, lower_flux_bound,
+                        step,
+                        compartment_id,
                         rp_transformation[step['transformation_id']]['rule'],
                         {'ec': rp_transformation[step['transformation_id']]['ec']},
                         pathway_id)
@@ -599,14 +612,14 @@ def write_rp2paths_to_rpSBML(cache,
 
             # 7) Insert the new rpsbml object in sorted rpsbml_items list
             sbml_item = SBML_Item(rpsbml.compute_score(),
-                                  'rp_'+str(path_id)+'_'+str(altPathNum),
+                                  'rp_'+str(path_id)+'_'+str(alt_path_id),
                                   rpsbml)
             local_SBMLItems = insert_and_or_replace_in_sorted_list(sbml_item, local_SBMLItems)
 
             # 8) Keep only topX
             local_SBMLItems = local_SBMLItems[-max_subpaths_filter:]
 
-            altPathNum += 1
+            alt_path_id += 1
 
         # Write results to files
         for rpsbml_item in local_SBMLItems:

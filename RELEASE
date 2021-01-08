@@ -1,5 +1,13 @@
 # Release history
 
+## 2.0.0
+- rename reaction ids in rpSBML format:
+    + RP1      -> Rxn_1
+    + RP1_sink -> Rxn_sink
+- rename methods in rpSBML class:
+    + createPathway()    -> createGroup()
+    + readRPpathwayIDs() -> readGroupMembers()
+
 ## 1.2.0
 - add global_score to rpSBML
 

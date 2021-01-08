@@ -38,7 +38,7 @@ class rpGraph:
         else:
             self.logger = logger
 
-        self.logger.info('Started instance of rpGraph')
+        self.logger.info('New instance of rpGraph')
 
         self.rpsbml = rpsbml
         self.pathway_id = pathway_id

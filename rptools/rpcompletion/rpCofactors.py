@@ -289,7 +289,7 @@ def addCofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway',
                 subs.setConstant(True)
                 subs.setStoichiometry(rp_path[stepNum]['left'][sub])
             #replace the reaction rule with new one
-            rpsbml.addUpdateBRSynth(reac, 'smiles', rp_path[stepNum]['reaction_rule'], None, True)
+            rpsbml.updateBRSynth(reac, 'smiles', rp_path[stepNum]['reaction_rule'], None, True)
         else:
             #if the cofactors cannot be found delete it from the list
             logger.warning('Cannot find cofactors... skipping')
