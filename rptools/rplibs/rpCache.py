@@ -92,7 +92,6 @@ class rpCache:
 
     _attributes = list(__attributes.keys())
 
-
     # name: sha512sum
     _cache_files = {
             _attributes[0]+'.json.gz': '698a3e83cf4f9206ea2644c9c35a9af53957838baaae6efb245d02b6b8d0ea8b25c75008e562b99ba3e0189e50ee47655376f2d0635f6206e0015f91f0e4bad8',
@@ -107,8 +106,6 @@ class rpCache:
             _attributes[9]+'.json.gz': '599e4de4935d2ba649c0b526d8aeef6f0e3bf0ed9ee20adad65cb86b078ac139e4cc9758945c2bb6da1c6840867239c5415cb5bceeb80164798ff627aac0a985',
             _attributes[10]+'.json.gz': '599e4de4935d2ba649c0b526d8aeef6f0e3bf0ed9ee20adad65cb86b078ac139e4cc9758945c2bb6da1c6840867239c5415cb5bceeb80164798ff627aac0a985'
             }
-
-
 
     _ext = '.json.gz'
 
@@ -134,7 +131,11 @@ class rpCache:
         rpCache._db_timeout = 10
 
         if attrs:
-            self._attributes = attrs
+            if not isinstance(attrs, list):
+                self.logger.warning('\'attrs\' argument is not of type list, trying to convert...')
+                self._attributes = [attrs]
+            else:
+                self._attributes = attrs
 
         self.dirname = os_path.dirname(os_path.abspath( __file__ ))#+"/.."
         # input_cache
