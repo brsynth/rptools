@@ -9,7 +9,7 @@ def _cli():
     args  = parser.parse_args()
 
     # Create logger
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger('rpFBA')
     logger.setLevel(getattr(logging, args.log.upper()))
     logger.formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
 

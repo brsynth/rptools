@@ -12,7 +12,7 @@ def _cli():
     args.pubchem_search = args.pubchem_search.lower() in ['true', 't']
 
     # Create logger
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger('rpCompletion')
     logger.setLevel(getattr(logging, args.log.upper()))
     logger.formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
 
