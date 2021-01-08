@@ -9,8 +9,11 @@ from unittest             import TestCase
 from tempfile             import TemporaryDirectory
 from rptools.rplibs       import rpCache
 from rptools.rpcompletion import rp_completion
-from os                   import path as os_path
-from os                   import stat as os_stat
+from rptools.rpcompletion.rpCompletion import update_rppaths, build_side_rxn, rxns_from_rules, rp2paths_to_dict
+from os                   import path  as os_path
+from os                   import stat  as os_stat
+from io                   import open  as io_open
+from json                 import load  as json_load
 
 
 class Test_rpCompletion(TestCase):
@@ -22,7 +25,7 @@ class Test_rpCompletion(TestCase):
 
     def test_rp_completion(self):
         with TemporaryDirectory() as temp_d:
-            result = rp_completion(self.cache,
+            result = rp_completion(self.rpcache,
                                    self.rp2_pathways,
                                    self.rp2paths_compounds,
                                    self.rp2paths_pathways,
@@ -42,27 +45,83 @@ class Test_rpCompletion(TestCase):
                 self.assertEqual(os_stat(os_path.join(temp_d, file)).st_size, size)
          
 
-
-    cache              = rpCache('file')
+    rpcache            = rpCache('file')
     data_path          = os_path.join(os_path.dirname(__file__), 'data' , 'lycopene')
     rp2_pathways       = os_path.join(data_path, '1-rp2_pathways.csv')
     rp2paths_compounds = os_path.join(data_path, '2-rp2paths_compounds.tsv')
     rp2paths_pathways  = os_path.join(data_path, '3-rp2paths_pathways.csv')
 
     files = [
-    ('rp_1_11_sbml.xml',  32358),
-    ('rp_1_1_sbml.xml',   32640),
-    ('rp_1_6_sbml.xml',   32225),
-    ('rp_2_12_sbml.xml',  32355),
-    ('rp_2_22_sbml.xml',  32483),
-    ('rp_2_2_sbml.xml',   32765),
-    ('rp_3_10_sbml.xml',  33763),
-    ('rp_3_131_sbml.xml', 34551),
-    ('rp_3_132_sbml.xml', 34814),
-    ('rp_3_140_sbml.xml', 33353),
-    ('rp_3_1_sbml.xml',   34956),
-    ('rp_3_261_sbml.xml', 34680),
-    ('rp_3_262_sbml.xml', 34942),
-    ('rp_3_270_sbml.xml', 33482),
-    ('rp_3_2_sbml.xml',   35220),
+    ('rp_1_11_sbml.xml',  32373),
+    ('rp_1_1_sbml.xml',   32655),
+    ('rp_1_6_sbml.xml',   32240),
+    ('rp_2_12_sbml.xml',  32370),
+    ('rp_2_22_sbml.xml',  32498),
+    ('rp_2_2_sbml.xml',   32780),
+    ('rp_3_10_sbml.xml',  33778),
+    ('rp_3_131_sbml.xml', 34566),
+    ('rp_3_132_sbml.xml', 34829),
+    ('rp_3_140_sbml.xml', 33368),
+    ('rp_3_1_sbml.xml',   34971),
+    ('rp_3_261_sbml.xml', 34695),
+    ('rp_3_262_sbml.xml', 34957),
+    ('rp_3_270_sbml.xml', 33497),
+    ('rp_3_2_sbml.xml',   35235),
     ]
+
+    def test_update_rppaths(self):
+        current_path_id = 2
+        path_step = 3
+        sub_path_step = 1
+        rxn = {'rule_id'           : 'RR-02-ae41ec5771136ea5-14-F',
+               'rule_ori_reac'     : 'MNXR113128',
+               'rule_score'        : 0.7358363677022237,
+               'left'              : {'CMPD_0000000001': 1},
+               'right'             : {'TARGET_0000000001': 1},
+               'path_id'           : current_path_id,
+               'step'              : path_step,
+               'transformation_id' : 'TRS_0_0_1'}
+        rp_paths = update_rppaths({}, current_path_id, path_step, sub_path_step, rxn)
+        self.assertEqual(rp_paths, {
+                                    current_path_id: {
+                                        path_step: {
+                                            sub_path_step: rxn
+                                        }
+                                    }
+                                    })
+
+
+    def test_build_side_rxn(self):
+        cid           = 'CMPD_0000000001'
+        index         = 1
+        deprecatedCID = {}
+        self.assertDictEqual(build_side_rxn(str(index)+'.'+cid, deprecatedCID), {cid: index})
+
+
+    def test_build_side_rxn_deprecatedCID_NoMatch(self):
+        cid           = 'CMPD_0000000001'
+        index         = 1
+        deprecatedCID = {'CMPD_000000001': 'FOO'}
+        self.assertDictEqual(build_side_rxn(str(index)+'.'+cid, deprecatedCID), {cid: index})
+
+
+    def test_build_side_rxn_deprecatedCID_Match(self):
+        cid           = 'CMPD_0000000001'
+        index         = 1
+        deprecatedCID = {'CMPD_0000000001': 'FOO'}
+        self.assertDictEqual(build_side_rxn(str(index)+'.'+cid, deprecatedCID), {deprecatedCID[cid]: index})
+
+
+    def test_rxns_from_rules(self):
+        with open(os_path.join(self.data_path, 'refs', 'rxns_from_rules.json'), 'r') as read_file:
+            data = json_load(read_file)
+            self.assertDictEqual(rxns_from_rules('RR-02-ae41ec5771136ea5-14-F', self.rpcache.rr_reactions), data)
+
+
+    def test_rp2paths_to_dict(self):
+        with open(os_path.join(self.data_path, 'refs', 'rp2paths_to_dict.json'), 'r') as read_file:
+            # object_ook is used to convert str keys into int keys as stored in rpCompletion functions
+            data = json_load(read_file, object_hook=lambda d: {int(k) if k.lstrip('-').isdigit() else k: v for k, v in d.items()})
+            self.assertDictEqual(rp2paths_to_dict(self.rp2paths_pathways,
+                                                  self.rpcache.rr_reactions, self.rpcache.deprecatedCID_cid),
+                                 data)
