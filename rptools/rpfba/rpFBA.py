@@ -223,7 +223,7 @@ def rp_fraction(rpsbml,
     rpsbml.addAnalysisResults(objective_id, cobra_results, pathway_id)
     ##### print the biomass results ######
     logger.debug('Biomass: '+str(cobra_results.fluxes.biomass))
-    logger.debug('Target: '+str(cobra_results.fluxes.RP1_sink))
+    logger.debug('Target: '+str(cobra_results.fluxes.Rxn_sink))
     # reset the bounds to the original values for the target
     old_upper_bound, old_lower_bound = rpsbml.setReactionConstraints(source_reaction,
                                                                      old_upper_bound,
@@ -311,7 +311,7 @@ def runFBA(sbml_path, gem_sbml, outFile,
     rpsbml_gem = rpSBML(gem_sbml, logger=logger)
     species_source_target, reactions_convert = rpSBML.mergeModels(rpsbml, rpsbml_gem, logger)
     # NOTE: reactions_convert is organised with key being the rpsbml reaction and value being the rpsbml_gem value`
-    # BUG: when merging the RP1_sink (very rare cases) can be recognised if another reaction contains the same species as a reactant
+    # BUG: when merging the Rxn_sink (very rare cases) can be recognised if another reaction contains the same species as a reactant
     ## under such as scenario the algorithm will consider that they are the same -- TODO: overwrite it
     if target_reaction in reactions_convert:
         logger.warning('The target_reaction ('+str(target_reaction)+') has been detected in model '+str(outFile)+', ignoring this model...')
