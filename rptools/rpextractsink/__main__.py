@@ -10,8 +10,12 @@ def _cli():
 
     # Create logger
     logger = logging.getLogger('rpExtractSink')
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(
+            '%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
     logger.setLevel(getattr(logging, args.log.upper()))
-    logger.formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
 
     rpcache = rpCache('file', ['cid_strc'], logger=logger)
     genSink(rpcache,

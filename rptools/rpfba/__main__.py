@@ -10,8 +10,12 @@ def _cli():
 
     # Create logger
     logger = logging.getLogger('rpFBA')
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(
+            '%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
     logger.setLevel(getattr(logging, args.log.upper()))
-    logger.formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
 
     result = runFBA(args.input_sbml, args.gem_sbml, args.outfile,
                     args.sim_type,
