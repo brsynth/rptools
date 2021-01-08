@@ -1,5 +1,5 @@
 from csv       import reader         as csv_reader
-from csv       import DictReader     as csv_DictReader
+# from csv       import DictReader     as csv_DictReader
 from requests  import post           as r_post
 from requests  import get            as r_get
 from itertools import product        as itertools_product
@@ -15,6 +15,7 @@ from brs_utils import insert_and_or_replace_in_sorted_list
 from rptools.rplibs                   import rpSBML
 from rptools.rpcompletion.rpCofactors import addCofactors
 import logging
+import pandas as pd
 
 #import rpCofactors
 
@@ -326,65 +327,92 @@ def _transformation(path, logger=None):
 
 ## Function that reads the pathway output of rp2paths
 #
-# @param rp2paths_pathways file parsing. Can either be a string of the file path or a bytes object
+# @param infile rp2_pathways file
+# @param rr_reactions RetroRules reactions
+# @param deprecatedCID_cid Deprecated cid
 # @return Dictionnary of the pathways
-def rp2paths_to_dict(cache, infile, logger=None):
+def rp2paths_to_dict(infile, rr_reactions, deprecatedCID_cid, logger=None):
 
     logger = logger or logging.getLogger(__name__)
 
-    # #### we might pass binary in the REST version
-    # if isinstance(rp2paths_pathways, bytes):
-    #     reader = csv_reader(StringIO(rp2paths_pathways.decode('utf-8')))
-    # else:
-    reader = csv_reader(open(infile, 'r'))
-    next(reader)
+    df = pd.read_csv(infile)
+
+    check = check_pathways(df)
+    if not check:
+        logger.error(check)
+        exit()
 
     rp_paths = {}
 
-    path_step = 1
-    for row in reader:
+    # store new Path ID
+    current_path_id = None
+    # step (rxn) number witin the current path
+    path_step = None
 
-        # read fields
-        try:
-            # important to leave them in order
-            current_path_id = int(row[0])
-        except ValueError:
-            logger.error('Cannot convert path_id to int ('+str(row[0])+')')
-            raise
-        unique_id       = row[1]
-        rule_ids        = row[2]
-        left            = row[3]
-        right           = row[4]
+    for index, row in df.iterrows():
 
-        #################################
-        rule_ids_dict = reac_dict_from_id(rule_ids, cache)
+        # if 'Path ID' has changed
+        if row['Path ID'] != current_path_id:
+            # re-init step (rxn) number witin the current path
+            path_step = 1
+            # store new Path ID
+            current_path_id = row['Path ID']
+        else: # else increment the number of steps (rxn)
+            path_step += 1
+
+        rule_ids_dict = rxns_from_rules(row['Rule ID'], rr_reactions)
         sub_path_step = 1
         for rule_id in rule_ids_dict:
-            tmpReac = build_reac(rule_id, cache, current_path_id, path_step, unique_id)
-            rp_paths = update_rppaths(rp_paths, current_path_id, path_step, sub_path_step, tmpReac)
+            ## Build reaction
+            rxn = {
+                    'rule_id'           : rule_id.split('__')[0],
+                    'rule_ori_reac'     : rule_id.split('__')[1],
+                    'rule_score'        : rr_reactions[rule_id.split('__')[0]][rule_id.split('__')[1]]['rule_score'],
+                                                         # remove all illegal characters in SBML ids
+                    'left'              : build_side_rxn(row['Left'].replace("'", "").replace('-', '_').replace('+', ''),
+                                                         deprecatedCID_cid),
+                    'right'             : build_side_rxn(row['Right'], deprecatedCID_cid),
+                    'path_id'           : row['Path ID'],
+                    'step'              : path_step,
+                    'transformation_id' : row['Unique ID'][:-2]
+                    }
+            rp_paths = update_rppaths(rp_paths, row['Path ID'], path_step, sub_path_step, rxn)
             sub_path_step += 1
-
-        path_step += 1
-
 
     return rp_paths
 
 
-## Function that returns an enriched dictionnary from a reaction rule id
+## Function that checks pathways data
 #
-# @param rule_ids The reaction rule id
-# @param cache rpCache
+# @param df pathways read with pandas
+# @return True or a message if something went wrong
+def check_pathways(df):
+    if len(df) == 0:
+        return 'infile is empty'
+
+    if df['Path ID'].dtypes != 'int64':
+        return '\'Path ID\' column contain non integer value(s)'
+
+    return True
+
+
+## Function that returns reactions from rules
+#
+# @param rule_ids The reaction rule ids
+# @param rules The reaction rules
 # @return Dictionnary of the reaction rule
-def reac_dict_from_id(rule_ids, cache):
+def rxns_from_rules(rule_ids, rules):
+
     if not rule_ids:
-        logger.warning('The ruleIds is empty')
+        logger.warning('The rule ids are empty')
     ruleIds = rule_ids.split(',')
+
     ### WARNING: This is the part where we select some rules over others
     # we do it by sorting the list according to their score and taking the topx
-    tmp_rr_reactions = {}
+    reactions = {}
     for r_id in ruleIds:
-        for rea_id in cache.rr_reactions[r_id]:
-            tmp_rr_reactions[str(r_id)+'__'+str(rea_id)] = cache.rr_reactions[r_id][rea_id]
+        for rea_id in rules[r_id]:
+            reactions[str(r_id)+'__'+str(rea_id)] = rules[r_id][rea_id]
     # if len(ruleIds)>int(maxRuleIds):
     #     logger.warning('There are too many rules, limiting the number to random top '+str(maxRuleIds))
     #     try:
@@ -393,89 +421,38 @@ def reac_dict_from_id(rule_ids, cache):
     #         logger.warning('Could not select topX due inconsistencies between rules ids and rr_reactions... selecting random instead')
     #         ruleIds = random.sample(tmp_rr_reactions, int(maxRuleIds))
     # else:
-    return tmp_rr_reactions
+
+    return reactions
 
 
-## Function that returns the left part of reaction as a dict
+## Function that returns the left/right part of reaction as a dict
 #
-# @param left part read in pathways
+# @param side is left or right part of the reaction read in pathways
+# @param deprecatedCID_cid
 # @return Dictionnary of the left part of the reaction
-def build_left_reac(left):
+def build_side_rxn(side, deprecatedCID_cid):
+
+    rxn_side = {}
+
+    for s in side.split(':'):
  
-    for l in left.split(':'):
- 
-        tmp_l = l.split('.')
+        tmp = s.split('.')
  
         try:
             #tmpReac['left'].append({'stoichio': int(tmp_l[0]), 'name': tmp_l[1]})
             cid = '' # TODO: change this
-            if tmp_l[1] in cache.deprecatedCID_cid:
-                cid = cache.deprecatedCID_cid[tmp_l[1]]
+            if tmp[1] in deprecatedCID_cid:
+                cid = deprecatedCID_cid[tmp[1]]
             else:
-                cid = tmp_l[1]
-            tmpReac['left'][cid] = int(tmp_l[0])
+                cid = tmp[1]
+            rxn_side[cid] = int(tmp[0])
  
         except ValueError:
-            logger.error('Cannot convert tmp_l[0] to int ('+str(tmp_l[0])+')')
+            logger.error('Cannot convert tmp[0] to int ('+str(tmp[0])+')')
             #return {}
             raise
- 
-    return tmpReac
 
-
-## Function that returns the right part of reaction as a dict
-#
-# @param right part read in pathways
-# @return Dictionnary of the right part of the reaction
-def build_right_reac(right):
- 
-    for r in right.split(':'):
- 
-        tmp_r = r.split('.')
- 
-        try:
-            # tmpReac['right'].append({'stoichio': int(tmp_r[0]), 'name': tmp_r[1]})
-            cid = '' # TODO change this
-            if tmp_r[1] in cache.deprecatedCID_cid:
-                cid = cache.deprecatedCID_cid[tmp_r[1]]  # +':'+self.rr_reactions[tmpReac['rule_id']]['left']
-            else:
-                cid = tmp_r[1]  # +':'+self.rr_reactions[tmpReac['rule_id']]['left']
-            tmpReac['right'][cid] = int(tmp_r[0])
- 
-        except ValueError:
-            logger.error('Cannot convert tmp_r[0] to int ('+str(tmp_r[0])+')')
-            raise
- 
-    return tmpReac
-
-
-## Function that returns the reaction as a dict
-#
-# @param rule_id is the rule ID from which the reaction as been created
-# @param unique_id is the unique ID of he reaction
-# @param cache is the pre-computed rpCache
-# @param current_path_id is the id of the current pathway
-# @param path_step is the reaction number in the pathway
-# @return Dictionnary of the reaction
-def build_reac(rule_id, unique_id, cache, current_path_id, path_step):
-    tmpReac = {
-                'rule_id': rule_id.split('__')[0],
-                'rule_ori_reac': rule_id.split('__')[1],
-                'rule_score': cache.rr_reactions[rule_id.split('__')[0]][rule_id.split('__')[1]]['rule_score'],
-                'right': {},
-                'left': {},
-                'path_id': current_path_id,
-                'step': path_step,
-                'transformation_id': unique_id[:-2]
-                }
-    ############ LEFT ##############
-    # remove all illegal characters in SBML ids
-    left = left.replace("'", "").replace('-', '_').replace('+', '')
-    tmpReac['left'] = build_left_reac(left)
-    ############## RIGHT ###########
-    tmpReac['right'] = build_right_reac(right)
-
-    return tmpReac
+    return rxn_side
 
 
 ## Function that returns the reaction as a dict
@@ -494,13 +471,148 @@ def update_rppaths(rp_paths, current_path_id, path_step, sub_path_step, rxn):
     if not int(path_step) in rp_paths[current_path_id]:
         rp_paths[current_path_id][int(path_step)] = {}
 
-    # update rp_paths
+    # add reaction to rp_paths
     rp_paths[current_path_id][int(path_step)][int(sub_path_step)] = rxn
 
     return rp_paths
 
 
-def _unique_species(cache, meta, rp_strc, pubchem_search, logger=None):
+## Function to parse the out_paths.csv file
+#
+#  Reading the RP2path output and extract all the information for each pathway
+#  RP2path Metabolic pathways from out_paths.csv
+#  create all the different values for heterologous paths from the RP2path out_paths.csv file
+#  Note that path_step are in reverse order here
+#
+#  @param self Object pointer
+#  @param path The out_path.csv file path
+#  @max_subpaths_filter maximal numer of subpaths per paths
+#  @outFolder folder where to write files
+#  @return Boolean The success or failure of the function
+def write_rp2paths_to_rpSBML(cache,
+                             rp_strc, rp_transformation,
+                             sink_molecules,
+                             rp2paths_pathways,
+                             outFolder,
+                             upper_flux_bound=999999,
+                             lower_flux_bound=0,
+                             max_subpaths_filter=10,
+                             pathway_id='rp_pathway',
+                             compartment_id='MNXC3',
+                             species_group_id='central_species',
+                             sink_species_group_id='rp_sink_species',
+                             pubchem_search=False,
+                             logger=None):
+    # TODO: make sure that you account for the fact that each reaction may have multiple associated reactions
+
+    logger = logger or logging.getLogger(__name__)
+
+    rp_paths = rp2paths_to_dict(rp2paths_pathways, cache.rr_reactions, cache.deprecatedCID_cid, logger=logger)
+    sink_species = []
+
+    # for each line or rp2paths_pathways:
+    #     generate comb
+    #     for each combinant:
+    #         rank
+    #         process
+    #         add cofactors
+    #         dedup
+
+    #### pathToSBML ####
+    try:
+        compid = cache.deprecatedCompID_compid[compartment_id]
+    except KeyError:
+        logger.error('Could not Xref compartment_id ('+str(compartment_id)+')')
+        return 1
+
+    for pathNum in rp_paths:
+
+        # first level is the list of lists of sub_steps
+        # second is itertools all possible combinations using product
+        altPathNum = 1
+        # topX subpaths of the current rp2path pathway
+        local_SBMLItems = []
+
+        for comb_path in list(itertools_product(*[[(i,y) for y in rp_paths[pathNum][i]] for i in rp_paths[pathNum]])):
+            steps = []
+            for i, y in comb_path:
+                steps.append(rp_paths[pathNum][i][y])
+            path_id = steps[0]['path_id']
+            rpsbml = rpSBML(name='rp_'+str(path_id)+'_'+str(altPathNum))
+
+            # 1) Create a generic Model, ie the structure and unit definitions that we will use the most
+            ##### TODO: give the user more control over a generic model creation:
+            # -> special attention to the compartment
+            rpsbml.genericModel(
+                    'RetroPath_Pathway_'+str(path_id)+'_'+str(altPathNum),
+                    'RP_model_'+str(path_id)+'_'+str(altPathNum),
+                    cache.comp_xref[compid],
+                    compartment_id,
+                    upper_flux_bound,
+                    lower_flux_bound)
+
+            # 2) Create the pathway (groups)
+            rpsbml.createPathway(pathway_id)
+            rpsbml.createPathway(species_group_id)
+            rpsbml.createPathway(sink_species_group_id)
+
+            # 3) Find all unique species and add them to the model
+            all_meta = set([i for step in steps for lr in ['left', 'right'] for i in step[lr]])
+            rpsbml = add_unique_species(rpsbml, all_meta,
+                                        rp_strc, sink_molecules, compartment_id, species_group_id, sink_species_group_id, pubchem_search,
+                                        cache,
+                                        logger=logger)
+
+            # 4) Add the complete reactions and their annotations
+            for step in steps:
+                # add the substep to the model
+                step['sub_step'] = altPathNum
+                rpsbml.createReaction(
+                        'Rxn_'+str(step['step']), # parameter 'name' of the reaction deleted : 'RetroPath_Reaction_'+str(step['step']),
+                        upper_flux_bound, lower_flux_bound, step, compartment_id,
+                        rp_transformation[step['transformation_id']]['rule'],
+                        {'ec': rp_transformation[step['transformation_id']]['ec']},
+                        pathway_id)
+
+            # 5) Adding the consumption of the target
+            targetStep = {
+                    'rule_id': None,
+                    'left': {[i for i in all_meta if i[:6]=='TARGET'][0]: 1},
+                    'right': [],
+                    'step': None,
+                    'sub_step': None,
+                    'path_id': None,
+                    'transformation_id': None,
+                    'rule_score': None,
+                    'rule_ori_reac': None
+                    }
+            rpsbml.createReaction('Rxn_sink',
+                                  upper_flux_bound, lower_flux_bound,
+                                  targetStep,
+                                  compartment_id)
+
+            # 6) Adding the cofactors
+            addCofactors(cache, rpsbml, logger=logger)
+
+            # 7) Insert the new rpsbml object in sorted rpsbml_items list
+            sbml_item = SBML_Item(rpsbml.compute_score(),
+                                  'rp_'+str(path_id)+'_'+str(altPathNum),
+                                  rpsbml)
+            local_SBMLItems = insert_and_or_replace_in_sorted_list(sbml_item, local_SBMLItems)
+
+            # 8) Keep only topX
+            local_SBMLItems = local_SBMLItems[-max_subpaths_filter:]
+
+            altPathNum += 1
+
+        # Write results to files
+        for rpsbml_item in local_SBMLItems:
+            rpsbml_item.rpsbml_obj.writeSBML(os_path.join(outFolder, str(rpsbml_item.rpsbml_obj.modelName))+'_sbml.xml')
+
+    return 0
+
+
+def unique_species(cache, meta, rp_strc, pubchem_search, logger=None):
 
     logger = logger or logging.getLogger(__name__)
 
@@ -632,141 +744,17 @@ def _unique_species(cache, meta, rp_strc, pubchem_search, logger=None):
     return (chemName, spe)
 
 
-## Function to parse the out_paths.csv file
-#
-#  Reading the RP2path output and extract all the information for each pathway
-#  RP2path Metabolic pathways from out_paths.csv
-#  create all the different values for heterologous paths from the RP2path out_paths.csv file
-#  Note that path_step are in reverse order here
-#
-#  @param self Object pointer
-#  @param path The out_path.csv file path
-#  @max_subpaths_filter maximal numer of subpaths per paths
-#  @outFolder folder where to write files
-#  @return Boolean The success or failure of the function
-def write_rp2paths_to_rpSBML(cache,
-                             rp_strc, rp_transformation,
-                             sink_molecules,
-                             rp2paths_pathways,
-                             outFolder,
-                             upper_flux_bound=999999,
-                             lower_flux_bound=0,
-                             max_subpaths_filter=10,
-                             pathway_id='rp_pathway',
-                             compartment_id='MNXC3',
-                             species_group_id='central_species',
-                             sink_species_group_id='rp_sink_species',
-                             pubchem_search=False,
-                             logger=None):
-    # TODO: make sure that you account for the fact that each reaction may have multiple associated reactions
-
+def add_unique_species(rpsbml, all_meta,
+                       rp_strc, sink_molecules, compartment_id, species_group_id, sink_species_group_id, pubchem_search,
+                       cache, logger=None):
     logger = logger or logging.getLogger(__name__)
-
-    rp_paths = rp2paths_to_dict(cache, rp2paths_pathways, logger=logger)
-    sink_species = []
-
-    # for each line or rp2paths_pathways:
-    #     generate comb
-    #     for each combinant:
-    #         rank
-    #         process
-    #         add cofactors
-    #         dedup
-
-    #### pathToSBML ####
-    try:
-        compid = cache.deprecatedCompID_compid[compartment_id]
-    except KeyError:
-        logger.error('Could not Xref compartment_id ('+str(compartment_id)+')')
-        return 1
-
-    for pathNum in rp_paths:
-
-        # first level is the list of lists of sub_steps
-        # second is itertools all possible combinations using product
-        altPathNum = 1
-        # topX subpaths of the current rp2path pathway
-        local_SBMLItems = []
-
-        for comb_path in list(itertools_product(*[[(i,y) for y in rp_paths[pathNum][i]] for i in rp_paths[pathNum]])):
-            steps = []
-            for i, y in comb_path:
-                steps.append(rp_paths[pathNum][i][y])
-            path_id = steps[0]['path_id']
-            rpsbml = rpSBML(name='rp_'+str(path_id)+'_'+str(altPathNum))
-
-            # 1) Create a generic Model, ie the structure and unit definitions that we will use the most
-            ##### TODO: give the user more control over a generic model creation:
-            # -> special attention to the compartment
-            rpsbml.genericModel(
-                    'RetroPath_Pathway_'+str(path_id)+'_'+str(altPathNum),
-                    'RP_model_'+str(path_id)+'_'+str(altPathNum),
-                    cache.comp_xref[compid],
-                    compartment_id,
-                    upper_flux_bound,
-                    lower_flux_bound)
-
-            # 2) Create the pathway (groups)
-            rpsbml.createPathway(pathway_id)
-            rpsbml.createPathway(species_group_id)
-            rpsbml.createPathway(sink_species_group_id)
-
-            # 3) Find all unique species and add them to the model
-            all_meta = set([i for step in steps for lr in ['left', 'right'] for i in step[lr]])
-            for meta in all_meta:
-                (chemName, spe) = _unique_species(cache, meta, rp_strc, pubchem_search, logger=logger)
-                if chemName:
-                    chemName = chemName.replace("'", "")
-                # pass the information to create the species
-                rpsbml = add_species(rpsbml, meta, sink_molecules, compartment_id, chemName, spe, species_group_id, sink_species_group_id, logger=logger)
-
-            # 4) Add the complete reactions and their annotations
-            for step in steps:
-                # add the substep to the model
-                step['sub_step'] = altPathNum
-                rpsbml.createReaction(
-                        'Rxn_'+str(step['step']), # parameter 'name' of the reaction deleted : 'RetroPath_Reaction_'+str(step['step']),
-                        upper_flux_bound, lower_flux_bound, step, compartment_id,
-                        rp_transformation[step['transformation_id']]['rule'],
-                        {'ec': rp_transformation[step['transformation_id']]['ec']},
-                        pathway_id)
-
-            # 5) Adding the consumption of the target
-            targetStep = {
-                    'rule_id': None,
-                    'left': {[i for i in all_meta if i[:6]=='TARGET'][0]: 1},
-                    'right': [],
-                    'step': None,
-                    'sub_step': None,
-                    'path_id': None,
-                    'transformation_id': None,
-                    'rule_score': None,
-                    'rule_ori_reac': None
-                    }
-            rpsbml.createReaction('Rxn_sink',
-                                  upper_flux_bound, lower_flux_bound,
-                                  targetStep,
-                                  compartment_id)
-
-            # 6) Adding the cofactors
-            addCofactors(cache, rpsbml, logger=logger)
-
-            # 7) Insert the new rpsbml object in sorted rpsbml_items list
-            sbml_item = SBML_Item(rpsbml.compute_score(),
-                                  'rp_'+str(path_id)+'_'+str(altPathNum),
-                                  rpsbml)
-            local_SBMLItems = insert_and_or_replace_in_sorted_list(sbml_item, local_SBMLItems)
-
-            # 8) Keep only topX
-            local_SBMLItems = local_SBMLItems[-max_subpaths_filter:]
-
-            altPathNum += 1
-
-        # Write results to files
-        for rpsbml_item in local_SBMLItems:
-            rpsbml_item.rpsbml_obj.writeSBML(os_path.join(outFolder, str(rpsbml_item.rpsbml_obj.modelName))+'_sbml.xml')
-
-    return 0
+    for meta in all_meta:
+        (chemName, spe) = unique_species(cache, meta, rp_strc, pubchem_search, logger=logger)
+        if chemName:
+            chemName = chemName.replace("'", "")
+        # pass the information to create the species
+        rpsbml = add_species(rpsbml, meta, sink_molecules, compartment_id, chemName, spe, species_group_id, sink_species_group_id, logger=logger)
+    return rpsbml
 
 
 def add_species(rpsbml, meta, sink_molecules, compartment_id, chemName, spe, species_group_id, sink_species_group_id, logger=None):
