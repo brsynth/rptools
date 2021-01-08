@@ -533,6 +533,11 @@ def write_rp2paths_to_rpSBML(cache,
         # topX subpaths of the current rp2path pathway
         local_SBMLItems = []
 
+        # # add pathway id to the model
+        # rpsbml_json = self.genJSON(pathway_id)
+        # # add the substep to the model
+        # step['sub_step'] = altPathNum
+
         for comb_path in list(itertools_product(*[[(i,y) for y in rp_paths[pathNum][i]] for i in rp_paths[pathNum]])):
             steps = []
             for i, y in comb_path:
@@ -552,9 +557,9 @@ def write_rp2paths_to_rpSBML(cache,
                     lower_flux_bound)
 
             # 2) Create the pathway (groups)
-            rpsbml.createPathway(pathway_id)
-            rpsbml.createPathway(species_group_id)
-            rpsbml.createPathway(sink_species_group_id)
+            rpsbml.createGroup(pathway_id)
+            rpsbml.createGroup(species_group_id)
+            rpsbml.createGroup(sink_species_group_id)
 
             # 3) Find all unique species and add them to the model
             all_meta = set([i for step in steps for lr in ['left', 'right'] for i in step[lr]])
@@ -565,8 +570,6 @@ def write_rp2paths_to_rpSBML(cache,
 
             # 4) Add the complete reactions and their annotations
             for step in steps:
-                # add the substep to the model
-                step['sub_step'] = altPathNum
                 rpsbml.createReaction(
                         'Rxn_'+str(step['step']), # parameter 'name' of the reaction deleted : 'RetroPath_Reaction_'+str(step['step']),
                         upper_flux_bound, lower_flux_bound, step, compartment_id,
@@ -580,8 +583,8 @@ def write_rp2paths_to_rpSBML(cache,
                     'left': {[i for i in all_meta if i[:6]=='TARGET'][0]: 1},
                     'right': [],
                     'step': None,
-                    'sub_step': None,
-                    'path_id': None,
+                    # 'sub_step': None,
+                    # 'path_id': None,
                     'transformation_id': None,
                     'rule_score': None,
                     'rule_ori_reac': None
@@ -984,8 +987,8 @@ def TSVtoSBML(cache,
                             upper_flux_bound,
                             lower_flux_bound)
         # 2) create the pathway (groups)
-        rpsbml.createPathway(pathway_id)
-        rpsbml.createPathway(species_group_id)
+        rpsbml.createGroup(pathway_id)
+        rpsbml.createGroup(species_group_id)
         # 3) find all the unique species and add them to the model
         allChem = []
         for stepNum in data[path_id]['steps']:
@@ -1064,7 +1067,16 @@ def TSVtoSBML(cache,
         # create a new group for the measured pathway
         # need to convert the validation to step for reactions
         for stepNum in data[path_id]['steps']:
-            toSend = {'left': {}, 'right': {}, 'rule_id': None, 'rule_ori_reac': None, 'rule_score': None, 'path_id': path_id, 'step': stepNum, 'sub_step': None}
+            toSend = {
+                'left': {},
+                'right': {},
+                'rule_id': None,
+                'rule_ori_reac': None,
+                'rule_score': None,
+                # 'path_id': path_id,
+                'step': stepNum,
+                # 'sub_step': None
+                }
             for chem in data[path_id]['steps'][stepNum]['substrates']:
                 if 'mnx' in chem['dbref']:
                     meta = sorted(chem['dbref']['mnx'], key=lambda x : int(x.replace('MNXM', '')))[0]
@@ -1122,8 +1134,8 @@ def TSVtoSBML(cache,
                               'left': {},
                               'right': {},
                               'step': None,
-                              'sub_step': None,
-                              'path_id': None,
+                            #   'sub_step': None,
+                            #   'path_id': None,
                               'transformation_id': None,
                               'rule_score': None,
                               'rule_ori_reac': None}

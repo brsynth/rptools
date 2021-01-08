@@ -56,7 +56,7 @@ class rpSBML:
         else:
             self.logger = logger
 
-        self.logger.info('Started instance of rpSBML')
+        self.logger.debug('New instance of rpSBML')
 
         self.modelName = None
         self.document  = None
@@ -1590,7 +1590,7 @@ class rpSBML:
         rp_pathway = groups.getGroup(pathway_id)
         if rp_pathway==None:
             self.logger.warning('The group '+str(pathway_id)+' does not exist... creating it')
-            self.createPathway(pathway_id)
+            self.createGroup(pathway_id)
             rp_pathway = groups.getGroup(pathway_id)
         self.checklibSBML(rp_pathway, 'Getting RP pathway')
         #write the results to the rp_pathway
@@ -3200,12 +3200,12 @@ class rpSBML:
         if step['rule_score']:
             self.add_rule_score(step['rule_score'])
             self.addUpdateBRSynth(reac, 'rule_score', step['rule_score'], None, False, False, False, meta_id)
-        if step['path_id']:
-            self.addUpdateBRSynth(reac, 'path_id', step['path_id'], None, False, False, False, meta_id)
+        # if step['path_id']:
+        #     self.addUpdateBRSynth(reac, 'path_id', step['path_id'], None, False, False, False, meta_id)
         if step['step']:
             self.addUpdateBRSynth(reac, 'step_id', step['step'], None, False, False, False, meta_id)
-        if step['sub_step']:
-            self.addUpdateBRSynth(reac, 'sub_step_id', step['sub_step'], None, False, False, False, meta_id)
+        # if step['sub_step']:
+        #     self.addUpdateBRSynth(reac, 'sub_step_id', step['sub_step'], None, False, False, False, meta_id)
         #### GROUPS #####
         if pathway_id:
             groups_plugin = self.getModel().getPlugin('groups')
@@ -3330,16 +3330,15 @@ class rpSBML:
                 rpSBML.checklibSBML(newM.setIdRef(str(species_id)+'__64__'+str(compartment_id)), 'Setting name to the groups member')
 
 
-    #TODO: change the name of this function to createGroup
-    def createPathway(self, pathway_id, meta_id=None):
+    def createGroup(self, id, meta_id=None):
         """Create libSBML pathway
 
-        Create a pathway that is added to self.model
+        Create a group that is added to self.model
 
-        :param pathway_id: The Groups id of the pathway id
+        :param id: The Groups id of the pathway id
         :param meta_id: Meta id (Default: None)
 
-        :type pathway_id: str
+        :type id: str
         :type meta_id: str
 
         :rtype: None
@@ -3347,9 +3346,9 @@ class rpSBML:
         """
         groups_plugin = self.getModel().getPlugin('groups')
         new_group = groups_plugin.createGroup()
-        new_group.setId(pathway_id)
+        new_group.setId(id)
         if not meta_id:
-            meta_id = self._genMetaID(pathway_id)
+            meta_id = self._genMetaID(id)
         new_group.setMetaId(meta_id)
         new_group.setKind(libsbml.GROUP_KIND_COLLECTION)
         new_group.setAnnotation(self._defaultBRSynthAnnot(meta_id))
