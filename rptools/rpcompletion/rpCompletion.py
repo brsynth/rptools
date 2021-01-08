@@ -563,8 +563,8 @@ def write_rp2paths_to_rpSBML(cache,
             rpsbml_json = rpsbml.genJSON(pathway_id)
             rpsbml_json['pathway']['brsynth']['path_id'] = {}
             rpsbml_json['pathway']['brsynth']['path_id']['value'] = path_id
-            rpsbml_json['pathway']['brsynth']['sub_step_id'] = {}
-            rpsbml_json['pathway']['brsynth']['sub_step_id']['value'] = alt_path_id
+            rpsbml_json['pathway']['brsynth']['alt_path_id'] = {}
+            rpsbml_json['pathway']['brsynth']['alt_path_id']['value'] = alt_path_id
             rpsbml.updateBRSynthPathway(rpsbml_json, pathway_id)
             logger.debug('Create species group: '+species_group_id)
             rpsbml.createGroup(species_group_id)

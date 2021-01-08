@@ -826,8 +826,8 @@ class rpSBML:
                     'left': {pro.split('__')[0]: 1},
                     'right': {},
                     'step': None,
-                    'sub_step': None,
-                    'path_id': None,
+                    # # 'sub_step': None,
+                    # 'path_id': None,
                     'transformation_id': None,
                     'rule_score': None,
                     'rule_ori_reac': None}
@@ -843,8 +843,8 @@ class rpSBML:
                     'left': {},
                     'right': {react.split('__')[0]: 1},
                     'step': None,
-                    'sub_step': None,
-                    'path_id': None,
+                    # 'sub_step': None,
+                    # 'path_id': None,
                     'transformation_id': None,
                     'rule_score': None,
                     'rule_ori_reac': None}
@@ -2383,9 +2383,9 @@ class rpSBML:
         toRet = {'dfG_prime_m':   {},
                  'dfG_uncert':    {},
                  'dfG_prime_o':   {},
-                 'path_id':       None,
+                #  'path_id':       None,
                  'step_id':       None,
-                 'sub_step_id':   None,
+                #  'sub_step_id':   None,
                  'rule_score':    None,
                  'smiles':        None,
                  'inchi':         None,
@@ -2414,7 +2414,7 @@ class rpSBML:
                     toRet[ann.getName()] = {
                             'units': None,
                             'value': None}
-            elif ann.getName()=='path_id' or ann.getName()=='step_id' or ann.getName()=='sub_step_id':
+            elif ann.getName()=='path_id' or ann.getName()=='step_id' or ann.getName()=='alt_path_id':
                 try:
                     # toRet[ann.getName()] = int(ann.getAttrValue('value'))
                     toRet[ann.getName()] = {'value': int(ann.getAttrValue('value'))}
@@ -2630,7 +2630,8 @@ class rpSBML:
         source_dict = self.readBRSYNTHAnnotation(source_annot, self.logger)
         target_dict = self.readBRSYNTHAnnotation(target_annot, self.logger)
         # ignore thse when comparing reactions
-        for i in ['path_id', 'step', 'sub_step', 'rule_score', 'rule_ori_reac']:
+        # for i in ['path_id', 'step', 'sub_step', 'rule_score', 'rule_ori_reac']:
+        for i in ['step', 'rule_score', 'rule_ori_reac']:
             try:
                 del source_dict[i]
             except KeyError:
@@ -2893,8 +2894,8 @@ class rpSBML:
                               'left': {species_id.split('__')[0]: 1},
                               'right': {},
                               'step': None,
-                              'sub_step': None,
-                              'path_id': None,
+                            #   'sub_step': None,
+                            #   'path_id': None,
                               'transformation_id': None,
                               'rule_score': None,
                               'rule_ori_reac': None}
