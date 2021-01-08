@@ -100,7 +100,7 @@ class rpSBML:
 
     def compute_score(self, pathway_id='rp_pathway'):
         self.score['value'] = 0
-        for member in self.readRPpathwayIDs(pathway_id):
+        for member in self.readGroupMembers(pathway_id):
             reaction = self.getModel().getReaction(member)
             self.add_rule_score(float(reaction.getAnnotation().getChild('RDF').getChild('BRSynth').getChild('brsynth').getChild('rule_score').getAttrValue('value')))
         return self.getScore()
@@ -1425,7 +1425,7 @@ class rpSBML:
 
         # Get Reactions
         reactions = {}
-        for reaction_id in pathway.readRPpathwayIDs():
+        for reaction_id in pathway.readGroupMembers():
             reaction = model.getReaction(reaction_id)
             reactions[reaction_id] = rpSBML.readBRSYNTHAnnotation(reaction.getAnnotation(), logger=logger)
 
@@ -1480,7 +1480,7 @@ class rpSBML:
     def __eq__(self, other):
             # len(self.getModel().getListOfReactions())==len(other.getModel().getListOfReactions()) \
         return \
-            sorted(self.readRPpathwayIDs()) == sorted(other.readRPpathwayIDs()) \
+            sorted(self.readGroupMembers()) == sorted(other.readGroupMembers()) \
         and rpSBML._normalize_pathway(self, self.logger) == rpSBML._normalize_pathway(other, self.logger)
 
     def __lt__(self, rpsbml):
@@ -2224,10 +2224,8 @@ class rpSBML:
     #####################################################################
 
 
-    #TODO: rename this function to readGroupsMembers
     #TODO: add error handling if the groups does not exist
-    #TODO: change the pathway_id to groups_id
-    def readRPpathwayIDs(self, pathway_id='rp_pathway'):
+    def readGroupMembers(self, group_id='rp_pathway'):
         """Return the members of a groups entry
 
         :param pathway_id: The pathway ID (Default: rp_pathway)
@@ -2257,7 +2255,7 @@ class rpSBML:
         :return: Dictionnary of reaction rules (rule_id as key)
         """
         toRet = {}
-        for reacId in self.readRPpathwayIDs(pathway_id):
+        for reacId in self.readGroupMembers(pathway_id):
             reac = self.getModel().getReaction(reacId)
             brsynth_annot = self.readBRSYNTHAnnotation(reac.getAnnotation(), self.logger)
             if not brsynth_annot['rule_id']=='' and not brsynth_annot['smiles']=='':
@@ -2278,7 +2276,7 @@ class rpSBML:
         :return: Dictionary of the pathway species and reactions
         """
         reacMembers = {}
-        for reacId in self.readRPpathwayIDs(pathway_id):
+        for reacId in self.readGroupMembers(pathway_id):
             reacMembers[reacId] = {}
             reacMembers[reacId]['products'] = {}
             reacMembers[reacId]['reactants'] = {}
@@ -2593,21 +2591,23 @@ class rpSBML:
         :return: Dictionary of the pathway
         """
         pathway = {}
-        for member in self.readRPpathwayIDs(pathway_id):
+        for member in self.readGroupMembers(pathway_id):
             # TODO: need to find a better way
             reaction = self.getModel().getReaction(member)
             brsynthAnnot = rpSBML.readBRSYNTHAnnotation(reaction.getAnnotation(), self.logger)
             speciesReac = self.readReactionSpecies(reaction)
-            step = {'reaction_id': member,
-                    'reaction_rule': brsynthAnnot['smiles'],
-                    'rule_score': brsynthAnnot['rule_score'],
-                    'rule_id': brsynthAnnot['rule_id'],
-                    'rule_ori_reac': brsynthAnnot['rule_ori_reac'],
-                    'right': speciesReac['right'],
-                    'left': speciesReac['left'],
-                    'path_id': brsynthAnnot['path_id'],
-                    'step': brsynthAnnot['step_id'],
-                    'sub_step': brsynthAnnot['sub_step_id']}
+            step = {
+                'reaction_id': member,
+                'reaction_rule': brsynthAnnot['smiles'],
+                'rule_score': brsynthAnnot['rule_score'],
+                'rule_id': brsynthAnnot['rule_id'],
+                'rule_ori_reac': brsynthAnnot['rule_ori_reac'],
+                'right': speciesReac['right'],
+                'left': speciesReac['left'],
+                # 'path_id': brsynthAnnot['path_id'],
+                'step': brsynthAnnot['step_id'],
+                # 'sub_step': brsynthAnnot['sub_step_id']
+                }
             pathway[brsynthAnnot['step_id']['value']] = step
         return pathway
 
@@ -2762,14 +2762,14 @@ class rpSBML:
             self.logger.warning('The pathways are not of the same length')
             return False, {}
         ############## compare using the reactions ###################
-        for meas_step_id in measured_sbml.readRPpathwayIDs():
+        for meas_step_id in measured_sbml.readGroupMembers():
             for rp_step_id in rp_rp_species:
                 if self.compareMIRIAMAnnotations(rp_rp_species[rp_step_id]['annotation'], meas_rp_species[meas_step_id]['annotation']):
                     found_meas_rp_species[meas_step_id]['found'] = True
                     found_meas_rp_species[meas_step_id]['rp_step_id'] = rp_step_id
                     break
         ############## compare using the species ###################
-        for meas_step_id in measured_sbml.readRPpathwayIDs():
+        for meas_step_id in measured_sbml.readGroupMembers():
             # if not found_meas_rp_species[meas_step_id]['found']:
             for rp_step_id in rp_rp_species:
                 # We test to see if the meas reaction elements all exist in rp reaction and not the opposite
