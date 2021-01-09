@@ -4,9 +4,14 @@
 - rename reaction ids in rpSBML format:
     + RP1      -> Rxn_1
     + RP1_sink -> Rxn_sink
+- change reactions order from reverse to forward
 - rename methods in rpSBML class:
     + createPathway()    -> createGroup()
     + readRPpathwayIDs() -> readGroupMembers()
+- move annotations from reaction nodes to pathway node:
+    + path_id
+    + sub_step_id
+- rename 'sub_step_id' to 'alt_path_id'
 
 ## 1.2.0
 - add global_score to rpSBML

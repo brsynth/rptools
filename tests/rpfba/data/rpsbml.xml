@@ -160,7 +160,7 @@
       <parameter metaid="dc937b59892604f5a86ac96936cd7ff09e25f18ae6b758e8014a24c7fa039e91" sboTerm="SBO:0000625" id="B_0" value="0" units="mmol_per_gDW_per_hr" constant="true"/>
     </listOfParameters>
     <listOfReactions>
-      <reaction metaid="_684ff92e8f3ce83a2eaf3ffa87467a6dc5b408ef813bc4d75708bc7777aae979" sboTerm="SBO:0000176" id="RP1" reversible="true" fast="false" fbc:lowerFluxBound="B_0" fbc:upperFluxBound="B_999999">
+      <reaction metaid="_684ff92e8f3ce83a2eaf3ffa87467a6dc5b408ef813bc4d75708bc7777aae979" sboTerm="SBO:0000176" id="Rxn_1" reversible="true" fast="false" fbc:lowerFluxBound="B_0" fbc:upperFluxBound="B_999999">
         <annotation>
           <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
             <rdf:Description rdf:about="#_684ff92e8f3ce83a2eaf3ffa87467a6dc5b408ef813bc4d75708bc7777aae979">
@@ -176,9 +176,7 @@
                 <brsynth:rule_id>RR-02-ce58f652d300d037-16-F</brsynth:rule_id>
                 <brsynth:rule_ori_reac>MNXR140222</brsynth:rule_ori_reac>
                 <brsynth:rule_score value="1.0"/>
-                <brsynth:path_id value="1"/>
                 <brsynth:step_id value="1"/>
-                <brsynth:sub_step_id value="4"/>
                 <brsynth:smiles>[H]C([H])=C(C([H])([H])[H])C1([H])C([H])([H])C([H])=C(C([H])([H])[H])C([H])([H])C1([H])[H].O=P(O)(O)OP(=O)(O)O&gt;&gt;[H]OP(=O)(O[H])OP(=O)(O[H])OC([H])([H])C([H])=C(C([H])([H])[H])C([H])([H])C([H])([H])C([H])=C(C([H])([H])[H])C([H])([H])[H]</brsynth:smiles>
               </brsynth:brsynth>
             </rdf:BRSynth>
@@ -192,7 +190,7 @@
           <speciesReference species="MNXM11__64__MNXC3" stoichiometry="1" constant="true"/>
         </listOfProducts>
       </reaction>
-      <reaction metaid="b0e8d95d263519a4d780f40c409183c72eacbea19653effc5c41069ed4cf9269" sboTerm="SBO:0000176" id="RP1_sink" reversible="true" fast="false" fbc:lowerFluxBound="B_0" fbc:upperFluxBound="B_999999">
+      <reaction metaid="b0e8d95d263519a4d780f40c409183c72eacbea19653effc5c41069ed4cf9269" sboTerm="SBO:0000176" id="Rxn_sink" reversible="true" fast="false" fbc:lowerFluxBound="B_0" fbc:upperFluxBound="B_999999">
         <annotation>
           <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
             <rdf:Description rdf:about="#b0e8d95d263519a4d780f40c409183c72eacbea19653effc5c41069ed4cf9269">
@@ -215,12 +213,15 @@
         <annotation>
           <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
             <rdf:BRSynth rdf:about="#_93eef40c447d295fa61df9270c5fd909ec2ba7ee9883090552c0466873cd4299">
-              <brsynth:brsynth xmlns:brsynth="http://brsynth.eu"/>
+              <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
+                <brsynth:path_id value="1"/>
+                <brsynth:alt_path_id value="4"/>
+              </brsynth:brsynth>
             </rdf:BRSynth>
           </rdf:RDF>
         </annotation>
         <groups:listOfMembers>
-          <groups:member groups:idRef="RP1"/>
+          <groups:member groups:idRef="Rxn_1"/>
         </groups:listOfMembers>
       </groups:group>
       <groups:group metaid="_8366edb8c9a74861fcde55baa072956b5f045bc88d208eca37144993dcd70a0e" groups:id="central_species" groups:kind="collection">

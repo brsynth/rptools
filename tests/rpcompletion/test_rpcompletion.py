@@ -52,21 +52,21 @@ class Test_rpCompletion(TestCase):
     rp2paths_pathways  = os_path.join(data_path, '3-rp2paths_pathways.csv')
 
     files = [
-    ('rp_1_11_sbml.xml',  32373),
-    ('rp_1_1_sbml.xml',   32655),
-    ('rp_1_6_sbml.xml',   32240),
-    ('rp_2_12_sbml.xml',  32370),
-    ('rp_2_22_sbml.xml',  32498),
-    ('rp_2_2_sbml.xml',   32780),
-    ('rp_3_10_sbml.xml',  33778),
-    ('rp_3_131_sbml.xml', 34566),
-    ('rp_3_132_sbml.xml', 34829),
-    ('rp_3_140_sbml.xml', 33368),
-    ('rp_3_1_sbml.xml',   34971),
-    ('rp_3_261_sbml.xml', 34695),
-    ('rp_3_262_sbml.xml', 34957),
-    ('rp_3_270_sbml.xml', 33497),
-    ('rp_3_2_sbml.xml',   35235),
+    ('rp_1_11_sbml.xml',  32215),
+    ('rp_1_1_sbml.xml',   32499),
+    ('rp_1_6_sbml.xml',   32084),
+    ('rp_2_12_sbml.xml',  32212),
+    ('rp_2_22_sbml.xml',  32340),
+    ('rp_2_2_sbml.xml',   32624),
+    ('rp_3_10_sbml.xml',  33620),
+    ('rp_3_131_sbml.xml', 34406),
+    ('rp_3_132_sbml.xml', 34669),
+    ('rp_3_140_sbml.xml', 33208),
+    ('rp_3_1_sbml.xml',   34815),
+    ('rp_3_261_sbml.xml', 34535),
+    ('rp_3_262_sbml.xml', 34797),
+    ('rp_3_270_sbml.xml', 33337),
+    ('rp_3_2_sbml.xml',   35079),
     ]
 
     def test_update_rppaths(self):
