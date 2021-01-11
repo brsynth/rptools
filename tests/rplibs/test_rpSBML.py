@@ -9,6 +9,7 @@ from unittest import TestCase
 from rptools.rplibs import rpSBML
 from os       import path     as os_path
 from json     import load     as json_load
+from json     import loads    as json_loads
 from tempfile import NamedTemporaryFile
 from io       import open     as io_open
 from _main    import Main
@@ -30,10 +31,8 @@ class Test_rpSBML(TestCase):
                                                 self.logger)
         self.gem          = rpSBML(os_path.join(self.data_path, 'gem.xml'),
                                                 self.logger)
-        self.rpsbml_name  = 'RetroPath_Pathway_1_1'
-        self.rpsbml_score = 0.5684564101634014
-        with open(os_path.join(self.data_path, 'data.json'),      'r') as f:
-            self.data = json_load(f)
+        self.ref_name  = 'RetroPath_Pathway_1_1'
+        self.ref_score = 0.5684564101634014
 
 
     def test_initEmpty(self):
@@ -41,17 +40,17 @@ class Test_rpSBML(TestCase):
 
 
     def test_initWithInFile(self):
-        self.assertEqual(self.rpsbml.getName(), self.rpsbml_name)
+        self.assertEqual(self.rpsbml.getName(), self.ref_name)
 
 
     def test_initWithDocument(self):
         rpsbml  = rpSBML(document=self.rpsbml.getDocument())
-        self.assertEqual(rpsbml.getName(), self.rpsbml_name)
+        self.assertEqual(rpsbml.getName(), self.ref_name)
 
 
     def test_initWithModelName(self):
         rpsbml  = rpSBML(name=self.rpsbml.getName())
-        self.assertEqual(rpsbml.getName(), self.rpsbml_name)
+        self.assertEqual(rpsbml.getName(), self.ref_name)
 
 
     def test_initWithNothing(self):
@@ -61,7 +60,12 @@ class Test_rpSBML(TestCase):
 
     def test_score(self):
         self.rpsbml.compute_score()
-        self.assertEqual(self.rpsbml.getScore(), self.rpsbml_score)
+        self.assertAlmostEqual(self.rpsbml.getScore(), self.ref_score)
+
+
+    def test_GlobalScore(self):
+        global_score = self.rpsbml.compute_globalscore()
+        self.assertAlmostEqual(global_score, 0.5760957019721074)
 
 
     '''
@@ -84,22 +88,39 @@ class Test_rpSBML(TestCase):
         )
 
 
-    def test_genJSON(self):
-        self.assertDictEqual(self.rpsbml.genJSON(), self.data['asdict'])
+    def test_convert_pathway_to_dict(self):
+        with open(os_path.join(self.data_path, 'pathway.json'), 'r') as f:
+            self.assertDictEqual(self.rpsbml.convert_pathway_to_dict(),
+                                 json_loads(f.read(), object_hook=lambda d: {int(k) if k.lstrip('-').isdigit() else k: v for k, v in d.items()}))
+
+
+    def test_toDict(self):
+        with open(os_path.join(self.data_path, 'rpsbml.json'), 'r') as f:
+            self.assertDictEqual(self.rpsbml.toDict(),
+                                 json_loads(f.read()))
+
+
+    def test_toJSON(self):
+        with open(os_path.join(self.data_path, 'rpsbml.json'), 'r') as f:
+            self.assertDictEqual(json_loads(self.rpsbml.toJSON()),
+                                 json_loads(f.read()))
 
 
     def test_readRPrules(self):
-        self.assertDictEqual(self.rpsbml.readRPrules(), self.data['readrprules'])
-
-
-    def test_readRPpathwayIDs(self):
-        self.assertCountEqual(self.rpsbml.readRPpathwayIDs('rp_pathway'),
-                              ['RP1', 'RP2', 'RP3'])
+        with open(os_path.join(self.data_path, 'rp_rules.json'), 'r') as f:
+            self.assertDictEqual(self.rpsbml.readRPrules(),
+                                 json_loads(f.read()))
 
 
     def test_readRPspecies(self):
-        self.assertDictEqual(self.rpsbml.readRPspecies(),
-                             self.data['readrpspecies'])
+        with open(os_path.join(self.data_path, 'rp_species.json'), 'r') as f:
+            self.assertDictEqual(self.rpsbml.readRPspecies(),
+                                 json_loads(f.read()))
+
+
+    def test_readRPpathwayIDs(self):
+        self.assertCountEqual(self.rpsbml.readGroupMembers('rp_pathway'),
+                              ['rxn_1', 'rxn_2', 'rxn_3'])
 
 
     def test_readUniqueRPspecies(self):
@@ -164,7 +185,7 @@ class Test_rpSBML(TestCase):
 
     def test_readMIRIAMAnnotation(self):
         self.assertDictEqual(self.rpsbml.readMIRIAMAnnotation(
-                self.rpsbml.getModel().getReaction('RP1').getAnnotation()),
+                self.rpsbml.getModel().getReaction('rxn_3').getAnnotation()),
                 {'ec-code': ['4.1.1.17']})
         self.assertDictEqual(self.gem.readMIRIAMAnnotation(
                 self.gem.getModel().getReaction('R_ALATA_D2').getAnnotation()),
@@ -179,12 +200,21 @@ class Test_rpSBML(TestCase):
 
     def test_readReactionSpecies(self):
         self.assertDictEqual(self.rpsbml.readReactionSpecies(
-                self.rpsbml.getModel().getReaction('RP1')),
+                self.rpsbml.getModel().getReaction('rxn_3')),
                 {
                     'left': {'CMPD_0000000004__64__MNXC3': 1,
                              'MNXM1__64__MNXC3': 1},
                     'right': {'TARGET_0000000001__64__MNXC3': 1,
                               'MNXM13__64__MNXC3': 1}})
+
+
+    def test_mergeModels(self):
+        target_rpsbml = rpSBML(os_path.join(self.data_path, 'e_coli_model.sbml'))
+        rpSBML.mergeModels(self.rpsbml,
+                           target_rpsbml,
+                           logger=self.logger)
+        ref_target_rpsbml = rpSBML(os_path.join(self.data_path, 'merged_sbml.xml'))
+        self.assertEqual(target_rpsbml, ref_target_rpsbml)
 
 
     def test_mergeSBMLFiles(self):
@@ -193,7 +223,7 @@ class Test_rpSBML(TestCase):
                                   os_path.join(self.data_path, 'e_coli_model.sbml'),
                                   tempf.name,
                                   logger=self.logger)
-            self.assertTrue(Main._check_file_hash(tempf.name, 'e36cd98da717db385e42a15c901257192a6b1b1c861d9b4e5a56b052229a1e88'))
+            self.assertEqual(rpSBML(tempf.name), rpSBML(os_path.join(self.data_path, 'merged_sbml.xml')))
 
 
     def test_print(self):
@@ -204,14 +234,9 @@ class Test_rpSBML(TestCase):
                             'MNXC3',
                             999999,
                             0)
-        rpsbml.createPathway('rp_pathway')
-        rpsbml.createPathway('central_species')
+        rpsbml.createGroup('rp_pathway')
+        rpsbml.createGroup('central_species')
         with NamedTemporaryFile() as tempf:
             rpsbml.writeSBML(tempf.name)
             self.assertListEqual(list(io_open(tempf.name)),
                                  list(io_open(os_path.join(self.data_path, 'rpSBML_test_sbml.xml'))))
-
-
-    def test_GlobalScore(self):
-        global_score = self.rpsbml.compute_globalscore()
-        self.assertAlmostEqual(global_score, 0.5760957019721074)
