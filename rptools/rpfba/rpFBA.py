@@ -56,7 +56,7 @@ def rp_fba(rpsbml,
            is_max=True,
            pathway_id='rp_pathway',
            objective_id=None,
-           logger=None):
+           logger=logging.getLogger(__name__)):
     """Run FBA using a single objective
 
     :param reaction_id: The id of the reactions involved in the objective
@@ -74,7 +74,7 @@ def rp_fba(rpsbml,
     :return: Tuple with the results of the FBA and boolean indicating the success or failure of the function
     :rtype: tuple
     """
-    logger = logger or logging.getLogger(__name__)
+    
     fbc_plugin = rpsbml.getModel().getPlugin('fbc')
     rpsbml.checklibSBML(fbc_plugin, 'Getting FBC package')
     objective_id = rpsbml.findCreateObjective([reaction_id], [coefficient], is_max, objective_id)
@@ -96,7 +96,7 @@ def rp_pfba(rpsbml,
             is_max=True,
             pathway_id='rp_pathway',
             objective_id=None,
-            logger=None):
+            logger=logging.getLogger(__name__)):
     """Run parsimonious FBA using a single objective
 
     :param reaction_id: The id of the reactions involved in the objective
@@ -116,7 +116,7 @@ def rp_pfba(rpsbml,
     :return: Tuple with the results of the FBA and boolean indicating the success or failure of the function
     :rtype: tuple
     """
-    logger = logger or logging.getLogger(__name__)
+    
     fbc_plugin = rpsbml.getModel().getPlugin('fbc')
     rpsbml.checklibSBML(fbc_plugin, 'Getting FBC package')
     objective_id = rpsbml.findCreateObjective([reaction_id], [coefficient], is_max, objective_id)
@@ -140,7 +140,7 @@ def rp_fraction(rpsbml,
                 is_max=True,
                 pathway_id='rp_pathway',
                 objective_id=None,
-                logger=None):
+                logger=logging.getLogger(__name__)):
     """Optimise for a target reaction while fixing a source reaction to the fraction of its optimum
 
     :param source_reaction: The id of the source reaction
@@ -164,7 +164,7 @@ def rp_fraction(rpsbml,
     :return: Tuple with the results of the FBA and boolean indicating the success or failure of the function
     :rtype: tuple
     """
-    logger = logger or logging.getLogger(__name__)
+    
     # retreive the biomass objective and flux results and set as maxima
     fbc_plugin = rpsbml.getModel().getPlugin('fbc')
     rpsbml.checklibSBML(fbc_plugin, 'Getting FBC package')
@@ -246,7 +246,7 @@ def runFBA(sbml_path, gem_sbml, outFile,
            # fill_orphan_species=False,
            species_group_id='central_species',
            sink_species_group_id='rp_sink_species',
-           logger=None):
+           logger=logging.getLogger(__name__)):
     """Single rpSBML simulation
 
     :param file_name: The name of the model
@@ -291,7 +291,7 @@ def runFBA(sbml_path, gem_sbml, outFile,
     :rtype: bool
     """
 
-    logger = logger or logging.getLogger(__name__)
+    
 
     logger.info('--------- '+str(outFile)+' ------------')
 

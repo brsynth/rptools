@@ -34,7 +34,7 @@ class rpSBML:
 
     """This class uses the libSBML object and handles it by adding BRSynth annotation
     """
-    def __init__(self, inFile='', document=None, name='', logger=None):
+    def __init__(self, inFile='', document=None, name='', logger=logging.getLogger(__name__)):
         """Constructor for the rpSBML class
 
         Note that the user can pass either a document libSBML object or a path to a SBML file. If a path is passed it overwrite the passed document object.
@@ -48,13 +48,7 @@ class rpSBML:
         :type document: libsbml.SBMLDocument
         """
 
-        if logger is None:
-            # Create logger
-            self.logger = logging.getLogger(__name__)
-            self.logger.setLevel(getattr(logging, 'ERROR'))
-            self.logger.formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
-        else:
-            self.logger = logger
+        self.logger = logger
 
         self.logger.debug('New instance of rpSBML')
 
@@ -369,7 +363,7 @@ class rpSBML:
                        species_group_id='central_species',
                        sink_species_group_id='rp_sink_species',
                        pathway_id='rp_pathway',
-                       logger=None):
+                       logger=logging.getLogger(__name__)):
         """Public function that merges two SBML files together
 
         :param path_source: Path of the source SBML file
@@ -383,7 +377,6 @@ class rpSBML:
         :return: Success or failure of the function
         :rtype: bool
         """
-        logger = logger or logging.getLogger(__name__)
         if not os_path.exists(input_sbml):
             logger.error('Source SBML file is invalid: '+str(input_sbml))
             return False
@@ -401,7 +394,7 @@ class rpSBML:
     @staticmethod
     #TODO: add a confidence in the merge using the score in
     #TODO: seperate the different parts so that others may use it
-    def mergeModels(source_rpsbml, target_rpsbml, logger=None):
+    def mergeModels(source_rpsbml, target_rpsbml, logger=logging.getLogger(__name__)):
         """Merge two models species and reactions using the annotations to recognise the same species and reactions
 
         The source model has to have both the GROUPS and FBC packages enabled in its SBML. The course must have a groups
@@ -417,7 +410,6 @@ class rpSBML:
         :return: Tuple of dict where the first entry is the species source to target conversion and the second is the reaction source to target conversion
         :rtype: tuple
         """
-        logger = logger or logging.getLogger(__name__)
         #target_rpsbml.model = target_document.getModel()
         #Find the ID's of the similar target_rpsbml.model species
         ################ MODEL FBC ########################
@@ -795,7 +787,7 @@ class rpSBML:
                            pathway_id='rp_pathway',
                            central_species_group_id='central_species',
                            sink_species_group_id='rp_sink_species',
-                           logger=None):
+                           logger=logging.getLogger(__name__)):
         """Check if there are any single parent species in a heterologous pathways and if there are, either delete them or add reaction to complete the heterologous pathway
 
         :param rpsbml: The rpSBML object
@@ -817,7 +809,7 @@ class rpSBML:
         :rtype: bool
         :return: Success of failure of the function
         """
-        logger = logger or logging.getLogger(__name__)
+        
         rpgraph = rpGraph.rpGraph(rpsbml, True, pathway_id, central_species_group_id, sink_species_group_id, logger=logger)
         consumed_species_nid = rpgraph.onlyConsumedSpecies()
         produced_species_nid = rpgraph.onlyProducedSpecies()
@@ -859,7 +851,7 @@ class rpSBML:
 
 
     @staticmethod
-    def _findUniqueRowColumn(pd_matrix, logger=None):
+    def _findUniqueRowColumn(pd_matrix, logger=logging.getLogger(__name__)):
         """Private function that takes the matrix of similarity scores between the reactions or species of two models and finds the unqiue matches
 
         pd_matrix is organised such that the rows are the simulated species and the columns are the measured ones
@@ -871,7 +863,7 @@ class rpSBML:
         :return: Dictionary of matches
         :rtype: dict
         """
-        logger = logger or logging.getLogger(__name__)
+        
         # self.logger.debug(pd_matrix)
         to_ret = {}
         ######################## filter by the global top values ################
@@ -1179,7 +1171,7 @@ class rpSBML:
 
     #TODO: change this with a flag so that all the reactants and products are the same
     @staticmethod
-    def compareReaction(species_source_target, source_reaction, target_reaction, logger=None):
+    def compareReaction(species_source_target, source_reaction, target_reaction, logger=logging.getLogger(__name__)):
         """Compare two reactions and elect that they are the same if they have exactly the same reactants and products
 
         species_source_target: {'MNXM4__64__MNXC3': {'M_o2_c': 1.0}, 'MNXM10__64__MNXC3': {'M_nadh_c': 1.0}, 'CMPD_0000000003__64__MNXC3': {}, 'TARGET_0000000001__64__MNXC3': {}, 'MNXM188__64__MNXC3': {'M_anth_c': 1.0}, 'BC_32877__64__MNXC3': {'M_nh4_c': 0.8}, 'BC_32401__64__MNXC3': {'M_nad_c': 0.2}, 'BC_26705__64__MNXC3': {'M_h_c': 1.0}, 'BC_20662__64__MNXC3': {'M_co2_c': 1.0}}
@@ -1199,7 +1191,7 @@ class rpSBML:
         :return: The score of the match and boolean if its a match or not
         :rtype: tuple
         """
-        logger = logger or logging.getLogger(__name__)
+        
         scores = []
         source_reactants = [i.species for i in source_reaction.getListOfReactants()]
         target_reactants = []
@@ -1254,7 +1246,7 @@ class rpSBML:
     # TODO: for all the measured species compare with the simualted one. Then find the measured and simulated species that match the best and exclude the
     # simulated species from potentially matching with another
     @staticmethod
-    def compareSpecies(comp_source_target, source_rpsbml, target_rpsbml, logger=None):
+    def compareSpecies(comp_source_target, source_rpsbml, target_rpsbml, logger=logging.getLogger(__name__)):
         """Match all the measured chemical species to the simulated chemical species between two SBML
 
         :param comp_source_target: The comparison dictionary between the compartment of two SBML files
@@ -1268,7 +1260,7 @@ class rpSBML:
         :return: The compartment match dictionary
         :rtype: dict
         """
-        logger = logger or logging.getLogger(__name__)
+        
         ############## compare species ###################
         source_target = {}
         target_source = {}
@@ -1420,9 +1412,9 @@ class rpSBML:
     # @param pathway rpSBML object
     # @return dict object with species in it
     @staticmethod
-    def _normalize_pathway(pathway, logger=None):
+    def _normalize_pathway(pathway, logger=logging.getLogger(__name__)):
 
-        logger = logger or logging.getLogger(__name__)
+        
 
         model = pathway.document.getModel()
 
@@ -1505,7 +1497,7 @@ class rpSBML:
 
 
     @staticmethod
-    def checklibSBML(value, message, logger=None):
+    def checklibSBML(value, message, logger=logging.getLogger(__name__)):
         """Private function that checks the libSBML calls.
 
         Check that the libSBML python calls do not return error INT and if so, display the error. Taken from: http://sbml.org/Software/libSBML/docs/python-api/create_simple_model_8py-example.html
@@ -1522,7 +1514,7 @@ class rpSBML:
         :rtype: None
         """
 
-        logger = logger or logging.getLogger(__name__)
+        
         logger.debug('type('+str(value)+'): '+str(type(value)))
 
         if value is None:
@@ -2378,7 +2370,7 @@ class rpSBML:
 
 
     @staticmethod
-    def readBRSYNTHAnnotation(annot, logger=None):
+    def readBRSYNTHAnnotation(annot, logger=logging.getLogger(__name__)):
         """Return a dictionnary of all the information in a BRSynth annotations
 
         :param annot: The annotation object of libSBML
@@ -2388,7 +2380,7 @@ class rpSBML:
         :rtype: dict
         :return: Dictionary of all the BRSynth annotations
         """
-        logger = logger or logging.getLogger(__name__)
+        
         toRet = {'dfG_prime_m':   {},
                  'dfG_uncert':    {},
                  'dfG_prime_o':   {},

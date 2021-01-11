@@ -115,17 +115,11 @@ class rpCache:
     #
     # @param self The object pointer
     # @param db Mode of storing objects ('file' or 'redis')
-    def __init__(self, db='file', attrs='', logger=None):
+    def __init__(self, db='file', attrs='', logger=logging.getLogger(__name__)):
 
-        if logger is None:
-            # Create logger
-            self.logger = logging.getLogger(__name__)
-            self.logger.setLevel(getattr(logging, 'ERROR'))
-            self.logger.formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
-        else:
-            self.logger = logger
+        self.logger = logger
 
-        self.logger.info('New instance of rpCache')
+        self.logger.debug('New instance of rpCache')
 
         self.store_mode = db
         rpCache._db_timeout = 10
@@ -202,9 +196,7 @@ class rpCache:
     #url = 'ftp://ftp.vital-it.ch/databases/metanetx/MNXref/3.2/'
 
     @staticmethod
-    def generate_cache(outdir, logger=None):
-
-        logger = logger or logging.getLogger(__name__)
+    def generate_cache(outdir, logger=logging.getLogger(__name__)):
 
         if outdir == '':
             outdir = 'cache'
@@ -694,8 +686,8 @@ class rpCache:
     #  @param deprecatedCID_cid Dictionnary of deprecated CID to cid
     #  @return cid_strc Dictionnary of formula, smiles, inchi and inchikey
     @staticmethod
-    def _m_mnxm_strc(rr_compounds_path, chem_prop_path, deprecatedCID_cid, logger=None):
-        logger = logger or logging.getLogger(__name__)
+    def _m_mnxm_strc(rr_compounds_path, chem_prop_path, deprecatedCID_cid, logger=logging.getLogger(__name__)):
+
         cid_strc = {}
         cid_name = {}
         for row in csv_DictReader(gzip_open(rr_compounds_path, 'rt'), delimiter='\t'):
@@ -773,8 +765,7 @@ class rpCache:
     #  @return Dictionnary of cross references of a given chemical id
     #TODO: save the self.deprecatedCID_cid to be used in case there rp_paths uses an old version of MNX
     @staticmethod
-    def _m_mnxm_xref(chem_xref_path, deprecatedCID_cid, logger=None):
-        logger = logger or logging.getLogger(__name__)
+    def _m_mnxm_xref(chem_xref_path, deprecatedCID_cid, logger=logging.getLogger(__name__)):
         cid_xref = {}
         with gzip_open(chem_xref_path, 'rt') as f:
             c = csv_reader(f, delimiter='\t')
@@ -812,8 +803,7 @@ class rpCache:
     #  @return a The dictionnary of compartment identifiers
     #TODO: save the self.deprecatedCID_cid to be used in case there rp_paths uses an old version of MNX
     @staticmethod
-    def _m_mnxc_xref(comp_xref_path, logger=None):
-        logger = logger or logging.getLogger(__name__)
+    def _m_mnxc_xref(comp_xref_path, logger=logging.getLogger(__name__)):
         comp_xref = {}
         deprecatedCompID_compid = {}
         try:
@@ -863,8 +853,7 @@ class rpCache:
     #  @param deprecatedRID_rid Dictionnary of deprecated to uniformed reaction id's
     #  @return Dictionnary describing each reaction rule
     @staticmethod
-    def _m_rr_reactions(rules_rall_path, deprecatedCID_cid, deprecatedRID_rid, logger=None):
-        logger = logger or logging.getLogger(__name__)
+    def _m_rr_reactions(rules_rall_path, deprecatedCID_cid, deprecatedRID_rid, logger=logging.getLogger(__name__)):
         rr_reactions = {}
         try:
             #with gzip_open(rules_rall_path, 'r') as f:
@@ -918,8 +907,7 @@ class rpCache:
     #  @param rxn_recipes_path Path to the recipes file
     #  @return Boolean that determines the success or failure of the function
     @staticmethod
-    def _m_rr_full_reactions(rxn_recipes_path, deprecatedCID_cid, deprecatedRID_rid, logger=None):
-        logger = logger or logging.getLogger(__name__)
+    def _m_rr_full_reactions(rxn_recipes_path, deprecatedCID_cid, deprecatedRID_rid, logger=logging.getLogger(__name__)):
         #### for character matching that are returned
         DEFAULT_STOICHIO_RESCUE = {"4n": 4, "3n": 3, "2n": 2, 'n': 1,
                            '(n)': 1, '(N)': 1, '(2n)': 2, '(x)': 1,

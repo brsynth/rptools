@@ -83,9 +83,9 @@ pubchem_min_start = 0.0
 ############################# PRIVATE FUNCTIONS #######################
 #######################################################################
 
-def _pubChemLimit(logger=None):
+def _pubChemLimit(logger=logging.getLogger(__name__)):
     global pubchem_min_count, pubchem_min_start
-    logger = logger or logging.getLogger(__name__)
+
     if pubchem_min_start==0.0:
         pubchem_min_start = time_time()
     pubchem_min_count += 1
@@ -107,8 +107,8 @@ def _pubChemLimit(logger=None):
 # @param strct Strucutre string of the molecule
 # @param itype Input type of the structure. Accepted values are: inchi, inchikey, smiles
 # @return Dict with the following structure: {'name': name, 'inchi': inchi, 'inchikey': inchikey, 'smiles': smiles, 'xref': xref}
-def _pubchemStrctSearch(strct, itype='inchi', logger=None):
-    logger = logger or logging.getLogger(__name__)
+def _pubchemStrctSearch(strct, itype='inchi', logger=logging.getLogger(__name__)):
+
     _pubChemLimit(logger=logger)
     try:
         r = r_post('https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/'+str(itype)+'/xrefs/SBURL/JSON', data={itype: strct})
@@ -217,9 +217,7 @@ def rp_completion(cache,
                   species_group_id='central_species',
                   sink_species_group_id='rp_sink_species',
                   pubchem_search=False,
-                  logger=None):
-
-    logger = logger or logging.getLogger(__name__)
+                  logger=logging.getLogger(__name__)):
 
     if max_subpaths_filter<0:
         raise ValueError('Max number of subpaths cannot be less than 0: '+str(max_subpaths_filter))
@@ -256,8 +254,8 @@ def rp_completion(cache,
 #
 #  @param path The compounds.txt file path
 #  @return rp_compounds Dictionnary of smile and structure for each compound
-def _compounds(cache, path, logger=None):
-    logger = logger or logging.getLogger(__name__)
+def _compounds(cache, path, logger=logging.getLogger(__name__)):
+
     #self.rp_strc = {}
     rp_strc = {}
     try:
@@ -299,8 +297,8 @@ def _compounds(cache, path, logger=None):
 #
 # @param path The scope.csv file path
 # @return tuple with dictionnary of all the reactions rules and the list unique molecules that these apply them to
-def _transformation(path, logger=None):
-    logger = logger or logging.getLogger(__name__)
+def _transformation(path, logger=logging.getLogger(__name__)):
+
     rp_transformation = {}
     sink_molecules = []
     #### we might pass binary in the REST version
@@ -334,9 +332,7 @@ def _transformation(path, logger=None):
 # @param rr_reactions RetroRules reactions
 # @param deprecatedCID_cid Deprecated cid
 # @return Dictionnary of the pathways
-def rp2paths_to_dict(infile, rr_reactions, deprecatedCID_cid, logger=None):
-
-    logger = logger or logging.getLogger(__name__)
+def rp2paths_to_dict(infile, rr_reactions, deprecatedCID_cid, logger=logging.getLogger(__name__)):
 
     df = pd.read_csv(infile)
 
@@ -404,7 +400,7 @@ def check_pathways(df):
 # @param rule_ids The reaction rule ids
 # @param rules The reaction rules
 # @return Dictionnary of the reaction rule
-def rxns_from_rules(rule_ids, rules):
+def rxns_from_rules(rule_ids, rules, logger=logging.getLogger(__name__)):
 
     if not rule_ids:
         logger.warning('The rule ids are empty')
@@ -433,8 +429,9 @@ def rxns_from_rules(rule_ids, rules):
 # @param side is left or right part of the reaction read in pathways
 # @param deprecatedCID_cid
 # @return Dictionnary of the left part of the reaction
-def build_side_rxn(side, deprecatedCID_cid):
+def build_side_rxn(side, deprecatedCID_cid, logger=logging.getLogger(__name__)):
 
+    logger=logging.getLogger(__name__)
     rxn_side = {}
 
     for s in side.split(':'):
@@ -505,10 +502,8 @@ def write_rp2paths_to_rpSBML(cache,
                              species_group_id='central_species',
                              sink_species_group_id='rp_sink_species',
                              pubchem_search=False,
-                             logger=None):
+                             logger=logging.getLogger(__name__)):
     # TODO: make sure that you account for the fact that each reaction may have multiple associated reactions
-
-    logger = logger or logging.getLogger(__name__)
 
     rp_paths = rp2paths_to_dict(rp2paths_pathways, cache.rr_reactions, cache.deprecatedCID_cid, logger=logger)
     sink_species = []
@@ -631,9 +626,7 @@ def write_rp2paths_to_rpSBML(cache,
     return 0
 
 
-def unique_species(cache, meta, rp_strc, pubchem_search, logger=None):
-
-    logger = logger or logging.getLogger(__name__)
+def unique_species(cache, meta, rp_strc, pubchem_search, logger=logging.getLogger(__name__)):
 
     try:
         chemName = cache.cid_strc[meta]['name']
@@ -765,8 +758,7 @@ def unique_species(cache, meta, rp_strc, pubchem_search, logger=None):
 
 def add_unique_species(rpsbml, all_meta,
                        rp_strc, sink_molecules, compartment_id, species_group_id, sink_species_group_id, pubchem_search,
-                       cache, logger=None):
-    logger = logger or logging.getLogger(__name__)
+                       cache, logger=logging.getLogger(__name__)):
     for meta in all_meta:
         (chemName, spe) = unique_species(cache, meta, rp_strc, pubchem_search, logger=logger)
         if chemName:
@@ -776,8 +768,7 @@ def add_unique_species(rpsbml, all_meta,
     return rpsbml
 
 
-def add_species(rpsbml, meta, sink_molecules, compartment_id, chemName, spe, species_group_id, sink_species_group_id, logger=None):
-    logger = logger or logging.getLogger(__name__)
+def add_species(rpsbml, meta, sink_molecules, compartment_id, chemName, spe, species_group_id, sink_species_group_id, logger=logging.getLogger(__name__)):
     if meta in sink_molecules:
         rpsbml.createSpecies(meta,
                              compartment_id,
@@ -815,151 +806,150 @@ def add_species(rpsbml, meta, sink_molecules, compartment_id, chemName, spe, spe
 # @param inFile The input JSON file
 # @param mnxHeader Reorganise the results around the target MNX products
 # @return Dictionnary of SBML
-def _parseTSV(inFile, remove_inchi_4p=False, mnxHeader=False, logger=None):
-    logger = logger or logging.getLogger(__name__)
-    data = {}
-    try:
-        for row in csv_DictReader(open(inFile), delimiter='\t'):
-            ######## path_id ######
-            try:
-                pathID = int(row['pathway_ID'])
-            except ValueError:
-                logger.error('Cannot convert pathway ID: '+str(row['pathway_ID']))
-                continue
-            if not pathID in data:
-                data[pathID] = {}
-                data[pathID]['isValid'] = True
-                data[pathID]['steps'] = {}
-            ####### target #########
-            if not 'target' in data[pathID]:
-                data[pathID]['target'] = {}
-                data[pathID]['target']['name'] = row['target_name']
-                if remove_inchi_4p:
-                    data[pathID]['target']['inchi'] = '/'.join([row['target_structure'].split('/')[i] for i in range(len(row['target_structure'].split('/'))) if i<4])
-                else:
-                    data[pathID]['target']['inchi'] = row['target_structure']
-            ####### step #########
-            try:
-                stepID = int(row['step'])
-            except ValueError:
-                logger.error('Cannot convert step ID: '+str(row['step']))
-                data[pathID]['isValid'] = False
-                continue
-            if stepID==0:
-                continue
-            elif stepID==1:
-                data[pathID]['organism'] = row['organism'].replace(' ', '')
-                data[pathID]['reference'] = row['reference'].replace(' ', '')
-            data[pathID]['steps'][stepID] = {}
-            ##### substrates #########
-            data[pathID]['steps'][stepID]['substrates'] = []
-            lenDBref = len(row['substrate_dbref'].split(';'))
-            for i in row['substrate_dbref'].split(';'):
-                if i=='':
-                    lenDBref -= 1
-            lenStrc = len(row['substrate_structure'].split('_'))
-            for i in row['substrate_structure'].split('_'):
-                if i=='':
-                    lenStrc -= 1
-            lenSub = len(row['substrate_name'].split(';'))
-            for i in row['substrate_name'].split(';'):
-                if i=='':
-                    lenSub -= 1
-            if lenSub==lenStrc==lenSub:
-                for name, inchi, dbrefs in zip(row['substrate_name'].split(';'),
-                        row['substrate_structure'].split('_'),
-                        row['substrate_dbref'].split(';')):
-                    tmp = {}
-                    if remove_inchi_4p:
-                        tmp['inchi'] = '/'.join([inchi.split('/')[i] for i in range(len(inchi.split('/'))) if i<4])
-                    else:
-                        tmp['inchi'] = inchi.replace(' ', '')
-                    tmp['name'] = name
-                    tmp['dbref'] = {}
-                    for dbref in dbrefs.split('|'):
-                        if len(dbref.split(':'))==2:
-                            db_name = dbref.split(':')[0].replace(' ', '').lower()
-                            db_cid = dbref.split(':')[1].replace(' ', '')
-                            if not db_name in tmp['dbref']:
-                                tmp['dbref'][db_name] = []
-                            tmp['dbref'][db_name].append(db_cid)
-                        else:
-                            logger.warning('Ignoring the folowing product dbref ('+str(name)+'): '+str(dbref))
-                            data[pathID]['isValid'] = False
-                    data[pathID]['steps'][stepID]['substrates'].append(tmp)
-            else:
-                logger.warning('Not equal length between substrate names, their structure or dbref ('+str(name)+'): '+str(row['substrate_name'])+' <--> '+str(row['substrate_structure'])+' <--> '+str(row['substrate_dbref']))
-                data[pathID]['isValid'] = False
-                continue
-            ##### products #########
-            data[pathID]['steps'][stepID]['products'] = []
-            lenDBref = len(row['product_dbref'].split(';'))
-            for i in row['product_dbref'].split(';'):
-                if i=='':
-                    lenDBref -= 1
-            lenStrc = len(row['product_structure'].split('_'))
-            for i in row['product_structure'].split('_'):
-                if i=='':
-                    lenStrc -= 1
-            lenSub = len(row['product_name'].split(';'))
-            for i in row['product_name'].split(';'):
-                if i=='':
-                    lenSub -= 1
-            if lenSub==lenStrc==lenDBref:
-                for name, inchi, dbrefs in zip(row['product_name'].split(';'),
-                        row['product_structure'].split('_'),
-                        row['product_dbref'].split(';')):
-                    tmp = {}
-                    if remove_inchi_4p:
-                        tmp['inchi'] = '/'.join([inchi.split('/')[i] for i in range(len(inchi.split('/'))) if i<4])
-                    else:
-                        tmp['inchi'] = inchi.replace(' ', '')
-                    tmp['name'] = name
-                    tmp['dbref'] = {}
-                    for dbref in dbrefs.split('|'):
-                        if len(dbref.split(':'))==2:
-                            db_name = dbref.split(':')[0].replace(' ', '').lower()
-                            db_cid = dbref.split(':')[1].replace(' ', '')
-                            if not db_name in tmp['dbref']:
-                                tmp['dbref'][db_name] = []
-                            tmp['dbref'][db_name].append(db_cid)
-                        else:
-                            data[pathID]['isValid'] = False
-                            logger.warning('Ignoring the folowing product dbref ('+str(name)+'): '+str(dbref))
-                    data[pathID]['steps'][stepID]['products'].append(tmp)
-            else:
-                logger.warning('Not equal length between substrate names, their structure or dbref ('+str(name)+'): '+str(row['product_name'])+' <--> '+str(row['product_structure'])+' <--> '+str(row['product_dbref']))
-                data[pathID]['isValid'] = False
-            if not row['uniprot']=='':
-                data[pathID]['steps'][stepID]['uniprot'] = row['uniprot'].replace(' ', '').split(';')
-            if not row['EC_number']=='':
-                data[pathID]['steps'][stepID]['ec_numbers'] = [i.replace(' ', '') for i in row['EC_number'].split(';')]
-            data[pathID]['steps'][stepID]['enzyme_id'] = [i.replace(' ', '') for i in row['enzyme_identifier'].split(';')]
-            data[pathID]['steps'][stepID]['enzyme_name'] = row['enzyme_name'].split(';')
-    except FileNotFoundError:
-        logger.error('Cannot open the file: '+str(inFile))
-    #now loop through all of them and remove the invalid paths
-    toRet = deepcopy(data)
-    for path_id in data.keys():
-        if toRet[path_id]['isValid']==False:
-            del toRet[path_id]
-        else:
-            del toRet[path_id]['isValid']
-    #reorganise the results around the target products mnx
-    if not mnxHeader:
-        return toRet
-    else:
-        toRetTwo = {}
-        for path_id in toRet:
-            try:
-                final_pro_mnx = toRet[path_id]['steps'][max(toRet[path_id]['steps'])]['products'][0]['dbref']['mnx'][0]
-            except KeyError:
-                logger.error('The species '+str(toRet[path_id]['steps'][max(toRet[path_id]['steps'])]['products'][0]['name'])+' does not contain a mnx database reference... skipping whole pathway number '+str(path_id))
-                #continue
-            if not final_pro_mnx in toRetTwo:
-                toRetTwo[final_pro_mnx] = {}
-            toRetTwo[final_pro_mnx][path_id] = toRet[path_id]
-        return toRetTwo
+# def _parseTSV(inFile, remove_inchi_4p=False, mnxHeader=False, logger=logging.getLogger(__name__)):
+#     #     data = {}
+#     try:
+#         for row in csv_DictReader(open(inFile), delimiter='\t'):
+#             ######## path_id ######
+#             try:
+#                 pathID = int(row['pathway_ID'])
+#             except ValueError:
+#                 logger.error('Cannot convert pathway ID: '+str(row['pathway_ID']))
+#                 continue
+#             if not pathID in data:
+#                 data[pathID] = {}
+#                 data[pathID]['isValid'] = True
+#                 data[pathID]['steps'] = {}
+#             ####### target #########
+#             if not 'target' in data[pathID]:
+#                 data[pathID]['target'] = {}
+#                 data[pathID]['target']['name'] = row['target_name']
+#                 if remove_inchi_4p:
+#                     data[pathID]['target']['inchi'] = '/'.join([row['target_structure'].split('/')[i] for i in range(len(row['target_structure'].split('/'))) if i<4])
+#                 else:
+#                     data[pathID]['target']['inchi'] = row['target_structure']
+#             ####### step #########
+#             try:
+#                 stepID = int(row['step'])
+#             except ValueError:
+#                 logger.error('Cannot convert step ID: '+str(row['step']))
+#                 data[pathID]['isValid'] = False
+#                 continue
+#             if stepID==0:
+#                 continue
+#             elif stepID==1:
+#                 data[pathID]['organism'] = row['organism'].replace(' ', '')
+#                 data[pathID]['reference'] = row['reference'].replace(' ', '')
+#             data[pathID]['steps'][stepID] = {}
+#             ##### substrates #########
+#             data[pathID]['steps'][stepID]['substrates'] = []
+#             lenDBref = len(row['substrate_dbref'].split(';'))
+#             for i in row['substrate_dbref'].split(';'):
+#                 if i=='':
+#                     lenDBref -= 1
+#             lenStrc = len(row['substrate_structure'].split('_'))
+#             for i in row['substrate_structure'].split('_'):
+#                 if i=='':
+#                     lenStrc -= 1
+#             lenSub = len(row['substrate_name'].split(';'))
+#             for i in row['substrate_name'].split(';'):
+#                 if i=='':
+#                     lenSub -= 1
+#             if lenSub==lenStrc==lenSub:
+#                 for name, inchi, dbrefs in zip(row['substrate_name'].split(';'),
+#                         row['substrate_structure'].split('_'),
+#                         row['substrate_dbref'].split(';')):
+#                     tmp = {}
+#                     if remove_inchi_4p:
+#                         tmp['inchi'] = '/'.join([inchi.split('/')[i] for i in range(len(inchi.split('/'))) if i<4])
+#                     else:
+#                         tmp['inchi'] = inchi.replace(' ', '')
+#                     tmp['name'] = name
+#                     tmp['dbref'] = {}
+#                     for dbref in dbrefs.split('|'):
+#                         if len(dbref.split(':'))==2:
+#                             db_name = dbref.split(':')[0].replace(' ', '').lower()
+#                             db_cid = dbref.split(':')[1].replace(' ', '')
+#                             if not db_name in tmp['dbref']:
+#                                 tmp['dbref'][db_name] = []
+#                             tmp['dbref'][db_name].append(db_cid)
+#                         else:
+#                             logger.warning('Ignoring the folowing product dbref ('+str(name)+'): '+str(dbref))
+#                             data[pathID]['isValid'] = False
+#                     data[pathID]['steps'][stepID]['substrates'].append(tmp)
+#             else:
+#                 logger.warning('Not equal length between substrate names, their structure or dbref ('+str(name)+'): '+str(row['substrate_name'])+' <--> '+str(row['substrate_structure'])+' <--> '+str(row['substrate_dbref']))
+#                 data[pathID]['isValid'] = False
+#                 continue
+#             ##### products #########
+#             data[pathID]['steps'][stepID]['products'] = []
+#             lenDBref = len(row['product_dbref'].split(';'))
+#             for i in row['product_dbref'].split(';'):
+#                 if i=='':
+#                     lenDBref -= 1
+#             lenStrc = len(row['product_structure'].split('_'))
+#             for i in row['product_structure'].split('_'):
+#                 if i=='':
+#                     lenStrc -= 1
+#             lenSub = len(row['product_name'].split(';'))
+#             for i in row['product_name'].split(';'):
+#                 if i=='':
+#                     lenSub -= 1
+#             if lenSub==lenStrc==lenDBref:
+#                 for name, inchi, dbrefs in zip(row['product_name'].split(';'),
+#                         row['product_structure'].split('_'),
+#                         row['product_dbref'].split(';')):
+#                     tmp = {}
+#                     if remove_inchi_4p:
+#                         tmp['inchi'] = '/'.join([inchi.split('/')[i] for i in range(len(inchi.split('/'))) if i<4])
+#                     else:
+#                         tmp['inchi'] = inchi.replace(' ', '')
+#                     tmp['name'] = name
+#                     tmp['dbref'] = {}
+#                     for dbref in dbrefs.split('|'):
+#                         if len(dbref.split(':'))==2:
+#                             db_name = dbref.split(':')[0].replace(' ', '').lower()
+#                             db_cid = dbref.split(':')[1].replace(' ', '')
+#                             if not db_name in tmp['dbref']:
+#                                 tmp['dbref'][db_name] = []
+#                             tmp['dbref'][db_name].append(db_cid)
+#                         else:
+#                             data[pathID]['isValid'] = False
+#                             logger.warning('Ignoring the folowing product dbref ('+str(name)+'): '+str(dbref))
+#                     data[pathID]['steps'][stepID]['products'].append(tmp)
+#             else:
+#                 logger.warning('Not equal length between substrate names, their structure or dbref ('+str(name)+'): '+str(row['product_name'])+' <--> '+str(row['product_structure'])+' <--> '+str(row['product_dbref']))
+#                 data[pathID]['isValid'] = False
+#             if not row['uniprot']=='':
+#                 data[pathID]['steps'][stepID]['uniprot'] = row['uniprot'].replace(' ', '').split(';')
+#             if not row['EC_number']=='':
+#                 data[pathID]['steps'][stepID]['ec_numbers'] = [i.replace(' ', '') for i in row['EC_number'].split(';')]
+#             data[pathID]['steps'][stepID]['enzyme_id'] = [i.replace(' ', '') for i in row['enzyme_identifier'].split(';')]
+#             data[pathID]['steps'][stepID]['enzyme_name'] = row['enzyme_name'].split(';')
+#     except FileNotFoundError:
+#         logger.error('Cannot open the file: '+str(inFile))
+#     #now loop through all of them and remove the invalid paths
+#     toRet = deepcopy(data)
+#     for path_id in data.keys():
+#         if toRet[path_id]['isValid']==False:
+#             del toRet[path_id]
+#         else:
+#             del toRet[path_id]['isValid']
+#     #reorganise the results around the target products mnx
+#     if not mnxHeader:
+#         return toRet
+#     else:
+#         toRetTwo = {}
+#         for path_id in toRet:
+#             try:
+#                 final_pro_mnx = toRet[path_id]['steps'][max(toRet[path_id]['steps'])]['products'][0]['dbref']['mnx'][0]
+#             except KeyError:
+#                 logger.error('The species '+str(toRet[path_id]['steps'][max(toRet[path_id]['steps'])]['products'][0]['name'])+' does not contain a mnx database reference... skipping whole pathway number '+str(path_id))
+#                 #continue
+#             if not final_pro_mnx in toRetTwo:
+#                 toRetTwo[final_pro_mnx] = {}
+#             toRetTwo[final_pro_mnx][path_id] = toRet[path_id]
+#         return toRetTwo
 
 
 ## Parse the validation TSV to SBML
@@ -970,217 +960,216 @@ def _parseTSV(inFile, remove_inchi_4p=False, mnxHeader=False, logger=None):
 # @param inFile Input file
 # @param compartment_id compartment of the
 # TODO: update this with the new SBML groups
-def TSVtoSBML(cache,
-              inFile,
-              tmpOutputFolder=None,
-              upper_flux_bound=99999,
-              lower_flux_bound=0,
-              compartment_id='MNXC3',
-              pathway_id='rp_pathway',
-              species_group_id='central_species',
-              header_name='',
-              logger=None):
-    logger = logger or logging.getLogger(__name__)
-    data = _parseTSV(inFile, logger=logger)
-    sbml_paths = {}
-    if header_name=='':
-        header_name = inFile.split('/')[-1].replace('.tsv', '').replace('.csv', '')
-    # TODO: need to exit at this loop
-    for path_id in data:
-        try:
-            mnxc = cache.deprecatedCompID_compid[compartment_id]
-        except KeyError:
-            logger.error('Could not Xref compartment_id ('+str(compartment_id)+')')
-            return False
-        rpsbml = rpSBML.rpSBML(name=header_name+'_'+str(path_id), logger=logger)
-        # 1) create a generic Model, ie the structure and unit definitions that we will use the most
-        ##### TODO: give the user more control over a generic model creation:
-        # -> special attention to the compartment
-        rpsbml.genericModel(header_name+'_Path'+str(path_id),
-                            header_name+'_Path'+str(path_id),
-                            cache.comp_xref[mnxc],
-                            compartment_id,
-                            upper_flux_bound,
-                            lower_flux_bound)
-        # 2) create the pathway (groups)
-        rpsbml.createGroup(pathway_id)
-        rpsbml.createGroup(species_group_id)
-        # 3) find all the unique species and add them to the model
-        allChem = []
-        for stepNum in data[path_id]['steps']:
-            # because of the nature of the input we need to remove duplicates
-            for i in data[path_id]['steps'][stepNum]['substrates']+data[path_id]['steps'][stepNum]['products']:
-                if not i in allChem:
-                    allChem.append(i)
-        # add them to the SBML
-        for chem in allChem:
-            # PROBLEM: as it stands one expects the meta to be MNX
-            if 'mnx' in chem['dbref']:
-                # must list the different models
-                meta = sorted(chem['dbref']['mnx'], key=lambda x : int(x.replace('MNXM', '')))[0]
-            else:
-                # TODO: add the species with other types of xref in annotation
-                logger.warning('Some species are not referenced by a MNX id and will be ignored')
-                # try CHEBI
-                try:
-                    meta = sorted(chem['dbref']['chebi'], key=lambda x : int(x))[0]
-                    meta = 'CHEBI_'+str(meta)
-                except KeyError:
-                    # TODO: need to find a better way
-                    logger.warning('Cannot determine MNX or CHEBI entry, using random')
-                    tmpDB_name = list(chem['dbref'].keys())[0]
-                    meta = chem['dbref'][list(chem['dbref'].keys())[0]][0]
-                    meta = str(tmpDB_name)+'_'+str(meta)
-                # break
-            # try to conver the inchi into the other structures
-            smiles = None
-            inchikey = None
-            try:
-                resConv = cache._convert_depiction(idepic=chem['inchi'], itype='inchi', otype={'smiles','inchikey'})
-                smiles = resConv['smiles']
-                inchikey = resConv['inchikey']
-            except NotImplementedError as e:
-                logger.warning('Could not convert the following InChI: '+str(chem['inchi']))
-            # create a new species
-            # here we want to gather the info from rpReader's rp_strc and cid_strc
-            try:
-                chem_name = cache.cid_strc[meta]['name']
-            except KeyError:
-                chem_name = meta
-            # compile as much info as you can
-            # xref
-            try:
-                # TODO: add the xref from the document
-                spe_xref = cache.cid_xref[meta]
-            except KeyError:
-                #spe_xref = {}
-                spe_xref = chem['dbref']
-            # inchi
-            try:
-                spe_inchi = cache.cid_strc[meta]['inchi']
-            except KeyError:
-                spe_inchi = chem['inchi']
-            # inchikey
-            try:
-                spe_inchikey = cache.cid_strc[meta]['inchikey']
-            except KeyError:
-                spe_inchikey =  resConv['inchikey']
-            # smiles
-            try:
-                spe_smiles = cache.cid_strc[meta]['smiles']
-            except KeyError:
-                spe_smiles = resConv['smiles']
-            # pass the information to create the species
-            rpsbml.createSpecies(meta,
-                                 compartment_id,
-                                 chem_name,
-                                 spe_xref,
-                                 spe_inchi,
-                                 spe_inchikey,
-                                 spe_smiles,
-                                 species_group_id)
-        # 4) add the complete reactions and their annotations
-        # create a new group for the measured pathway
-        # need to convert the validation to step for reactions
-        for stepNum in data[path_id]['steps']:
-            toSend = {
-                'left': {},
-                'right': {},
-                'rule_id': None,
-                'rule_ori_reac': None,
-                'rule_score': None,
-                # 'path_id': path_id,
-                'step': stepNum,
-                # 'sub_step': None
-                }
-            for chem in data[path_id]['steps'][stepNum]['substrates']:
-                if 'mnx' in chem['dbref']:
-                    meta = sorted(chem['dbref']['mnx'], key=lambda x : int(x.replace('MNXM', '')))[0]
-                    # try CHEBI
-                else:
-                    logger.warning('Not all the species to have a MNX ID')
-                    # break
-                    try:
-                        meta = sorted(chem['dbref']['chebi'], key=lambda x : int(x))[0]
-                        meta = 'CHEBI_'+str(meta)
-                    except KeyError:
-                        # TODO: need to find a better way
-                        logger.warning('Cannot determine MNX or CHEBI entry, using random')
-                        tmpDB_name = list(chem['dbref'].keys())[0]
-                        meta = chem['dbref'][list(chem['dbref'].keys())[0]][0]
-                        meta = str(tmpDB_name)+'_'+str(meta)
-                toSend['left'][meta] = 1
-            for chem in data[path_id]['steps'][stepNum]['products']:
-                if 'mnx' in chem['dbref']:
-                    meta = sorted(chem['dbref']['mnx'], key=lambda x : int(x.replace('MNXM', '')))[0]
-                    # try CHEBI
-                else:
-                    logger.warning('Need all the species to have a MNX ID')
-                    try:
-                        meta = sorted(chem['dbref']['chebi'], key=lambda x : int(x))[0]
-                        meta = 'CHEBI_'+str(meta)
-                    except KeyError:
-                        # TODO: need to find a better way
-                        logger.warning('Cannot determine MNX or CHEBI entry, using random')
-                        tmpDB_name = list(chem['dbref'].keys())[0]
-                        meta = chem['dbref'][list(chem['dbref'].keys())[0]][0]
-                        meta = str(tmpDB_name)+'_'+str(meta)
-                toSend['right'][meta] = 1
-                    # break
-            # if all are full add it
-            reac_xref = {}
-            if 'ec_numbers' in data[path_id]['steps'][stepNum]:
-                reac_xref['ec'] = data[path_id]['steps'][stepNum]['ec_numbers']
-            if 'uniprot' in data[path_id]['steps'][stepNum]:
-                reac_xref['uniprot'] = data[path_id]['steps'][stepNum]['uniprot']
-            logger.debug('#########################################')
-            logger.debug(toSend)
-            logger.debug('#########################################')
-            rpsbml.createReaction(header_name+'_Step'+str(stepNum),
-                                  upper_flux_bound,
-                                  lower_flux_bound,
-                                  toSend,
-                                  compartment_id,
-                                  None,
-                                  reac_xref,
-                                  pathway_id)
-            if stepNum==1:
-                # adding the consumption of the target
-                targetStep = {'rule_id': None,
-                              'left': {},
-                              'right': {},
-                              'step': None,
-                            #   'sub_step': None,
-                            #   'path_id': None,
-                              'transformation_id': None,
-                              'rule_score': None,
-                              'rule_ori_reac': None}
-                for chem in data[path_id]['steps'][stepNum]['products']:
-                    try:
-                        # smallest MNX
-                        meta = sorted(chem['dbref']['mnx'], key=lambda x : int(x.replace('MNXM', '')))[0]
-                    except KeyError:
-                        # try CHEBI
-                        try:
-                            meta = sorted(chem['dbref']['chebi'], key=lambda x : int(x))[0]
-                            meta = 'CHEBI_'+str(meta)
-                        except KeyError:
-                            logger.warning('Cannot determine MNX or CHEBI entry, using random')
-                            tmpDB_name = list(chem['dbref'].keys())[0]
-                            meta = chem['dbref'][list(chem['dbref'].keys())[0]][0]
-                            meta = str(tmpDB_name)+'_'+str(meta)
-                    targetStep['left'][meta] = 1
-                rpsbml.createReaction(header_name+'_Step1_sink',
-                                      upper_flux_bound,
-                                      lower_flux_bound,
-                                      targetStep,
-                                      compartment_id)
-                rpsbml.createFluxObj('rpFBA_obj', header_name+'_Step1_sink', 1, True)
-        if tmpOutputFolder:
-            rpsbml.writeSBML(tmpOutputFolder)
-        else:
-            sbml_paths[header_name+'_Path'+str(path_id)] = rpsbml
-    if tmpOutputFolder:
-        return {}
-    else:
-        return sbml_paths
+# def TSVtoSBML(cache,
+#               inFile,
+#               tmpOutputFolder=None,
+#               upper_flux_bound=99999,
+#               lower_flux_bound=0,
+#               compartment_id='MNXC3',
+#               pathway_id='rp_pathway',
+#               species_group_id='central_species',
+#               header_name='',
+#               logger=logging.getLogger(__name__)):
+#     #     data = _parseTSV(inFile, logger=logger)
+#     sbml_paths = {}
+#     if header_name=='':
+#         header_name = inFile.split('/')[-1].replace('.tsv', '').replace('.csv', '')
+#     # TODO: need to exit at this loop
+#     for path_id in data:
+#         try:
+#             mnxc = cache.deprecatedCompID_compid[compartment_id]
+#         except KeyError:
+#             logger.error('Could not Xref compartment_id ('+str(compartment_id)+')')
+#             return False
+#         rpsbml = rpSBML.rpSBML(name=header_name+'_'+str(path_id), logger=logger)
+#         # 1) create a generic Model, ie the structure and unit definitions that we will use the most
+#         ##### TODO: give the user more control over a generic model creation:
+#         # -> special attention to the compartment
+#         rpsbml.genericModel(header_name+'_Path'+str(path_id),
+#                             header_name+'_Path'+str(path_id),
+#                             cache.comp_xref[mnxc],
+#                             compartment_id,
+#                             upper_flux_bound,
+#                             lower_flux_bound)
+#         # 2) create the pathway (groups)
+#         rpsbml.createGroup(pathway_id)
+#         rpsbml.createGroup(species_group_id)
+#         # 3) find all the unique species and add them to the model
+#         allChem = []
+#         for stepNum in data[path_id]['steps']:
+#             # because of the nature of the input we need to remove duplicates
+#             for i in data[path_id]['steps'][stepNum]['substrates']+data[path_id]['steps'][stepNum]['products']:
+#                 if not i in allChem:
+#                     allChem.append(i)
+#         # add them to the SBML
+#         for chem in allChem:
+#             # PROBLEM: as it stands one expects the meta to be MNX
+#             if 'mnx' in chem['dbref']:
+#                 # must list the different models
+#                 meta = sorted(chem['dbref']['mnx'], key=lambda x : int(x.replace('MNXM', '')))[0]
+#             else:
+#                 # TODO: add the species with other types of xref in annotation
+#                 logger.warning('Some species are not referenced by a MNX id and will be ignored')
+#                 # try CHEBI
+#                 try:
+#                     meta = sorted(chem['dbref']['chebi'], key=lambda x : int(x))[0]
+#                     meta = 'CHEBI_'+str(meta)
+#                 except KeyError:
+#                     # TODO: need to find a better way
+#                     logger.warning('Cannot determine MNX or CHEBI entry, using random')
+#                     tmpDB_name = list(chem['dbref'].keys())[0]
+#                     meta = chem['dbref'][list(chem['dbref'].keys())[0]][0]
+#                     meta = str(tmpDB_name)+'_'+str(meta)
+#                 # break
+#             # try to conver the inchi into the other structures
+#             smiles = None
+#             inchikey = None
+#             try:
+#                 resConv = cache._convert_depiction(idepic=chem['inchi'], itype='inchi', otype={'smiles','inchikey'})
+#                 smiles = resConv['smiles']
+#                 inchikey = resConv['inchikey']
+#             except NotImplementedError as e:
+#                 logger.warning('Could not convert the following InChI: '+str(chem['inchi']))
+#             # create a new species
+#             # here we want to gather the info from rpReader's rp_strc and cid_strc
+#             try:
+#                 chem_name = cache.cid_strc[meta]['name']
+#             except KeyError:
+#                 chem_name = meta
+#             # compile as much info as you can
+#             # xref
+#             try:
+#                 # TODO: add the xref from the document
+#                 spe_xref = cache.cid_xref[meta]
+#             except KeyError:
+#                 #spe_xref = {}
+#                 spe_xref = chem['dbref']
+#             # inchi
+#             try:
+#                 spe_inchi = cache.cid_strc[meta]['inchi']
+#             except KeyError:
+#                 spe_inchi = chem['inchi']
+#             # inchikey
+#             try:
+#                 spe_inchikey = cache.cid_strc[meta]['inchikey']
+#             except KeyError:
+#                 spe_inchikey =  resConv['inchikey']
+#             # smiles
+#             try:
+#                 spe_smiles = cache.cid_strc[meta]['smiles']
+#             except KeyError:
+#                 spe_smiles = resConv['smiles']
+#             # pass the information to create the species
+#             rpsbml.createSpecies(meta,
+#                                  compartment_id,
+#                                  chem_name,
+#                                  spe_xref,
+#                                  spe_inchi,
+#                                  spe_inchikey,
+#                                  spe_smiles,
+#                                  species_group_id)
+#         # 4) add the complete reactions and their annotations
+#         # create a new group for the measured pathway
+#         # need to convert the validation to step for reactions
+#         for stepNum in data[path_id]['steps']:
+#             toSend = {
+#                 'left': {},
+#                 'right': {},
+#                 'rule_id': None,
+#                 'rule_ori_reac': None,
+#                 'rule_score': None,
+#                 # 'path_id': path_id,
+#                 'step': stepNum,
+#                 # 'sub_step': None
+#                 }
+#             for chem in data[path_id]['steps'][stepNum]['substrates']:
+#                 if 'mnx' in chem['dbref']:
+#                     meta = sorted(chem['dbref']['mnx'], key=lambda x : int(x.replace('MNXM', '')))[0]
+#                     # try CHEBI
+#                 else:
+#                     logger.warning('Not all the species to have a MNX ID')
+#                     # break
+#                     try:
+#                         meta = sorted(chem['dbref']['chebi'], key=lambda x : int(x))[0]
+#                         meta = 'CHEBI_'+str(meta)
+#                     except KeyError:
+#                         # TODO: need to find a better way
+#                         logger.warning('Cannot determine MNX or CHEBI entry, using random')
+#                         tmpDB_name = list(chem['dbref'].keys())[0]
+#                         meta = chem['dbref'][list(chem['dbref'].keys())[0]][0]
+#                         meta = str(tmpDB_name)+'_'+str(meta)
+#                 toSend['left'][meta] = 1
+#             for chem in data[path_id]['steps'][stepNum]['products']:
+#                 if 'mnx' in chem['dbref']:
+#                     meta = sorted(chem['dbref']['mnx'], key=lambda x : int(x.replace('MNXM', '')))[0]
+#                     # try CHEBI
+#                 else:
+#                     logger.warning('Need all the species to have a MNX ID')
+#                     try:
+#                         meta = sorted(chem['dbref']['chebi'], key=lambda x : int(x))[0]
+#                         meta = 'CHEBI_'+str(meta)
+#                     except KeyError:
+#                         # TODO: need to find a better way
+#                         logger.warning('Cannot determine MNX or CHEBI entry, using random')
+#                         tmpDB_name = list(chem['dbref'].keys())[0]
+#                         meta = chem['dbref'][list(chem['dbref'].keys())[0]][0]
+#                         meta = str(tmpDB_name)+'_'+str(meta)
+#                 toSend['right'][meta] = 1
+#                     # break
+#             # if all are full add it
+#             reac_xref = {}
+#             if 'ec_numbers' in data[path_id]['steps'][stepNum]:
+#                 reac_xref['ec'] = data[path_id]['steps'][stepNum]['ec_numbers']
+#             if 'uniprot' in data[path_id]['steps'][stepNum]:
+#                 reac_xref['uniprot'] = data[path_id]['steps'][stepNum]['uniprot']
+#             logger.debug('#########################################')
+#             logger.debug(toSend)
+#             logger.debug('#########################################')
+#             rpsbml.createReaction(header_name+'_Step'+str(stepNum),
+#                                   upper_flux_bound,
+#                                   lower_flux_bound,
+#                                   toSend,
+#                                   compartment_id,
+#                                   None,
+#                                   reac_xref,
+#                                   pathway_id)
+#             if stepNum==1:
+#                 # adding the consumption of the target
+#                 targetStep = {'rule_id': None,
+#                               'left': {},
+#                               'right': {},
+#                               'step': None,
+#                             #   'sub_step': None,
+#                             #   'path_id': None,
+#                               'transformation_id': None,
+#                               'rule_score': None,
+#                               'rule_ori_reac': None}
+#                 for chem in data[path_id]['steps'][stepNum]['products']:
+#                     try:
+#                         # smallest MNX
+#                         meta = sorted(chem['dbref']['mnx'], key=lambda x : int(x.replace('MNXM', '')))[0]
+#                     except KeyError:
+#                         # try CHEBI
+#                         try:
+#                             meta = sorted(chem['dbref']['chebi'], key=lambda x : int(x))[0]
+#                             meta = 'CHEBI_'+str(meta)
+#                         except KeyError:
+#                             logger.warning('Cannot determine MNX or CHEBI entry, using random')
+#                             tmpDB_name = list(chem['dbref'].keys())[0]
+#                             meta = chem['dbref'][list(chem['dbref'].keys())[0]][0]
+#                             meta = str(tmpDB_name)+'_'+str(meta)
+#                     targetStep['left'][meta] = 1
+#                 rpsbml.createReaction(header_name+'_Step1_sink',
+#                                       upper_flux_bound,
+#                                       lower_flux_bound,
+#                                       targetStep,
+#                                       compartment_id)
+#                 rpsbml.createFluxObj('rpFBA_obj', header_name+'_Step1_sink', 1, True)
+#         if tmpOutputFolder:
+#             rpsbml.writeSBML(tmpOutputFolder)
+#         else:
+#             sbml_paths[header_name+'_Path'+str(path_id)] = rpsbml
+#     if tmpOutputFolder:
+#         return {}
+#     else:
+#         return sbml_paths

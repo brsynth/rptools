@@ -15,9 +15,9 @@ from copy import deepcopy
 # @param f_reac Dictionnary describing the full original reaction
 # @param pathway_cmp Dictionnary used to retreive the public ID of the intermediate compounds. Resets for each individual pathway
 #
-def completeReac(cache, step, rr_reac, full_reac, mono_side, rr_string, pathway_cmp, logger=None):
+def completeReac(cache, step, rr_reac, full_reac, mono_side, rr_string, pathway_cmp, logger=logging.getLogger(__name__)):
 
-    logger = logger or logging.getLogger(__name__)
+    
 
     if mono_side:
         ## add the unknown species to pathway_cmp for the next steps
@@ -37,8 +37,8 @@ def completeReac(cache, step, rr_reac, full_reac, mono_side, rr_string, pathway_
     return True, update_stochio(cache, step, full_reac, rr_string, pathway_cmp, logger=logger)
 
 
-def add_side_species(cache, step, full_reac, rr_reac, logger=None):
-    logger = logger or logging.getLogger(__name__)
+def add_side_species(cache, step, full_reac, rr_reac, logger=logging.getLogger(__name__)):
+    
     rr_string = ''
     for toAdd in full_reac.keys()-rr_reac.keys():
         step.update({toAdd: full_reac[toAdd]})
@@ -53,8 +53,8 @@ def add_side_species(cache, step, full_reac, rr_reac, logger=None):
     return rr_string
 
 
-def update_stochio(cache, step, full_reac, rr_string, pathway_cmp, logger=None):
-    logger = logger or logging.getLogger(__name__)
+def update_stochio(cache, step, full_reac, rr_string, pathway_cmp, logger=logging.getLogger(__name__)):
+    
     for step_spe in step:
         if step_spe in full_reac:
             if not step[step_spe]==full_reac[step_spe]:
@@ -91,8 +91,8 @@ def update_stochio(cache, step, full_reac, rr_string, pathway_cmp, logger=None):
 # @param step Step in a pathway
 # @param pathway_cmp Dictionnary of intermediate compounds with their public ID's
 # @return Boolean determine if the step is to be added
-def addCofactors_step(cache, step, pathway_cmp, logger=None):
-    logger = logger or logging.getLogger(__name__)
+def addCofactors_step(cache, step, pathway_cmp, logger=logging.getLogger(__name__)):
+    
     reac_smiles_left = step['reaction_rule'].split('>>')[0]
     reac_smiles_right = step['reaction_rule'].split('>>')[1]
     if cache.rr_reactions[step['rule_id']][step['rule_ori_reac']]['rel_direction']==-1:
@@ -167,8 +167,8 @@ def addCofactors_step(cache, step, pathway_cmp, logger=None):
 #  @param self Object pointer
 #  @param rpsbml rpSBML object with a single model
 #  @return Boolean if True then you keep that model for the next step, if not then ignore it
-def addCofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway', logger=None):
-    logger = logger or logging.getLogger(__name__)
+def addCofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway', logger=logging.getLogger(__name__)):
+    
     #This keeps the IDs conversions to the pathway
     pathway_cmp = {}
     spe_conv = {}

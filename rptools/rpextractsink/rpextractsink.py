@@ -14,14 +14,14 @@ TIMEOUT = 5
 #
 # @param input Cobra model object
 #
-def _reduce_model(cobraModel, logger=None):
+def _reduce_model(cobraModel, logger=logging.getLogger(__name__)):
     """
     Reduce the model by removing reaction that cannot carry any flux and orphan metabolites
 
     :param model: cobra model object
     :return: reduced cobra model object
     """
-    logger = logger or logging.getLogger(__name__)
+    
     lof_zero_flux_rxn = cobra_flux_analysis.find_blocked_reactions(cobraModel, open_exchanges=True)
     # For assert and logger: Backup the list of metabolites and reactions
     # nb_metabolite_model_ids = set([m.id for m in cobraModel.metabolites])
@@ -59,8 +59,8 @@ def _removeDeadEnd(sbml_path):
 # NOTE: this only works for MNX models, since we are parsing the id
 # TODO: change this to read the annotations and extract the MNX id's
 #
-def genSink(rpcache, input_sbml, output_sink, remove_dead_end=False, compartment_id='MNXC3', logger=None):
-    logger = logger or logging.getLogger(__name__)
+def genSink(rpcache, input_sbml, output_sink, remove_dead_end=False, compartment_id='MNXC3', logger=logging.getLogger(__name__)):
+    
     ### because cobrapy can be terrible and cause infinite loop depending on the input SBML model
     if remove_dead_end:
         try:

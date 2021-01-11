@@ -17,7 +17,7 @@ class rpGraph:
                  pathway_id='rp_pathway',
                  central_species_group_id='central_species',
                  sink_species_group_id='rp_sink_species',
-                 logger=None):
+                 logger=logging.getLogger(__name__)):
         """Constructor of the class
 
         Automatically constructs the network when calling the construtor
@@ -30,13 +30,7 @@ class rpGraph:
         :type pathway_id: str
         :type species_group_id: str
         """
-        if logger is None:
-            # Create logger
-            self.logger = logging.getLogger(__name__)
-            self.logger.setLevel(getattr(logging, 'ERROR'))
-            self.logger.formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
-        else:
-            self.logger = logger
+        self.logger = logger
 
         self.logger.info('New instance of rpGraph')
 
