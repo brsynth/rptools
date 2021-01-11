@@ -172,8 +172,8 @@ def addCofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway',
     #This keeps the IDs conversions to the pathway
     pathway_cmp = {}
     spe_conv = {}
-    rpsbml_json = rpsbml.genJSON(pathway_id)
-    rp_path = rpsbml.convert_pathways_to_dict(pathway_id)
+    rpsbml_dict = rpsbml.toDict(pathway_id)
+    rp_path = rpsbml.convert_pathway_to_dict(pathway_id)
     ori_rp_path = deepcopy(rp_path)
     #We reverse the loop to ID the intermediate CMP to their original ones
     for stepNum in sorted(list(rp_path), reverse=True):
@@ -203,10 +203,10 @@ def addCofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway',
                         #logger.debug('Found the inchikey: '+str(inchikey))
                         #### TODO: find a better way to check if two species are the same ####
                         isfound = False
-                        for rpsbml_species in rpsbml_json['species']:
+                        for rpsbml_species in rpsbml_dict['species']:
                             #TODO add a comparison by xref as well
-                            #logger.debug(str(rpsbml_json['species'][rpsbml_species]['brsynth']['inchikey'])+' <--> '+str(inchikey))
-                            if str(rpsbml_json['species'][rpsbml_species]['brsynth']['inchikey'])==str(inchikey):
+                            #logger.debug(str(rpsbml_dict['species'][rpsbml_species]['brsynth']['inchikey'])+' <--> '+str(inchikey))
+                            if str(rpsbml_dict['species'][rpsbml_species]['brsynth']['inchikey'])==str(inchikey):
                                 spe_conv[tmp_species] = rpsbml_species
                                 logger.debug('The species '+str(tmp_species)+' is the same as '+str(rpsbml_species))
                                 isfound = True

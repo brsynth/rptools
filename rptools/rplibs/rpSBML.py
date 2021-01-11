@@ -167,10 +167,10 @@ class rpSBML:
         self.logger.debug('thermo_floor: '+str(thermo_floor))
         self.logger.debug('fba_ceil: '+str(fba_ceil))
         self.logger.debug('fba_floor: '+str(fba_floor))
-        rpsbml_json = self.genJSON(pathway_id)
-        list_reac_id = list(rpsbml_json['reactions'].keys())
+        rpsbml_dict = self.toDict(pathway_id)
+        list_reac_id = list(rpsbml_dict['reactions'].keys())
         for reac_id in list_reac_id:
-            list_bd_id = list(rpsbml_json['reactions'][reac_id]['brsynth'].keys())
+            list_bd_id = list(rpsbml_dict['reactions'][reac_id]['brsynth'].keys())
             for bd_id in list_bd_id:
                 ####### Thermo ############
                 #lower is better -> -1.0 to have highest better
@@ -179,20 +179,20 @@ class rpSBML:
                     if bd_id not in path_norm:
                         path_norm[bd_id] = []
                     try:
-                        if thermo_ceil>=rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']>=thermo_floor:
+                        if thermo_ceil>=rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']>=thermo_floor:
                             #min-max feature scaling
-                            norm_thermo = (rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']-thermo_floor)/(thermo_ceil-thermo_floor)
+                            norm_thermo = (rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']-thermo_floor)/(thermo_ceil-thermo_floor)
                             norm_thermo = 1.0-norm_thermo
-                        elif rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']<thermo_floor:
+                        elif rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']<thermo_floor:
                             norm_thermo = 1.0
-                        elif rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']>thermo_ceil:
+                        elif rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']>thermo_ceil:
                             norm_thermo = 0.0
                     except (KeyError, TypeError) as e:
                         self.logger.warning('Cannot find the thermo: '+str(bd_id)+' for the reaction: '+str(reac_id))
                         norm_thermo = 1.0
-                    rpsbml_json['reactions'][reac_id]['brsynth']['norm_'+bd_id] = {}
-                    rpsbml_json['reactions'][reac_id]['brsynth']['norm_'+bd_id]['value'] = norm_thermo
-                    self.logger.debug(str(bd_id)+': '+str(rpsbml_json['reactions'][reac_id]['brsynth']['norm_'+bd_id]['value'])+' ('+str(norm_thermo)+')')
+                    rpsbml_dict['reactions'][reac_id]['brsynth']['norm_'+bd_id] = {}
+                    rpsbml_dict['reactions'][reac_id]['brsynth']['norm_'+bd_id]['value'] = norm_thermo
+                    self.logger.debug(str(bd_id)+': '+str(rpsbml_dict['reactions'][reac_id]['brsynth']['norm_'+bd_id]['value'])+' ('+str(norm_thermo)+')')
                     path_norm[bd_id].append(norm_thermo)
                 ####### FBA ##############
                 #higher is better
@@ -201,24 +201,24 @@ class rpSBML:
                 elif bd_id[:4]=='fba_':
                     try:
                         norm_fba = 0.0
-                        if fba_ceil>=rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']>=fba_floor:
+                        if fba_ceil>=rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']>=fba_floor:
                             #min-max feature scaling
-                            norm_fba = (rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']-fba_floor)/(fba_ceil-fba_floor)
-                        elif rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']<=fba_floor:
+                            norm_fba = (rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']-fba_floor)/(fba_ceil-fba_floor)
+                        elif rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']<=fba_floor:
                             norm_fba = 0.0
-                        elif rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']>fba_ceil:
+                        elif rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']>fba_ceil:
                             norm_fba = 1.0
-                        rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value'] = norm_fba
+                        rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value'] = norm_fba
                     except (KeyError, TypeError) as e:
                         norm_fba = 0.0
                         self.logger.warning('Cannot find the objective: '+str(bd_id)+' for the reaction: '+str(reac_id))
-                    rpsbml_json['reactions'][reac_id]['brsynth']['norm_'+bd_id] = {}
-                    rpsbml_json['reactions'][reac_id]['brsynth']['norm_'+bd_id]['value'] = norm_fba
+                    rpsbml_dict['reactions'][reac_id]['brsynth']['norm_'+bd_id] = {}
+                    rpsbml_dict['reactions'][reac_id]['brsynth']['norm_'+bd_id]['value'] = norm_fba
                 elif bd_id=='rule_score':
                     if bd_id not in path_norm:
                         path_norm[bd_id] = []
                     #rule score higher is better
-                    path_norm[bd_id].append(rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value'])
+                    path_norm[bd_id].append(rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value'])
                 else:
                     self.logger.debug('Not normalising: '+str(bd_id))
         ####################################################################################################### 
@@ -226,49 +226,49 @@ class rpSBML:
         ####################################################################################################### 
         ############### FBA ################
         #higher is better
-        list_path_id = list(rpsbml_json['pathway']['brsynth'].keys())
+        list_path_id = list(rpsbml_dict['pathway']['brsynth'].keys())
         for bd_id in list_path_id:
             if bd_id[:4]=='fba_':
                 norm_fba = 0.0
-                if fba_ceil>=rpsbml_json['pathway']['brsynth'][bd_id]['value']>=fba_floor:
+                if fba_ceil>=rpsbml_dict['pathway']['brsynth'][bd_id]['value']>=fba_floor:
                     #min-max feature scaling
-                    norm_fba = (rpsbml_json['pathway']['brsynth'][bd_id]['value']-fba_floor)/(fba_ceil-fba_floor)
-                elif rpsbml_json['pathway']['brsynth'][bd_id]['value']<=fba_floor:
+                    norm_fba = (rpsbml_dict['pathway']['brsynth'][bd_id]['value']-fba_floor)/(fba_ceil-fba_floor)
+                elif rpsbml_dict['pathway']['brsynth'][bd_id]['value']<=fba_floor:
                     norm_fba = 0.0
-                elif rpsbml_json['pathway']['brsynth'][bd_id]['value']>fba_ceil:
+                elif rpsbml_dict['pathway']['brsynth'][bd_id]['value']>fba_ceil:
                     norm_fba = 1.0
                 else:
-                    self.logger.warning('This flux event should never happen: '+str(rpsbml_json['pathway']['brsynth'][bd_id]['value']))
-                rpsbml_json['pathway']['brsynth']['norm_'+bd_id] = {}
-                rpsbml_json['pathway']['brsynth']['norm_'+bd_id]['value'] = norm_fba
+                    self.logger.warning('This flux event should never happen: '+str(rpsbml_dict['pathway']['brsynth'][bd_id]['value']))
+                rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
+                rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = norm_fba
         ############# thermo ################
         for bd_id in path_norm:
             if bd_id[:4]=='dfG_':
-                rpsbml_json['pathway']['brsynth']['norm_'+bd_id] = {}
-                rpsbml_json['pathway']['brsynth']['var_'+bd_id] = {}
+                rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
+                rpsbml_dict['pathway']['brsynth']['var_'+bd_id] = {}
                 #here add weights based on std
                 self.logger.debug(str(bd_id)+': '+str(path_norm[bd_id]))
-                rpsbml_json['pathway']['brsynth']['norm_'+bd_id]['value'] = np.average([np.average(path_norm[bd_id]), 1.0-np.std(path_norm[bd_id])], weights=[0.5, 0.5])
+                rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = np.average([np.average(path_norm[bd_id]), 1.0-np.std(path_norm[bd_id])], weights=[0.5, 0.5])
                 #the score is higher is better - (-1 since we want lower variability)
-                #rpsbml_json['pathway']['brsynth']['var_'+bd_id]['value'] = 1.0-np.var(path_norm[bd_id])
+                #rpsbml_dict['pathway']['brsynth']['var_'+bd_id]['value'] = 1.0-np.var(path_norm[bd_id])
         ############# rule score ############
         #higher is better
         if not 'rule_score' in path_norm:
             self.logger.warning('Cannot detect rule_score: '+str(path_norm))
-            rpsbml_json['pathway']['brsynth']['norm_'+bd_id] = {}
-            rpsbml_json['pathway']['brsynth']['norm_'+bd_id]['value'] = 0.0
+            rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
+            rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = 0.0
         else:
-            rpsbml_json['pathway']['brsynth']['norm_'+bd_id] = {}
-            rpsbml_json['pathway']['brsynth']['norm_'+bd_id]['value'] = np.average(path_norm[bd_id])
+            rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
+            rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = np.average(path_norm[bd_id])
         ##### length of pathway ####
         #lower is better -> -1.0 to reverse it
         norm_steps = 0.0
-        if len(rpsbml_json['reactions'])>max_rp_steps:
+        if len(rpsbml_dict['reactions'])>max_rp_steps:
             self.logger.warning('There are more steps than specified')
             norm_steps = 0.0
         else:
             try:
-                norm_steps = (float(len(rpsbml_json['reactions']))-1.0)/(float(max_rp_steps)-1.0)
+                norm_steps = (float(len(rpsbml_dict['reactions']))-1.0)/(float(max_rp_steps)-1.0)
                 norm_steps = 1.0-norm_steps
             except ZeroDivisionError:
                 norm_steps = 0.0
@@ -277,33 +277,33 @@ class rpSBML:
         #################################################
         ##### global score #########
         try:
-            rpsbml_json['pathway']['brsynth']['norm_steps'] = {}
-            rpsbml_json['pathway']['brsynth']['norm_steps']['value'] = norm_steps
-            globalScore = np.average([rpsbml_json['pathway']['brsynth']['norm_rule_score']['value'],
-                                    rpsbml_json['pathway']['brsynth']['norm_'+str(thermo_id)]['value'],
-                                    rpsbml_json['pathway']['brsynth']['norm_steps']['value'],
-                                    rpsbml_json['pathway']['brsynth']['norm_fba_'+str(objective_id)]['value']],
+            rpsbml_dict['pathway']['brsynth']['norm_steps'] = {}
+            rpsbml_dict['pathway']['brsynth']['norm_steps']['value'] = norm_steps
+            globalScore = np.average([rpsbml_dict['pathway']['brsynth']['norm_rule_score']['value'],
+                                    rpsbml_dict['pathway']['brsynth']['norm_'+str(thermo_id)]['value'],
+                                    rpsbml_dict['pathway']['brsynth']['norm_steps']['value'],
+                                    rpsbml_dict['pathway']['brsynth']['norm_fba_'+str(objective_id)]['value']],
                                     weights=[weight_rule_score, weight_thermo, weight_rp_steps, weight_fba]
                                     )
             '''
-            globalScore = (rpsbml_json['pathway']['brsynth']['norm_rule_score']['value']*weight_rule_score+
-                        rpsbml_json['pathway']['brsynth']['norm_'+str(thermo_id)]['value']*weight_thermo+
-                        rpsbml_json['pathway']['brsynth']['norm_steps']['value']*weight_rp_steps+
-                        rpsbml_json['pathway']['brsynth']['norm_fba_'+str(objective_id)]['value']*weight_fba
+            globalScore = (rpsbml_dict['pathway']['brsynth']['norm_rule_score']['value']*weight_rule_score+
+                        rpsbml_dict['pathway']['brsynth']['norm_'+str(thermo_id)]['value']*weight_thermo+
+                        rpsbml_dict['pathway']['brsynth']['norm_steps']['value']*weight_rp_steps+
+                        rpsbml_dict['pathway']['brsynth']['norm_fba_'+str(objective_id)]['value']*weight_fba
                         )/sum([weight_rule_score, weight_thermo, weight_rp_steps, weight_fba])
             '''
         except ZeroDivisionError:
             globalScore = 0.0
         except KeyError as e:
-            #logger.error(rpsbml_json['pathway']['brsynth'].keys())
+            #logger.error(rpsbml_dict['pathway']['brsynth'].keys())
             self.logger.error('KeyError for :'+str(e))
             self.logger.error('Make sure that you run both thermodynamics and FBA')
             globalScore = 0.0
-        rpsbml_json['pathway']['brsynth']['global_score'] = {}
-        rpsbml_json['pathway']['brsynth']['global_score']['value'] = globalScore
+        rpsbml_dict['pathway']['brsynth']['global_score'] = {}
+        rpsbml_dict['pathway']['brsynth']['global_score']['value'] = globalScore
         self.global_score = globalScore
 
-        self.updateBRSynthPathway(rpsbml_json, pathway_id)
+        self.updateBRSynthPathway(rpsbml_dict, pathway_id)
 
         return self.getGlobalScore()
 
@@ -312,47 +312,47 @@ class rpSBML:
         return self.global_score
 
 
-    def updateBRSynthPathway(self, rpsbml_json, pathway_id='rp_pathway'):
+    def updateBRSynthPathway(self, rpsbml_dict, pathway_id='rp_pathway'):
         """Update the heterologous pathway from a dictionary to a rpsbml file
 
         :param self: rpSBML object
-        :param rpsbml_json: The dictionary of the heterologous pathway
+        :param rpsbml_dict: The dictionary of the heterologous pathway
         :param pathway_id: The ID of the heterologous pathway
         
         :return: None
         """
 
-        self.logger.debug('rpsbml_json: {0}'.format(rpsbml_json))
+        self.logger.debug('rpsbml_dict: {0}'.format(rpsbml_dict))
 
         rp_pathway = self.getModel().getPlugin('groups').getGroup(pathway_id)
 
-        for bd_id in rpsbml_json['pathway']['brsynth']:
+        for bd_id in rpsbml_dict['pathway']['brsynth']:
             # if bd_id[:5]=='norm_' or bd_id=='global_score':
                 try:
-                    value = rpsbml_json['pathway']['brsynth'][bd_id]['value']
+                    value = rpsbml_dict['pathway']['brsynth'][bd_id]['value']
                 except KeyError:
                     self.logger.warning('The entry '+str(bd_id)+' does not contain any value')
                     self.logger.warning('No" value", using the root')
                 try:
-                    units = rpsbml_json['pathway']['brsynth'][bd_id]['units']
+                    units = rpsbml_dict['pathway']['brsynth'][bd_id]['units']
                 except KeyError:
                     units = None
                 self.updateBRSynth(rp_pathway, bd_id, value, units, False)
 
-        for reac_id in rpsbml_json['reactions']:
+        for reac_id in rpsbml_dict['reactions']:
             reaction = self.getModel().getReaction(reac_id)
             if reaction==None:
                 self.logger.warning('Skipping updating '+str(reac_id)+', cannot retreive it')
                 continue
-            for bd_id in rpsbml_json['reactions'][reac_id]['brsynth']:
+            for bd_id in rpsbml_dict['reactions'][reac_id]['brsynth']:
                 if bd_id[:5]=='norm_':
                     try:
-                        value = rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['value']
+                        value = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']
                     except KeyError:
-                        value = rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]
+                        value = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]
                         self.logger.warning('No" value", using the root')
                     try:
-                        units = rpsbml_json['reactions'][reac_id]['brsynth'][bd_id]['units']
+                        units = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['units']
                     except KeyError:
                         units = None
                     self.updateBRSynth(reaction, bd_id, value, units, False)
@@ -2050,8 +2050,7 @@ class rpSBML:
         return True
 
 
-    #TODO: change the name of the function to: rpJSON
-    def genJSON(self, pathway_id='rp_pathway'):
+    def toDict(self, pathway_id='rp_pathway'):
         """Generate the dictionnary of all the annotations of a pathway species, reaction and pathway annotations
 
         :param pathway_id: The pathway ID (Default: rp_pathway)
@@ -2061,30 +2060,40 @@ class rpSBML:
         :rtype: dict
         :return: Dictionnary of the pathway annotation
         """
+
         groups = self.getModel().getPlugin('groups')
         rp_pathway = groups.getGroup(pathway_id)
         reactions = rp_pathway.getListOfMembers()
+
         # pathway
-        rpsbml_json = {}
-        rpsbml_json['pathway'] = {}
-        rpsbml_json['pathway']['brsynth'] = self.readBRSYNTHAnnotation(rp_pathway.getAnnotation(), self.logger)
+        rpsbml_dict = {}
+        rpsbml_dict['pathway'] = {}
+        rpsbml_dict['pathway']['brsynth'] = self.readBRSYNTHAnnotation(rp_pathway.getAnnotation(), self.logger)
+
         # reactions
-        rpsbml_json['reactions'] = {}
+        rpsbml_dict['reactions'] = {}
         for member in reactions:
             reaction = self.getModel().getReaction(member.getIdRef())
             annot = reaction.getAnnotation()
-            rpsbml_json['reactions'][member.getIdRef()] = {}
-            rpsbml_json['reactions'][member.getIdRef()]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
-            rpsbml_json['reactions'][member.getIdRef()]['miriam'] = self.readMIRIAMAnnotation(annot)
+            rpsbml_dict['reactions'][member.getIdRef()] = {}
+            rpsbml_dict['reactions'][member.getIdRef()]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
+            rpsbml_dict['reactions'][member.getIdRef()]['miriam'] = self.readMIRIAMAnnotation(annot)
+
         # loop though all the species
-        rpsbml_json['species'] = {}
+        rpsbml_dict['species'] = {}
         for spe_id in self.readUniqueRPspecies(pathway_id):
             species = self.getModel().getSpecies(spe_id)
             annot = species.getAnnotation()
-            rpsbml_json['species'][spe_id] = {}
-            rpsbml_json['species'][spe_id]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
-            rpsbml_json['species'][spe_id]['miriam'] = self.readMIRIAMAnnotation(annot)
-        return rpsbml_json
+            rpsbml_dict['species'][spe_id] = {}
+            rpsbml_dict['species'][spe_id]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
+            rpsbml_dict['species'][spe_id]['miriam'] = self.readMIRIAMAnnotation(annot)
+
+        return rpsbml_dict
+
+
+    def toJSON(self, pathway_id='rp_pathway', indent=0):
+        from json import dumps as json_dumps
+        return json_dumps(self.toDict(pathway_id))
 
 
     #####################################################################
@@ -2446,66 +2455,6 @@ class rpSBML:
         # return toRet
 
 
-    # TODO: delete
-    def readReactionSpecies_old(self, reaction, isID=False):
-        """Return the products and the species associated with a reaction
-
-        WARNING: DEPRECATED
-
-        :param reaction: Reaction object of libSBML
-
-        :type annot: libsbml.Reaction
-
-        :rtype: dict
-        :return: Dictionary of the reactions stoichiometry
-        """
-        # TODO: check that reaction is either an sbml species; if not check that its a string and that
-        # it exists in the rpsbml model
-        toRet = {'left': {}, 'right': {}}
-        # reactants
-        for i in range(reaction.getNumReactants()):
-            reactant_ref = reaction.getReactant(i)
-            reactant = self.getModel().getSpecies(reactant_ref.getSpecies())
-            if isID:
-                toRet['left'][reactant.getId()] = int(reactant_ref.getStoichiometry())
-            else:
-                toRet['left'][reactant.getName()] = int(reactant_ref.getStoichiometry())
-        # products
-        for i in range(reaction.getNumProducts()):
-            product_ref = reaction.getProduct(i)
-            product = self.getModel().getSpecies(product_ref.getSpecies())
-            if isID:
-                toRet['right'][product.getId()] = int(product_ref.getStoichiometry())
-            else:
-                toRet['right'][product.getName()] = int(product_ref.getStoichiometry())
-            toRet['reversible'] = reaction.getReversible()
-        return toRet
-
-
-    def readReactionSpecies(self, reaction):
-        """Return the products and the species associated with a reaction
-
-        :param reaction: Reaction object of libSBML
-
-        :type annot: libsbml.Reaction
-
-        :rtype: dict
-        :return: Dictionary of the reaction stoichiometry
-        """
-        # TODO: check that reaction is either an sbml species; if not check that its a string and that
-        # it exists in the rpsbml model
-        toRet = {'left': {}, 'right': {}}
-        # reactants
-        for i in range(reaction.getNumReactants()):
-            reactant_ref = reaction.getReactant(i)
-            toRet['left'][reactant_ref.getSpecies()] = int(reactant_ref.getStoichiometry())
-        # products
-        for i in range(reaction.getNumProducts()):
-            product_ref = reaction.getProduct(i)
-            toRet['right'][product_ref.getSpecies()] = int(product_ref.getStoichiometry())
-        return toRet
-
-
     #####################################################################
     ######################### INQUIRE ###################################
     #####################################################################
@@ -2574,7 +2523,7 @@ class rpSBML:
     #########################################################################
 
 
-    def convert_pathways_to_dict(self, pathway_id='rp_pathway'):
+    def convert_pathway_to_dict(self, pathway_id='rp_pathway'):
         """Function to return in a dictionary in the same format as the out_paths rp2paths file dictionary object
 
         Example format returned: {'rule_id': 'RR-01-503dbb54cf91-49-F', 'right': {'TARGET_0000000001': 1}, 'left': {'MNXM2': 1, 'MNXM376': 1}, 'pathway_id': 1, 'step': 1, 'sub_step': 1, 'transformation_id': 'TRS_0_0_17'}. Really used to complete the monocomponent reactions
@@ -2600,12 +2549,35 @@ class rpSBML:
                 'rule_ori_reac': brsynthAnnot['rule_ori_reac'],
                 'right': speciesReac['right'],
                 'left': speciesReac['left'],
-                # 'path_id': brsynthAnnot['path_id'],
-                'step': brsynthAnnot['step_id'],
-                # 'sub_step': brsynthAnnot['sub_step_id']
+                'step_id': brsynthAnnot['step_id'],
                 }
             pathway[brsynthAnnot['step_id']['value']] = step
         return pathway
+
+
+    def readReactionSpecies(self, reaction):
+        """Return the products and the species associated with a reaction
+
+        :param reaction: Reaction object of libSBML
+
+        :type annot: libsbml.Reaction
+
+        :rtype: dict
+        :return: Dictionary of the reaction stoichiometry
+        """
+        # TODO: check that reaction is either an sbml species; if not check that its a string and that
+        # it exists in the rpsbml model
+        self.logger.debug(reaction)
+        toRet = {'left': {}, 'right': {}}
+        # reactants
+        for i in range(reaction.getNumReactants()):
+            reactant_ref = reaction.getReactant(i)
+            toRet['left'][reactant_ref.getSpecies()] = int(reactant_ref.getStoichiometry())
+        # products
+        for i in range(reaction.getNumProducts()):
+            product_ref = reaction.getProduct(i)
+            toRet['right'][product_ref.getSpecies()] = int(product_ref.getStoichiometry())
+        return toRet
 
 
     #########################################################################

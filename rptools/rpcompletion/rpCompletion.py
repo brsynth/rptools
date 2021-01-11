@@ -226,6 +226,9 @@ def rp_completion(cache,
 
     if not os_path.exists(outdir):
         os_mkdir(outdir)
+    elif os_path.isfile(outdir):
+        logger.error('Outdir name '+outdir+' already exists and is actually file. Stopping the process...')
+        exit()
 
     rp_strc = _compounds(cache, rp2paths_compounds, logger=logger)
     rp_transformation, sink_molecules = _transformation(rp2_pathways, logger=logger)
@@ -560,12 +563,12 @@ def write_rp2paths_to_rpSBML(cache,
             # create new group
             rpsbml.createGroup(pathway_id)
             # add pathway id
-            rpsbml_json = rpsbml.genJSON(pathway_id)
-            rpsbml_json['pathway']['brsynth']['path_id'] = {}
-            rpsbml_json['pathway']['brsynth']['path_id']['value'] = path_id
-            rpsbml_json['pathway']['brsynth']['alt_path_id'] = {}
-            rpsbml_json['pathway']['brsynth']['alt_path_id']['value'] = alt_path_id
-            rpsbml.updateBRSynthPathway(rpsbml_json, pathway_id)
+            rpsbml_dict = rpsbml.toDict(pathway_id)
+            rpsbml_dict['pathway']['brsynth']['path_id'] = {}
+            rpsbml_dict['pathway']['brsynth']['path_id']['value'] = path_id
+            rpsbml_dict['pathway']['brsynth']['alt_path_id'] = {}
+            rpsbml_dict['pathway']['brsynth']['alt_path_id']['value'] = alt_path_id
+            rpsbml.updateBRSynthPathway(rpsbml_dict, pathway_id)
             logger.debug('Create species group: '+species_group_id)
             rpsbml.createGroup(species_group_id)
             logger.debug('Create sink species group: '+sink_species_group_id)
@@ -582,7 +585,7 @@ def write_rp2paths_to_rpSBML(cache,
             for step in steps:
                 rpsbml.createReaction(
                         # switch rxn number order from reverse to forward
-                        'Rxn_'+str(len(steps)+1-step['step']), # parameter 'name' of the reaction deleted : 'RetroPath_Reaction_'+str(step['step']),
+                        'rxn_'+str(len(steps)+1-step['step']), # parameter 'name' of the reaction deleted : 'RetroPath_Reaction_'+str(step['step']),
                         upper_flux_bound, lower_flux_bound,
                         step,
                         compartment_id,
@@ -602,7 +605,7 @@ def write_rp2paths_to_rpSBML(cache,
                     'rule_score': None,
                     'rule_ori_reac': None
                     }
-            rpsbml.createReaction('Rxn_sink',
+            rpsbml.createReaction('rxn_target',
                                   upper_flux_bound, lower_flux_bound,
                                   targetStep,
                                   compartment_id)
