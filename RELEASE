@@ -2,12 +2,14 @@
 
 ## 2.0.0
 - rename reaction ids in rpSBML format:
-    + RP1      -> Rxn_1
-    + RP1_sink -> Rxn_sink
+    + RP1      -> rxn_1
+    + RP1_sink -> rxn_target
 - change reactions order from reverse to forward
 - rename methods in rpSBML class:
-    + createPathway()    -> createGroup()
-    + readRPpathwayIDs() -> readGroupMembers()
+    + createPathway()            -> createGroup()
+    + readRPpathwayIDs()         -> readGroupMembers()
+    + genJSON()                  -> toDict()
+    + convert_pathways_to_dict() -> convert_pathway_to_dict()
 - move annotations from reaction nodes to pathway node:
     + path_id
     + sub_step_id
