@@ -169,7 +169,7 @@ class rpSBML:
                 ####### Thermo ############
                 #lower is better -> -1.0 to have highest better
                 #WARNING: we will only take the dfG_prime_m value
-                if bd_id[:4]=='dfG_':
+                if bd_id.startswith('dfG_'):
                     if bd_id not in path_norm:
                         path_norm[bd_id] = []
                     try:
@@ -192,7 +192,7 @@ class rpSBML:
                 #higher is better
                 #return all the FBA values
                 #------- reactions ----------
-                elif bd_id[:4]=='fba_':
+                elif bd_id.startswith('fba_'):
                     try:
                         norm_fba = 0.0
                         if fba_ceil>=rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']>=fba_floor:
@@ -222,7 +222,7 @@ class rpSBML:
         #higher is better
         list_path_id = list(rpsbml_dict['pathway']['brsynth'].keys())
         for bd_id in list_path_id:
-            if bd_id[:4]=='fba_':
+            if bd_id.startswith('fba_'):
                 norm_fba = 0.0
                 if fba_ceil>=rpsbml_dict['pathway']['brsynth'][bd_id]['value']>=fba_floor:
                     #min-max feature scaling
@@ -237,7 +237,7 @@ class rpSBML:
                 rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = norm_fba
         ############# thermo ################
         for bd_id in path_norm:
-            if bd_id[:4]=='dfG_':
+            if bd_id.startswith('dfG_'):
                 rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
                 rpsbml_dict['pathway']['brsynth']['var_'+bd_id] = {}
                 #here add weights based on std
