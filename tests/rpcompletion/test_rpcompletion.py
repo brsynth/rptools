@@ -70,22 +70,22 @@ class Test_rpCompletion(TestCase):
     ]
 
     def test_update_rppaths(self):
-        current_path_id = 2
+        path_base_id = 2
         path_step = 3
-        sub_path_step = 1
+        path_variant_idx = 1
         rxn = {'rule_id'           : 'RR-02-ae41ec5771136ea5-14-F',
                'rule_ori_reac'     : 'MNXR113128',
                'rule_score'        : 0.7358363677022237,
                'left'              : {'CMPD_0000000001': 1},
                'right'             : {'TARGET_0000000001': 1},
-               'path_id'           : current_path_id,
+               'path_base_id'      : path_base_id,
                'step'              : path_step,
                'transformation_id' : 'TRS_0_0_1'}
-        rp_paths = update_rppaths({}, current_path_id, path_step, sub_path_step, rxn)
+        rp_paths = update_rppaths({}, path_base_id, path_step, path_variant_idx, rxn)
         self.assertEqual(rp_paths, {
-                                    current_path_id: {
+                                    path_base_id: {
                                         path_step: {
-                                            sub_path_step: rxn
+                                            path_variant_idx: rxn
                                         }
                                     }
                                     })
@@ -119,8 +119,8 @@ class Test_rpCompletion(TestCase):
 
 
     def test_rp2paths_to_dict(self):
-        with open(os_path.join(self.data_path, 'refs', 'rp2paths_to_dict.json'), 'r') as read_file:
-            # object_ook is used to convert str keys into int keys as stored in rpCompletion functions
+        with open(os_path.join(self.data_path, 'rp2paths_pathways.json'), 'r') as read_file:
+            # object_hook is used to convert str keys into int keys as stored in rpCompletion functions
             data = json_load(read_file, object_hook=lambda d: {int(k) if k.lstrip('-').isdigit() else k: v for k, v in d.items()})
             self.assertDictEqual(rp2paths_to_dict(self.rp2paths_pathways,
                                                   self.rpcache.rr_reactions, self.rpcache.deprecatedCID_cid),
