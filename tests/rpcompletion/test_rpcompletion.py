@@ -78,10 +78,9 @@ class Test_rpCompletion(TestCase):
                'rule_score'        : 0.7358363677022237,
                'left'              : {'CMPD_0000000001': 1},
                'right'             : {'TARGET_0000000001': 1},
-               'path_base_id'      : path_base_id,
                'step'              : path_step,
                'transformation_id' : 'TRS_0_0_1'}
-        rp_paths = update_rppaths({}, path_base_id, path_step, path_variant_idx, rxn)
+        rp_paths = update_rppaths({}, path_base_id, path_variant_idx, rxn)
         self.assertEqual(rp_paths, {
                                     path_base_id: {
                                         path_step: {

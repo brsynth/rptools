@@ -16,6 +16,8 @@ from rptools.rplibs                   import rpSBML
 from rptools.rpcompletion.rpCofactors import addCofactors
 import logging
 import pandas as pd
+# from collections import defaultdict
+# nested_dict = lambda: defaultdict(nested_dict)
 
 #import rpCofactors
 
@@ -326,7 +328,24 @@ def _transformation(path, logger=logging.getLogger(__name__)):
     return rp_transformation, list(set(sink_molecules))
 
 
-## Function that reads the pathway output of rp2paths
+## Function that converts pathways from output of rp2paths to a dictionnary with the following structure:
+# {
+#     path_base_id: {
+#         path_step: {
+#             'left': { components },
+#             'right': { products },
+#             'transformation_id': transformation_id,
+#             'reactions': {
+#                 rxn_id: {
+#                     'rule_id': rule_id,
+#                     'rule_score': rule_score
+#                     'left': { additional_components },
+#                     'right': { additional_products },
+#                 }
+#             }
+#         }
+#     }
+# }
 #
 # @param infile rp2_pathways file
 # @param rr_reactions RetroRules reactions
@@ -344,41 +363,79 @@ def rp2paths_to_dict(infile, rr_reactions, deprecatedCID_cid, logger=logging.get
     rp_paths = {}
 
     # store new Path ID
-    current_path_base_id = None
-    # step (rxn) number witin the current path
-    path_step = None
+    path_base_id = None
 
     for index, row in df.iterrows():
 
+        ### INIT ###
         # if 'Path ID' has changed
-        if row['Path ID'] != current_path_base_id:
-            # re-init step (rxn) number witin the current path
-            path_step = 1
+        if row['Path ID'] != path_base_id:
             # store new Path ID
-            current_path_base_id = row['Path ID']
-        else: # else increment the number of steps (rxn)
+            path_base_id = row['Path ID']
+            # create new entry in rp_paths
+            rp_paths[path_base_id] = {}
+            # re-init path step (rxn number)
+            path_step = 1
+        else: # else increment path step (rxn number)
             path_step += 1
 
-        rule_ids_dict = rxns_from_rules(row['Rule ID'], rr_reactions)
-        sub_path_step = 1
-        for rule_id in rule_ids_dict:
-            ## Build reaction
-            rxn = {
-                    'rule_id'           : rule_id.split('__')[0],
-                    'rule_ori_reac'     : rule_id.split('__')[1],
-                    'rule_score'        : rr_reactions[rule_id.split('__')[0]][rule_id.split('__')[1]]['rule_score'],
-                                                         # remove all illegal characters in SBML ids
-                    'left'              : build_side_rxn(row['Left'].replace("'", "").replace('-', '_').replace('+', ''),
-                                                         deprecatedCID_cid),
-                    'right'             : build_side_rxn(row['Right'], deprecatedCID_cid),
-                    'path_base_id'      : row['Path ID'],
-                    'step'              : path_step,
-                    'transformation_id' : row['Unique ID'][:-2]
-                    }
-            rp_paths = update_rppaths(rp_paths, row['Path ID'], path_step, sub_path_step, rxn)
-            sub_path_step += 1
+        ### REACTION RULE COMMON PART ###
+        # create new entry in rp_paths
+        rp_paths[path_base_id][path_step] = {}
+        # Common fields to all reactions for current step (all reactions from all rules at a given step)
+        rp_paths[path_base_id][path_step] = {
+                                   # remove all illegal characters in SBML ids
+            'left': build_side_rxn(row['Left'].replace("'", "").replace('-', '_').replace('+', ''),
+                                   deprecatedCID_cid),
+            'right': build_side_rxn(row['Right'], deprecatedCID_cid),
+            'transformation_id': row['Unique ID'][:-2],
+            'reactions': {}
+        }
+
+        ### REACTION SPECIFIC PART ###
+        ## Generate all reactions from each rule list
+        # For each rule
+        for rule_id in row['Rule ID'].split(','):
+            # For each reaction of a rule
+            for rxn_id in rr_reactions[rule_id]:
+                # Add reaction to rp_paths
+                rp_paths[path_base_id][path_step]['reactions'][rxn_id] = {
+                    'rule_id': rule_id,
+                    'rule_score': rr_reactions[rule_id][rxn_id]['rule_score'],
+                    'left': {},
+                    'right': {}
+                }
 
     return rp_paths
+
+        # # if 'Path ID' has changed
+        # if row['Path ID'] != current_path_base_id:
+        #     # re-init index of pathway variant
+        #     path_variant_idx = 1
+        #     # store new Path ID
+        #     current_path_base_id = row['Path ID']
+        # else: # else increment index of pathway variant
+        #     path_variant_idx += 1
+
+
+        # rule_ids_dict = rxns_from_rules(row['Rule ID'].split(','), rr_reactions)
+        # path_variant_idx = 1
+
+        # for rule_id in rule_ids_dict:
+        #     ## Build reaction
+        #     rxn = {
+        #             'rule_id'           : rule_id.split('__')[0],
+        #             'rule_ori_reac'     : rule_id.split('__')[1],
+        #             'rule_score'        : rr_reactions[rule_id.split('__')[0]][rule_id.split('__')[1]]['rule_score'],
+        #                                                  # remove all illegal characters in SBML ids
+        #             'left'              : build_side_rxn(row['Left'].replace("'", "").replace('-', '_').replace('+', ''),
+        #                                                  deprecatedCID_cid),
+        #             'right'             : build_side_rxn(row['Right'], deprecatedCID_cid),
+        #             'step'              : path_step,
+        #             'transformation_id' : row['Unique ID'][:-2]
+        #             }
+        #     rp_paths = add_rxn_to_rppaths(rp_paths, row['Path ID'], path_variant_idx, rxn)
+        #     path_variant_idx += 1
 
 
 ## Function that checks pathways data
@@ -395,33 +452,34 @@ def check_pathways(df):
     return True
 
 
-## Function that returns reactions from rules
-#
-# @param rule_ids The reaction rule ids
-# @param rules The reaction rules
-# @return Dictionnary of the reaction rule
-def rxns_from_rules(rule_ids, rules, logger=logging.getLogger(__name__)):
+# ## Function that returns reactions from rules
+# #
+# # @param rule_ids The list of reaction rule ids
+# # @param rules The reaction rules
+# # @return Dictionnary of the reaction rule
+# def rxns_from_rules(rule_ids, rules, logger=logging.getLogger(__name__)):
 
-    if not rule_ids:
-        logger.warning('The rule ids are empty')
-    ruleIds = rule_ids.split(',')
+#     if not rule_ids:
+#         logger.warning('The rule ids are empty')
 
-    ### WARNING: This is the part where we select some rules over others
-    # we do it by sorting the list according to their score and taking the topx
-    reactions = {}
-    for r_id in ruleIds:
-        for rea_id in rules[r_id]:
-            reactions[str(r_id)+'__'+str(rea_id)] = rules[r_id][rea_id]
-    # if len(ruleIds)>int(maxRuleIds):
-    #     logger.warning('There are too many rules, limiting the number to random top '+str(maxRuleIds))
-    #     try:
-    #         ruleIds = [y for y,_ in sorted([(i, tmp_rr_reactions[i]['rule_score']) for i in tmp_rr_reactions])][:int(maxRuleIds)]
-    #     except KeyError:
-    #         logger.warning('Could not select topX due inconsistencies between rules ids and rr_reactions... selecting random instead')
-    #         ruleIds = random.sample(tmp_rr_reactions, int(maxRuleIds))
-    # else:
+#     ### WARNING: This is the part where we select some rules over others
+#     # we do it by sorting the list according to their score and taking the topx
+#     reactions = {}
+#     for rule_id in rule_ids:
+#         for rxn_id in rules[rule_id]:
+#             reactions[str(rxn_id)] = {}
+#             reactions[str(rxn_id)]['rule_id'] = str(rule_id)
+#             reactions[str(rule_id)+'__'+str(rxn_id)] = rules[rule_id][rxn_id]
+#     # if len(ruleIds)>int(maxRuleIds):
+#     #     logger.warning('There are too many rules, limiting the number to random top '+str(maxRuleIds))
+#     #     try:
+#     #         ruleIds = [y for y,_ in sorted([(i, tmp_rr_reactions[i]['rule_score']) for i in tmp_rr_reactions])][:int(maxRuleIds)]
+#     #     except KeyError:
+#     #         logger.warning('Could not select topX due inconsistencies between rules ids and rr_reactions... selecting random instead')
+#     #         ruleIds = random.sample(tmp_rr_reactions, int(maxRuleIds))
+#     # else:
 
-    return reactions
+#     return reactions
 
 
 ## Function that returns the left/right part of reaction as a dict
@@ -455,26 +513,31 @@ def build_side_rxn(side, deprecatedCID_cid, logger=logging.getLogger(__name__)):
     return rxn_side
 
 
-## Function that returns the reaction as a dict
-#
-# @param rp_paths is the dictionnary of pathways already built
-# @param path_base_id is the id of the current pathway
-# @param path_step is the reaction number in the pathway
-# @param sub_path_step is the reaction number in the pathway
-# @param rxn is the reaction to add
-# @return Dictionnary of the reaction
-def update_rppaths(rp_paths, path_base_id, path_step, sub_path_step, rxn):
+# ## Function that returns the reaction as a dict
+# #
+# # @param rp_paths is the dictionnary of pathways already built
+# # @param path_base_id is the id of the current pathway
+# # @param path_variant_idx is the index of the pathway variant
+# # @param path_step is the reaction number in the pathway
+# # @param rxn is the reaction to add
+# # @return Dictionnary of the reaction
+# def add_rxn_to_dict(rp_paths, path_base_id, path_variant_idx, rxn):
 
-    # init some keys
-    if not path_base_id in rp_paths:
-        rp_paths[path_base_id] = {}
-    if not int(path_step) in rp_paths[path_base_id]:
-        rp_paths[path_base_id][int(path_step)] = {}
+#     # init some keys
+#     if not path_base_id in rp_paths:
+#         rp_paths[path_base_id] = {}
+#     if not path_variant_idx in rp_paths[path_base_id]:
+#         rp_paths[path_base_id][path_variant_idx] = {}
 
-    # add reaction to rp_paths
-    rp_paths[path_base_id][int(path_step)][int(sub_path_step)] = rxn
+#     # add reaction to rp_paths
+#     rp_paths[path_base_id][path_variant_idx][rxn['step']] = rxn
 
-    return rp_paths
+#     import json
+#     print(json.dumps(rp_paths, indent=4))
+#     print(rxn)
+#     print(path_base_id, path_variant_idx)
+
+#     return rp_paths
 
 
 ## Function to parse the out_paths.csv file
@@ -534,11 +597,17 @@ def write_rp2paths_to_rpSBML(cache,
         local_SBMLItems = []
 
         path_variant_idx = 1
-        for comb_path in list(itertools_product(*[[(i,y) for y in rp_paths[path_base_id][i]] for i in rp_paths[path_base_id]])):
-            steps = []
-            for i, y in comb_path:
-                steps.append(rp_paths[path_base_id][i][y])
-            logger.debug('steps --> {0}'.format(steps))
+
+        # Build all pathways from reaction list over step
+        pathways_comb = list(map(list,list(itertools_product(*[list(rp_paths[path_base_id][step]['reactions'].keys()) for step in rp_paths[path_base_id]]))))
+
+        for path_variant in pathways_comb:
+
+        # for comb_path in list(itertools_product(*[[(i,y) for y in rp_paths[path_base_id][i]] for i in rp_paths[path_base_id]])):
+        #     steps = []
+        #     for i, y in comb_path:
+        #         steps.append(rp_paths[path_base_id][i][y])
+        #     logger.debug('steps --> {0}'.format(steps))
 
             rpsbml = rpSBML(name='rp_'+str(path_base_id)+'_'+str(path_variant_idx), logger=logger)
 
@@ -559,14 +628,26 @@ def write_rp2paths_to_rpSBML(cache,
             rpsbml.createGroup(pathway_id)
             # add pathway id
             rpsbml_dict = rpsbml.toDict(pathway_id)
-            rpsbml_dict['pathway']['brsynth']['path_id']          = 'rp_'+path_base_id+'_'+path_variant_idx
-            rpsbml_dict['pathway']['brsynth']['path_base_id']     = path_base_id
-            rpsbml_dict['pathway']['brsynth']['path_variant_idx'] = path_variant_idx
+            rpsbml_dict['pathway']['brsynth']['path_id'] = {}
+            rpsbml_dict['pathway']['brsynth']['path_id']['value'] = path_id
+            rpsbml_dict['pathway']['brsynth']['alt_path_id'] = {}
+            rpsbml_dict['pathway']['brsynth']['alt_path_id']['value'] = alt_path_id
+
+            # rpsbml.add_pathway('rp_'+str(path_base_id)+'_'+str(path_variant_idx), path_base_id, path_variant_idx)
+
+            # rpsbml_dict = rpsbml.toDict(pathway_id)
+            # path_id = 'rp_'+str(path_base_id)+'_'+str(path_variant_idx)
+            # rpsbml_dict['pathway'][path_id] = {} 
+            # rpsbml_dict['pathway'][path_id]['path_base_id']     = path_base_id
+            # rpsbml_dict['pathway'][path_id]['path_variant_idx'] = path_variant_idx
             rpsbml.updateBRSynthPathway(rpsbml_dict, pathway_id)
             logger.debug('Create species group: '+species_group_id)
             rpsbml.createGroup(species_group_id)
             logger.debug('Create sink species group: '+sink_species_group_id)
             rpsbml.createGroup(sink_species_group_id)
+
+            print(rpsbml_dict)
+            exit()
 
             # 3) Find all unique species and add them to the model
             all_meta = set([i for step in steps for lr in ['left', 'right'] for i in step[lr]])

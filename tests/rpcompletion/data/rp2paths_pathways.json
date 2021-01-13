@@ -1,796 +1,321 @@
 {
     "1": {
         "1": {
-            "1": {
-                "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                "rule_ori_reac": "MNXR113128",
-                "rule_score": 0.7358363677022237,
-                "left": {
-                    "CMPD_0000000001": 1
-                },
-                "right": {
-                    "TARGET_0000000001": 1
-                },
-                "path_base_id": 1,
-                "step": 1,
-                "transformation_id": "TRS_0_0_1"
+            "left": {
+                "CMPD_0000000001": 1
             },
-            "2": {
-                "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                "rule_ori_reac": "MNXR117536",
-                "rule_score": 0.7358363677022237,
-                "left": {
-                    "CMPD_0000000001": 1
-                },
-                "right": {
-                    "TARGET_0000000001": 1
-                },
-                "path_base_id": 1,
-                "step": 1,
-                "transformation_id": "TRS_0_0_1"
+            "right": {
+                "TARGET_0000000001": 1
             },
-            "3": {
-                "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                "rule_ori_reac": "MNXR125832",
-                "rule_score": 0.7358363677022237,
-                "left": {
-                    "CMPD_0000000001": 1
+            "transformation_id": "TRS_0_0_1",
+            "reactions": {
+                "MNXR113128": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
                 },
-                "right": {
-                    "TARGET_0000000001": 1
+                "MNXR117536": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
                 },
-                "path_base_id": 1,
-                "step": 1,
-                "transformation_id": "TRS_0_0_1"
+                "MNXR125832": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
+                }
             }
         },
         "2": {
-            "1": {
-                "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                "rule_ori_reac": "MNXR111250",
-                "rule_score": 0.5518755963407151,
-                "left": {
-                    "CMPD_0000000003": 1
-                },
-                "right": {
-                    "CMPD_0000000001": 1
-                },
-                "path_base_id": 1,
-                "step": 2,
-                "transformation_id": "TRS_0_1_9"
+            "left": {
+                "CMPD_0000000003": 1
             },
-            "2": {
-                "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                "rule_ori_reac": "MNXR111499",
-                "rule_score": 0.5518755963407151,
-                "left": {
-                    "CMPD_0000000003": 1
-                },
-                "right": {
-                    "CMPD_0000000001": 1
-                },
-                "path_base_id": 1,
-                "step": 2,
-                "transformation_id": "TRS_0_1_9"
+            "right": {
+                "CMPD_0000000001": 1
             },
-            "3": {
-                "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                "rule_ori_reac": "MNXR113543",
-                "rule_score": 0.5518755963407151,
-                "left": {
-                    "CMPD_0000000003": 1
+            "transformation_id": "TRS_0_1_9",
+            "reactions": {
+                "MNXR111250": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
                 },
-                "right": {
-                    "CMPD_0000000001": 1
+                "MNXR111499": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
                 },
-                "path_base_id": 1,
-                "step": 2,
-                "transformation_id": "TRS_0_1_9"
-            },
-            "4": {
-                "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                "rule_ori_reac": "MNXR118024",
-                "rule_score": 0.5518755963407151,
-                "left": {
-                    "CMPD_0000000003": 1
+                "MNXR113543": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
                 },
-                "right": {
-                    "CMPD_0000000001": 1
+                "MNXR118024": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
                 },
-                "path_base_id": 1,
-                "step": 2,
-                "transformation_id": "TRS_0_1_9"
-            },
-            "5": {
-                "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                "rule_ori_reac": "MNXR139549",
-                "rule_score": 0.5518755963407151,
-                "left": {
-                    "CMPD_0000000003": 1
-                },
-                "right": {
-                    "CMPD_0000000001": 1
-                },
-                "path_base_id": 1,
-                "step": 2,
-                "transformation_id": "TRS_0_1_9"
+                "MNXR139549": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                }
             }
         },
         "3": {
-            "1": {
-                "rule_id": "RR-02-90bcfd187709eb1b-14-F",
-                "rule_ori_reac": "MNXR132232",
-                "rule_score": 0.5706379442030705,
-                "left": {
-                    "MNXM132": 1,
-                    "MNXM83": 1
-                },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 1,
-                "step": 3,
-                "transformation_id": "TRS_0_2_739"
+            "left": {
+                "MNXM132": 1,
+                "MNXM83": 1
+            },
+            "right": {
+                "CMPD_0000000003": 1
+            },
+            "transformation_id": "TRS_0_2_739",
+            "reactions": {
+                "MNXR132232": {
+                    "rule_id": "RR-02-90bcfd187709eb1b-14-F",
+                    "rule_score": 0.5706379442030705
+                }
             }
         }
     },
     "2": {
         "1": {
-            "1": {
-                "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                "rule_ori_reac": "MNXR113128",
-                "rule_score": 0.7358363677022237,
-                "left": {
-                    "CMPD_0000000001": 1
-                },
-                "right": {
-                    "TARGET_0000000001": 1
-                },
-                "path_base_id": 2,
-                "step": 1,
-                "transformation_id": "TRS_0_0_1"
+            "left": {
+                "CMPD_0000000001": 1
             },
-            "2": {
-                "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                "rule_ori_reac": "MNXR117536",
-                "rule_score": 0.7358363677022237,
-                "left": {
-                    "CMPD_0000000001": 1
-                },
-                "right": {
-                    "TARGET_0000000001": 1
-                },
-                "path_base_id": 2,
-                "step": 1,
-                "transformation_id": "TRS_0_0_1"
+            "right": {
+                "TARGET_0000000001": 1
             },
-            "3": {
-                "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                "rule_ori_reac": "MNXR125832",
-                "rule_score": 0.7358363677022237,
-                "left": {
-                    "CMPD_0000000001": 1
+            "transformation_id": "TRS_0_0_1",
+            "reactions": {
+                "MNXR113128": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
                 },
-                "right": {
-                    "TARGET_0000000001": 1
+                "MNXR117536": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
                 },
-                "path_base_id": 2,
-                "step": 1,
-                "transformation_id": "TRS_0_0_1"
+                "MNXR125832": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
+                }
             }
         },
         "2": {
-            "1": {
-                "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                "rule_ori_reac": "MNXR111250",
-                "rule_score": 0.5518755963407151,
-                "left": {
-                    "CMPD_0000000003": 1
-                },
-                "right": {
-                    "CMPD_0000000001": 1
-                },
-                "path_base_id": 2,
-                "step": 2,
-                "transformation_id": "TRS_0_1_9"
+            "left": {
+                "CMPD_0000000003": 1
             },
-            "2": {
-                "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                "rule_ori_reac": "MNXR111499",
-                "rule_score": 0.5518755963407151,
-                "left": {
-                    "CMPD_0000000003": 1
-                },
-                "right": {
-                    "CMPD_0000000001": 1
-                },
-                "path_base_id": 2,
-                "step": 2,
-                "transformation_id": "TRS_0_1_9"
+            "right": {
+                "CMPD_0000000001": 1
             },
-            "3": {
-                "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                "rule_ori_reac": "MNXR113543",
-                "rule_score": 0.5518755963407151,
-                "left": {
-                    "CMPD_0000000003": 1
+            "transformation_id": "TRS_0_1_9",
+            "reactions": {
+                "MNXR111250": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
                 },
-                "right": {
-                    "CMPD_0000000001": 1
+                "MNXR111499": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
                 },
-                "path_base_id": 2,
-                "step": 2,
-                "transformation_id": "TRS_0_1_9"
-            },
-            "4": {
-                "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                "rule_ori_reac": "MNXR118024",
-                "rule_score": 0.5518755963407151,
-                "left": {
-                    "CMPD_0000000003": 1
+                "MNXR113543": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
                 },
-                "right": {
-                    "CMPD_0000000001": 1
+                "MNXR118024": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
                 },
-                "path_base_id": 2,
-                "step": 2,
-                "transformation_id": "TRS_0_1_9"
-            },
-            "5": {
-                "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                "rule_ori_reac": "MNXR139549",
-                "rule_score": 0.5518755963407151,
-                "left": {
-                    "CMPD_0000000003": 1
-                },
-                "right": {
-                    "CMPD_0000000001": 1
-                },
-                "path_base_id": 2,
-                "step": 2,
-                "transformation_id": "TRS_0_1_9"
+                "MNXR139549": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                }
             }
         },
         "3": {
-            "1": {
-                "rule_id": "RR-02-0c33a3bfd9bf5ad5-14-F",
-                "rule_ori_reac": "MNXR132231",
-                "rule_score": 0.5706379442030705,
-                "left": {
-                    "MNXM100": 1,
-                    "MNXM83": 1
-                },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 2,
-                "step": 3,
-                "transformation_id": "TRS_0_2_740"
+            "left": {
+                "MNXM100": 1,
+                "MNXM83": 1
             },
-            "2": {
-                "rule_id": "RR-02-6692e4af37fbca2d-14-F",
-                "rule_ori_reac": "MNXR112683",
-                "rule_score": 0.7358363677022237,
-                "left": {
-                    "MNXM100": 1,
-                    "MNXM83": 1
+            "right": {
+                "CMPD_0000000003": 1
+            },
+            "transformation_id": "TRS_0_2_740",
+            "reactions": {
+                "MNXR132231": {
+                    "rule_id": "RR-02-0c33a3bfd9bf5ad5-14-F",
+                    "rule_score": 0.5706379442030705
                 },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 2,
-                "step": 3,
-                "transformation_id": "TRS_0_2_740"
+                "MNXR112683": {
+                    "rule_id": "RR-02-6692e4af37fbca2d-14-F",
+                    "rule_score": 0.7358363677022237
+                }
             }
         }
     },
     "3": {
         "1": {
-            "1": {
-                "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                "rule_ori_reac": "MNXR113128",
-                "rule_score": 0.7358363677022237,
-                "left": {
-                    "CMPD_0000000001": 1
-                },
-                "right": {
-                    "TARGET_0000000001": 1
-                },
-                "path_base_id": 3,
-                "step": 1,
-                "transformation_id": "TRS_0_0_1"
+            "left": {
+                "CMPD_0000000001": 1
             },
-            "2": {
-                "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                "rule_ori_reac": "MNXR117536",
-                "rule_score": 0.7358363677022237,
-                "left": {
-                    "CMPD_0000000001": 1
-                },
-                "right": {
-                    "TARGET_0000000001": 1
-                },
-                "path_base_id": 3,
-                "step": 1,
-                "transformation_id": "TRS_0_0_1"
+            "right": {
+                "TARGET_0000000001": 1
             },
-            "3": {
-                "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                "rule_ori_reac": "MNXR125832",
-                "rule_score": 0.7358363677022237,
-                "left": {
-                    "CMPD_0000000001": 1
+            "transformation_id": "TRS_0_0_1",
+            "reactions": {
+                "MNXR113128": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
                 },
-                "right": {
-                    "TARGET_0000000001": 1
+                "MNXR117536": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
                 },
-                "path_base_id": 3,
-                "step": 1,
-                "transformation_id": "TRS_0_0_1"
+                "MNXR125832": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
+                }
             }
         },
         "2": {
-            "1": {
-                "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                "rule_ori_reac": "MNXR111250",
-                "rule_score": 0.5518755963407151,
-                "left": {
-                    "CMPD_0000000003": 1
-                },
-                "right": {
-                    "CMPD_0000000001": 1
-                },
-                "path_base_id": 3,
-                "step": 2,
-                "transformation_id": "TRS_0_1_9"
+            "left": {
+                "CMPD_0000000003": 1
             },
-            "2": {
-                "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                "rule_ori_reac": "MNXR111499",
-                "rule_score": 0.5518755963407151,
-                "left": {
-                    "CMPD_0000000003": 1
-                },
-                "right": {
-                    "CMPD_0000000001": 1
-                },
-                "path_base_id": 3,
-                "step": 2,
-                "transformation_id": "TRS_0_1_9"
+            "right": {
+                "CMPD_0000000001": 1
             },
-            "3": {
-                "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                "rule_ori_reac": "MNXR113543",
-                "rule_score": 0.5518755963407151,
-                "left": {
-                    "CMPD_0000000003": 1
+            "transformation_id": "TRS_0_1_9",
+            "reactions": {
+                "MNXR111250": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
                 },
-                "right": {
-                    "CMPD_0000000001": 1
+                "MNXR111499": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
                 },
-                "path_base_id": 3,
-                "step": 2,
-                "transformation_id": "TRS_0_1_9"
-            },
-            "4": {
-                "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                "rule_ori_reac": "MNXR118024",
-                "rule_score": 0.5518755963407151,
-                "left": {
-                    "CMPD_0000000003": 1
+                "MNXR113543": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
                 },
-                "right": {
-                    "CMPD_0000000001": 1
+                "MNXR118024": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
                 },
-                "path_base_id": 3,
-                "step": 2,
-                "transformation_id": "TRS_0_1_9"
-            },
-            "5": {
-                "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                "rule_ori_reac": "MNXR139549",
-                "rule_score": 0.5518755963407151,
-                "left": {
-                    "CMPD_0000000003": 1
-                },
-                "right": {
-                    "CMPD_0000000001": 1
-                },
-                "path_base_id": 3,
-                "step": 2,
-                "transformation_id": "TRS_0_1_9"
+                "MNXR139549": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                }
             }
         },
         "3": {
-            "1": {
-                "rule_id": "RR-02-07adee9ac9c42c7d-14-F",
-                "rule_ori_reac": "MNXR100137",
-                "rule_score": 0.7358363677022237,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
-                },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
+            "left": {
+                "MNXM34": 1,
+                "MNXM83": 1
             },
-            "2": {
-                "rule_id": "RR-02-07adee9ac9c42c7d-14-F",
-                "rule_ori_reac": "MNXR112247",
-                "rule_score": 0.7358363677022237,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
-                },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
+            "right": {
+                "CMPD_0000000003": 1
             },
-            "3": {
-                "rule_id": "RR-02-07adee9ac9c42c7d-14-F",
-                "rule_ori_reac": "MNXR116653",
-                "rule_score": 0.7358363677022237,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
+            "transformation_id": "TRS_0_2_742",
+            "reactions": {
+                "MNXR100137": {
+                    "rule_id": "RR-02-07adee9ac9c42c7d-14-F",
+                    "rule_score": 0.7358363677022237
                 },
-                "right": {
-                    "CMPD_0000000003": 1
+                "MNXR112247": {
+                    "rule_id": "RR-02-07adee9ac9c42c7d-14-F",
+                    "rule_score": 0.7358363677022237
                 },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "4": {
-                "rule_id": "RR-02-1494429c7e6e0694-14-F",
-                "rule_ori_reac": "MNXR100621",
-                "rule_score": 0.46257858183365314,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
+                "MNXR116653": {
+                    "rule_id": "RR-02-07adee9ac9c42c7d-14-F",
+                    "rule_score": 0.7358363677022237
                 },
-                "right": {
-                    "CMPD_0000000003": 1
+                "MNXR100621": {
+                    "rule_id": "RR-02-1494429c7e6e0694-14-F",
+                    "rule_score": 0.46257858183365314
                 },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "5": {
-                "rule_id": "RR-02-1d50852f3f343682-14-F",
-                "rule_ori_reac": "MNXR99634",
-                "rule_score": 0.5369487923122099,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
+                "MNXR99634": {
+                    "rule_id": "RR-02-1d50852f3f343682-14-F",
+                    "rule_score": 0.5369487923122099
                 },
-                "right": {
-                    "CMPD_0000000003": 1
+                "MNXR112069": {
+                    "rule_id": "RR-02-1d50852f3f343682-14-F",
+                    "rule_score": 0.5369487923122099
                 },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "6": {
-                "rule_id": "RR-02-1d50852f3f343682-14-F",
-                "rule_ori_reac": "MNXR112069",
-                "rule_score": 0.5369487923122099,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
+                "MNXR99650": {
+                    "rule_id": "RR-02-3bf131230c6b2bf2-14-F",
+                    "rule_score": 0.5706379442030705
                 },
-                "right": {
-                    "CMPD_0000000003": 1
+                "MNXR109677": {
+                    "rule_id": "RR-02-3bf131230c6b2bf2-14-F",
+                    "rule_score": 0.5706379442030705
                 },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "7": {
-                "rule_id": "RR-02-3bf131230c6b2bf2-14-F",
-                "rule_ori_reac": "MNXR99650",
-                "rule_score": 0.5706379442030705,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
+                "MNXR113141": {
+                    "rule_id": "RR-02-3bf131230c6b2bf2-14-F",
+                    "rule_score": 0.5706379442030705
                 },
-                "right": {
-                    "CMPD_0000000003": 1
+                "MNXR105052": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
                 },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "8": {
-                "rule_id": "RR-02-3bf131230c6b2bf2-14-F",
-                "rule_ori_reac": "MNXR109677",
-                "rule_score": 0.5706379442030705,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
+                "MNXR109713": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
                 },
-                "right": {
-                    "CMPD_0000000003": 1
+                "MNXR110950": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
                 },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "9": {
-                "rule_id": "RR-02-3bf131230c6b2bf2-14-F",
-                "rule_ori_reac": "MNXR113141",
-                "rule_score": 0.5706379442030705,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
+                "MNXR110952": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
                 },
-                "right": {
-                    "CMPD_0000000003": 1
+                "MNXR112246": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
                 },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "10": {
-                "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                "rule_ori_reac": "MNXR105052",
-                "rule_score": 0.8153265812713834,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
+                "MNXR112250": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
                 },
-                "right": {
-                    "CMPD_0000000003": 1
+                "MNXR112251": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
                 },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "11": {
-                "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                "rule_ori_reac": "MNXR109713",
-                "rule_score": 0.8153265812713834,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
+                "MNXR112252": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
                 },
-                "right": {
-                    "CMPD_0000000003": 1
+                "MNXR116656": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
                 },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "12": {
-                "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                "rule_ori_reac": "MNXR110950",
-                "rule_score": 0.8153265812713834,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
+                "MNXR117266": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
                 },
-                "right": {
-                    "CMPD_0000000003": 1
+                "MNXR139515": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
                 },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "13": {
-                "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                "rule_ori_reac": "MNXR110952",
-                "rule_score": 0.8153265812713834,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
+                "MNXR139637": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
                 },
-                "right": {
-                    "CMPD_0000000003": 1
+                "MNXR112249": {
+                    "rule_id": "RR-02-b3db29f084fc7a81-14-F",
+                    "rule_score": 0.3831274100072347
                 },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "14": {
-                "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                "rule_ori_reac": "MNXR112246",
-                "rule_score": 0.8153265812713834,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
+                "MNXR116655": {
+                    "rule_id": "RR-02-b3db29f084fc7a81-14-F",
+                    "rule_score": 0.3831274100072347
                 },
-                "right": {
-                    "CMPD_0000000003": 1
+                "MNXR103150": {
+                    "rule_id": "RR-02-f9759fe03c57b29f-14-F",
+                    "rule_score": 0.3831274100072347
                 },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "15": {
-                "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                "rule_ori_reac": "MNXR112250",
-                "rule_score": 0.8153265812713834,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
+                "MNXR112248": {
+                    "rule_id": "RR-02-f9759fe03c57b29f-14-F",
+                    "rule_score": 0.3831274100072347
                 },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "16": {
-                "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                "rule_ori_reac": "MNXR112251",
-                "rule_score": 0.8153265812713834,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
-                },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "17": {
-                "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                "rule_ori_reac": "MNXR112252",
-                "rule_score": 0.8153265812713834,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
-                },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "18": {
-                "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                "rule_ori_reac": "MNXR116656",
-                "rule_score": 0.8153265812713834,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
-                },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "19": {
-                "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                "rule_ori_reac": "MNXR117266",
-                "rule_score": 0.8153265812713834,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
-                },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "20": {
-                "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                "rule_ori_reac": "MNXR139515",
-                "rule_score": 0.8153265812713834,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
-                },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "21": {
-                "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                "rule_ori_reac": "MNXR139637",
-                "rule_score": 0.8153265812713834,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
-                },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "22": {
-                "rule_id": "RR-02-b3db29f084fc7a81-14-F",
-                "rule_ori_reac": "MNXR112249",
-                "rule_score": 0.3831274100072347,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
-                },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "23": {
-                "rule_id": "RR-02-b3db29f084fc7a81-14-F",
-                "rule_ori_reac": "MNXR116655",
-                "rule_score": 0.3831274100072347,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
-                },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "24": {
-                "rule_id": "RR-02-f9759fe03c57b29f-14-F",
-                "rule_ori_reac": "MNXR103150",
-                "rule_score": 0.3831274100072347,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
-                },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "25": {
-                "rule_id": "RR-02-f9759fe03c57b29f-14-F",
-                "rule_ori_reac": "MNXR112248",
-                "rule_score": 0.3831274100072347,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
-                },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
-            },
-            "26": {
-                "rule_id": "RR-02-f9759fe03c57b29f-14-F",
-                "rule_ori_reac": "MNXR116654",
-                "rule_score": 0.3831274100072347,
-                "left": {
-                    "MNXM34": 1,
-                    "MNXM83": 1
-                },
-                "right": {
-                    "CMPD_0000000003": 1
-                },
-                "path_base_id": 3,
-                "step": 3,
-                "transformation_id": "TRS_0_2_742"
+                "MNXR116654": {
+                    "rule_id": "RR-02-f9759fe03c57b29f-14-F",
+                    "rule_score": 0.3831274100072347
+                }
             }
         }
     }
