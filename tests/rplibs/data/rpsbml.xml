@@ -775,8 +775,9 @@
           <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
             <rdf:BRSynth rdf:about="#f6370751b7d7e51be4a78651e904fd2c">
               <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
-                <brsynth:path_id value="1"/>
-                <brsynth:alt_path_id value="1"/>
+                <brsynth:path_base_idx value="1"/>
+                <brsynth:path_variant_idx value="1"/>
+                <brsynth:path_id value="rp_1_1"/>
                 <brsynth:fba_obj_biomass units="mmol_per_gDW_per_hr" value="0.8739215069684303"/>
                 <brsynth:fba_obj_fraction units="mmol_per_gDW_per_hr" value="2.487101449275366"/>
                 <brsynth:dfG_prime_o units="kj_per_mol" value="-30.259358918721446"/>

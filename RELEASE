@@ -1,5 +1,12 @@
 # Release history
 
+## 2.1.0
+- rename:
+    + path_id     -> path_base_idx
+    + alt_path_id -> path_variant_idx
+- 'path_id' is now used to really store the id of the pathway
+- remove 'value' field from simple tag in rpSBML file for: path_base_id, path_variant_idx, 
+
 ## 2.0.0
 - rename reaction ids in rpSBML format:
     + RP1      -> rxn_1

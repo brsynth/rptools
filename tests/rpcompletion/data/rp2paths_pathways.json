@@ -11,15 +11,21 @@
             "reactions": {
                 "MNXR113128": {
                     "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                    "rule_score": 0.7358363677022237
+                    "rule_score": 0.7358363677022237,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR117536": {
                     "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                    "rule_score": 0.7358363677022237
+                    "rule_score": 0.7358363677022237,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR125832": {
                     "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                    "rule_score": 0.7358363677022237
+                    "rule_score": 0.7358363677022237,
+                    "left": {},
+                    "right": {}
                 }
             }
         },
@@ -34,23 +40,33 @@
             "reactions": {
                 "MNXR111250": {
                     "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                    "rule_score": 0.5518755963407151
+                    "rule_score": 0.5518755963407151,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR111499": {
                     "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                    "rule_score": 0.5518755963407151
+                    "rule_score": 0.5518755963407151,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR113543": {
                     "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                    "rule_score": 0.5518755963407151
+                    "rule_score": 0.5518755963407151,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR118024": {
                     "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                    "rule_score": 0.5518755963407151
+                    "rule_score": 0.5518755963407151,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR139549": {
                     "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                    "rule_score": 0.5518755963407151
+                    "rule_score": 0.5518755963407151,
+                    "left": {},
+                    "right": {}
                 }
             }
         },
@@ -66,7 +82,9 @@
             "reactions": {
                 "MNXR132232": {
                     "rule_id": "RR-02-90bcfd187709eb1b-14-F",
-                    "rule_score": 0.5706379442030705
+                    "rule_score": 0.5706379442030705,
+                    "left": {},
+                    "right": {}
                 }
             }
         }
@@ -83,15 +101,21 @@
             "reactions": {
                 "MNXR113128": {
                     "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                    "rule_score": 0.7358363677022237
+                    "rule_score": 0.7358363677022237,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR117536": {
                     "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                    "rule_score": 0.7358363677022237
+                    "rule_score": 0.7358363677022237,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR125832": {
                     "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                    "rule_score": 0.7358363677022237
+                    "rule_score": 0.7358363677022237,
+                    "left": {},
+                    "right": {}
                 }
             }
         },
@@ -106,23 +130,33 @@
             "reactions": {
                 "MNXR111250": {
                     "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                    "rule_score": 0.5518755963407151
+                    "rule_score": 0.5518755963407151,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR111499": {
                     "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                    "rule_score": 0.5518755963407151
+                    "rule_score": 0.5518755963407151,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR113543": {
                     "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                    "rule_score": 0.5518755963407151
+                    "rule_score": 0.5518755963407151,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR118024": {
                     "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                    "rule_score": 0.5518755963407151
+                    "rule_score": 0.5518755963407151,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR139549": {
                     "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                    "rule_score": 0.5518755963407151
+                    "rule_score": 0.5518755963407151,
+                    "left": {},
+                    "right": {}
                 }
             }
         },
@@ -138,11 +172,15 @@
             "reactions": {
                 "MNXR132231": {
                     "rule_id": "RR-02-0c33a3bfd9bf5ad5-14-F",
-                    "rule_score": 0.5706379442030705
+                    "rule_score": 0.5706379442030705,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR112683": {
                     "rule_id": "RR-02-6692e4af37fbca2d-14-F",
-                    "rule_score": 0.7358363677022237
+                    "rule_score": 0.7358363677022237,
+                    "left": {},
+                    "right": {}
                 }
             }
         }
@@ -159,15 +197,21 @@
             "reactions": {
                 "MNXR113128": {
                     "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                    "rule_score": 0.7358363677022237
+                    "rule_score": 0.7358363677022237,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR117536": {
                     "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                    "rule_score": 0.7358363677022237
+                    "rule_score": 0.7358363677022237,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR125832": {
                     "rule_id": "RR-02-ae41ec5771136ea5-14-F",
-                    "rule_score": 0.7358363677022237
+                    "rule_score": 0.7358363677022237,
+                    "left": {},
+                    "right": {}
                 }
             }
         },
@@ -182,23 +226,33 @@
             "reactions": {
                 "MNXR111250": {
                     "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                    "rule_score": 0.5518755963407151
+                    "rule_score": 0.5518755963407151,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR111499": {
                     "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                    "rule_score": 0.5518755963407151
+                    "rule_score": 0.5518755963407151,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR113543": {
                     "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                    "rule_score": 0.5518755963407151
+                    "rule_score": 0.5518755963407151,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR118024": {
                     "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                    "rule_score": 0.5518755963407151
+                    "rule_score": 0.5518755963407151,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR139549": {
                     "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
-                    "rule_score": 0.5518755963407151
+                    "rule_score": 0.5518755963407151,
+                    "left": {},
+                    "right": {}
                 }
             }
         },
@@ -214,107 +268,159 @@
             "reactions": {
                 "MNXR100137": {
                     "rule_id": "RR-02-07adee9ac9c42c7d-14-F",
-                    "rule_score": 0.7358363677022237
+                    "rule_score": 0.7358363677022237,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR112247": {
                     "rule_id": "RR-02-07adee9ac9c42c7d-14-F",
-                    "rule_score": 0.7358363677022237
+                    "rule_score": 0.7358363677022237,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR116653": {
                     "rule_id": "RR-02-07adee9ac9c42c7d-14-F",
-                    "rule_score": 0.7358363677022237
+                    "rule_score": 0.7358363677022237,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR100621": {
                     "rule_id": "RR-02-1494429c7e6e0694-14-F",
-                    "rule_score": 0.46257858183365314
+                    "rule_score": 0.46257858183365314,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR99634": {
                     "rule_id": "RR-02-1d50852f3f343682-14-F",
-                    "rule_score": 0.5369487923122099
+                    "rule_score": 0.5369487923122099,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR112069": {
                     "rule_id": "RR-02-1d50852f3f343682-14-F",
-                    "rule_score": 0.5369487923122099
+                    "rule_score": 0.5369487923122099,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR99650": {
                     "rule_id": "RR-02-3bf131230c6b2bf2-14-F",
-                    "rule_score": 0.5706379442030705
+                    "rule_score": 0.5706379442030705,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR109677": {
                     "rule_id": "RR-02-3bf131230c6b2bf2-14-F",
-                    "rule_score": 0.5706379442030705
+                    "rule_score": 0.5706379442030705,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR113141": {
                     "rule_id": "RR-02-3bf131230c6b2bf2-14-F",
-                    "rule_score": 0.5706379442030705
+                    "rule_score": 0.5706379442030705,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR105052": {
                     "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                    "rule_score": 0.8153265812713834
+                    "rule_score": 0.8153265812713834,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR109713": {
                     "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                    "rule_score": 0.8153265812713834
+                    "rule_score": 0.8153265812713834,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR110950": {
                     "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                    "rule_score": 0.8153265812713834
+                    "rule_score": 0.8153265812713834,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR110952": {
                     "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                    "rule_score": 0.8153265812713834
+                    "rule_score": 0.8153265812713834,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR112246": {
                     "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                    "rule_score": 0.8153265812713834
+                    "rule_score": 0.8153265812713834,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR112250": {
                     "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                    "rule_score": 0.8153265812713834
+                    "rule_score": 0.8153265812713834,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR112251": {
                     "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                    "rule_score": 0.8153265812713834
+                    "rule_score": 0.8153265812713834,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR112252": {
                     "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                    "rule_score": 0.8153265812713834
+                    "rule_score": 0.8153265812713834,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR116656": {
                     "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                    "rule_score": 0.8153265812713834
+                    "rule_score": 0.8153265812713834,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR117266": {
                     "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                    "rule_score": 0.8153265812713834
+                    "rule_score": 0.8153265812713834,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR139515": {
                     "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                    "rule_score": 0.8153265812713834
+                    "rule_score": 0.8153265812713834,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR139637": {
                     "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
-                    "rule_score": 0.8153265812713834
+                    "rule_score": 0.8153265812713834,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR112249": {
                     "rule_id": "RR-02-b3db29f084fc7a81-14-F",
-                    "rule_score": 0.3831274100072347
+                    "rule_score": 0.3831274100072347,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR116655": {
                     "rule_id": "RR-02-b3db29f084fc7a81-14-F",
-                    "rule_score": 0.3831274100072347
+                    "rule_score": 0.3831274100072347,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR103150": {
                     "rule_id": "RR-02-f9759fe03c57b29f-14-F",
-                    "rule_score": 0.3831274100072347
+                    "rule_score": 0.3831274100072347,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR112248": {
                     "rule_id": "RR-02-f9759fe03c57b29f-14-F",
-                    "rule_score": 0.3831274100072347
+                    "rule_score": 0.3831274100072347,
+                    "left": {},
+                    "right": {}
                 },
                 "MNXR116654": {
                     "rule_id": "RR-02-f9759fe03c57b29f-14-F",
-                    "rule_score": 0.3831274100072347
+                    "rule_score": 0.3831274100072347,
+                    "left": {},
+                    "right": {}
                 }
             }
         }
