@@ -375,35 +375,43 @@ class rpSBML:
         rp_pathway = self.getModel().getPlugin('groups').getGroup(pathway_id)
 
         for bd_id in rpsbml_dict['pathway']['brsynth']:
-            if bd_id[:5]=='norm_' or bd_id=='global_score':
-                try:
-                    value = rpsbml_dict['pathway']['brsynth'][bd_id]['value']
-                except KeyError:
-                    self.logger.warning('The entry '+str(bd_id)+' does not contain any value')
-                    self.logger.warning('No" value", using the root')
-                try:
+            # if bd_id[:5]=='norm_' or bd_id=='global_score':
+
+            units = None
+
+            try: # read 'value' field
+                value = rpsbml_dict['pathway']['brsynth'][bd_id]['value']
+                try: # read 'units' field
                     units = rpsbml_dict['pathway']['brsynth'][bd_id]['units']
                 except KeyError:
-                    units = None
-                self.updateBRSynth(rp_pathway, bd_id, value, units, False)
+                    pass
 
-        for reac_id in rpsbml_dict['reactions']:
-            reaction = self.getModel().getReaction(reac_id)
-            if reaction==None:
-                self.logger.warning('Skipping updating '+str(reac_id)+', cannot retreive it')
-                continue
-            for bd_id in rpsbml_dict['reactions'][reac_id]['brsynth']:
-                if bd_id[:5]=='norm_':
-                    try:
-                        value = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']
-                    except KeyError:
-                        value = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]
-                        self.logger.warning('No" value", using the root')
-                    try:
-                        units = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['units']
-                    except KeyError:
-                        units = None
-                    self.updateBRSynth(reaction, bd_id, value, units, False)
+            except (KeyError, TypeError):
+                self.logger.warning('The entry '+str(bd_id)+' does not contain any \'value\' field. Trying using the root...')
+                try: # read value directly
+                    value = rpsbml_dict['pathway']['brsynth'][bd_id]
+                except KeyError:
+                    self.logger.warning('The entry '+str(bd_id)+' does not exist. Giving up...')
+
+            self.updateBRSynth(rp_pathway, bd_id, value, units, False)
+
+        # for reac_id in rpsbml_dict['reactions']:
+        #     reaction = self.getModel().getReaction(reac_id)
+        #     if reaction==None:
+        #         self.logger.warning('Skipping updating '+str(reac_id)+', cannot retreive it')
+        #         continue
+        #     for bd_id in rpsbml_dict['reactions'][reac_id]['brsynth']:
+        #         if bd_id[:5]=='norm_':
+        #             try:
+        #                 value = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']
+        #             except KeyError:
+        #                 value = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]
+        #                 self.logger.warning('No" value", using the root')
+        #             try:
+        #                 units = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['units']
+        #             except KeyError:
+        #                 units = None
+        #             self.updateBRSynth(reaction, bd_id, value, units, False)
 
 
     #############################################################################################################
@@ -1910,7 +1918,6 @@ class rpSBML:
              self.logger.error('Cannot find the BRSynth annotation')
              return False
 
-
         # try to update the annotation
         target_found = self.updateBRSynthAnnot(brsynth_annot, annot_obj, annot_header)
 
@@ -2431,7 +2438,6 @@ class rpSBML:
         :rtype: dict
         :return: Dictionary of all the BRSynth annotations
         """
-        
         toRet = {'dfG_prime_m':   {},
                  'dfG_uncert':    {},
                  'dfG_prime_o':   {},
@@ -2466,12 +2472,14 @@ class rpSBML:
                     toRet[ann.getName()] = {
                             'units': None,
                             'value': None}
-            elif ann.getName()=='path_base_id' or ann.getName()=='step_id' or ann.getName()=='path_variant_idx':
+            elif ann.getName()=='path_base_idx' or ann.getName()=='step_id' or ann.getName()=='path_variant_idx':
                 try:
                     # toRet[ann.getName()] = int(ann.getAttrValue('value'))
-                    toRet[ann.getName()] = {'value': int(ann.getAttrValue('value'))}
+                    toRet[ann.getName()] = int(ann.getAttrValue('value'))
                 except ValueError:
                     toRet[ann.getName()] = None
+            elif ann.getName()=='path_id':
+                    toRet[ann.getName()] = str(ann.getAttrValue('value'))
             elif ann.getName()=='rule_score' or ann.getName()=='global_score' or ann.getName()[:5]=='norm_':
                 try:
                     # toRet[ann.getName()] = float(ann.getAttrValue('value'))
