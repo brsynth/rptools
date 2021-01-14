@@ -598,12 +598,12 @@ def complete_reactions(rpsbml, species, steps,
                        rp_transformation):
 
     # 4) Add the complete reactions of the pathway (all steps) and their annotations
-    rpsbml, reactions = add_reactions(path_variant,
-                                      steps,
-                                      upper_flux_bound, lower_flux_bound,
-                                      rp_transformation,
-                                      compartment_id, pathway_id,
-                                      rpsbml)
+    rpsbml = add_reactions(path_variant,
+                           steps,
+                           upper_flux_bound, lower_flux_bound,
+                           rp_transformation,
+                           compartment_id, pathway_id,
+                           rpsbml)
 
     # 5) Adding the consumption of the target
     rxn_target = build_rxn(left={[i for i in species if i.startswith('TARGET')][0]: 1},
