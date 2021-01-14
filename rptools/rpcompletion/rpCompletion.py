@@ -495,12 +495,7 @@ def write_rp2paths_to_rpSBML(cache,
     #         add cofactors
     #         dedup
 
-    # reactions formatted as rpSBML expects
-    reactions = {}
-
     for path_base_idx in rp2paths_pathways:
-
-        logger.debug('path_base_idx: {0}'.format(path_base_idx))
 
         # topX pathways
         best_rpsbml = []
@@ -524,10 +519,10 @@ def write_rp2paths_to_rpSBML(cache,
                                             pubchem_search)
 
             # 2) Add complete reactions
-            rpsbml, reactions = complete_reactions(rpsbml, reactions, species, rp2paths_pathways[path_base_idx],
-                                                   pathway_id, path_variant,
-                                                   compartment_id, upper_flux_bound, lower_flux_bound,
-                                                   rp_transformation)
+            rpsbml = complete_reactions(rpsbml, species, rp2paths_pathways[path_base_idx],
+                                        pathway_id, path_variant,
+                                        compartment_id, upper_flux_bound, lower_flux_bound,
+                                        rp_transformation)
 
             # 3) Add the cofactors
             rpsbml = add_cofactors(cache, rpsbml, logger=logger)
@@ -597,7 +592,7 @@ def create_rpSBML(pathway_id, path_base_idx, path_variant_idx,
     return rpsbml, species
 
 
-def complete_reactions(rpsbml, reactions, species, steps,
+def complete_reactions(rpsbml, species, steps,
                        pathway_id, path_variant,
                        compartment_id, upper_flux_bound, lower_flux_bound,
                        rp_transformation):
@@ -608,18 +603,17 @@ def complete_reactions(rpsbml, reactions, species, steps,
                                       upper_flux_bound, lower_flux_bound,
                                       rp_transformation,
                                       compartment_id, pathway_id,
-                                      reactions,
                                       rpsbml)
 
     # 5) Adding the consumption of the target
     rxn_target = build_rxn(left={[i for i in species if i.startswith('TARGET')][0]: 1},
-                            right=[])
+                           right=[])
     rpsbml.createReaction('rxn_target',
                             upper_flux_bound, lower_flux_bound,
                             rxn_target,
                             compartment_id)
     
-    return rpsbml, reactions
+    return rpsbml
 
 
 ## Function that returns rpSBML object with groups (pathway, species, sink species) added
@@ -681,14 +675,12 @@ def build_rxn(rule_id=None, rule_ori_reac=None, rule_score=None, left=None, righ
 #  @param lower_flux_bound List Unique molecules that reactions apply them to
 #  @param compartment_id Str The id of the compartment to add the reaction
 #  @param pathway_id Str The id of the pathway to add reactions to
-#  @param reactions Dict Reactions already built so far
 #  @param rpsbml rpSBML The in-building rpSBML object
 #  @return rpSBML The updated rpSBML object
 def add_reactions(path_variant, steps,
                   upper_flux_bound, lower_flux_bound,
                   rp_transformation,
                   compartment_id, pathway_id,
-                  reactions,
                   rpsbml):
 
     for step in range(len(path_variant)):
@@ -699,15 +691,14 @@ def add_reactions(path_variant, steps,
         index = len(path_variant)-int(step)
 
         # Build the complete reaction
-        if not rxn_id in reactions:
-            reactions[rxn_id] = build_rxn(
-                steps[step+1]['reactions'][rxn_id]['rule_id'],
-                rxn_id,
-                steps[step+1]['reactions'][rxn_id]['rule_score'],
-                steps[step+1]['left'],
-                steps[step+1]['right'],
-                index
-            )
+        rxn = build_rxn(
+            steps[step+1]['reactions'][rxn_id]['rule_id'],
+            rxn_id,
+            steps[step+1]['reactions'][rxn_id]['rule_score'],
+            steps[step+1]['left'],
+            steps[step+1]['right'],
+            index
+        )
 
         transformation_id = steps[step+1]['transformation_id']
 
@@ -715,13 +706,13 @@ def add_reactions(path_variant, steps,
         rpsbml.createReaction(
                 'rxn_'+str(index), # parameter 'name' of the reaction deleted : 'RetroPath_Reaction_'+str(step['step']),
                 upper_flux_bound, lower_flux_bound,
-                reactions[rxn_id],
+                rxn,
                 compartment_id,
                 rp_transformation[transformation_id]['rule'],
                 {'ec': rp_transformation[transformation_id]['ec']},
                 pathway_id)
 
-    return rpsbml, reactions
+    return rpsbml
 
 
 ## Function that returns the list of species in rp2paths_pathways
