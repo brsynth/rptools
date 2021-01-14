@@ -7,13 +7,14 @@ Created on Jul 15 2020
 import logging
 from unittest             import TestCase
 from tempfile             import TemporaryDirectory
-from rptools.rplibs       import rpCache
+from rptools.rplibs       import rpCache, rpSBML
 from rptools.rpcompletion import rp_completion
-from rptools.rpcompletion.rpCompletion import update_rppaths, build_side_rxn, rxns_from_rules, rp2paths_to_dict
+from rptools.rpcompletion.rpCompletion import build_side_rxn, rp2paths_to_dict
 from os                   import path  as os_path
 from os                   import stat  as os_stat
 from io                   import open  as io_open
 from json                 import load  as json_load
+from json                 import dumps as json_dumps
 
 
 class Test_rpCompletion(TestCase):
@@ -42,7 +43,10 @@ class Test_rpCompletion(TestCase):
             # Useless to sort files since smiles could be equivalent and not equal, then checksum will be different
             for file, size in self.files:
                 self.assertTrue(os_path.isfile(os_path.join(temp_d, file)))
-                self.assertEqual(os_stat(os_path.join(temp_d, file)).st_size, size)
+            rpsbml = rpSBML(os_path.join(temp_d, self.rp_1_11_xml))
+            with open(self.rp_1_11_json, 'r') as f:
+                self.assertDictEqual(rpsbml.toDict(), json_load(f))
+                # self.assertEqual(os_stat(os_path.join(temp_d, file)).st_size, size)
          
 
     rpcache            = rpCache('file')
@@ -50,6 +54,9 @@ class Test_rpCompletion(TestCase):
     rp2_pathways       = os_path.join(data_path, '1-rp2_pathways.csv')
     rp2paths_compounds = os_path.join(data_path, '2-rp2paths_compounds.tsv')
     rp2paths_pathways  = os_path.join(data_path, '3-rp2paths_pathways.csv')
+    test_file_pattern  = 'rp_1_11'
+    rp_1_11_xml        = test_file_pattern+'_sbml.xml'
+    rp_1_11_json       = os_path.join(data_path, 'refs', test_file_pattern+'.json')
 
     files = [
     ('rp_1_11_sbml.xml',  32217),
@@ -69,25 +76,25 @@ class Test_rpCompletion(TestCase):
     ('rp_3_2_sbml.xml',   35081),
     ]
 
-    def test_update_rppaths(self):
-        path_base_id = 2
-        path_step = 3
-        path_variant_idx = 1
-        rxn = {'rule_id'           : 'RR-02-ae41ec5771136ea5-14-F',
-               'rule_ori_reac'     : 'MNXR113128',
-               'rule_score'        : 0.7358363677022237,
-               'left'              : {'CMPD_0000000001': 1},
-               'right'             : {'TARGET_0000000001': 1},
-               'step'              : path_step,
-               'transformation_id' : 'TRS_0_0_1'}
-        rp_paths = update_rppaths({}, path_base_id, path_variant_idx, rxn)
-        self.assertEqual(rp_paths, {
-                                    path_base_id: {
-                                        path_step: {
-                                            path_variant_idx: rxn
-                                        }
-                                    }
-                                    })
+    # def test_update_rppaths(self):
+    #     path_base_id = 2
+    #     path_step = 3
+    #     path_variant_idx = 1
+    #     rxn = {'rule_id'           : 'RR-02-ae41ec5771136ea5-14-F',
+    #            'rule_ori_reac'     : 'MNXR113128',
+    #            'rule_score'        : 0.7358363677022237,
+    #            'left'              : {'CMPD_0000000001': 1},
+    #            'right'             : {'TARGET_0000000001': 1},
+    #            'step'              : path_step,
+    #            'transformation_id' : 'TRS_0_0_1'}
+    #     rp_paths = update_rppaths({}, path_base_id, path_variant_idx, rxn)
+    #     self.assertEqual(rp_paths, {
+    #                                 path_base_id: {
+    #                                     path_step: {
+    #                                         path_variant_idx: rxn
+    #                                     }
+    #                                 }
+    #                                 })
 
 
     def test_build_side_rxn(self):
@@ -111,10 +118,10 @@ class Test_rpCompletion(TestCase):
         self.assertDictEqual(build_side_rxn(str(index)+'.'+cid, deprecatedCID), {deprecatedCID[cid]: index})
 
 
-    def test_rxns_from_rules(self):
-        with open(os_path.join(self.data_path, 'refs', 'rxns_from_rules.json'), 'r') as read_file:
-            data = json_load(read_file)
-            self.assertDictEqual(rxns_from_rules('RR-02-ae41ec5771136ea5-14-F', self.rpcache.rr_reactions), data)
+    # def test_rxns_from_rules(self):
+    #     with open(os_path.join(self.data_path, 'refs', 'rxns_from_rules.json'), 'r') as read_file:
+    #         data = json_load(read_file)
+    #         self.assertDictEqual(rxns_from_rules('RR-02-ae41ec5771136ea5-14-F', self.rpcache.rr_reactions), data)
 
 
     def test_rp2paths_to_dict(self):
