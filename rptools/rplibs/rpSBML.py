@@ -2474,7 +2474,6 @@ class rpSBML:
                             'value': None}
             elif ann.getName()=='path_base_idx' or ann.getName()=='step' or ann.getName()=='path_variant_idx':
                 try:
-                    # toRet[ann.getName()] = int(ann.getAttrValue('value'))
                     toRet[ann.getName()] = int(ann.getAttrValue('value'))
                 except ValueError:
                     toRet[ann.getName()] = None
@@ -2587,12 +2586,13 @@ class rpSBML:
         :return: Dictionary of the pathway
         """
         pathway = {}
+
         for member in self.readGroupMembers(pathway_id):
             # TODO: need to find a better way
             reaction = self.getModel().getReaction(member)
             brsynthAnnot = rpSBML.readBRSYNTHAnnotation(reaction.getAnnotation(), self.logger)
             speciesReac = self.readReactionSpecies(reaction)
-            step = {
+            pathway[brsynthAnnot['step']] = {
                 'reaction_id'   : member,
                 'reaction_rule' : brsynthAnnot['smiles'],
                 'rule_score'    : brsynthAnnot['rule_score'],
@@ -2602,7 +2602,7 @@ class rpSBML:
                 'left'          : speciesReac['left'],
                 'step'          : brsynthAnnot['step'],
                 }
-            pathway[brsynthAnnot['step']] = step
+
         return pathway
 
 

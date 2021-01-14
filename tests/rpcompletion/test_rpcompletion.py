@@ -118,12 +118,6 @@ class Test_rpCompletion(TestCase):
         self.assertDictEqual(build_side_rxn(str(index)+'.'+cid, deprecatedCID), {deprecatedCID[cid]: index})
 
 
-    # def test_rxns_from_rules(self):
-    #     with open(os_path.join(self.data_path, 'refs', 'rxns_from_rules.json'), 'r') as read_file:
-    #         data = json_load(read_file)
-    #         self.assertDictEqual(rxns_from_rules('RR-02-ae41ec5771136ea5-14-F', self.rpcache.rr_reactions), data)
-
-
     def test_rp2paths_to_dict(self):
         with open(os_path.join(self.data_path, 'refs', 'rp2paths_pathways.json'), 'r') as read_file:
             # object_hook is used to convert str keys into int keys as stored in rpCompletion functions
