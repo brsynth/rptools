@@ -16,12 +16,9 @@
             "global_score": {
                 "value": 0.5760957019721074
             },
-            "path_id": {
-                "value": 1
-            },
-            "alt_path_id": {
-                "value": 1
-            },
+            "path_base_idx": 1,
+            "path_variant_idx": 1,
+            "path_id": "rp_1_1",
             "fba_obj_biomass": {
                 "units": "mmol_per_gDW_per_hr",
                 "value": 0.8739215069684303

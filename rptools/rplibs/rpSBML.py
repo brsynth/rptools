@@ -174,9 +174,6 @@ class rpSBML:
 
         rpsbml_dict = self.toDict(pathway_id)
 
-        print(rpsbml_dict)
-        exit()
-
         rpsbml_dict  = self.score_for_reactions(rpsbml_dict, path_norm, values, pathway_id, self.logger)
 
         norm_steps = self.score_from_pathway(path_norm, values, pathway_id, rpsbml_dict, self.logger)
@@ -288,7 +285,7 @@ class rpSBML:
 
 
     @staticmethod
-    def score_from_pathway(self, path_norm, values, pathway_id, rpsbml_dict, logger=logging.getLogger(__name__)):
+    def score_from_pathway(path_norm, values, pathway_id, rpsbml_dict, logger=logging.getLogger(__name__)):
 
         ############### FBA ################
         # higher is better
