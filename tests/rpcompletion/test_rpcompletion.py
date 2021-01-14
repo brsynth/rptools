@@ -125,7 +125,7 @@ class Test_rpCompletion(TestCase):
 
 
     def test_rp2paths_to_dict(self):
-        with open(os_path.join(self.data_path, 'rp2paths_pathways.json'), 'r') as read_file:
+        with open(os_path.join(self.data_path, 'refs', 'rp2paths_pathways.json'), 'r') as read_file:
             # object_hook is used to convert str keys into int keys as stored in rpCompletion functions
             data = json_load(read_file, object_hook=lambda d: {int(k) if k.lstrip('-').isdigit() else k: v for k, v in d.items()})
             self.assertDictEqual(rp2paths_to_dict(self.rp2paths_pathways,
