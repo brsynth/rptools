@@ -5,7 +5,10 @@
     + path_id     -> path_base_idx
     + alt_path_id -> path_variant_idx
 - 'path_id' is now used to really store the id of the pathway
-- remove 'value' field from simple tag in rpSBML file for: path_base_id, path_variant_idx, 
+- remove 'value' field from simple tag in rpSBML file for: path_base_id, path_variant_idx
+- rpCompletion:
+    + functions
+    + compare dictionnaries for tests
 
 ## 2.0.0
 - rename reaction ids in rpSBML format:
