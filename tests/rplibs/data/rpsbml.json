@@ -16,12 +16,9 @@
             "global_score": {
                 "value": 0.5760957019721074
             },
-            "path_id": {
-                "value": 1
-            },
-            "alt_path_id": {
-                "value": 1
-            },
+            "path_base_idx": 1,
+            "path_variant_idx": 1,
+            "path_id": "rp_1_1",
             "fba_obj_biomass": {
                 "units": "mmol_per_gDW_per_hr",
                 "value": 0.8739215069684303
@@ -68,9 +65,7 @@
                     "units": "kj_per_mol",
                     "value": 0.0
                 },
-                "step_id": {
-                    "value": 1
-                },
+                "rxn_idx": 1,
                 "rule_score": {
                     "value": 0.6461261981425104
                 },
@@ -117,9 +112,7 @@
                     "units": "kj_per_mol",
                     "value": 0.0
                 },
-                "step_id": {
-                    "value": 2
-                },
+                "rxn_idx": 2,
                 "rule_score": {
                     "value": 0.5412736479780204
                 },
@@ -170,9 +163,7 @@
                     "units": "kj_per_mol",
                     "value": -30.259358918721446
                 },
-                "step_id": {
-                    "value": 3
-                },
+                "rxn_idx": 3,
                 "rule_score": {
                     "value": 0.5179693843696734
                 },

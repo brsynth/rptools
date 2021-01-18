@@ -1,0 +1,322 @@
+{
+    "1": {
+        "1": {
+            "left": {
+                "CMPD_0000000001": 1
+            },
+            "right": {
+                "TARGET_0000000001": 1
+            },
+            "transformation_id": "TRS_0_0_1",
+            "reactions": {
+                "MNXR113128": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
+                },
+                "MNXR117536": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
+                },
+                "MNXR125832": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
+                }
+            }
+        },
+        "2": {
+            "left": {
+                "CMPD_0000000003": 1
+            },
+            "right": {
+                "CMPD_0000000001": 1
+            },
+            "transformation_id": "TRS_0_1_9",
+            "reactions": {
+                "MNXR111250": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                },
+                "MNXR111499": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                },
+                "MNXR113543": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                },
+                "MNXR118024": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                },
+                "MNXR139549": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                }
+            }
+        },
+        "3": {
+            "left": {
+                "MNXM132": 1,
+                "MNXM83": 1
+            },
+            "right": {
+                "CMPD_0000000003": 1
+            },
+            "transformation_id": "TRS_0_2_739",
+            "reactions": {
+                "MNXR132232": {
+                    "rule_id": "RR-02-90bcfd187709eb1b-14-F",
+                    "rule_score": 0.5706379442030705
+                }
+            }
+        }
+    },
+    "2": {
+        "1": {
+            "left": {
+                "CMPD_0000000001": 1
+            },
+            "right": {
+                "TARGET_0000000001": 1
+            },
+            "transformation_id": "TRS_0_0_1",
+            "reactions": {
+                "MNXR113128": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
+                },
+                "MNXR117536": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
+                },
+                "MNXR125832": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
+                }
+            }
+        },
+        "2": {
+            "left": {
+                "CMPD_0000000003": 1
+            },
+            "right": {
+                "CMPD_0000000001": 1
+            },
+            "transformation_id": "TRS_0_1_9",
+            "reactions": {
+                "MNXR111250": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                },
+                "MNXR111499": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                },
+                "MNXR113543": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                },
+                "MNXR118024": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                },
+                "MNXR139549": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                }
+            }
+        },
+        "3": {
+            "left": {
+                "MNXM100": 1,
+                "MNXM83": 1
+            },
+            "right": {
+                "CMPD_0000000003": 1
+            },
+            "transformation_id": "TRS_0_2_740",
+            "reactions": {
+                "MNXR132231": {
+                    "rule_id": "RR-02-0c33a3bfd9bf5ad5-14-F",
+                    "rule_score": 0.5706379442030705
+                },
+                "MNXR112683": {
+                    "rule_id": "RR-02-6692e4af37fbca2d-14-F",
+                    "rule_score": 0.7358363677022237
+                }
+            }
+        }
+    },
+    "3": {
+        "1": {
+            "left": {
+                "CMPD_0000000001": 1
+            },
+            "right": {
+                "TARGET_0000000001": 1
+            },
+            "transformation_id": "TRS_0_0_1",
+            "reactions": {
+                "MNXR113128": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
+                },
+                "MNXR117536": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
+                },
+                "MNXR125832": {
+                    "rule_id": "RR-02-ae41ec5771136ea5-14-F",
+                    "rule_score": 0.7358363677022237
+                }
+            }
+        },
+        "2": {
+            "left": {
+                "CMPD_0000000003": 1
+            },
+            "right": {
+                "CMPD_0000000001": 1
+            },
+            "transformation_id": "TRS_0_1_9",
+            "reactions": {
+                "MNXR111250": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                },
+                "MNXR111499": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                },
+                "MNXR113543": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                },
+                "MNXR118024": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                },
+                "MNXR139549": {
+                    "rule_id": "RR-02-bedda4e2f5001e0c-14-F",
+                    "rule_score": 0.5518755963407151
+                }
+            }
+        },
+        "3": {
+            "left": {
+                "MNXM34": 1,
+                "MNXM83": 1
+            },
+            "right": {
+                "CMPD_0000000003": 1
+            },
+            "transformation_id": "TRS_0_2_742",
+            "reactions": {
+                "MNXR100137": {
+                    "rule_id": "RR-02-07adee9ac9c42c7d-14-F",
+                    "rule_score": 0.7358363677022237
+                },
+                "MNXR112247": {
+                    "rule_id": "RR-02-07adee9ac9c42c7d-14-F",
+                    "rule_score": 0.7358363677022237
+                },
+                "MNXR116653": {
+                    "rule_id": "RR-02-07adee9ac9c42c7d-14-F",
+                    "rule_score": 0.7358363677022237
+                },
+                "MNXR100621": {
+                    "rule_id": "RR-02-1494429c7e6e0694-14-F",
+                    "rule_score": 0.46257858183365314
+                },
+                "MNXR99634": {
+                    "rule_id": "RR-02-1d50852f3f343682-14-F",
+                    "rule_score": 0.5369487923122099
+                },
+                "MNXR112069": {
+                    "rule_id": "RR-02-1d50852f3f343682-14-F",
+                    "rule_score": 0.5369487923122099
+                },
+                "MNXR99650": {
+                    "rule_id": "RR-02-3bf131230c6b2bf2-14-F",
+                    "rule_score": 0.5706379442030705
+                },
+                "MNXR109677": {
+                    "rule_id": "RR-02-3bf131230c6b2bf2-14-F",
+                    "rule_score": 0.5706379442030705
+                },
+                "MNXR113141": {
+                    "rule_id": "RR-02-3bf131230c6b2bf2-14-F",
+                    "rule_score": 0.5706379442030705
+                },
+                "MNXR105052": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
+                },
+                "MNXR109713": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
+                },
+                "MNXR110950": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
+                },
+                "MNXR110952": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
+                },
+                "MNXR112246": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
+                },
+                "MNXR112250": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
+                },
+                "MNXR112251": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
+                },
+                "MNXR112252": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
+                },
+                "MNXR116656": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
+                },
+                "MNXR117266": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
+                },
+                "MNXR139515": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
+                },
+                "MNXR139637": {
+                    "rule_id": "RR-02-58d0f0d25e47b74a-14-F",
+                    "rule_score": 0.8153265812713834
+                },
+                "MNXR112249": {
+                    "rule_id": "RR-02-b3db29f084fc7a81-14-F",
+                    "rule_score": 0.3831274100072347
+                },
+                "MNXR116655": {
+                    "rule_id": "RR-02-b3db29f084fc7a81-14-F",
+                    "rule_score": 0.3831274100072347
+                },
+                "MNXR103150": {
+                    "rule_id": "RR-02-f9759fe03c57b29f-14-F",
+                    "rule_score": 0.3831274100072347
+                },
+                "MNXR112248": {
+                    "rule_id": "RR-02-f9759fe03c57b29f-14-F",
+                    "rule_score": 0.3831274100072347
+                },
+                "MNXR116654": {
+                    "rule_id": "RR-02-f9759fe03c57b29f-14-F",
+                    "rule_score": 0.3831274100072347
+                }
+            }
+        }
+    }
+}

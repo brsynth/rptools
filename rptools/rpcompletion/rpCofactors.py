@@ -91,7 +91,7 @@ def update_stochio(cache, step, full_reac, rr_string, pathway_cmp, logger=loggin
 # @param step Step in a pathway
 # @param pathway_cmp Dictionnary of intermediate compounds with their public ID's
 # @return Boolean determine if the step is to be added
-def addCofactors_step(cache, step, pathway_cmp, logger=logging.getLogger(__name__)):
+def add_cofactors_step(cache, step, pathway_cmp, logger=logging.getLogger(__name__)):
     
     reac_smiles_left = step['reaction_rule'].split('>>')[0]
     reac_smiles_right = step['reaction_rule'].split('>>')[1]
@@ -167,7 +167,7 @@ def addCofactors_step(cache, step, pathway_cmp, logger=logging.getLogger(__name_
 #  @param self Object pointer
 #  @param rpsbml rpSBML object with a single model
 #  @return Boolean if True then you keep that model for the next step, if not then ignore it
-def addCofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway', logger=logging.getLogger(__name__)):
+def add_cofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway', logger=logging.getLogger(__name__)):
     
     #This keeps the IDs conversions to the pathway
     pathway_cmp = {}
@@ -178,7 +178,7 @@ def addCofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway',
     #We reverse the loop to ID the intermediate CMP to their original ones
     for stepNum in sorted(list(rp_path), reverse=True):
     #for stepNum in sorted(list(rp_path)):
-        if addCofactors_step(cache, rp_path[stepNum], pathway_cmp, logger=logger):
+        if add_cofactors_step(cache, rp_path[stepNum], pathway_cmp, logger=logger):
             ###add the new cofactors to the SBML
             #remove the original species from the monocomponent reaction
             reactants = set(set(rp_path[stepNum]['left'].keys())-set(ori_rp_path[stepNum]['left'].keys()))
@@ -294,4 +294,4 @@ def addCofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway',
             #if the cofactors cannot be found delete it from the list
             logger.warning('Cannot find cofactors... skipping')
             return False
-    return True
+    return rpsbml

@@ -152,123 +152,36 @@ class rpSBML:
         :rtype: float
         :return: The global score
         """
-        path_norm = {}
-        ####################################################################################################### 
-        ########################################### REACTIONS #################################################
-        ####################################################################################################### 
+
         #WARNING: we do this because the list gets updated
         self.logger.debug('thermo_ceil: '+str(thermo_ceil))
         self.logger.debug('thermo_floor: '+str(thermo_floor))
         self.logger.debug('fba_ceil: '+str(fba_ceil))
         self.logger.debug('fba_floor: '+str(fba_floor))
+
+        path_norm = {}
+        values = {
+            'thermo': {
+                'floor': thermo_floor,
+                'ceil' : thermo_ceil
+            },
+            'fba': {
+                'floor': fba_floor,
+                'ceil' : fba_ceil
+            },
+            'max_rp_steps': max_rp_steps
+        }
+
         rpsbml_dict = self.toDict(pathway_id)
-        list_reac_id = list(rpsbml_dict['reactions'].keys())
-        for reac_id in list_reac_id:
-            list_bd_id = list(rpsbml_dict['reactions'][reac_id]['brsynth'].keys())
-            for bd_id in list_bd_id:
-                ####### Thermo ############
-                #lower is better -> -1.0 to have highest better
-                #WARNING: we will only take the dfG_prime_m value
-                if bd_id[:4]=='dfG_':
-                    if bd_id not in path_norm:
-                        path_norm[bd_id] = []
-                    try:
-                        if thermo_ceil>=rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']>=thermo_floor:
-                            #min-max feature scaling
-                            norm_thermo = (rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']-thermo_floor)/(thermo_ceil-thermo_floor)
-                            norm_thermo = 1.0-norm_thermo
-                        elif rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']<thermo_floor:
-                            norm_thermo = 1.0
-                        elif rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']>thermo_ceil:
-                            norm_thermo = 0.0
-                    except (KeyError, TypeError) as e:
-                        self.logger.warning('Cannot find the thermo: '+str(bd_id)+' for the reaction: '+str(reac_id))
-                        norm_thermo = 1.0
-                    rpsbml_dict['reactions'][reac_id]['brsynth']['norm_'+bd_id] = {}
-                    rpsbml_dict['reactions'][reac_id]['brsynth']['norm_'+bd_id]['value'] = norm_thermo
-                    self.logger.debug(str(bd_id)+': '+str(rpsbml_dict['reactions'][reac_id]['brsynth']['norm_'+bd_id]['value'])+' ('+str(norm_thermo)+')')
-                    path_norm[bd_id].append(norm_thermo)
-                ####### FBA ##############
-                #higher is better
-                #return all the FBA values
-                #------- reactions ----------
-                elif bd_id[:4]=='fba_':
-                    try:
-                        norm_fba = 0.0
-                        if fba_ceil>=rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']>=fba_floor:
-                            #min-max feature scaling
-                            norm_fba = (rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']-fba_floor)/(fba_ceil-fba_floor)
-                        elif rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']<=fba_floor:
-                            norm_fba = 0.0
-                        elif rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']>fba_ceil:
-                            norm_fba = 1.0
-                        rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value'] = norm_fba
-                    except (KeyError, TypeError) as e:
-                        norm_fba = 0.0
-                        self.logger.warning('Cannot find the objective: '+str(bd_id)+' for the reaction: '+str(reac_id))
-                    rpsbml_dict['reactions'][reac_id]['brsynth']['norm_'+bd_id] = {}
-                    rpsbml_dict['reactions'][reac_id]['brsynth']['norm_'+bd_id]['value'] = norm_fba
-                elif bd_id=='rule_score':
-                    if bd_id not in path_norm:
-                        path_norm[bd_id] = []
-                    #rule score higher is better
-                    path_norm[bd_id].append(rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value'])
-                else:
-                    self.logger.debug('Not normalising: '+str(bd_id))
-        ####################################################################################################### 
-        ########################################### PATHWAY ###################################################
-        ####################################################################################################### 
-        ############### FBA ################
-        #higher is better
-        list_path_id = list(rpsbml_dict['pathway']['brsynth'].keys())
-        for bd_id in list_path_id:
-            if bd_id[:4]=='fba_':
-                norm_fba = 0.0
-                if fba_ceil>=rpsbml_dict['pathway']['brsynth'][bd_id]['value']>=fba_floor:
-                    #min-max feature scaling
-                    norm_fba = (rpsbml_dict['pathway']['brsynth'][bd_id]['value']-fba_floor)/(fba_ceil-fba_floor)
-                elif rpsbml_dict['pathway']['brsynth'][bd_id]['value']<=fba_floor:
-                    norm_fba = 0.0
-                elif rpsbml_dict['pathway']['brsynth'][bd_id]['value']>fba_ceil:
-                    norm_fba = 1.0
-                else:
-                    self.logger.warning('This flux event should never happen: '+str(rpsbml_dict['pathway']['brsynth'][bd_id]['value']))
-                rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
-                rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = norm_fba
-        ############# thermo ################
-        for bd_id in path_norm:
-            if bd_id[:4]=='dfG_':
-                rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
-                rpsbml_dict['pathway']['brsynth']['var_'+bd_id] = {}
-                #here add weights based on std
-                self.logger.debug(str(bd_id)+': '+str(path_norm[bd_id]))
-                rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = np.average([np.average(path_norm[bd_id]), 1.0-np.std(path_norm[bd_id])], weights=[0.5, 0.5])
-                #the score is higher is better - (-1 since we want lower variability)
-                #rpsbml_dict['pathway']['brsynth']['var_'+bd_id]['value'] = 1.0-np.var(path_norm[bd_id])
-        ############# rule score ############
-        #higher is better
-        if not 'rule_score' in path_norm:
-            self.logger.warning('Cannot detect rule_score: '+str(path_norm))
-            rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
-            rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = 0.0
-        else:
-            rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
-            rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = np.average(path_norm[bd_id])
-        ##### length of pathway ####
-        #lower is better -> -1.0 to reverse it
-        norm_steps = 0.0
-        if len(rpsbml_dict['reactions'])>max_rp_steps:
-            self.logger.warning('There are more steps than specified')
-            norm_steps = 0.0
-        else:
-            try:
-                norm_steps = (float(len(rpsbml_dict['reactions']))-1.0)/(float(max_rp_steps)-1.0)
-                norm_steps = 1.0-norm_steps
-            except ZeroDivisionError:
-                norm_steps = 0.0
+
+        rpsbml_dict  = self.score_for_reactions(rpsbml_dict, path_norm, values, pathway_id, self.logger)
+
+        norm_steps = self.score_from_pathway(path_norm, values, pathway_id, rpsbml_dict, self.logger)
+        
         #################################################
         ################# GLOBAL ########################
         #################################################
+
         ##### global score #########
         try:
             rpsbml_dict['pathway']['brsynth']['norm_steps'] = {}
@@ -279,13 +192,6 @@ class rpSBML:
                                     rpsbml_dict['pathway']['brsynth']['norm_fba_'+str(objective_id)]['value']],
                                     weights=[weight_rule_score, weight_thermo, weight_rp_steps, weight_fba]
                                     )
-            '''
-            globalScore = (rpsbml_dict['pathway']['brsynth']['norm_rule_score']['value']*weight_rule_score+
-                        rpsbml_dict['pathway']['brsynth']['norm_'+str(thermo_id)]['value']*weight_thermo+
-                        rpsbml_dict['pathway']['brsynth']['norm_steps']['value']*weight_rp_steps+
-                        rpsbml_dict['pathway']['brsynth']['norm_fba_'+str(objective_id)]['value']*weight_fba
-                        )/sum([weight_rule_score, weight_thermo, weight_rp_steps, weight_fba])
-            '''
         except ZeroDivisionError:
             globalScore = 0.0
         except KeyError as e:
@@ -300,6 +206,144 @@ class rpSBML:
         self.updateBRSynthPathway(rpsbml_dict, pathway_id)
 
         return self.getGlobalScore()
+
+
+    # @staticmethod
+    # def thermo_score(value, floor, ceil):
+    #     """Compute and returns the thermo score
+    #     """
+    #     if ceil >= value >= floor:
+    #         # min-max feature scaling
+    #         norm = (value-floor) / (ceil-floor)
+    #         norm = 1.0-norm
+    #     elif value < floor:
+    #         norm = 1.0
+    #     # then value > ceil
+    #     else:
+    #         norm = 0.0
+
+    #     # self.logger.debug(str(bd_id)+': '+str(rpsbml_dict['reactions'][reac_id]['brsynth']['norm_'+bd_id]['value'])+' ('+str(norm)+')')
+
+    #     print('*** ',norm+rpSBML.fba_score(value, floor, ceil))
+    #     return norm
+
+
+    @staticmethod
+    def score_for_reactions(rpsbml_dict, path_norm, values, pathway_id, logger=logging.getLogger(__name__)):
+
+        for reac_id in list(rpsbml_dict['reactions'].keys()):
+
+            for bd_id in list(rpsbml_dict['reactions'][reac_id]['brsynth'].keys()):
+
+                thermo     = bd_id.startswith('dfG_')
+                fba        = bd_id.startswith('fba_')
+                rule_score = bd_id=='rule_score'
+
+                if thermo or fba:
+                    try:
+                        ####### Thermo ############
+                        # lower is better -> -1.0 to have highest better
+                        # WARNING: we will only take the dfG_prime_m value
+                        ####### FBA ##############
+                        # higher is better
+                        # return all the FBA values
+                        # ------- reactions ----------
+                        value = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']
+                        floor = values['thermo']['floor'] if thermo else values['fba']['floor']
+                        ceil  = values['thermo']['ceil'] if thermo else values['fba']['ceil']
+                        norm_score = rpSBML.minmax_score(value, floor, ceil)
+                    except (KeyError, TypeError) as e:
+                        logger.warning('Cannot find: '+str(bd_id)+' for the reaction: '+str(reac_id))
+                        norm_score = 0.0
+                    if thermo:
+                        norm_score = 1 - norm_score
+                    rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['norm'] = norm_score
+
+                # elif rule_score:
+                #     # print(rpsbml_dict['reactions'][reac_id]['brsynth'])
+                #     # print(reac_id, bd_id)
+                #     norm_score = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']
+
+                else:
+                    logger.debug('Not normalising: '+str(bd_id))
+
+                # if thermo:
+                #     if bd_id not in path_norm:
+                #         path_norm[bd_id] = []
+                #     path_norm[bd_id].append(norm_score)
+
+        # print(path_norm)
+
+        return rpsbml_dict
+
+
+    @staticmethod
+    def score_from_pathway(path_norm, values, pathway_id, rpsbml_dict, logger=logging.getLogger(__name__)):
+
+        ############### FBA ################
+        # higher is better
+        for bd_id in list(rpsbml_dict['pathway']['brsynth'].keys()):
+            if bd_id.startswith('fba_'):
+                norm_fba = rpSBML.minmax_score(rpsbml_dict['pathway']['brsynth'][bd_id]['value'],
+                                               values['fba']['floor'], values['fba']['ceil'])
+                rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
+                rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = norm_fba
+
+        ############# Thermo ################
+        import json
+        print(json.dumps(rpsbml_dict, indent=4))
+        print(path_norm)
+        for bd_id in path_norm:
+            if bd_id.startswith('dfG_'):
+                rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
+                rpsbml_dict['pathway']['brsynth']['var_'+bd_id] = {}
+                # here add weights based on std
+                logger.debug(str(bd_id)+': '+str(path_norm[bd_id]))
+                rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = \
+                    np.average([np.average(path_norm[bd_id]), 1.0-np.std(path_norm[bd_id])], weights=[0.5, 0.5])
+                # the score is higher is better - (-1 since we want lower variability)
+                # rpsbml_dict['pathway']['brsynth']['var_'+bd_id]['value'] = 1.0-np.var(path_norm[bd_id])
+
+        ############# rule score ############
+        # higher is better
+        if not 'rule_score' in path_norm:
+            logger.warning('Cannot detect rule_score: '+str(path_norm))
+            rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
+            rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = 0.0
+        else:
+            rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
+            rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = np.average(path_norm[bd_id])
+
+        ##### length of pathway ####
+        # lower is better -> -1.0 to reverse it
+        norm_steps = 0.0
+        if len(rpsbml_dict['reactions']) > values['max_rp_steps']:
+            logger.warning('There are more steps than specified')
+            norm_steps = 0.0
+        else:
+            try:
+                norm_steps = (float(len(rpsbml_dict['reactions']))-1.0) / (float(values['max_rp_steps'])-1.0)
+                norm_steps = 1.0 - norm_steps
+            except ZeroDivisionError:
+                norm_steps = 0.0
+
+        return norm_steps
+
+
+    def minmax_score(value, floor, ceil, logger=logging.getLogger(__name__)):
+        """Compute and returns the FBA score
+        """
+        if ceil >= value >= floor:
+            # min-max feature scaling
+            norm = (value-floor) / (ceil-floor)
+        elif value < floor:
+            norm = 0.0
+        # then value > ceil
+        else:
+            norm = 1.0
+        # rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value'] = norm
+
+        return norm
 
 
     def getGlobalScore(self):
@@ -322,34 +366,42 @@ class rpSBML:
 
         for bd_id in rpsbml_dict['pathway']['brsynth']:
             # if bd_id[:5]=='norm_' or bd_id=='global_score':
-                try:
-                    value = rpsbml_dict['pathway']['brsynth'][bd_id]['value']
-                except KeyError:
-                    self.logger.warning('The entry '+str(bd_id)+' does not contain any value')
-                    self.logger.warning('No" value", using the root')
-                try:
+
+            units = None
+
+            try: # read 'value' field
+                value = rpsbml_dict['pathway']['brsynth'][bd_id]['value']
+                try: # read 'units' field
                     units = rpsbml_dict['pathway']['brsynth'][bd_id]['units']
                 except KeyError:
-                    units = None
-                self.updateBRSynth(rp_pathway, bd_id, value, units, False)
+                    pass
 
-        for reac_id in rpsbml_dict['reactions']:
-            reaction = self.getModel().getReaction(reac_id)
-            if reaction==None:
-                self.logger.warning('Skipping updating '+str(reac_id)+', cannot retreive it')
-                continue
-            for bd_id in rpsbml_dict['reactions'][reac_id]['brsynth']:
-                if bd_id[:5]=='norm_':
-                    try:
-                        value = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']
-                    except KeyError:
-                        value = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]
-                        self.logger.warning('No" value", using the root')
-                    try:
-                        units = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['units']
-                    except KeyError:
-                        units = None
-                    self.updateBRSynth(reaction, bd_id, value, units, False)
+            except (KeyError, TypeError):
+                # self.logger.warning('The entry '+str(bd_id)+' does not contain any \'value\' field. Trying using the root...')
+                try: # read value directly
+                    value = rpsbml_dict['pathway']['brsynth'][bd_id]
+                except KeyError:
+                    self.logger.warning('The entry '+str(bd_id)+' does not exist. Giving up...')
+
+            self.updateBRSynth(rp_pathway, bd_id, value, units, False)
+
+        # for reac_id in rpsbml_dict['reactions']:
+        #     reaction = self.getModel().getReaction(reac_id)
+        #     if reaction==None:
+        #         self.logger.warning('Skipping updating '+str(reac_id)+', cannot retreive it')
+        #         continue
+        #     for bd_id in rpsbml_dict['reactions'][reac_id]['brsynth']:
+        #         if bd_id[:5]=='norm_':
+        #             try:
+        #                 value = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']
+        #             except KeyError:
+        #                 value = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]
+        #                 self.logger.warning('No" value", using the root')
+        #             try:
+        #                 units = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['units']
+        #             except KeyError:
+        #                 units = None
+        #             self.updateBRSynth(reaction, bd_id, value, units, False)
 
 
     #############################################################################################################
@@ -817,7 +869,7 @@ class rpSBML:
             step = {'rule_id': None,
                     'left': {pro.split('__')[0]: 1},
                     'right': {},
-                    'step': None,
+                    'rxn_idx': None,
                     # # 'sub_step': None,
                     # 'path_id': None,
                     'transformation_id': None,
@@ -834,7 +886,7 @@ class rpSBML:
             step = {'rule_id': None,
                     'left': {},
                     'right': {react.split('__')[0]: 1},
-                    'step': None,
+                    'rxn_idx': None,
                     # 'sub_step': None,
                     # 'path_id': None,
                     'transformation_id': None,
@@ -1223,14 +1275,13 @@ class rpSBML:
             else:
                 target_products.append(i.species)
                 scores.append(1.0)
-        '''
-        # self.logger.debug('source_reactants: '+str(source_reactants))
-        # self.logger.debug('target_reactants: '+str(target_reactants))
-        # self.logger.debug('source_products: '+str(source_products))
-        # self.logger.debug('target_products: '+str(target_products))
-        # self.logger.debug(set(source_reactants)-set(target_reactants))
-        # self.logger.debug(set(source_products)-set(target_products))
-        '''
+
+        logger.debug('source_reactants: '+str(source_reactants))
+        logger.debug('target_reactants: '+str(target_reactants))
+        logger.debug('source_products: '+str(source_products))
+        logger.debug('target_products: '+str(target_products))
+        logger.debug(set(source_reactants)-set(target_reactants))
+        logger.debug(set(source_products)-set(target_products))
 
         if not set(source_reactants)-set(target_reactants) and not set(source_products)-set(target_products):
             return np.mean(scores), True
@@ -1414,8 +1465,6 @@ class rpSBML:
     @staticmethod
     def _normalize_pathway(pathway, logger=logging.getLogger(__name__)):
 
-        
-
         model = pathway.document.getModel()
 
         # Get Reactions
@@ -1463,6 +1512,12 @@ class rpSBML:
                 d_products[key] = product.getStoichiometry()
             # Put all products dicts in reactions dict for which smiles notations are the keys
             d_reactions[reaction_id]['Products'] = d_products
+
+        # print(d_reactions)
+        # print()
+        # print()
+        # print(self.toDict())
+        # exit()
 
         return d_reactions
 
@@ -1703,20 +1758,22 @@ class rpSBML:
         :return: The default annotation string
         :rtype: str
         """
-        return '''<annotation>
-  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
-    <rdf:Description rdf:about="#'''+str(meta_id or '')+'''">
-      <bqbiol:is>
-        <rdf:Bag>
-        </rdf:Bag>
-      </bqbiol:is>
-    </rdf:Description>
-    <rdf:BRSynth rdf:about="#'''+str(meta_id or '')+'''">
-      <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
-      </brsynth:brsynth>
-    </rdf:BRSynth>
-  </rdf:RDF>
-</annotation>'''
+        return '''
+            <annotation>
+                <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
+                    <rdf:Description rdf:about="#'''+str(meta_id or '')+'''">
+                    <bqbiol:is>
+                        <rdf:Bag>
+                        </rdf:Bag>
+                    </bqbiol:is>
+                    </rdf:Description>
+                    <rdf:BRSynth rdf:about="#'''+str(meta_id or '')+'''">
+                    <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
+                    </brsynth:brsynth>
+                    </rdf:BRSynth>
+                </rdf:RDF>
+            </annotation>
+        '''
 
 
     def _defaultBRSynthAnnot(self, meta_id):
@@ -1729,14 +1786,16 @@ class rpSBML:
         :return: The default annotation string
         :rtype: str
         """
-        return '''<annotation>
-  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
-    <rdf:BRSynth rdf:about="#'''+str(meta_id or '')+'''">
-      <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
-      </brsynth:brsynth>
-    </rdf:BRSynth>
-  </rdf:RDF>
-</annotation>'''
+        return '''
+            <annotation>
+                <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
+                    <rdf:BRSynth rdf:about="#'''+str(meta_id or '')+'''">
+                    <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
+                    </brsynth:brsynth>
+                    </rdf:BRSynth>
+                </rdf:RDF>
+            </annotation>
+        '''
 
 
     def _defaultMIRIAMAnnot(self, meta_id):
@@ -1749,17 +1808,18 @@ class rpSBML:
         :return: The default annotation string
         :rtype: str
         """
-        return '''<annotation>
-  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
-    <rdf:Description rdf:about="#'''+str(meta_id or '')+'''">
-      <bqbiol:is>
-        <rdf:Bag>
-        </rdf:Bag>
-      </bqbiol:is>
-    </rdf:Description>
-  </rdf:RDF>
-</annotation>'''
-
+        return '''
+            <annotation>
+                <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
+                    <rdf:Description rdf:about="#'''+str(meta_id or '')+'''">
+                    <bqbiol:is>
+                        <rdf:Bag>
+                        </rdf:Bag>
+                    </bqbiol:is>
+                    </rdf:Description>
+                </rdf:RDF>
+            </annotation>
+        '''
 
 
     def updateBRSynth(self, sbase_obj, annot_header, value, units=None, isAlone=False, isList=False, isSort=True, meta_id=None):
@@ -1790,11 +1850,13 @@ class rpSBML:
         """
         self.logger.debug('############### '+str(annot_header)+' ################')
         if isList:
-            annotation = '''<annotation>
-      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
-        <rdf:BRSynth rdf:about="# adding">
-          <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
-            <brsynth:'''+str(annot_header)+'''>'''
+            annotation = '''
+                <annotation>
+                    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                        <rdf:BRSynth rdf:about="# adding">
+                        <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
+                            <brsynth:'''+str(annot_header)+'''>
+            '''
             if isSort:
                 for name in sorted(value, key=value.get, reverse=True):
                     if isAlone:
@@ -1814,17 +1876,18 @@ class rpSBML:
                         else:
                             annotation += '<brsynth:'+str(name)+' value="'+str(value[name])+'" />'
             annotation += '''
-            </brsynth:'''+str(annot_header)+'''>
-          </brsynth:brsynth>
-        </rdf:BRSynth>
-      </rdf:RDF>
-    </annotation>'''
+                    </brsynth:'''+str(annot_header)+'''>
+                    </brsynth:brsynth>
+                    </rdf:BRSynth>
+                    </rdf:RDF>
+                </annotation>'''
         else:
             #### create the string
-            annotation = '''<annotation>
-      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
-        <rdf:BRSynth rdf:about="# adding">
-          <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">'''
+            annotation = '''
+                <annotation>
+                    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                        <rdf:BRSynth rdf:about="# adding">
+                            <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">'''
             if isAlone:
                 annotation += '<brsynth:'+str(annot_header)+'>'+str(value)+'</brsynth:'+str(annot_header)+'>'
             else:
@@ -1833,10 +1896,10 @@ class rpSBML:
                 else:
                     annotation += '<brsynth:'+str(annot_header)+' value="'+str(value)+'" />'
             annotation += '''
-          </brsynth:brsynth>
-        </rdf:BRSynth>
-      </rdf:RDF>
-    </annotation>'''
+                            </brsynth:brsynth>
+                        </rdf:BRSynth>
+                    </rdf:RDF>
+                </annotation>'''
         self.logger.debug('annotation: {0}'.format(annotation))
         annot_obj = libsbml.XMLNode.convertStringToXMLNode(annotation)
         if not annot_obj:
@@ -1855,7 +1918,6 @@ class rpSBML:
         if not brsynth_annot:
              self.logger.error('Cannot find the BRSynth annotation')
              return False
-
 
         # try to update the annotation
         target_found = self.updateBRSynthAnnot(brsynth_annot, annot_obj, annot_header)
@@ -2069,7 +2131,7 @@ class rpSBML:
             annot = reaction.getAnnotation()
             rpsbml_dict['reactions'][member.getIdRef()] = {}
             rpsbml_dict['reactions'][member.getIdRef()]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
-            rpsbml_dict['reactions'][member.getIdRef()]['miriam'] = self.readMIRIAMAnnotation(annot)
+            rpsbml_dict['reactions'][member.getIdRef()]['miriam']  = self.readMIRIAMAnnotation(annot)
 
         # loop though all the species
         rpsbml_dict['species'] = {}
@@ -2078,7 +2140,7 @@ class rpSBML:
             annot = species.getAnnotation()
             rpsbml_dict['species'][spe_id] = {}
             rpsbml_dict['species'][spe_id]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
-            rpsbml_dict['species'][spe_id]['miriam'] = self.readMIRIAMAnnotation(annot)
+            rpsbml_dict['species'][spe_id]['miriam']  = self.readMIRIAMAnnotation(annot)
 
         return rpsbml_dict
 
@@ -2091,8 +2153,6 @@ class rpSBML:
     #####################################################################
     ########################## INPUT/OUTPUT #############################
     #####################################################################
-
-
     def readSBML(self, inFile):
         """Open an SBML file to the object
 
@@ -2138,7 +2198,6 @@ class rpSBML:
                 True),
                     'Enabling the FBC package')
             rpSBML.checklibSBML(self.getDocument().setPackageRequired('fbc', False), 'enabling FBC package')
-
 
 
     ## Export a libSBML model to file
@@ -2380,13 +2439,12 @@ class rpSBML:
         :rtype: dict
         :return: Dictionary of all the BRSynth annotations
         """
-        
         toRet = {'dfG_prime_m':   {},
                  'dfG_uncert':    {},
                  'dfG_prime_o':   {},
                 #  'path_id':       None,
-                 'step_id':       None,
-                #  'sub_step_id':   None,
+                 'rxn_idx':       None,
+                #  'sub_step':   None,
                  'rule_score':    None,
                  'smiles':        None,
                  'inchi':         None,
@@ -2415,12 +2473,13 @@ class rpSBML:
                     toRet[ann.getName()] = {
                             'units': None,
                             'value': None}
-            elif ann.getName()=='path_id' or ann.getName()=='step_id' or ann.getName()=='alt_path_id':
+            elif ann.getName()=='path_base_idx' or ann.getName()=='rxn_idx' or ann.getName()=='path_variant_idx':
                 try:
-                    # toRet[ann.getName()] = int(ann.getAttrValue('value'))
-                    toRet[ann.getName()] = {'value': int(ann.getAttrValue('value'))}
+                    toRet[ann.getName()] = int(ann.getAttrValue('value'))
                 except ValueError:
                     toRet[ann.getName()] = None
+            elif ann.getName()=='path_id':
+                    toRet[ann.getName()] = str(ann.getAttrValue('value'))
             elif ann.getName()=='rule_score' or ann.getName()=='global_score' or ann.getName()[:5]=='norm_':
                 try:
                     # toRet[ann.getName()] = float(ann.getAttrValue('value'))
@@ -2442,6 +2501,7 @@ class rpSBML:
                         toRet[ann.getName()][selAnn.getName()] = selAnn.getAttrValue('value')
             else:
                 toRet[ann.getName()] = ann.getChild(0).toXMLString()
+
         # to delete empty
         return {k: v for k, v in toRet.items() if v}
         # return toRet
@@ -2518,7 +2578,7 @@ class rpSBML:
     def convert_pathway_to_dict(self, pathway_id='rp_pathway'):
         """Function to return in a dictionary in the same format as the out_paths rp2paths file dictionary object
 
-        Example format returned: {'rule_id': 'RR-01-503dbb54cf91-49-F', 'right': {'TARGET_0000000001': 1}, 'left': {'MNXM2': 1, 'MNXM376': 1}, 'pathway_id': 1, 'step': 1, 'sub_step': 1, 'transformation_id': 'TRS_0_0_17'}. Really used to complete the monocomponent reactions
+        Example format returned: {'rule_id': 'RR-01-503dbb54cf91-49-F', 'right': {'TARGET_0000000001': 1}, 'left': {'MNXM2': 1, 'MNXM376': 1}, 'pathway_id': 1, 'rxn_idx': 1, 'sub_step': 1, 'transformation_id': 'TRS_0_0_17'}. Really used to complete the monocomponent reactions
 
         :param pathway_id: The pathway ID (Default: rp_pathway)
 
@@ -2528,22 +2588,23 @@ class rpSBML:
         :return: Dictionary of the pathway
         """
         pathway = {}
+
         for member in self.readGroupMembers(pathway_id):
             # TODO: need to find a better way
             reaction = self.getModel().getReaction(member)
             brsynthAnnot = rpSBML.readBRSYNTHAnnotation(reaction.getAnnotation(), self.logger)
             speciesReac = self.readReactionSpecies(reaction)
-            step = {
-                'reaction_id': member,
-                'reaction_rule': brsynthAnnot['smiles'],
-                'rule_score': brsynthAnnot['rule_score'],
-                'rule_id': brsynthAnnot['rule_id'],
-                'rule_ori_reac': brsynthAnnot['rule_ori_reac'],
-                'right': speciesReac['right'],
-                'left': speciesReac['left'],
-                'step_id': brsynthAnnot['step_id'],
+            pathway[brsynthAnnot['rxn_idx']] = {
+                'reaction_id'   : member,
+                'reaction_rule' : brsynthAnnot['smiles'],
+                'rule_score'    : brsynthAnnot['rule_score'],
+                'rule_id'       : brsynthAnnot['rule_id'],
+                'rule_ori_reac' : brsynthAnnot['rule_ori_reac'],
+                'right'         : speciesReac['right'],
+                'left'          : speciesReac['left'],
+                'rxn_idx'          : brsynthAnnot['rxn_idx'],
                 }
-            pathway[brsynthAnnot['step_id']['value']] = step
+
         return pathway
 
 
@@ -2594,8 +2655,8 @@ class rpSBML:
         source_dict = self.readBRSYNTHAnnotation(source_annot, self.logger)
         target_dict = self.readBRSYNTHAnnotation(target_annot, self.logger)
         # ignore thse when comparing reactions
-        # for i in ['path_id', 'step', 'sub_step', 'rule_score', 'rule_ori_reac']:
-        for i in ['step', 'rule_score', 'rule_ori_reac']:
+        # for i in ['path_id', 'rxn_idx', 'sub_step', 'rule_score', 'rule_ori_reac']:
+        for i in ['rxn_idx', 'rule_score', 'rule_ori_reac']:
             try:
                 del source_dict[i]
             except KeyError:
@@ -2699,22 +2760,22 @@ class rpSBML:
         try:
             meas_rp_species = measured_sbml.readRPspecies()
             found_meas_rp_species = measured_sbml.readRPspecies()
-            for meas_step_id in meas_rp_species:
-                meas_rp_species[meas_step_id]['annotation'] = measured_sbml.getModel().getReaction(meas_step_id).getAnnotation()
-                found_meas_rp_species[meas_step_id]['found'] = False
-                for spe_name in meas_rp_species[meas_step_id]['reactants']:
-                    meas_rp_species[meas_step_id]['reactants'][spe_name] = measured_sbml.getModel().getSpecies(spe_name).getAnnotation()
-                    found_meas_rp_species[meas_step_id]['reactants'][spe_name] = False
-                for spe_name in meas_rp_species[meas_step_id]['products']:
-                    meas_rp_species[meas_step_id]['products'][spe_name] = measured_sbml.getModel().getSpecies(spe_name).getAnnotation()
-                    found_meas_rp_species[meas_step_id]['products'][spe_name] = False
+            for meas_step in meas_rp_species:
+                meas_rp_species[meas_step]['annotation'] = measured_sbml.getModel().getReaction(meas_step).getAnnotation()
+                found_meas_rp_species[meas_step]['found'] = False
+                for spe_name in meas_rp_species[meas_step]['reactants']:
+                    meas_rp_species[meas_step]['reactants'][spe_name] = measured_sbml.getModel().getSpecies(spe_name).getAnnotation()
+                    found_meas_rp_species[meas_step]['reactants'][spe_name] = False
+                for spe_name in meas_rp_species[meas_step]['products']:
+                    meas_rp_species[meas_step]['products'][spe_name] = measured_sbml.getModel().getSpecies(spe_name).getAnnotation()
+                    found_meas_rp_species[meas_step]['products'][spe_name] = False
             rp_rp_species = self.readRPspecies()
-            for rp_step_id in rp_rp_species:
-                rp_rp_species[rp_step_id]['annotation'] = self.getModel().getReaction(rp_step_id).getAnnotation()
-                for spe_name in rp_rp_species[rp_step_id]['reactants']:
-                    rp_rp_species[rp_step_id]['reactants'][spe_name] = self.getModel().getSpecies(spe_name).getAnnotation()
-                for spe_name in rp_rp_species[rp_step_id]['products']:
-                    rp_rp_species[rp_step_id]['products'][spe_name] = self.getModel().getSpecies(spe_name).getAnnotation()
+            for rp_step in rp_rp_species:
+                rp_rp_species[rp_step]['annotation'] = self.getModel().getReaction(rp_step).getAnnotation()
+                for spe_name in rp_rp_species[rp_step]['reactants']:
+                    rp_rp_species[rp_step]['reactants'][spe_name] = self.getModel().getSpecies(spe_name).getAnnotation()
+                for spe_name in rp_rp_species[rp_step]['products']:
+                    rp_rp_species[rp_step]['products'][spe_name] = self.getModel().getSpecies(spe_name).getAnnotation()
         except AttributeError:
             self.logger.error('TODO: debug, for some reason some are passed as None here')
             return False, {}
@@ -2723,45 +2784,45 @@ class rpSBML:
             self.logger.warning('The pathways are not of the same length')
             return False, {}
         ############## compare using the reactions ###################
-        for meas_step_id in measured_sbml.readGroupMembers():
-            for rp_step_id in rp_rp_species:
-                if self.compareMIRIAMAnnotations(rp_rp_species[rp_step_id]['annotation'], meas_rp_species[meas_step_id]['annotation']):
-                    found_meas_rp_species[meas_step_id]['found'] = True
-                    found_meas_rp_species[meas_step_id]['rp_step_id'] = rp_step_id
+        for meas_step in measured_sbml.readGroupMembers():
+            for rp_step in rp_rp_species:
+                if self.compareMIRIAMAnnotations(rp_rp_species[rp_step]['annotation'], meas_rp_species[meas_step]['annotation']):
+                    found_meas_rp_species[meas_step]['found'] = True
+                    found_meas_rp_species[meas_step]['rp_step'] = rp_step
                     break
         ############## compare using the species ###################
-        for meas_step_id in measured_sbml.readGroupMembers():
-            # if not found_meas_rp_species[meas_step_id]['found']:
-            for rp_step_id in rp_rp_species:
+        for meas_step in measured_sbml.readGroupMembers():
+            # if not found_meas_rp_species[meas_step]['found']:
+            for rp_step in rp_rp_species:
                 # We test to see if the meas reaction elements all exist in rp reaction and not the opposite
                 # because the measured pathways may not contain all the elements
                 ########## reactants ##########
-                for meas_spe_id in meas_rp_species[meas_step_id]['reactants']:
-                    for rp_spe_id in rp_rp_species[rp_step_id]['reactants']:
-                        if self.compareMIRIAMAnnotations(meas_rp_species[meas_step_id]['reactants'][meas_spe_id], rp_rp_species[rp_step_id]['reactants'][rp_spe_id]):
-                            found_meas_rp_species[meas_step_id]['reactants'][meas_spe_id] = True
+                for meas_spe_id in meas_rp_species[meas_step]['reactants']:
+                    for rp_spe_id in rp_rp_species[rp_step]['reactants']:
+                        if self.compareMIRIAMAnnotations(meas_rp_species[meas_step]['reactants'][meas_spe_id], rp_rp_species[rp_step]['reactants'][rp_spe_id]):
+                            found_meas_rp_species[meas_step]['reactants'][meas_spe_id] = True
                             break
                         else:
-                            if self.compareBRSYNTHAnnotations(meas_rp_species[meas_step_id]['reactants'][meas_spe_id], rp_rp_species[rp_step_id]['reactants'][rp_spe_id]):
-                                found_meas_rp_species[meas_step_id]['reactants'][meas_spe_id] = True
+                            if self.compareBRSYNTHAnnotations(meas_rp_species[meas_step]['reactants'][meas_spe_id], rp_rp_species[rp_step]['reactants'][rp_spe_id]):
+                                found_meas_rp_species[meas_step]['reactants'][meas_spe_id] = True
                                 break
                 ########### products ###########
-                for meas_spe_id in meas_rp_species[meas_step_id]['products']:
-                    for rp_spe_id in rp_rp_species[rp_step_id]['products']:
-                        if self.compareMIRIAMAnnotations(meas_rp_species[meas_step_id]['products'][meas_spe_id], rp_rp_species[rp_step_id]['products'][rp_spe_id]):
-                            found_meas_rp_species[meas_step_id]['products'][meas_spe_id] = True
+                for meas_spe_id in meas_rp_species[meas_step]['products']:
+                    for rp_spe_id in rp_rp_species[rp_step]['products']:
+                        if self.compareMIRIAMAnnotations(meas_rp_species[meas_step]['products'][meas_spe_id], rp_rp_species[rp_step]['products'][rp_spe_id]):
+                            found_meas_rp_species[meas_step]['products'][meas_spe_id] = True
                             break
                         else:
-                            if self.compareBRSYNTHAnnotations(meas_rp_species[meas_step_id]['products'][meas_spe_id], rp_rp_species[rp_step_id]['products'][rp_spe_id]):
-                                found_meas_rp_species[meas_step_id]['products'][meas_spe_id] = True
+                            if self.compareBRSYNTHAnnotations(meas_rp_species[meas_step]['products'][meas_spe_id], rp_rp_species[rp_step]['products'][rp_spe_id]):
+                                found_meas_rp_species[meas_step]['products'][meas_spe_id] = True
                                 break
                 ######### test to see the difference
-                pro_found = [found_meas_rp_species[meas_step_id]['products'][i] for i in found_meas_rp_species[meas_step_id]['products']]
-                rea_found = [found_meas_rp_species[meas_step_id]['reactants'][i] for i in found_meas_rp_species[meas_step_id]['reactants']]
+                pro_found = [found_meas_rp_species[meas_step]['products'][i] for i in found_meas_rp_species[meas_step]['products']]
+                rea_found = [found_meas_rp_species[meas_step]['reactants'][i] for i in found_meas_rp_species[meas_step]['reactants']]
                 if pro_found and rea_found:
                     if all(pro_found) and all(rea_found):
-                        found_meas_rp_species[meas_step_id]['found'] = True
-                        found_meas_rp_species[meas_step_id]['rp_step_id'] = rp_step_id
+                        found_meas_rp_species[meas_step]['found'] = True
+                        found_meas_rp_species[meas_step]['rp_step'] = rp_step
                         break
         ################# Now see if all steps have been found ############
         if all(found_meas_rp_species[i]['found'] for i in found_meas_rp_species):
@@ -2857,7 +2918,7 @@ class rpSBML:
                 createStep = {'rule_id': None,
                               'left': {species_id.split('__')[0]: 1},
                               'right': {},
-                              'step': None,
+                              'rxn_idx': None,
                             #   'sub_step': None,
                             #   'path_id': None,
                               'transformation_id': None,
@@ -3137,6 +3198,7 @@ class rpSBML:
                 'set stoichiometry ('+str(float(step['left'][reactant]))+')')
         # TODO: check that the species exist
         # products_dict
+
         for product in step['right']:
             pro = reac.createProduct()
             rpSBML.checklibSBML(pro, 'create product')
@@ -3163,10 +3225,10 @@ class rpSBML:
             self.updateBRSynth(reac, 'rule_score', step['rule_score'], None, False, False, False, meta_id)
         # if step['path_id']:
         #     self.updateBRSynth(reac, 'path_id', step['path_id'], None, False, False, False, meta_id)
-        if step['step']:
-            self.updateBRSynth(reac, 'step_id', step['step'], None, False, False, False, meta_id)
+        if step['rxn_idx']:
+            self.updateBRSynth(reac, 'rxn_idx', step['rxn_idx'], None, False, False, False, meta_id)
         # if step['sub_step']:
-        #     self.updateBRSynth(reac, 'sub_step_id', step['sub_step'], None, False, False, False, meta_id)
+        #     self.updateBRSynth(reac, 'sub_step', step['sub_step'], None, False, False, False, meta_id)
         #### GROUPS #####
         if pathway_id:
             groups_plugin = self.getModel().getPlugin('groups')
@@ -3315,24 +3377,24 @@ class rpSBML:
         new_group.setAnnotation(self._defaultBRSynthAnnot(meta_id))
 
 
-    # def createGene(self, reac, step_id, meta_id=None):
+    # def createGene(self, reac, step, meta_id=None):
     #     """Create libSBML gene
 
     #     Create a gene that is associated with a reaction
 
     #     :param reac: The id of the reaction that is associated with the gene
-    #     :param step_id: The id of the reaction to name the gene
+    #     :param step: The id of the reaction to name the gene
     #     :param meta_id: Meta id (Default: None)
 
     #     :type reac: str
-    #     :type step_id: str
+    #     :type step: str
     #     :type meta_id: str
 
     #     :rtype: None
     #     :return: None
     #     """
     #     # TODO: pass this function to Pablo for him to fill with parameters that are appropriate for his needs
-    #     geneName = 'RP'+str(step_id)+'_gene'
+    #     geneName = 'RP'+str(step)+'_gene'
     #     fbc_plugin = self.getModel().getPlugin('fbc')
     #     # fbc_plugin = reac.getPlugin("fbc")
     #     gp = fbc_plugin.createGeneProduct()
@@ -3340,8 +3402,8 @@ class rpSBML:
     #     if not meta_id:
     #         meta_id = self._genMetaID(str(geneName))
     #     gp.setMetaId(meta_id)
-    #     gp.setLabel('gene_'+str(step_id))
-    #     gp.setAssociatedSpecies('RP'+str(step_id))
+    #     gp.setLabel('gene_'+str(step))
+    #     gp.setAssociatedSpecies('RP'+str(step))
     #     ##### NOTE: The parameters here require the input from Pablo to determine what he needs
     #     # gp.setAnnotation(self._defaultBothAnnot(meta_id))
 

@@ -19,9 +19,7 @@
             "MNXM6__64__MNXC3": 1,
             "MNXM3__64__MNXC3": 1
         },
-        "step_id": {
-            "value": 1
-        }
+        "step": 1
     },
     "2": {
         "reaction_id": "rxn_2",
@@ -39,9 +37,7 @@
             "CMPD_0000000013__64__MNXC3": 1,
             "MNXM89557__64__MNXC3": 1
         },
-        "step_id": {
-            "value": 2
-        }
+        "step": 2
     },
     "3": {
         "reaction_id": "rxn_3",
@@ -59,8 +55,6 @@
             "CMPD_0000000004__64__MNXC3": 1,
             "MNXM1__64__MNXC3": 1
         },
-        "step_id": {
-            "value": 3
-        }
+        "step": 3
     }
 }
