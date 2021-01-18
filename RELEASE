@@ -1,7 +1,11 @@
 # Release history
 
+## 2.2.0
+- rename in rpSBML format:
+    + step -> rxn_idx
+
 ## 2.1.0
-- rename:
+- rename in rpSBML format:
     + path_id     -> path_base_idx
     + alt_path_id -> path_variant_idx
 - 'path_id' is now used to really store the id of the pathway
