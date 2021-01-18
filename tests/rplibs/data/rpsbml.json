@@ -65,7 +65,7 @@
                     "units": "kj_per_mol",
                     "value": 0.0
                 },
-                "step": 1,
+                "rxn_idx": 1,
                 "rule_score": {
                     "value": 0.6461261981425104
                 },
@@ -112,7 +112,7 @@
                     "units": "kj_per_mol",
                     "value": 0.0
                 },
-                "step": 2,
+                "rxn_idx": 2,
                 "rule_score": {
                     "value": 0.5412736479780204
                 },
@@ -163,7 +163,7 @@
                     "units": "kj_per_mol",
                     "value": -30.259358918721446
                 },
-                "step": 3,
+                "rxn_idx": 3,
                 "rule_score": {
                     "value": 0.5179693843696734
                 },

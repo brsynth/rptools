@@ -9,7 +9,7 @@
     "reactions": {
         "rxn_3": {
             "brsynth": {
-                "step": 3,
+                "rxn_idx": 3,
                 "rule_score": {
                     "value": 0.7358363677022237
                 },
@@ -25,7 +25,7 @@
         },
         "rxn_2": {
             "brsynth": {
-                "step": 2,
+                "rxn_idx": 2,
                 "rule_score": {
                     "value": 0.5518755963407151
                 },
@@ -43,7 +43,7 @@
         },
         "rxn_1": {
             "brsynth": {
-                "step": 1,
+                "rxn_idx": 1,
                 "rule_score": {
                     "value": 0.5706379442030705
                 },

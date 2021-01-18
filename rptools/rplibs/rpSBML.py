@@ -192,13 +192,6 @@ class rpSBML:
                                     rpsbml_dict['pathway']['brsynth']['norm_fba_'+str(objective_id)]['value']],
                                     weights=[weight_rule_score, weight_thermo, weight_rp_steps, weight_fba]
                                     )
-            '''
-            globalScore = (rpsbml_dict['pathway']['brsynth']['norm_rule_score']['value']*weight_rule_score+
-                        rpsbml_dict['pathway']['brsynth']['norm_'+str(thermo_id)]['value']*weight_thermo+
-                        rpsbml_dict['pathway']['brsynth']['norm_steps']['value']*weight_rp_steps+
-                        rpsbml_dict['pathway']['brsynth']['norm_fba_'+str(objective_id)]['value']*weight_fba
-                        )/sum([weight_rule_score, weight_thermo, weight_rp_steps, weight_fba])
-            '''
         except ZeroDivisionError:
             globalScore = 0.0
         except KeyError as e:
@@ -384,7 +377,7 @@ class rpSBML:
                     pass
 
             except (KeyError, TypeError):
-                self.logger.warning('The entry '+str(bd_id)+' does not contain any \'value\' field. Trying using the root...')
+                # self.logger.warning('The entry '+str(bd_id)+' does not contain any \'value\' field. Trying using the root...')
                 try: # read value directly
                     value = rpsbml_dict['pathway']['brsynth'][bd_id]
                 except KeyError:
@@ -876,7 +869,7 @@ class rpSBML:
             step = {'rule_id': None,
                     'left': {pro.split('__')[0]: 1},
                     'right': {},
-                    'step': None,
+                    'rxn_idx': None,
                     # # 'sub_step': None,
                     # 'path_id': None,
                     'transformation_id': None,
@@ -893,7 +886,7 @@ class rpSBML:
             step = {'rule_id': None,
                     'left': {},
                     'right': {react.split('__')[0]: 1},
-                    'step': None,
+                    'rxn_idx': None,
                     # 'sub_step': None,
                     # 'path_id': None,
                     'transformation_id': None,
@@ -1282,14 +1275,13 @@ class rpSBML:
             else:
                 target_products.append(i.species)
                 scores.append(1.0)
-        '''
-        # self.logger.debug('source_reactants: '+str(source_reactants))
-        # self.logger.debug('target_reactants: '+str(target_reactants))
-        # self.logger.debug('source_products: '+str(source_products))
-        # self.logger.debug('target_products: '+str(target_products))
-        # self.logger.debug(set(source_reactants)-set(target_reactants))
-        # self.logger.debug(set(source_products)-set(target_products))
-        '''
+
+        logger.debug('source_reactants: '+str(source_reactants))
+        logger.debug('target_reactants: '+str(target_reactants))
+        logger.debug('source_products: '+str(source_products))
+        logger.debug('target_products: '+str(target_products))
+        logger.debug(set(source_reactants)-set(target_reactants))
+        logger.debug(set(source_products)-set(target_products))
 
         if not set(source_reactants)-set(target_reactants) and not set(source_products)-set(target_products):
             return np.mean(scores), True
@@ -1473,8 +1465,6 @@ class rpSBML:
     @staticmethod
     def _normalize_pathway(pathway, logger=logging.getLogger(__name__)):
 
-        
-
         model = pathway.document.getModel()
 
         # Get Reactions
@@ -1522,6 +1512,12 @@ class rpSBML:
                 d_products[key] = product.getStoichiometry()
             # Put all products dicts in reactions dict for which smiles notations are the keys
             d_reactions[reaction_id]['Products'] = d_products
+
+        # print(d_reactions)
+        # print()
+        # print()
+        # print(self.toDict())
+        # exit()
 
         return d_reactions
 
@@ -1762,20 +1758,22 @@ class rpSBML:
         :return: The default annotation string
         :rtype: str
         """
-        return '''<annotation>
-  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
-    <rdf:Description rdf:about="#'''+str(meta_id or '')+'''">
-      <bqbiol:is>
-        <rdf:Bag>
-        </rdf:Bag>
-      </bqbiol:is>
-    </rdf:Description>
-    <rdf:BRSynth rdf:about="#'''+str(meta_id or '')+'''">
-      <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
-      </brsynth:brsynth>
-    </rdf:BRSynth>
-  </rdf:RDF>
-</annotation>'''
+        return '''
+            <annotation>
+                <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
+                    <rdf:Description rdf:about="#'''+str(meta_id or '')+'''">
+                    <bqbiol:is>
+                        <rdf:Bag>
+                        </rdf:Bag>
+                    </bqbiol:is>
+                    </rdf:Description>
+                    <rdf:BRSynth rdf:about="#'''+str(meta_id or '')+'''">
+                    <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
+                    </brsynth:brsynth>
+                    </rdf:BRSynth>
+                </rdf:RDF>
+            </annotation>
+        '''
 
 
     def _defaultBRSynthAnnot(self, meta_id):
@@ -1788,14 +1786,16 @@ class rpSBML:
         :return: The default annotation string
         :rtype: str
         """
-        return '''<annotation>
-  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
-    <rdf:BRSynth rdf:about="#'''+str(meta_id or '')+'''">
-      <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
-      </brsynth:brsynth>
-    </rdf:BRSynth>
-  </rdf:RDF>
-</annotation>'''
+        return '''
+            <annotation>
+                <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
+                    <rdf:BRSynth rdf:about="#'''+str(meta_id or '')+'''">
+                    <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
+                    </brsynth:brsynth>
+                    </rdf:BRSynth>
+                </rdf:RDF>
+            </annotation>
+        '''
 
 
     def _defaultMIRIAMAnnot(self, meta_id):
@@ -1808,17 +1808,18 @@ class rpSBML:
         :return: The default annotation string
         :rtype: str
         """
-        return '''<annotation>
-  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
-    <rdf:Description rdf:about="#'''+str(meta_id or '')+'''">
-      <bqbiol:is>
-        <rdf:Bag>
-        </rdf:Bag>
-      </bqbiol:is>
-    </rdf:Description>
-  </rdf:RDF>
-</annotation>'''
-
+        return '''
+            <annotation>
+                <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
+                    <rdf:Description rdf:about="#'''+str(meta_id or '')+'''">
+                    <bqbiol:is>
+                        <rdf:Bag>
+                        </rdf:Bag>
+                    </bqbiol:is>
+                    </rdf:Description>
+                </rdf:RDF>
+            </annotation>
+        '''
 
 
     def updateBRSynth(self, sbase_obj, annot_header, value, units=None, isAlone=False, isList=False, isSort=True, meta_id=None):
@@ -1849,11 +1850,13 @@ class rpSBML:
         """
         self.logger.debug('############### '+str(annot_header)+' ################')
         if isList:
-            annotation = '''<annotation>
-      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
-        <rdf:BRSynth rdf:about="# adding">
-          <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
-            <brsynth:'''+str(annot_header)+'''>'''
+            annotation = '''
+                <annotation>
+                    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                        <rdf:BRSynth rdf:about="# adding">
+                        <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
+                            <brsynth:'''+str(annot_header)+'''>
+            '''
             if isSort:
                 for name in sorted(value, key=value.get, reverse=True):
                     if isAlone:
@@ -1873,17 +1876,18 @@ class rpSBML:
                         else:
                             annotation += '<brsynth:'+str(name)+' value="'+str(value[name])+'" />'
             annotation += '''
-            </brsynth:'''+str(annot_header)+'''>
-          </brsynth:brsynth>
-        </rdf:BRSynth>
-      </rdf:RDF>
-    </annotation>'''
+                    </brsynth:'''+str(annot_header)+'''>
+                    </brsynth:brsynth>
+                    </rdf:BRSynth>
+                    </rdf:RDF>
+                </annotation>'''
         else:
             #### create the string
-            annotation = '''<annotation>
-      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
-        <rdf:BRSynth rdf:about="# adding">
-          <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">'''
+            annotation = '''
+                <annotation>
+                    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                        <rdf:BRSynth rdf:about="# adding">
+                            <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">'''
             if isAlone:
                 annotation += '<brsynth:'+str(annot_header)+'>'+str(value)+'</brsynth:'+str(annot_header)+'>'
             else:
@@ -1892,10 +1896,10 @@ class rpSBML:
                 else:
                     annotation += '<brsynth:'+str(annot_header)+' value="'+str(value)+'" />'
             annotation += '''
-          </brsynth:brsynth>
-        </rdf:BRSynth>
-      </rdf:RDF>
-    </annotation>'''
+                            </brsynth:brsynth>
+                        </rdf:BRSynth>
+                    </rdf:RDF>
+                </annotation>'''
         self.logger.debug('annotation: {0}'.format(annotation))
         annot_obj = libsbml.XMLNode.convertStringToXMLNode(annotation)
         if not annot_obj:
@@ -2439,7 +2443,7 @@ class rpSBML:
                  'dfG_uncert':    {},
                  'dfG_prime_o':   {},
                 #  'path_id':       None,
-                 'step':       None,
+                 'rxn_idx':       None,
                 #  'sub_step':   None,
                  'rule_score':    None,
                  'smiles':        None,
@@ -2469,7 +2473,7 @@ class rpSBML:
                     toRet[ann.getName()] = {
                             'units': None,
                             'value': None}
-            elif ann.getName()=='path_base_idx' or ann.getName()=='step' or ann.getName()=='path_variant_idx':
+            elif ann.getName()=='path_base_idx' or ann.getName()=='rxn_idx' or ann.getName()=='path_variant_idx':
                 try:
                     toRet[ann.getName()] = int(ann.getAttrValue('value'))
                 except ValueError:
@@ -2497,6 +2501,7 @@ class rpSBML:
                         toRet[ann.getName()][selAnn.getName()] = selAnn.getAttrValue('value')
             else:
                 toRet[ann.getName()] = ann.getChild(0).toXMLString()
+
         # to delete empty
         return {k: v for k, v in toRet.items() if v}
         # return toRet
@@ -2573,7 +2578,7 @@ class rpSBML:
     def convert_pathway_to_dict(self, pathway_id='rp_pathway'):
         """Function to return in a dictionary in the same format as the out_paths rp2paths file dictionary object
 
-        Example format returned: {'rule_id': 'RR-01-503dbb54cf91-49-F', 'right': {'TARGET_0000000001': 1}, 'left': {'MNXM2': 1, 'MNXM376': 1}, 'pathway_id': 1, 'step': 1, 'sub_step': 1, 'transformation_id': 'TRS_0_0_17'}. Really used to complete the monocomponent reactions
+        Example format returned: {'rule_id': 'RR-01-503dbb54cf91-49-F', 'right': {'TARGET_0000000001': 1}, 'left': {'MNXM2': 1, 'MNXM376': 1}, 'pathway_id': 1, 'rxn_idx': 1, 'sub_step': 1, 'transformation_id': 'TRS_0_0_17'}. Really used to complete the monocomponent reactions
 
         :param pathway_id: The pathway ID (Default: rp_pathway)
 
@@ -2589,7 +2594,7 @@ class rpSBML:
             reaction = self.getModel().getReaction(member)
             brsynthAnnot = rpSBML.readBRSYNTHAnnotation(reaction.getAnnotation(), self.logger)
             speciesReac = self.readReactionSpecies(reaction)
-            pathway[brsynthAnnot['step']] = {
+            pathway[brsynthAnnot['rxn_idx']] = {
                 'reaction_id'   : member,
                 'reaction_rule' : brsynthAnnot['smiles'],
                 'rule_score'    : brsynthAnnot['rule_score'],
@@ -2597,7 +2602,7 @@ class rpSBML:
                 'rule_ori_reac' : brsynthAnnot['rule_ori_reac'],
                 'right'         : speciesReac['right'],
                 'left'          : speciesReac['left'],
-                'step'          : brsynthAnnot['step'],
+                'rxn_idx'          : brsynthAnnot['rxn_idx'],
                 }
 
         return pathway
@@ -2650,8 +2655,8 @@ class rpSBML:
         source_dict = self.readBRSYNTHAnnotation(source_annot, self.logger)
         target_dict = self.readBRSYNTHAnnotation(target_annot, self.logger)
         # ignore thse when comparing reactions
-        # for i in ['path_id', 'step', 'sub_step', 'rule_score', 'rule_ori_reac']:
-        for i in ['step', 'rule_score', 'rule_ori_reac']:
+        # for i in ['path_id', 'rxn_idx', 'sub_step', 'rule_score', 'rule_ori_reac']:
+        for i in ['rxn_idx', 'rule_score', 'rule_ori_reac']:
             try:
                 del source_dict[i]
             except KeyError:
@@ -2913,7 +2918,7 @@ class rpSBML:
                 createStep = {'rule_id': None,
                               'left': {species_id.split('__')[0]: 1},
                               'right': {},
-                              'step': None,
+                              'rxn_idx': None,
                             #   'sub_step': None,
                             #   'path_id': None,
                               'transformation_id': None,
@@ -3220,8 +3225,8 @@ class rpSBML:
             self.updateBRSynth(reac, 'rule_score', step['rule_score'], None, False, False, False, meta_id)
         # if step['path_id']:
         #     self.updateBRSynth(reac, 'path_id', step['path_id'], None, False, False, False, meta_id)
-        if step['step']:
-            self.updateBRSynth(reac, 'step', step['step'], None, False, False, False, meta_id)
+        if step['rxn_idx']:
+            self.updateBRSynth(reac, 'rxn_idx', step['rxn_idx'], None, False, False, False, meta_id)
         # if step['sub_step']:
         #     self.updateBRSynth(reac, 'sub_step', step['sub_step'], None, False, False, False, meta_id)
         #### GROUPS #####

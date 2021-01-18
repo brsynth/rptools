@@ -406,7 +406,7 @@ def rp2paths_to_dict(infile, rr_reactions, deprecatedCID_cid, logger=logging.get
         #             'left'              : build_side_rxn(row['Left'].replace("'", "").replace('-', '_').replace('+', ''),
         #                                                  deprecatedCID_cid),
         #             'right'             : build_side_rxn(row['Right'], deprecatedCID_cid),
-        #             'step'              : path_step,
+        #             'rxn_idx'              : path_step,
         #             'transformation_id' : row['Unique ID'][:-2]
         #             }
         #     rp2paths_pathways = add_rxn_to_rppaths(rp2paths_pathways, row['Path ID'], path_variant_idx, rxn)
@@ -662,7 +662,7 @@ def build_rxn(rule_id=None, rule_ori_reac=None, rule_score=None, left=None, righ
         'rule_score':    rule_score,
         'left':          left,
         'right':         right,
-        'step':          step
+        'rxn_idx':          step
         }
 
 
@@ -704,7 +704,7 @@ def add_reactions(path_variant, steps,
 
         # Create the reaction in the model
         rpsbml.createReaction(
-                'rxn_'+str(index), # parameter 'name' of the reaction deleted : 'RetroPath_Reaction_'+str(step['step']),
+                'rxn_'+str(index), # parameter 'name' of the reaction deleted : 'RetroPath_Reaction_'+str(step['rxn_idx']),
                 upper_flux_bound, lower_flux_bound,
                 rxn,
                 compartment_id,
@@ -933,9 +933,9 @@ def add_species(rpsbml, meta, sink_molecules, compartment_id, chemName, spe, spe
 #                     data[pathID]['target']['inchi'] = row['target_structure']
 #             ####### step #########
 #             try:
-#                 stepID = int(row['step'])
+#                 stepID = int(row['rxn_idx'])
 #             except ValueError:
-#                 logger.error('Cannot convert step ID: '+str(row['step']))
+#                 logger.error('Cannot convert step ID: '+str(row['rxn_idx']))
 #                 data[pathID]['isValid'] = False
 #                 continue
 #             if stepID==0:
@@ -1182,7 +1182,7 @@ def add_species(rpsbml, meta, sink_molecules, compartment_id, chemName, spe, spe
 #                 'rule_ori_reac': None,
 #                 'rule_score': None,
 #                 # 'path_base_idx': path_base_idx,
-#                 'step': stepNum,
+#                 'rxn_idx': stepNum,
 #                 # 'sub_step': None
 #                 }
 #             for chem in data[path_base_idx]['steps'][stepNum]['substrates']:
@@ -1241,7 +1241,7 @@ def add_species(rpsbml, meta, sink_molecules, compartment_id, chemName, spe, spe
 #                 targetStep = {'rule_id': None,
 #                               'left': {},
 #                               'right': {},
-#                               'step': None,
+#                               'rxn_idx': None,
 #                             #   'sub_step': None,
 #                             #   'path_base_idx': None,
 #                               'transformation_id': None,
