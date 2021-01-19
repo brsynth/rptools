@@ -1,7 +1,7 @@
 {
     "1": {
         "reaction_id": "rxn_1",
-        "reaction_rule": "[H]OC(=O)C([H])(N([H])[H])C([H])([H])C([H])([H])C([H])=O.NC(=O)c1ccc[n+](c1)[C@@H]1O[C@H](COP([O-])(=O)OP([O-])(=O)OC[C@H]2O[C@H]([C@H](OP([O-])([O-])=O)[C@@H]2O)n2cnc3c(N)ncnc23)[C@@H](O)[C@H]1O.Nc1ncnc2n(cnc12)[C@@H]1O[C@H](COP([O-])(=O)OP([O-])([O-])=O)[C@@H](O)[C@H]1O.OP([O-])([O-])=O>>[H+].[H]OC(=O)C([H])([H])C([H])([H])C([H])(C(=O)O[H])N([H])[H].NC(=O)C1=CN(C=CC1)[C@@H]1O[C@H](COP([O-])(=O)OP([O-])(=O)OC[C@H]2O[C@H]([C@H](OP([O-])([O-])=O)[C@@H]2O)n2cnc3c(N)ncnc23)[C@@H](O)[C@H]1O.Nc1ncnc2n(cnc12)[C@@H]1O[C@H](COP([O-])(=O)OP([O-])(=O)OP([O-])([O-])=O)[C@@H](O)[C@H]1O",
+        "smiles": "[H]OC(=O)C([H])(N([H])[H])C([H])([H])C([H])([H])C([H])=O.NC(=O)c1ccc[n+](c1)[C@@H]1O[C@H](COP([O-])(=O)OP([O-])(=O)OC[C@H]2O[C@H]([C@H](OP([O-])([O-])=O)[C@@H]2O)n2cnc3c(N)ncnc23)[C@@H](O)[C@H]1O.Nc1ncnc2n(cnc12)[C@@H]1O[C@H](COP([O-])(=O)OP([O-])([O-])=O)[C@@H](O)[C@H]1O.OP([O-])([O-])=O>>[H+].[H]OC(=O)C([H])([H])C([H])([H])C([H])(C(=O)O[H])N([H])[H].NC(=O)C1=CN(C=CC1)[C@@H]1O[C@H](COP([O-])(=O)OP([O-])(=O)OC[C@H]2O[C@H]([C@H](OP([O-])([O-])=O)[C@@H]2O)n2cnc3c(N)ncnc23)[C@@H](O)[C@H]1O.Nc1ncnc2n(cnc12)[C@@H]1O[C@H](COP([O-])(=O)OP([O-])(=O)OP([O-])([O-])=O)[C@@H](O)[C@H]1O",
         "rule_score": {
             "value": 0.6461261981425104
         },
@@ -19,11 +19,11 @@
             "MNXM6__64__MNXC3": 1,
             "MNXM3__64__MNXC3": 1
         },
-        "step": 1
+        "rxn_idx": 1
     },
     "2": {
         "reaction_id": "rxn_2",
-        "reaction_rule": "[H]OC(=O)C([H])(N([H])[H])C([H])([H])C([H])([H])C([H])([H])N([H])[H].[O-]C(=O)CCC(=O)C([O-])=O>>[H]OC(=O)C([H])(N([H])[H])C([H])([H])C([H])([H])C([H])=O.[H]OC(=O)C([H])([H])C([H])([H])C([H])(C(=O)O[H])N([H])[H]",
+        "smiles": "[H]OC(=O)C([H])(N([H])[H])C([H])([H])C([H])([H])C([H])([H])N([H])[H].[O-]C(=O)CCC(=O)C([O-])=O>>[H]OC(=O)C([H])(N([H])[H])C([H])([H])C([H])([H])C([H])=O.[H]OC(=O)C([H])([H])C([H])([H])C([H])(C(=O)O[H])N([H])[H]",
         "rule_score": {
             "value": 0.5412736479780204
         },
@@ -37,11 +37,11 @@
             "CMPD_0000000013__64__MNXC3": 1,
             "MNXM89557__64__MNXC3": 1
         },
-        "step": 2
+        "rxn_idx": 2
     },
     "3": {
         "reaction_id": "rxn_3",
-        "reaction_rule": "[H]N([H])C([H])([H])C([H])([H])C([H])([H])C([H])([H])N([H])[H].O=C=O>>[H]OC(=O)C([H])(N([H])[H])C([H])([H])C([H])([H])C([H])([H])N([H])[H].[H+]",
+        "smiles": "[H]N([H])C([H])([H])C([H])([H])C([H])([H])C([H])([H])N([H])[H].O=C=O>>[H]OC(=O)C([H])(N([H])[H])C([H])([H])C([H])([H])C([H])([H])N([H])[H].[H+]",
         "rule_score": {
             "value": 0.5179693843696734
         },
@@ -55,6 +55,6 @@
             "CMPD_0000000004__64__MNXC3": 1,
             "MNXM1__64__MNXC3": 1
         },
-        "step": 3
+        "rxn_idx": 3
     }
 }

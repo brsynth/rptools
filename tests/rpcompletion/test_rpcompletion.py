@@ -24,6 +24,7 @@ class Test_rpCompletion(TestCase):
         self.logger.setLevel(getattr(logging, 'ERROR'))
         self.logger.formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
 
+
     def test_rp_completion(self):
         with TemporaryDirectory() as temp_d:
             result = rp_completion(self.rpcache,
@@ -40,6 +41,8 @@ class Test_rpCompletion(TestCase):
                                    sink_species_group_id='rp_sink_species',
                                    pubchem_search=False,
                                    logger=self.logger)
+            # self.assertTrue(False)
+            # exit()
             # Useless to sort files since smiles could be equivalent and not equal, then checksum will be different
             for file, size in self.files:
                 self.assertTrue(os_path.isfile(os_path.join(temp_d, file)))

@@ -2117,20 +2117,27 @@ class rpSBML:
 
         groups = self.getModel().getPlugin('groups')
         rp_pathway = groups.getGroup(pathway_id)
-        reactions = rp_pathway.getListOfMembers()
+        members = rp_pathway.getListOfMembers()
 
         # pathway
         rpsbml_dict = {}
         rpsbml_dict['pathway'] = {}
         rpsbml_dict['pathway']['brsynth'] = self.readBRSYNTHAnnotation(rp_pathway.getAnnotation(), self.logger)
+        # rpsbml_dict['pathway']['brsynth']['reactions'] = self.readGroupMembers(pathway_id)
 
         # reactions
         rpsbml_dict['reactions'] = {}
-        for member in reactions:
+        for member in members:
             reaction = self.getModel().getReaction(member.getIdRef())
             annot = reaction.getAnnotation()
             rpsbml_dict['reactions'][member.getIdRef()] = {}
+            # add BRSynth annotations
             rpsbml_dict['reactions'][member.getIdRef()]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
+            # add right and left species
+            species = self.readReactionSpecies(reaction)
+            rpsbml_dict['reactions'][member.getIdRef()]['brsynth']['left']  = species['left']
+            rpsbml_dict['reactions'][member.getIdRef()]['brsynth']['right'] = species['right']
+            # add MIRIAM annotations
             rpsbml_dict['reactions'][member.getIdRef()]['miriam']  = self.readMIRIAMAnnotation(annot)
 
         # loop though all the species
@@ -2294,10 +2301,10 @@ class rpSBML:
         """
         group = self.getModel().getPlugin('groups').getGroup(group_id)
         rpSBML.checklibSBML(group, 'retreiving '+group_id+' group')
-        toRet = []
+        members = []
         for member in group.getListOfMembers():
-            toRet.append(member.getIdRef())
-        return toRet
+            members.append(member.getIdRef())
+        return members
 
 
     def readRPrules(self, pathway_id='rp_pathway'):
@@ -2575,37 +2582,38 @@ class rpSBML:
     #########################################################################
 
 
-    def convert_pathway_to_dict(self, pathway_id='rp_pathway'):
-        """Function to return in a dictionary in the same format as the out_paths rp2paths file dictionary object
+    # def convert_pathway_to_dict(self, pathway_id='rp_pathway'):
+    #     """Function to return in a dictionary in the same format as the out_paths rp2paths file dictionary object
 
-        Example format returned: {'rule_id': 'RR-01-503dbb54cf91-49-F', 'right': {'TARGET_0000000001': 1}, 'left': {'MNXM2': 1, 'MNXM376': 1}, 'pathway_id': 1, 'rxn_idx': 1, 'sub_step': 1, 'transformation_id': 'TRS_0_0_17'}. Really used to complete the monocomponent reactions
+    #     Example format returned: {'rule_id': 'RR-01-503dbb54cf91-49-F', 'right': {'TARGET_0000000001': 1}, 'left': {'MNXM2': 1, 'MNXM376': 1}, 'pathway_id': 1, 'rxn_idx': 1, 'sub_step': 1, 'transformation_id': 'TRS_0_0_17'}. Really used to complete the monocomponent reactions
 
-        :param pathway_id: The pathway ID (Default: rp_pathway)
+    #     :param pathway_id: The pathway ID (Default: rp_pathway)
 
-        :type pathway_id: str
+    #     :type pathway_id: str
 
-        :rtype: dict
-        :return: Dictionary of the pathway
-        """
-        pathway = {}
+    #     :rtype: dict
+    #     :return: Dictionary of the pathway
+    #     """
+    #     pathway = {}
 
-        for member in self.readGroupMembers(pathway_id):
-            # TODO: need to find a better way
-            reaction = self.getModel().getReaction(member)
-            brsynthAnnot = rpSBML.readBRSYNTHAnnotation(reaction.getAnnotation(), self.logger)
-            speciesReac = self.readReactionSpecies(reaction)
-            pathway[brsynthAnnot['rxn_idx']] = {
-                'reaction_id'   : member,
-                'reaction_rule' : brsynthAnnot['smiles'],
-                'rule_score'    : brsynthAnnot['rule_score'],
-                'rule_id'       : brsynthAnnot['rule_id'],
-                'rule_ori_reac' : brsynthAnnot['rule_ori_reac'],
-                'right'         : speciesReac['right'],
-                'left'          : speciesReac['left'],
-                'rxn_idx'          : brsynthAnnot['rxn_idx'],
-                }
+    #     for member in self.readGroupMembers(pathway_id):
+    #         # TODO: need to find a better way
+    #         reaction = self.getModel().getReaction(member)
+    #         brsynthAnnot = rpSBML.readBRSYNTHAnnotation(reaction.getAnnotation(), self.logger)
+    #         speciesReac = self.readReactionSpecies(reaction)
+    #         pathway[brsynthAnnot['rxn_idx']] = {
+    #             'rxn_id'        : member,
+    #             'smiles'        : brsynthAnnot['smiles'],
+    #             # 'reaction_rule' : brsynthAnnot['smiles'],
+    #             'rule_score'    : brsynthAnnot['rule_score'],
+    #             'rule_id'       : brsynthAnnot['rule_id'],
+    #             'rule_ori_reac' : brsynthAnnot['rule_ori_reac'],
+    #             'right'         : speciesReac['right'],
+    #             'left'          : speciesReac['left'],
+    #             'rxn_idx'       : brsynthAnnot['rxn_idx'],
+    #             }
 
-        return pathway
+    #     return pathway
 
 
     def readReactionSpecies(self, reaction):
@@ -2618,18 +2626,24 @@ class rpSBML:
         :rtype: dict
         :return: Dictionary of the reaction stoichiometry
         """
+
         # TODO: check that reaction is either an sbml species; if not check that its a string and that
         # it exists in the rpsbml model
+
         self.logger.debug(reaction)
+
         toRet = {'left': {}, 'right': {}}
+
         # reactants
         for i in range(reaction.getNumReactants()):
             reactant_ref = reaction.getReactant(i)
             toRet['left'][reactant_ref.getSpecies()] = int(reactant_ref.getStoichiometry())
+
         # products
         for i in range(reaction.getNumProducts()):
             product_ref = reaction.getProduct(i)
             toRet['right'][product_ref.getSpecies()] = int(product_ref.getStoichiometry())
+
         return toRet
 
 
@@ -2836,8 +2850,6 @@ class rpSBML:
     #########################################################################
     ############################# MODEL APPEND ##############################
     #########################################################################
-
-
     def setReactionConstraints(self,
                                reaction_id,
                                upper_bound,
@@ -2942,8 +2954,6 @@ class rpSBML:
     #########################################################################
     ############################# MODEL CREATION FUNCTIONS ##################
     #########################################################################
-
-
     def createModel(self, name, model_id, meta_id=None):
         """Create libSBML model instance
 

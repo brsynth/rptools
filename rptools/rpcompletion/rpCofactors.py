@@ -88,18 +88,18 @@ def update_stochio(cache, step, full_reac, rr_string, pathway_cmp, logger=loggin
 
 ## Add the cofactors to monocomponent reactions
 #
-# @param step Step in a pathway
+# @param rxn Reaction in a pathway
 # @param pathway_cmp Dictionnary of intermediate compounds with their public ID's
 # @return Boolean determine if the step is to be added
-def add_cofactors_step(cache, step, pathway_cmp, logger=logging.getLogger(__name__)):
+def add_cofactors_step(cache, rxn, pathway_cmp, logger=logging.getLogger(__name__)):
     
-    reac_smiles_left = step['reaction_rule'].split('>>')[0]
-    reac_smiles_right = step['reaction_rule'].split('>>')[1]
-    if cache.rr_reactions[step['rule_id']][step['rule_ori_reac']]['rel_direction']==-1:
+    reac_smiles_left = rxn['smiles'].split('>>')[0]
+    reac_smiles_right = rxn['smiles'].split('>>')[1]
+    if cache.rr_reactions[rxn['rule_id']][rxn['rule_ori_reac']]['rel_direction']==-1:
         try:
-            isSuccess, reac_smiles_left = completeReac(cache, step['right'],
-                    cache.rr_reactions[step['rule_id']][step['rule_ori_reac']]['left'],
-                    cache.rr_full_reactions[cache._checkRIDdeprecated(step['rule_ori_reac'], cache.deprecatedRID_rid)]['right'],
+            isSuccess, reac_smiles_left = completeReac(cache, rxn['right'],
+                    cache.rr_reactions[rxn['rule_id']][rxn['rule_ori_reac']]['left'],
+                    cache.rr_full_reactions[cache._checkRIDdeprecated(rxn['rule_ori_reac'], cache.deprecatedRID_rid)]['right'],
                     True,
                     reac_smiles_left,
                     pathway_cmp,
@@ -111,9 +111,9 @@ def add_cofactors_step(cache, step, pathway_cmp, logger=logging.getLogger(__name
             logger.warning('Could not find the full reaction for reaction (1): '+str(step))
             return False
         try:
-            isSuccess, reac_smiles_right = completeReac(cache, step['left'],
-                    cache.rr_reactions[step['rule_id']][step['rule_ori_reac']]['right'],
-                    cache.rr_full_reactions[cache._checkRIDdeprecated(step['rule_ori_reac'], cache.deprecatedRID_rid)]['left'],
+            isSuccess, reac_smiles_right = completeReac(cache, rxn['left'],
+                    cache.rr_reactions[rxn['rule_id']][rxn['rule_ori_reac']]['right'],
+                    cache.rr_full_reactions[cache._checkRIDdeprecated(rxn['rule_ori_reac'], cache.deprecatedRID_rid)]['left'],
                     False,
                     reac_smiles_right,
                     pathway_cmp,
@@ -124,11 +124,11 @@ def add_cofactors_step(cache, step, pathway_cmp, logger=logging.getLogger(__name
         except KeyError:
             logger.warning('Could not find the full reaction for reaction (2): '+str(step))
             return False
-    elif cache.rr_reactions[step['rule_id']][step['rule_ori_reac']]['rel_direction']==1:
+    elif cache.rr_reactions[rxn['rule_id']][rxn['rule_ori_reac']]['rel_direction']==1:
         try:
-            isSuccess, reac_smiles_left = completeReac(cache, step['right'],
-                    cache.rr_reactions[step['rule_id']][step['rule_ori_reac']]['left'],
-                    cache.rr_full_reactions[cache._checkRIDdeprecated(step['rule_ori_reac'], cache.deprecatedRID_rid)]['left'],
+            isSuccess, reac_smiles_left = completeReac(cache, rxn['right'],
+                    cache.rr_reactions[rxn['rule_id']][rxn['rule_ori_reac']]['left'],
+                    cache.rr_full_reactions[cache._checkRIDdeprecated(rxn['rule_ori_reac'], cache.deprecatedRID_rid)]['left'],
                     True,
                     reac_smiles_left,
                     pathway_cmp,
@@ -140,9 +140,9 @@ def add_cofactors_step(cache, step, pathway_cmp, logger=logging.getLogger(__name
             logger.warning('Could not find the full reaction for reaction (3): '+str(step))
             return False
         try:
-            isSuccess, reac_smiles_right = completeReac(cache, step['left'],
-                    cache.rr_reactions[step['rule_id']][step['rule_ori_reac']]['right'],
-                    cache.rr_full_reactions[cache._checkRIDdeprecated(step['rule_ori_reac'], cache.deprecatedRID_rid)]['right'],
+            isSuccess, reac_smiles_right = completeReac(cache, rxn['left'],
+                    cache.rr_reactions[rxn['rule_id']][rxn['rule_ori_reac']]['right'],
+                    cache.rr_full_reactions[cache._checkRIDdeprecated(rxn['rule_ori_reac'], cache.deprecatedRID_rid)]['right'],
                     False,
                     reac_smiles_right,
                     pathway_cmp,
@@ -154,9 +154,9 @@ def add_cofactors_step(cache, step, pathway_cmp, logger=logging.getLogger(__name
             logger.warning('Could not find the full reaction for reaction (4): '+str(step))
             return False
     else:
-        logger.error('Relative direction can only be 1 or -1: '+str(cache.rr_reactions[step['rule_id']][step['rule_ori_reac']]['rel_direction']))
+        logger.error('Relative direction can only be 1 or -1: '+str(cache.rr_reactions[rxn['rule_id']][rxn['rule_ori_reac']]['rel_direction']))
         return False
-    step['reaction_rule'] = reac_smiles_left+'>>'+reac_smiles_right
+    rxn['smiles'] = reac_smiles_left+'>>'+reac_smiles_right
     return True
 
 
@@ -173,20 +173,31 @@ def add_cofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway'
     pathway_cmp = {}
     spe_conv = {}
     rpsbml_dict = rpsbml.toDict(pathway_id)
-    rp_path = rpsbml.convert_pathway_to_dict(pathway_id)
-    ori_rp_path = deepcopy(rp_path)
-    #We reverse the loop to ID the intermediate CMP to their original ones
-    for stepNum in sorted(list(rp_path), reverse=True):
-    #for stepNum in sorted(list(rp_path)):
-        if add_cofactors_step(cache, rp_path[stepNum], pathway_cmp, logger=logger):
+    # rp_path = rpsbml.convert_pathway_to_dict(pathway_id)
+    ori_rpsbml_dict = deepcopy(rpsbml_dict)
+    # #We reverse the loop to ID the intermediate CMP to their original ones
+    # for stepNum in sorted(list(rp_path), reverse=True):
+
+    # For each reaction id taken in forward direction
+    for rxn_id in sorted(list(rpsbml_dict['reactions']), key=lambda x:rpsbml_dict['reactions'][x]['brsynth']['rxn_idx']):
+
+        rxn = rpsbml_dict['reactions'][rxn_id]['brsynth']
+
+        if add_cofactors_step(cache, rxn, pathway_cmp, logger=logger):
+
             ###add the new cofactors to the SBML
             #remove the original species from the monocomponent reaction
-            reactants = set(set(rp_path[stepNum]['left'].keys())-set(ori_rp_path[stepNum]['left'].keys()))
-            products = set(set(rp_path[stepNum]['right'].keys())-set(ori_rp_path[stepNum]['right'].keys()))
+            reactants = set(set(rxn['left'].keys()) \
+                          - set(ori_rpsbml_dict['reactions'][rxn_id]['brsynth']['left'].keys()))
+            products  = set(set(rxn['right'].keys()) \
+                          - set(ori_rpsbml_dict['reactions'][rxn_id]['brsynth']['right'].keys()))
+
             for species in reactants|products:
+
                 tmp_species = cache._checkCIDdeprecated(species, cache.deprecatedCID_cid)
                 #check to make sure that they do not yet exist and if not create a new one
                 #TODO, replace the species with an existing one if it is contained in the MIRIAM annotations
+
                 if not rpsbml.speciesExists(tmp_species, compartment_id):
                     xref = {}
                     inchi = None
@@ -260,8 +271,9 @@ def add_cofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway'
                             inchi,
                             inchikey,
                             smiles)
+
             #add the new species to the RP reactions
-            reac = rpsbml.getModel().getReaction(rp_path[stepNum]['reaction_id'])
+            reac = rpsbml.getModel().getReaction(rxn_id)
             pre_reactants = [i.species for i in reac.getListOfReactants()]
             pre_products = [i.species for i in reac.getListOfProducts()]
             for pro in products:
@@ -275,7 +287,7 @@ def add_cofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway'
                 prod = reac.createProduct()
                 prod.setSpecies(toadd)
                 prod.setConstant(True)
-                prod.setStoichiometry(rp_path[stepNum]['right'][pro])
+                prod.setStoichiometry(rxn['right'][pro])
             for sub in reactants:
                 if cache._checkCIDdeprecated(sub, cache.deprecatedCID_cid) in spe_conv:
                     toadd = spe_conv[cache._checkCIDdeprecated(sub, cache.deprecatedCID_cid)]
@@ -287,11 +299,13 @@ def add_cofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway'
                 subs = reac.createReactant()
                 subs.setSpecies(toadd)
                 subs.setConstant(True)
-                subs.setStoichiometry(rp_path[stepNum]['left'][sub])
+                subs.setStoichiometry(rxn['left'][sub])
             #replace the reaction rule with new one
-            rpsbml.updateBRSynth(reac, 'smiles', rp_path[stepNum]['reaction_rule'], None, True)
+            rpsbml.updateBRSynth(reac, 'smiles', rxn['smiles'], None, True)
+
         else:
             #if the cofactors cannot be found delete it from the list
             logger.warning('Cannot find cofactors... skipping')
             return False
+
     return rpsbml

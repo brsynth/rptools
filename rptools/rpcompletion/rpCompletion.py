@@ -638,9 +638,14 @@ def create_groups(rpsbml,
 
     # Add pathway id
     rpsbml_dict = rpsbml.toDict(pathway_id)
+    # path id
     rpsbml_dict['pathway']['brsynth']['path_id']          = path_id
+    # base path (from reaction rules) index
     rpsbml_dict['pathway']['brsynth']['path_base_idx']    = path_base_idx
+    # variant path (from real reactions) index
     rpsbml_dict['pathway']['brsynth']['path_variant_idx'] = path_variant_idx
+    # list of reaction ids in the pathway, in forward direction
+    rpsbml_dict['pathway']['brsynth']['reactions']        = []
 
     # Update rpSBML object
     rpsbml.updateBRSynthPathway(rpsbml_dict, pathway_id)
@@ -655,14 +660,14 @@ def create_groups(rpsbml,
 ## Function that returns the dictionnary of elements passed
 #
 #  @return Dict
-def build_rxn(rule_id=None, rule_ori_reac=None, rule_score=None, left=None, right=None, step=None):
+def build_rxn(rule_id=None, rule_ori_reac=None, rule_score=None, left=None, right=None, index=None):
     return {
         'rule_id':       rule_id,
         'rule_ori_reac': rule_ori_reac,
         'rule_score':    rule_score,
         'left':          left,
         'right':         right,
-        'rxn_idx':          step
+        'rxn_idx':       index
         }
 
 
@@ -685,26 +690,24 @@ def add_reactions(path_variant, steps,
 
     for step in range(len(path_variant)):
 
-        rxn_id = path_variant[step]
-
-        # switch rxn number order from reverse to forward
-        index = len(path_variant)-int(step)
+        rule_ori_reac = path_variant[step]
+        index         = len(path_variant)-int(step) # switch rxn number order from reverse to forward
+        rxn_id        = 'rxn_'+str(index)
 
         # Build the complete reaction
         rxn = build_rxn(
-            steps[step+1]['reactions'][rxn_id]['rule_id'],
-            rxn_id,
-            steps[step+1]['reactions'][rxn_id]['rule_score'],
+            steps[step+1]['reactions'][rule_ori_reac]['rule_id'],
+            rule_ori_reac,
+            steps[step+1]['reactions'][rule_ori_reac]['rule_score'],
             steps[step+1]['left'],
             steps[step+1]['right'],
             index
         )
 
         transformation_id = steps[step+1]['transformation_id']
-
         # Create the reaction in the model
         rpsbml.createReaction(
-                'rxn_'+str(index), # parameter 'name' of the reaction deleted : 'RetroPath_Reaction_'+str(step['rxn_idx']),
+                rxn_id, # parameter 'name' of the reaction deleted : 'RetroPath_Reaction_'+str(step['rxn_idx']),
                 upper_flux_bound, lower_flux_bound,
                 rxn,
                 compartment_id,
