@@ -94,6 +94,18 @@
                 },
                 "norm_fba_obj_fraction": {
                     "value": 0.49742028985507314
+                },
+                "left": {
+                    "MNXM1__64__MNXC3": 1,
+                    "MNXM89557__64__MNXC3": 1,
+                    "MNXM6__64__MNXC3": 1,
+                    "MNXM3__64__MNXC3": 1
+                },
+                "right": {
+                    "CMPD_0000000013__64__MNXC3": 1,
+                    "MNXM5__64__MNXC3": 1,
+                    "MNXM7__64__MNXC3": 1,
+                    "MNXM9__64__MNXC3": 1
                 }
             },
             "miriam": {}
@@ -141,6 +153,14 @@
                 },
                 "norm_fba_obj_fraction": {
                     "value": 0.49742028985507314
+                },
+                "left": {
+                    "CMPD_0000000013__64__MNXC3": 1,
+                    "MNXM89557__64__MNXC3": 1
+                },
+                "right": {
+                    "CMPD_0000000004__64__MNXC3": 1,
+                    "MNXM20__64__MNXC3": 1
                 }
             },
             "miriam": {
@@ -192,6 +212,14 @@
                 },
                 "norm_fba_obj_fraction": {
                     "value": 0.49742028985507314
+                },
+                "left": {
+                    "CMPD_0000000004__64__MNXC3": 1,
+                    "MNXM1__64__MNXC3": 1
+                },
+                "right": {
+                    "TARGET_0000000001__64__MNXC3": 1,
+                    "MNXM13__64__MNXC3": 1
                 }
             },
             "miriam": {

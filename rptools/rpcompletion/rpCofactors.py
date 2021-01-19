@@ -92,7 +92,7 @@ def update_stochio(cache, step, full_reac, rr_string, pathway_cmp, logger=loggin
 # @param pathway_cmp Dictionnary of intermediate compounds with their public ID's
 # @return Boolean determine if the step is to be added
 def add_cofactors_step(cache, rxn, pathway_cmp, logger=logging.getLogger(__name__)):
-    
+
     reac_smiles_left = rxn['smiles'].split('>>')[0]
     reac_smiles_right = rxn['smiles'].split('>>')[1]
     if cache.rr_reactions[rxn['rule_id']][rxn['rule_ori_reac']]['rel_direction']==-1:
@@ -105,10 +105,10 @@ def add_cofactors_step(cache, rxn, pathway_cmp, logger=logging.getLogger(__name_
                     pathway_cmp,
                     logger=logger)
             if not isSuccess:
-                logger.warning('Could not recognise reaction rule for step (1): '+str(step))
+                logger.warning('Could not recognise reaction rule for step (1): '+str(rxn['rxn_idx']))
                 return False
         except KeyError:
-            logger.warning('Could not find the full reaction for reaction (1): '+str(step))
+            logger.warning('Could not find the full reaction for reaction (1): '+str(rxn['rxn_idx']))
             return False
         try:
             isSuccess, reac_smiles_right = completeReac(cache, rxn['left'],
@@ -119,10 +119,10 @@ def add_cofactors_step(cache, rxn, pathway_cmp, logger=logging.getLogger(__name_
                     pathway_cmp,
                     logger=logger)
             if not isSuccess:
-                logger.warning('Could not recognise reaction rule for step (2): '+str(step))
+                logger.warning('Could not recognise reaction rule for step (2): '+str(rxn['rxn_idx']))
                 return False
         except KeyError:
-            logger.warning('Could not find the full reaction for reaction (2): '+str(step))
+            logger.warning('Could not find the full reaction for reaction (2): '+str(rxn['rxn_idx']))
             return False
     elif cache.rr_reactions[rxn['rule_id']][rxn['rule_ori_reac']]['rel_direction']==1:
         try:
@@ -134,10 +134,10 @@ def add_cofactors_step(cache, rxn, pathway_cmp, logger=logging.getLogger(__name_
                     pathway_cmp,
                     logger=logger)
             if not isSuccess:
-                logger.error('Could not recognise reaction rule for step (3): '+str(step))
+                logger.error('Could not recognise reaction rule for step (3): '+str(rxn['rxn_idx']))
                 return False
         except KeyError:
-            logger.warning('Could not find the full reaction for reaction (3): '+str(step))
+            logger.warning('Could not find the full reaction for reaction (3): '+str(rxn['rxn_idx']))
             return False
         try:
             isSuccess, reac_smiles_right = completeReac(cache, rxn['left'],
@@ -148,10 +148,10 @@ def add_cofactors_step(cache, rxn, pathway_cmp, logger=logging.getLogger(__name_
                     pathway_cmp,
                     logger=logger)
             if not isSuccess:
-                logger.error('Could not recognise reaction rule for step (4): '+str(step))
+                logger.error('Could not recognise reaction rule for step (4): '+str(rxn['rxn_idx']))
                 return False
         except KeyError:
-            logger.warning('Could not find the full reaction for reaction (4): '+str(step))
+            logger.warning('Could not find the full reaction for reaction (4): '+str(rxn['rxn_idx']))
             return False
     else:
         logger.error('Relative direction can only be 1 or -1: '+str(cache.rr_reactions[rxn['rule_id']][rxn['rule_ori_reac']]['rel_direction']))
