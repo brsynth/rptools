@@ -1,5 +1,8 @@
 # Release history
 
+## 2.2.1
+- Clean code in rpcompletion
+
 ## 2.2.0
 - rename in rpSBML format:
     + step -> rxn_idx
