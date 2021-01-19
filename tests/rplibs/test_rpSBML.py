@@ -27,16 +27,16 @@ class Test_rpSBML(TestCase):
         self.logger.setLevel(getattr(logging, 'ERROR'))
         self.logger.formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
         # load a rpSBML file
-        self.rpsbml       = rpSBML(os_path.join(self.data_path, 'rpsbml.xml'),
-                                                self.logger)
-        self.gem          = rpSBML(os_path.join(self.data_path, 'gem.xml'),
-                                                self.logger)
+        self.rpsbml = rpSBML(os_path.join(self.data_path, 'rpsbml.xml'),
+                                          self.logger)
+        self.gem = rpSBML(os_path.join(self.data_path, 'gem.xml'),
+                                       self.logger)
         self.ref_name  = 'RetroPath_Pathway_1_1'
         self.ref_score = 0.5684564101634014
 
 
     def test_initEmpty(self):
-        rpSBML('rpSBML_test', logger=self.logger)
+        rpSBML(name='rpSBML_test', logger=self.logger)
 
 
     def test_initWithInFile(self):
@@ -44,17 +44,17 @@ class Test_rpSBML(TestCase):
 
 
     def test_initWithDocument(self):
-        rpsbml  = rpSBML(document=self.rpsbml.getDocument())
+        rpsbml = rpSBML(document=self.rpsbml.getDocument())
         self.assertEqual(rpsbml.getName(), self.ref_name)
 
 
     def test_initWithModelName(self):
-        rpsbml  = rpSBML(name=self.rpsbml.getName())
+        rpsbml = rpSBML(name=self.rpsbml.getName())
         self.assertEqual(rpsbml.getName(), self.ref_name)
 
 
     def test_initWithNothing(self):
-        rpsbml  = rpSBML()
+        rpsbml = rpSBML()
         self.assertEqual(rpsbml.getName(), 'dummy')
 
 
@@ -181,7 +181,7 @@ class Test_rpSBML(TestCase):
         self.assertEqual(param.id, 'B_999999')
         self.assertEqual(param.value, 999999.0)
         #create feature
-        new = rpSBML('test', logger=self.logger)
+        new = rpSBML(name='test', logger=self.logger)
         new.createModel('test_name', 'test_id')
         param = new.createReturnFluxParameter(8888.0)
         self.assertEqual(param.id, 'B_8888_0')

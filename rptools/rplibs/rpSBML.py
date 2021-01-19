@@ -48,32 +48,101 @@ class rpSBML:
         :type document: libsbml.SBMLDocument
         """
 
+        # logger
         self.logger = logger
 
         self.logger.debug('New instance of rpSBML')
+        self.logger.debug('inFile: '   + inFile)
+        self.logger.debug('document: ' + str(document))
+        self.logger.debug('name: '     + name)
 
-        self.modelName = None
-        self.document  = None
-
+        # document
+        # if an sbml file is given, then read it (self.document will be created)
         if inFile:
             try:
                 self.readSBML(inFile)
             except FileNotFoundError as e:
                 self.logger.error(e)
-        elif document:
-            self.document = document
+        else:
+            self.document = document if document else None
 
-        if name:
-            self.modelName = name
+        # model name
+        self.setName(name if name else self.getName())
 
-        if not self.getName():
-            self.modelName = 'dummy'
-
+        # scores
         self.score = {'value': -1, 'nb_rules': 0}
         self.global_score = 0
 
-        self.miriam_header = {'compartment': {'mnx': 'metanetx.compartment/', 'bigg': 'bigg.compartment/', 'seed': 'seed/', 'name': 'name/'}, 'reaction': {'mnx': 'metanetx.reaction/', 'rhea': 'rhea/', 'reactome': 'reactome/', 'bigg': 'bigg.reaction/', 'sabiork': 'sabiork.reaction/', 'ec': 'ec-code/', 'biocyc': 'biocyc/', 'lipidmaps': 'lipidmaps/', 'uniprot': 'uniprot/'}, 'species': {'inchikey': 'inchikey/', 'pubchem': 'pubchem.compound/','mnx': 'metanetx.chemical/', 'chebi': 'chebi/CHEBI:', 'bigg': 'bigg.metabolite/', 'hmdb': 'hmdb/', 'kegg_c': 'kegg.compound/', 'kegg_d': 'kegg.drug/', 'biocyc': 'biocyc/META:', 'seed': 'seed.compound/', 'metacyc': 'metacyc.compound/', 'sabiork': 'sabiork.compound/', 'reactome': 'reactome/R-ALL-'}}
-        self.header_miriam = {'compartment': {'metanetx.compartment': 'mnx', 'bigg.compartment': 'bigg', 'seed': 'seed', 'name': 'name'}, 'reaction': {'metanetx.reaction': 'mnx', 'rhea': 'rhea', 'reactome': 'reactome', 'bigg.reaction': 'bigg', 'sabiork.reaction': 'sabiork', 'ec-code': 'ec', 'biocyc': 'biocyc', 'lipidmaps': 'lipidmaps', 'uniprot': 'uniprot'}, 'species': {'inchikey': 'inchikey', 'pubchem.compound': 'pubchem', 'metanetx.chemical': 'mnx', 'chebi': 'chebi', 'bigg.metabolite': 'bigg', 'hmdb': 'hmdb', 'kegg.compound': 'kegg_c', 'kegg.drug': 'kegg_d', 'biocyc': 'biocyc', 'seed.compound': 'seed', 'metacyc.compound': 'metacyc', 'sabiork.compound': 'sabiork', 'reactome': 'reactome'}}
+        # headers
+        self.miriam_header = {
+            'compartment': {
+                'mnx': 'metanetx.compartment/',
+                'bigg': 'bigg.compartment/',
+                'seed': 'seed/',
+                'name': 'name/'
+            },
+            'reaction': {
+                'mnx': 'metanetx.reaction/',
+                'rhea': 'rhea/',
+                'reactome': 'reactome/',
+                'bigg': 'bigg.reaction/',
+                'sabiork': 'sabiork.reaction/',
+                'ec': 'ec-code/',
+                'biocyc': 'biocyc/',
+                'lipidmaps': 'lipidmaps/',
+                'uniprot': 'uniprot/'
+            },
+            'species': {
+                'inchikey': 'inchikey/',
+                'pubchem': 'pubchem.compound/',
+                'mnx': 'metanetx.chemical/',
+                'chebi': 'chebi/CHEBI:',
+                'bigg': 'bigg.metabolite/',
+                'hmdb': 'hmdb/',
+                'kegg_c': 'kegg.compound/',
+                'kegg_d': 'kegg.drug/',
+                'biocyc': 'biocyc/META:',
+                'seed': 'seed.compound/',
+                'metacyc': 'metacyc.compound/',
+                'sabiork': 'sabiork.compound/',
+                'reactome': 'reactome/R-ALL-'
+            }
+        }
+        self.header_miriam = {
+            'compartment': {
+                'metanetx.compartment': 'mnx',
+                'bigg.compartment': 'bigg',
+                'seed': 'seed',
+                'name': 'name'
+                },
+            'reaction': {
+                'metanetx.reaction': 'mnx',
+                'rhea': 'rhea',
+                'reactome': 'reactome',
+                'bigg.reaction': 'bigg',
+                'sabiork.reaction': 'sabiork',
+                'ec-code': 'ec',
+                'biocyc': 'biocyc',
+                'lipidmaps': 'lipidmaps',
+                'uniprot': 'uniprot'
+            },
+            'species': {
+                'inchikey': 'inchikey',
+                'pubchem.compound': 'pubchem',
+                'metanetx.chemical': 'mnx',
+                'chebi': 'chebi',
+                'bigg.metabolite': 'bigg',
+                'hmdb': 'hmdb',
+                'kegg.compound': 'kegg_c',
+                'kegg.drug': 'kegg_d',
+                'biocyc': 'biocyc',
+                'seed.compound': 'seed',
+                'metacyc.compound': 'metacyc',
+                'sabiork.compound': 'sabiork',
+                'reactome': 'reactome'
+            }
+        }
+
 
     def getModel(self):
         if self.getDocument():
@@ -81,16 +150,31 @@ class rpSBML:
         else:
             return None
 
+
     def getDocument(self):
         return self.document
 
+
     def getName(self):
-        if self.modelName:
-            return self.modelName
-        elif self.getModel():
-            return self.getModel().getName()
-        else:
-            return None
+
+        name = ''
+
+        # try if modelName already exists
+        try:
+            name = self.modelName
+        except AttributeError:
+            pass
+
+        # self.modelName exists, returns it
+        if name:
+            return name
+        else: # else try to get name from model
+            return self.getModel().getName() if self.getModel() else None
+
+
+    def setName(self, name):
+        self.modelName = name if name else 'dummy'
+
 
     def compute_score(self, pathway_id='rp_pathway'):
         self.score['value'] = 0
@@ -99,12 +183,14 @@ class rpSBML:
             self.add_rule_score(float(reaction.getAnnotation().getChild('RDF').getChild('BRSynth').getChild('brsynth').getChild('rule_score').getAttrValue('value')))
         return self.getScore()
 
+
     def getScore(self):
         try:
             return self.score['value'] / self.score['nb_rules']
         except ZeroDivisionError as e:
             self.logger.error(e)
             return -1
+
 
     def add_rule_score(self, score):
         self.score['value']    += score
@@ -153,7 +239,7 @@ class rpSBML:
         :return: The global score
         """
 
-        #WARNING: we do this because the list gets updated
+        # WARNING: we do this because the list gets updated
         self.logger.debug('thermo_ceil: '+str(thermo_ceil))
         self.logger.debug('thermo_floor: '+str(thermo_floor))
         self.logger.debug('fba_ceil: '+str(fba_ceil))
@@ -1540,7 +1626,7 @@ class rpSBML:
         return self.getScore() > rpsbml.getScore()
 
     def __str__(self):
-        return 'modelName: ' + str(self.getName())  + '\n' \
+        return 'name: '      + str(self.getName())  + '\n' \
              + 'score: '     + str(self.getScore()) + '\n' \
              + 'document: '  + str(self.document)   + '\n' \
              + 'model: '     + str(self.getModel())      + '\n'
@@ -2104,59 +2190,6 @@ class rpSBML:
         return True
 
 
-    def toDict(self, pathway_id='rp_pathway'):
-        """Generate the dictionnary of all the annotations of a pathway species, reaction and pathway annotations
-
-        :param pathway_id: The pathway ID (Default: rp_pathway)
-
-        :type pathway_id: str
-
-        :rtype: dict
-        :return: Dictionnary of the pathway annotation
-        """
-
-        groups = self.getModel().getPlugin('groups')
-        rp_pathway = groups.getGroup(pathway_id)
-        members = rp_pathway.getListOfMembers()
-
-        # pathway
-        rpsbml_dict = {}
-        rpsbml_dict['pathway'] = {}
-        rpsbml_dict['pathway']['brsynth'] = self.readBRSYNTHAnnotation(rp_pathway.getAnnotation(), self.logger)
-        # rpsbml_dict['pathway']['brsynth']['reactions'] = self.readGroupMembers(pathway_id)
-
-        # reactions
-        rpsbml_dict['reactions'] = {}
-        for member in members:
-            reaction = self.getModel().getReaction(member.getIdRef())
-            annot = reaction.getAnnotation()
-            rpsbml_dict['reactions'][member.getIdRef()] = {}
-            # add BRSynth annotations
-            rpsbml_dict['reactions'][member.getIdRef()]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
-            # add right and left species
-            species = self.readReactionSpecies(reaction)
-            rpsbml_dict['reactions'][member.getIdRef()]['brsynth']['left']  = species['left']
-            rpsbml_dict['reactions'][member.getIdRef()]['brsynth']['right'] = species['right']
-            # add MIRIAM annotations
-            rpsbml_dict['reactions'][member.getIdRef()]['miriam']  = self.readMIRIAMAnnotation(annot)
-
-        # loop though all the species
-        rpsbml_dict['species'] = {}
-        for spe_id in self.readUniqueRPspecies(pathway_id):
-            species = self.getModel().getSpecies(spe_id)
-            annot = species.getAnnotation()
-            rpsbml_dict['species'][spe_id] = {}
-            rpsbml_dict['species'][spe_id]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
-            rpsbml_dict['species'][spe_id]['miriam']  = self.readMIRIAMAnnotation(annot)
-
-        return rpsbml_dict
-
-
-    def toJSON(self, pathway_id='rp_pathway', indent=0):
-        from json import dumps as json_dumps
-        return json_dumps(self.toDict(pathway_id))
-
-
     #####################################################################
     ########################## INPUT/OUTPUT #############################
     #####################################################################
@@ -2238,11 +2271,40 @@ class rpSBML:
         return True
 
 
+    def readReactionSpecies(self, reaction):
+        """Return the products and the species associated with a reaction
+
+        :param reaction: Reaction object of libSBML
+
+        :type annot: libsbml.Reaction
+
+        :rtype: dict
+        :return: Dictionary of the reaction stoichiometry
+        """
+
+        # TODO: check that reaction is either an sbml species; if not check that its a string and that
+        # it exists in the rpsbml model
+
+        self.logger.debug(reaction)
+
+        toRet = {'left': {}, 'right': {}}
+
+        # reactants
+        for i in range(reaction.getNumReactants()):
+            reactant_ref = reaction.getReactant(i)
+            toRet['left'][reactant_ref.getSpecies()] = int(reactant_ref.getStoichiometry())
+
+        # products
+        for i in range(reaction.getNumProducts()):
+            product_ref = reaction.getProduct(i)
+            toRet['right'][product_ref.getSpecies()] = int(product_ref.getStoichiometry())
+
+        return toRet
+
+
     #####################################################################
     ########################## FindCreate ###############################
     #####################################################################
-
-
     def findCreateObjective(self, reactions, coefficients, isMax=True, objective_id=None):
         """Find the objective (with only one reaction associated) based on the reaction ID and if not found create it
 
@@ -2286,9 +2348,7 @@ class rpSBML:
     #####################################################################
     ########################## READ #####################################
     #####################################################################
-
-
-    #TODO: add error handling if the groups does not exist
+    # TODO: add error handling if the groups does not exist
     def readGroupMembers(self, group_id='rp_pathway'):
         """Return the members of a groups entry
 
@@ -2326,8 +2386,8 @@ class rpSBML:
         return toRet
 
 
-    #TODO: merge with unique species
-    #TODO: change the name of the function to read
+    # TODO: merge with unique species
+    # TODO: change the name of the function to read
     def readRPspecies(self, pathway_id='rp_pathway'):
         """Return the species stoichiometry of a pathway
 
@@ -2517,8 +2577,6 @@ class rpSBML:
     #####################################################################
     ######################### INQUIRE ###################################
     #####################################################################
-
-
     def speciesExists(self, speciesName, compartment_id='MNXC3'):
         """Determine if the model already contains a species according to its ID
 
@@ -2580,78 +2638,63 @@ class rpSBML:
     #########################################################################
     ################### CONVERT BETWEEEN FORMATS ############################
     #########################################################################
+    def toDict(self, pathway_id='rp_pathway'):
+        """Generate the dictionnary of all the annotations of a pathway species, reaction and pathway annotations
 
+        :param pathway_id: The pathway ID (Default: rp_pathway)
 
-    # def convert_pathway_to_dict(self, pathway_id='rp_pathway'):
-    #     """Function to return in a dictionary in the same format as the out_paths rp2paths file dictionary object
-
-    #     Example format returned: {'rule_id': 'RR-01-503dbb54cf91-49-F', 'right': {'TARGET_0000000001': 1}, 'left': {'MNXM2': 1, 'MNXM376': 1}, 'pathway_id': 1, 'rxn_idx': 1, 'sub_step': 1, 'transformation_id': 'TRS_0_0_17'}. Really used to complete the monocomponent reactions
-
-    #     :param pathway_id: The pathway ID (Default: rp_pathway)
-
-    #     :type pathway_id: str
-
-    #     :rtype: dict
-    #     :return: Dictionary of the pathway
-    #     """
-    #     pathway = {}
-
-    #     for member in self.readGroupMembers(pathway_id):
-    #         # TODO: need to find a better way
-    #         reaction = self.getModel().getReaction(member)
-    #         brsynthAnnot = rpSBML.readBRSYNTHAnnotation(reaction.getAnnotation(), self.logger)
-    #         speciesReac = self.readReactionSpecies(reaction)
-    #         pathway[brsynthAnnot['rxn_idx']] = {
-    #             'rxn_id'        : member,
-    #             'smiles'        : brsynthAnnot['smiles'],
-    #             # 'reaction_rule' : brsynthAnnot['smiles'],
-    #             'rule_score'    : brsynthAnnot['rule_score'],
-    #             'rule_id'       : brsynthAnnot['rule_id'],
-    #             'rule_ori_reac' : brsynthAnnot['rule_ori_reac'],
-    #             'right'         : speciesReac['right'],
-    #             'left'          : speciesReac['left'],
-    #             'rxn_idx'       : brsynthAnnot['rxn_idx'],
-    #             }
-
-    #     return pathway
-
-
-    def readReactionSpecies(self, reaction):
-        """Return the products and the species associated with a reaction
-
-        :param reaction: Reaction object of libSBML
-
-        :type annot: libsbml.Reaction
+        :type pathway_id: str
 
         :rtype: dict
-        :return: Dictionary of the reaction stoichiometry
+        :return: Dictionnary of the pathway annotation
         """
 
-        # TODO: check that reaction is either an sbml species; if not check that its a string and that
-        # it exists in the rpsbml model
+        groups = self.getModel().getPlugin('groups')
+        rp_pathway = groups.getGroup(pathway_id)
+        members = rp_pathway.getListOfMembers()
 
-        self.logger.debug(reaction)
+        # pathway
+        rpsbml_dict = {}
+        rpsbml_dict['pathway'] = {}
+        rpsbml_dict['pathway']['brsynth'] = self.readBRSYNTHAnnotation(rp_pathway.getAnnotation(), self.logger)
+        # rpsbml_dict['pathway']['brsynth']['reactions'] = self.readGroupMembers(pathway_id)
 
-        toRet = {'left': {}, 'right': {}}
+        # reactions
+        rpsbml_dict['reactions'] = {}
+        for member in members:
+            reaction = self.getModel().getReaction(member.getIdRef())
+            annot = reaction.getAnnotation()
+            rpsbml_dict['reactions'][member.getIdRef()] = {}
+            # add BRSynth annotations
+            rpsbml_dict['reactions'][member.getIdRef()]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
+            # add right and left species
+            species = self.readReactionSpecies(reaction)
+            rpsbml_dict['reactions'][member.getIdRef()]['brsynth']['left']  = species['left']
+            rpsbml_dict['reactions'][member.getIdRef()]['brsynth']['right'] = species['right']
+            # add MIRIAM annotations
+            rpsbml_dict['reactions'][member.getIdRef()]['miriam']  = self.readMIRIAMAnnotation(annot)
 
-        # reactants
-        for i in range(reaction.getNumReactants()):
-            reactant_ref = reaction.getReactant(i)
-            toRet['left'][reactant_ref.getSpecies()] = int(reactant_ref.getStoichiometry())
+        # loop though all the species
+        rpsbml_dict['species'] = {}
+        for spe_id in self.readUniqueRPspecies(pathway_id):
+            species = self.getModel().getSpecies(spe_id)
+            annot = species.getAnnotation()
+            rpsbml_dict['species'][spe_id] = {}
+            rpsbml_dict['species'][spe_id]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
+            rpsbml_dict['species'][spe_id]['miriam']  = self.readMIRIAMAnnotation(annot)
 
-        # products
-        for i in range(reaction.getNumProducts()):
-            product_ref = reaction.getProduct(i)
-            toRet['right'][product_ref.getSpecies()] = int(product_ref.getStoichiometry())
-
-        return toRet
+        return rpsbml_dict
 
 
+    def toJSON(self, pathway_id='rp_pathway', indent=0):
+        from json import dumps as json_dumps
+        return json_dumps(self.toDict(pathway_id))
+
+
+    # def toSBOL(self):
     #########################################################################
     ############################# COMPARE MODELS ############################
     #########################################################################
-
-
     def compareBRSYNTHAnnotations(self, source_annot, target_annot):
         """Determine if two libsbml species or reactions have members in common in BRSynth annotation
 
