@@ -524,7 +524,7 @@ def write_rp2paths_to_rpSBML(cache,
                                         compartment_id, upper_flux_bound, lower_flux_bound,
                                         rp_transformation)
 
-            # 3) Add the cofactors
+            # 3) Get the cofactors
             rpsbml = add_cofactors(cache, rpsbml, logger=logger)
 
             # 4) Apply to best rpsbml list
