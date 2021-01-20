@@ -425,29 +425,24 @@ class rpSBML:
         rp_pathway = self.getModel().getPlugin('groups').getGroup(pathway_id)
 
         for bd_id in rpsbml_dict['pathway']['brsynth']:
-            if bd_id.startswith('norm_') or bd_id == 'global_score':
-                value = rpsbml_dict['pathway']['brsynth'][bd_id]
-                units = None
-                self.updateBRSynth(rp_pathway, bd_id, value, units, False)
-            # else:
-            #     value = rpsbml_dict['pathway']['brsynth'][bd_id]['value']
-            #     units = rpsbml_dict['pathway']['brsynth'][bd_id]['units']
 
+            units = None
 
-            # try: # read 'value' field
-            #     value = rpsbml_dict['pathway']['brsynth'][bd_id]['value']
-            #     try: # read 'units' field
-            #         units = rpsbml_dict['pathway']['brsynth'][bd_id]['units']
-            #     except KeyError:
-            #         pass
+            try: # read 'value' field
+                value = rpsbml_dict['pathway']['brsynth'][bd_id]['value']
+                try: # read 'units' field
+                    units = rpsbml_dict['pathway']['brsynth'][bd_id]['units']
+                except KeyError:
+                    pass
 
-            # except (KeyError, TypeError, IndexError):
-            #     # self.logger.warning('The entry '+str(bd_id)+' does not contain any \'value\' field. Trying using the root...')
-            #     try: # read value directly
-            #         value = rpsbml_dict['pathway']['brsynth'][bd_id]
-            #     except KeyError:
-            #         self.logger.warning('The entry '+str(bd_id)+' does not exist. Giving up...')
+            except (KeyError, TypeError, IndexError):
+                # self.logger.warning('The entry '+str(bd_id)+' does not contain any \'value\' field. Trying using the root...')
+                try: # read value directly
+                    value = rpsbml_dict['pathway']['brsynth'][bd_id]
+                except KeyError:
+                    self.logger.warning('The entry '+str(bd_id)+' does not exist. Giving up...')
 
+            self.updateBRSynth(rp_pathway, bd_id, value, units, False)
 
         # for reac_id in rpsbml_dict['reactions']:
         #     reaction = self.getModel().getReaction(reac_id)
@@ -2487,9 +2482,7 @@ class rpSBML:
         toRet = {'dfG_prime_m':   {},
                  'dfG_uncert':    {},
                  'dfG_prime_o':   {},
-                #  'path_id':       None,
                  'rxn_idx':       None,
-                #  'sub_step':   None,
                  'rule_score':    None,
                  'smiles':        None,
                  'inchi':         None,
@@ -2975,7 +2968,7 @@ class rpSBML:
     #########################################################################
     ############################# MODEL CREATION FUNCTIONS ##################
     #########################################################################
-    def createModel(self, name, model_id, meta_id=None):
+    def createModel(self, name='dummy', model_id='dummy', meta_id=None):
         """Create libSBML model instance
 
         Function that creates a new libSBML model instance and initiates it with the appropriate packages. Creates a cytosol compartment
