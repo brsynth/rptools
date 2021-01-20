@@ -88,17 +88,6 @@ class Test_rpSBML(TestCase):
         )
 
 
-    # def test_convert_pathway_to_dict(self):
-    #     import json
-    #     print(json.dumps(self.rpsbml.toDict(), indent=4))
-    #     print()
-    #     print(self.rpsbml.convert_pathway_to_dict())
-    #     self.assertTrue(False)
-    #     with open(os_path.join(self.data_path, 'pathway.json'), 'r') as f:
-    #         self.assertDictEqual(self.rpsbml.convert_pathway_to_dict(),
-    #                              json_loads(f.read(), object_hook=lambda d: {int(k) if k.lstrip('-').isdigit() else k: v for k, v in d.items()}))
-
-
     def test_toDict(self):
         with open(os_path.join(self.data_path, 'rpsbml.json'), 'r') as f:
             self.assertDictEqual(self.rpsbml.toDict(),
@@ -109,6 +98,13 @@ class Test_rpSBML(TestCase):
         with open(os_path.join(self.data_path, 'rpsbml.json'), 'r') as f:
             self.assertDictEqual(json_loads(self.rpsbml.toJSON()),
                                  json_loads(f.read()))
+
+
+    def test_updateBRSynthPathway(self):
+        rpsbml = rpSBML(inFile=os_path.join(self.data_path, 'rpsbml_empty_pathway.xml'))
+        self_rpsbml_dict = self.rpsbml.toDict()
+        rpsbml.updateBRSynthPathway(self_rpsbml_dict)
+        self.assertDictEqual(rpsbml.toDict(), self_rpsbml_dict)
 
 
     def test_readRPrules(self):

@@ -13,9 +13,7 @@
                 "units": "kj_per_mol",
                 "value": -30.259358918721446
             },
-            "global_score": {
-                "value": 0.5760957019721074
-            },
+            "global_score": 0.5760957019721074,
             "path_base_idx": 1,
             "path_variant_idx": 1,
             "path_id": "rp_1_1",
@@ -27,27 +25,13 @@
                 "units": "mmol_per_gDW_per_hr",
                 "value": 2.487101449275366
             },
-            "norm_fba_obj_biomass": {
-                "value": 0.17478430139368606
-            },
-            "norm_fba_obj_fraction": {
-                "value": 0.49742028985507314
-            },
-            "norm_dfG_prime_m": {
-                "value": 0.7496729494220409
-            },
-            "norm_dfG_uncert": {
-                "value": 0.7485292672224663
-            },
-            "norm_dfG_prime_o": {
-                "value": 0.7497911027191192
-            },
-            "norm_rule_score": {
-                "value": 0.5684564101634014
-            },
-            "norm_steps": {
-                "value": 0.8571428571428572
-            }
+            "norm_fba_obj_biomass": 0.17478430139368606,
+            "norm_fba_obj_fraction": 0.49742028985507314,
+            "norm_dfG_prime_m": 0.7496729494220409,
+            "norm_dfG_uncert": 0.7485292672224663,
+            "norm_dfG_prime_o": 0.7497911027191192,
+            "norm_rule_score": 0.5684564101634014,
+            "norm_steps": 0.8571428571428572
         }
     },
     "reactions": {
@@ -66,9 +50,7 @@
                     "value": 0.0
                 },
                 "rxn_idx": 1,
-                "rule_score": {
-                    "value": 0.6461261981425104
-                },
+                "rule_score": 0.6461261981425104,
                 "smiles": "[H]OC(=O)C([H])(N([H])[H])C([H])([H])C([H])([H])C([H])=O.NC(=O)c1ccc[n+](c1)[C@@H]1O[C@H](COP([O-])(=O)OP([O-])(=O)OC[C@H]2O[C@H]([C@H](OP([O-])([O-])=O)[C@@H]2O)n2cnc3c(N)ncnc23)[C@@H](O)[C@H]1O.Nc1ncnc2n(cnc12)[C@@H]1O[C@H](COP([O-])(=O)OP([O-])([O-])=O)[C@@H](O)[C@H]1O.OP([O-])([O-])=O>>[H+].[H]OC(=O)C([H])([H])C([H])([H])C([H])(C(=O)O[H])N([H])[H].NC(=O)C1=CN(C=CC1)[C@@H]1O[C@H](COP([O-])(=O)OP([O-])(=O)OC[C@H]2O[C@H]([C@H](OP([O-])([O-])=O)[C@@H]2O)n2cnc3c(N)ncnc23)[C@@H](O)[C@H]1O.Nc1ncnc2n(cnc12)[C@@H]1O[C@H](COP([O-])(=O)OP([O-])(=O)OP([O-])([O-])=O)[C@@H](O)[C@H]1O",
                 "rule_id": "RR-02-6d501a828bdc64ea-16-F",
                 "rule_ori_reac": "MNXR116157",
@@ -80,21 +62,10 @@
                     "units": "mmol_per_gDW_per_hr",
                     "value": 2.487101449275366
                 },
-                "norm_dfG_prime_m": {
-                    "value": 0.5
-                },
-                "norm_dfG_uncert": {
-                    "value": 0.4965578401017954
-                },
-                "norm_dfG_prime_o": {
-                    "value": 0.5
-                },
-                "norm_fba_obj_biomass": {
-                    "value": 0.0
-                },
-                "norm_fba_obj_fraction": {
-                    "value": 0.49742028985507314
-                },
+                "norm_dfG_prime_m": 0.5,
+                "norm_dfG_uncert": 0.4965578401017954,
+                "norm_dfG_prime_o": 0.5,
+                "norm_fba_obj_fraction": 0.49742028985507314,
                 "left": {
                     "MNXM1__64__MNXC3": 1,
                     "MNXM89557__64__MNXC3": 1,
@@ -125,9 +96,7 @@
                     "value": 0.0
                 },
                 "rxn_idx": 2,
-                "rule_score": {
-                    "value": 0.5412736479780204
-                },
+                "rule_score": 0.5412736479780204,
                 "smiles": "[H]OC(=O)C([H])(N([H])[H])C([H])([H])C([H])([H])C([H])([H])N([H])[H].[O-]C(=O)CCC(=O)C([O-])=O>>[H]OC(=O)C([H])(N([H])[H])C([H])([H])C([H])([H])C([H])=O.[H]OC(=O)C([H])([H])C([H])([H])C([H])(C(=O)O[H])N([H])[H]",
                 "rule_id": "RR-02-9c35b96038f8842d-16-F",
                 "rule_ori_reac": "MNXR102220",
@@ -139,21 +108,10 @@
                     "units": "mmol_per_gDW_per_hr",
                     "value": 2.487101449275366
                 },
-                "norm_dfG_prime_m": {
-                    "value": 0.5
-                },
-                "norm_dfG_uncert": {
-                    "value": 0.49895876059714706
-                },
-                "norm_dfG_prime_o": {
-                    "value": 0.5
-                },
-                "norm_fba_obj_biomass": {
-                    "value": 0.0
-                },
-                "norm_fba_obj_fraction": {
-                    "value": 0.49742028985507314
-                },
+                "norm_dfG_prime_m": 0.5,
+                "norm_dfG_uncert": 0.49895876059714706,
+                "norm_dfG_prime_o": 0.5,
+                "norm_fba_obj_fraction": 0.49742028985507314,
                 "left": {
                     "CMPD_0000000013__64__MNXC3": 1,
                     "MNXM89557__64__MNXC3": 1
@@ -184,9 +142,7 @@
                     "value": -30.259358918721446
                 },
                 "rxn_idx": 3,
-                "rule_score": {
-                    "value": 0.5179693843696734
-                },
+                "rule_score": 0.5179693843696734,
                 "smiles": "[H]N([H])C([H])([H])C([H])([H])C([H])([H])C([H])([H])N([H])[H].O=C=O>>[H]OC(=O)C([H])(N([H])[H])C([H])([H])C([H])([H])C([H])([H])N([H])[H].[H+]",
                 "rule_id": "RR-02-efad8295e3d6baf9-16-F",
                 "rule_ori_reac": "MNXR102209",
@@ -198,21 +154,10 @@
                     "units": "mmol_per_gDW_per_hr",
                     "value": 2.487101449275366
                 },
-                "norm_dfG_prime_m": {
-                    "value": 0.5047374196453442
-                },
-                "norm_dfG_uncert": {
-                    "value": 0.4994483634808615
-                },
-                "norm_dfG_prime_o": {
-                    "value": 0.5030259358918722
-                },
-                "norm_fba_obj_biomass": {
-                    "value": 0.0
-                },
-                "norm_fba_obj_fraction": {
-                    "value": 0.49742028985507314
-                },
+                "norm_dfG_prime_m": 0.5047374196453442,
+                "norm_dfG_uncert": 0.4994483634808615,
+                "norm_dfG_prime_o": 0.5030259358918722,
+                "norm_fba_obj_fraction": 0.49742028985507314,
                 "left": {
                     "CMPD_0000000004__64__MNXC3": 1,
                     "MNXM1__64__MNXC3": 1
