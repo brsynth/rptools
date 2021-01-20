@@ -27,6 +27,7 @@ class Test_rpCompletion(TestCase):
 
     def test_rp_completion(self):
         with TemporaryDirectory() as temp_d:
+            # temp_d = '/tmp/joan20'
             result = rp_completion(self.rpcache,
                                    self.rp2_pathways,
                                    self.rp2paths_compounds,
@@ -41,12 +42,13 @@ class Test_rpCompletion(TestCase):
                                    sink_species_group_id='rp_sink_species',
                                    pubchem_search=False,
                                    logger=self.logger)
-            # self.assertTrue(False)
-            # exit()
             # Useless to sort files since smiles could be equivalent and not equal, then checksum will be different
             for file, size in self.files:
                 self.assertTrue(os_path.isfile(os_path.join(temp_d, file)))
             rpsbml = rpSBML(os_path.join(temp_d, self.rp_1_11_xml))
+            # print(json_dumps(rpsbml.toDict(), indent=4))
+            # self.assertTrue(False)
+            # exit()
             with open(self.rp_1_11_json, 'r') as f:
                 self.assertDictEqual(rpsbml.toDict(), json_load(f))
                 # self.assertEqual(os_stat(os_path.join(temp_d, file)).st_size, size)

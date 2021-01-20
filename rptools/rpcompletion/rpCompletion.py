@@ -649,6 +649,7 @@ def create_groups(rpsbml,
 
     # Update rpSBML object
     rpsbml.updateBRSynthPathway(rpsbml_dict, pathway_id)
+
     logger.debug('Create species group: '+species_group_id)
     rpsbml.createGroup(species_group_id)
     logger.debug('Create sink species group: '+sink_species_group_id)
