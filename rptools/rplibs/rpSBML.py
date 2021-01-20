@@ -240,13 +240,12 @@ class rpSBML:
         """
 
         # WARNING: we do this because the list gets updated
-        self.logger.debug('thermo_ceil: '+str(thermo_ceil))
+        self.logger.debug('thermo_ceil:  '+str(thermo_ceil))
         self.logger.debug('thermo_floor: '+str(thermo_floor))
-        self.logger.debug('fba_ceil: '+str(fba_ceil))
-        self.logger.debug('fba_floor: '+str(fba_floor))
+        self.logger.debug('fba_ceil:     '+str(fba_ceil))
+        self.logger.debug('fba_floor:    '+str(fba_floor))
 
-        path_norm = {}
-        values = {
+        bounds      = {
             'thermo': {
                 'floor': thermo_floor,
                 'ceil' : thermo_ceil
@@ -257,12 +256,13 @@ class rpSBML:
             },
             'max_rp_steps': max_rp_steps
         }
-
+        # Dict to store list of scores over reactions
+        scores = {}
+        # score_names = ['dfG_prime_m', 'dfG_uncert', 'dfG_prime_o', 'rule_score', 'fba_obj_biomass', 'fba_obj_fraction']
         rpsbml_dict = self.toDict(pathway_id)
 
-        rpsbml_dict  = self.score_for_reactions(rpsbml_dict, path_norm, values, pathway_id, self.logger)
-
-        norm_steps = self.score_from_pathway(path_norm, values, pathway_id, rpsbml_dict, self.logger)
+        rpsbml_dict, scores = self.score_for_reactions(rpsbml_dict, scores, bounds, pathway_id, self.logger)
+        rpsbml_dict         = self.score_from_pathway(rpsbml_dict, scores, bounds, pathway_id, self.logger)
         
         #################################################
         ################# GLOBAL ########################
@@ -270,14 +270,12 @@ class rpSBML:
 
         ##### global score #########
         try:
-            rpsbml_dict['pathway']['brsynth']['norm_steps'] = {}
-            rpsbml_dict['pathway']['brsynth']['norm_steps']['value'] = norm_steps
-            globalScore = np.average([rpsbml_dict['pathway']['brsynth']['norm_rule_score']['value'],
-                                    rpsbml_dict['pathway']['brsynth']['norm_'+str(thermo_id)]['value'],
-                                    rpsbml_dict['pathway']['brsynth']['norm_steps']['value'],
-                                    rpsbml_dict['pathway']['brsynth']['norm_fba_'+str(objective_id)]['value']],
-                                    weights=[weight_rule_score, weight_thermo, weight_rp_steps, weight_fba]
-                                    )
+            # print(rpsbml_dict['pathway']['brsynth'])
+            globalScore = np.average([rpsbml_dict['pathway']['brsynth']['norm_rule_score'],
+                                      rpsbml_dict['pathway']['brsynth']['norm_'+str(thermo_id)],
+                                      rpsbml_dict['pathway']['brsynth']['norm_steps'],
+                                      rpsbml_dict['pathway']['brsynth']['norm_fba_'+str(objective_id)]],
+                                      weights=[weight_rule_score, weight_thermo, weight_rp_steps, weight_fba])
         except ZeroDivisionError:
             globalScore = 0.0
         except KeyError as e:
@@ -285,8 +283,9 @@ class rpSBML:
             self.logger.error('KeyError for :'+str(e))
             self.logger.error('Make sure that you run both thermodynamics and FBA')
             globalScore = 0.0
-        rpsbml_dict['pathway']['brsynth']['global_score'] = {}
-        rpsbml_dict['pathway']['brsynth']['global_score']['value'] = globalScore
+
+        rpsbml_dict['pathway']['brsynth']['global_score'] = globalScore
+
         self.global_score = globalScore
 
         self.updateBRSynthPathway(rpsbml_dict, pathway_id)
@@ -294,32 +293,15 @@ class rpSBML:
         return self.getGlobalScore()
 
 
-    # @staticmethod
-    # def thermo_score(value, floor, ceil):
-    #     """Compute and returns the thermo score
-    #     """
-    #     if ceil >= value >= floor:
-    #         # min-max feature scaling
-    #         norm = (value-floor) / (ceil-floor)
-    #         norm = 1.0-norm
-    #     elif value < floor:
-    #         norm = 1.0
-    #     # then value > ceil
-    #     else:
-    #         norm = 0.0
-
-    #     # self.logger.debug(str(bd_id)+': '+str(rpsbml_dict['reactions'][reac_id]['brsynth']['norm_'+bd_id]['value'])+' ('+str(norm)+')')
-
-    #     print('*** ',norm+rpSBML.fba_score(value, floor, ceil))
-    #     return norm
-
-
     @staticmethod
-    def score_for_reactions(rpsbml_dict, path_norm, values, pathway_id, logger=logging.getLogger(__name__)):
+    def score_for_reactions(rpsbml_dict, scores, bounds, pathway_id, logger=logging.getLogger(__name__)):
 
-        for reac_id in list(rpsbml_dict['reactions'].keys()):
+        rpsbml_dict_copy = deepcopy(rpsbml_dict)
+        scores_copy      = deepcopy(scores)
 
-            for bd_id in list(rpsbml_dict['reactions'][reac_id]['brsynth'].keys()):
+        for reac_id in list(rpsbml_dict_copy['reactions'].keys()):
+
+            for bd_id in list(rpsbml_dict_copy['reactions'][reac_id]['brsynth'].keys()):
 
                 thermo     = bd_id.startswith('dfG_')
                 fba        = bd_id.startswith('fba_')
@@ -334,86 +316,78 @@ class rpSBML:
                         # higher is better
                         # return all the FBA values
                         # ------- reactions ----------
-                        value = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']
-                        floor = values['thermo']['floor'] if thermo else values['fba']['floor']
-                        ceil  = values['thermo']['ceil'] if thermo else values['fba']['ceil']
+                        if bd_id not in scores_copy:
+                            scores_copy[bd_id] = []                        
+                        value = rpsbml_dict_copy['reactions'][reac_id]['brsynth'][bd_id]['value']
+                        floor = bounds['thermo']['floor'] if thermo else bounds['fba']['floor']
+                        ceil  = bounds['thermo']['ceil']  if thermo else bounds['fba']['ceil']
                         norm_score = rpSBML.minmax_score(value, floor, ceil)
                     except (KeyError, TypeError) as e:
                         logger.warning('Cannot find: '+str(bd_id)+' for the reaction: '+str(reac_id))
                         norm_score = 0.0
                     if thermo:
                         norm_score = 1 - norm_score
-                    rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['norm'] = norm_score
+                    rpsbml_dict_copy['reactions'][reac_id]['brsynth']['norm_'+bd_id] = norm_score
+                    scores_copy[bd_id].append(norm_score)
 
-                # elif rule_score:
-                #     # print(rpsbml_dict['reactions'][reac_id]['brsynth'])
-                #     # print(reac_id, bd_id)
-                #     norm_score = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']
-
+                elif rule_score:
+                    if bd_id not in scores_copy:
+                        scores_copy[bd_id] = []
+                    # rule score higher is better
+                    scores_copy[bd_id].append(rpsbml_dict_copy['reactions'][reac_id]['brsynth'][bd_id])
+                
                 else:
                     logger.debug('Not normalising: '+str(bd_id))
 
-                # if thermo:
-                #     if bd_id not in path_norm:
-                #         path_norm[bd_id] = []
-                #     path_norm[bd_id].append(norm_score)
-
-        # print(path_norm)
-
-        return rpsbml_dict
+        return rpsbml_dict_copy, scores_copy
 
 
     @staticmethod
-    def score_from_pathway(path_norm, values, pathway_id, rpsbml_dict, logger=logging.getLogger(__name__)):
+    def score_from_pathway(rpsbml_dict, scores, bounds, pathway_id, logger=logging.getLogger(__name__)):
 
-        ############### FBA ################
-        # higher is better
-        for bd_id in list(rpsbml_dict['pathway']['brsynth'].keys()):
+        rpsbml_dict_copy = deepcopy(rpsbml_dict)
+
+        for bd_id in scores:
+
+            ############### FBA ################
+            # higher is better
             if bd_id.startswith('fba_'):
-                norm_fba = rpSBML.minmax_score(rpsbml_dict['pathway']['brsynth'][bd_id]['value'],
-                                               values['fba']['floor'], values['fba']['ceil'])
-                rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
-                rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = norm_fba
+                rpsbml_dict_copy['pathway']['brsynth']['norm_'+bd_id] = \
+                    rpSBML.minmax_score(rpsbml_dict_copy['pathway']['brsynth'][bd_id]['value'],
+                                                bounds['fba']['floor'], bounds['fba']['ceil'])
 
-        ############# Thermo ################
-        import json
-        print(json.dumps(rpsbml_dict, indent=4))
-        print(path_norm)
-        for bd_id in path_norm:
-            if bd_id.startswith('dfG_'):
-                rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
-                rpsbml_dict['pathway']['brsynth']['var_'+bd_id] = {}
+            ############# Thermo ################
+            elif bd_id.startswith('dfG_'):
                 # here add weights based on std
-                logger.debug(str(bd_id)+': '+str(path_norm[bd_id]))
-                rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = \
-                    np.average([np.average(path_norm[bd_id]), 1.0-np.std(path_norm[bd_id])], weights=[0.5, 0.5])
+                rpsbml_dict_copy['pathway']['brsynth']['norm_'+bd_id] = \
+                    np.average([np.average(scores[bd_id]), 1.0-np.std(scores[bd_id])], weights=[0.5, 0.5])
                 # the score is higher is better - (-1 since we want lower variability)
-                # rpsbml_dict['pathway']['brsynth']['var_'+bd_id]['value'] = 1.0-np.var(path_norm[bd_id])
+                # rpsbml_dict['pathway']['brsynth']['var_'+bd_id] = 1.0-np.var(path_norm[bd_id])
 
         ############# rule score ############
         # higher is better
-        if not 'rule_score' in path_norm:
-            logger.warning('Cannot detect rule_score: '+str(path_norm))
-            rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
-            rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = 0.0
+        if not 'rule_score' in scores:
+            logger.warning('Cannot detect rule_score: '+str(scores))
+            rpsbml_dict_copy['pathway']['brsynth']['norm_'+bd_id] = 0.0
         else:
-            rpsbml_dict['pathway']['brsynth']['norm_'+bd_id] = {}
-            rpsbml_dict['pathway']['brsynth']['norm_'+bd_id]['value'] = np.average(path_norm[bd_id])
+            rpsbml_dict_copy['pathway']['brsynth']['norm_'+bd_id] = np.average(scores[bd_id])
 
         ##### length of pathway ####
         # lower is better -> -1.0 to reverse it
         norm_steps = 0.0
-        if len(rpsbml_dict['reactions']) > values['max_rp_steps']:
+        if len(rpsbml_dict_copy['reactions']) > bounds['max_rp_steps']:
             logger.warning('There are more steps than specified')
             norm_steps = 0.0
         else:
             try:
-                norm_steps = (float(len(rpsbml_dict['reactions']))-1.0) / (float(values['max_rp_steps'])-1.0)
+                norm_steps = (float(len(rpsbml_dict_copy['reactions']))-1.0) / (float(bounds['max_rp_steps'])-1.0)
                 norm_steps = 1.0 - norm_steps
             except ZeroDivisionError:
                 norm_steps = 0.0
 
-        return norm_steps
+        rpsbml_dict_copy['pathway']['brsynth']['norm_steps'] = norm_steps
+
+        return rpsbml_dict_copy
 
 
     def minmax_score(value, floor, ceil, logger=logging.getLogger(__name__)):
@@ -451,25 +425,29 @@ class rpSBML:
         rp_pathway = self.getModel().getPlugin('groups').getGroup(pathway_id)
 
         for bd_id in rpsbml_dict['pathway']['brsynth']:
-            # if bd_id[:5]=='norm_' or bd_id=='global_score':
+            if bd_id.startswith('norm_') or bd_id == 'global_score':
+                value = rpsbml_dict['pathway']['brsynth'][bd_id]
+                units = None
+                self.updateBRSynth(rp_pathway, bd_id, value, units, False)
+            # else:
+            #     value = rpsbml_dict['pathway']['brsynth'][bd_id]['value']
+            #     units = rpsbml_dict['pathway']['brsynth'][bd_id]['units']
 
-            units = None
 
-            try: # read 'value' field
-                value = rpsbml_dict['pathway']['brsynth'][bd_id]['value']
-                try: # read 'units' field
-                    units = rpsbml_dict['pathway']['brsynth'][bd_id]['units']
-                except KeyError:
-                    pass
+            # try: # read 'value' field
+            #     value = rpsbml_dict['pathway']['brsynth'][bd_id]['value']
+            #     try: # read 'units' field
+            #         units = rpsbml_dict['pathway']['brsynth'][bd_id]['units']
+            #     except KeyError:
+            #         pass
 
-            except (KeyError, TypeError):
-                # self.logger.warning('The entry '+str(bd_id)+' does not contain any \'value\' field. Trying using the root...')
-                try: # read value directly
-                    value = rpsbml_dict['pathway']['brsynth'][bd_id]
-                except KeyError:
-                    self.logger.warning('The entry '+str(bd_id)+' does not exist. Giving up...')
+            # except (KeyError, TypeError, IndexError):
+            #     # self.logger.warning('The entry '+str(bd_id)+' does not contain any \'value\' field. Trying using the root...')
+            #     try: # read value directly
+            #         value = rpsbml_dict['pathway']['brsynth'][bd_id]
+            #     except KeyError:
+            #         self.logger.warning('The entry '+str(bd_id)+' does not exist. Giving up...')
 
-            self.updateBRSynth(rp_pathway, bd_id, value, units, False)
 
         # for reac_id in rpsbml_dict['reactions']:
         #     reaction = self.getModel().getReaction(reac_id)
@@ -2549,8 +2527,8 @@ class rpSBML:
                     toRet[ann.getName()] = str(ann.getAttrValue('value'))
             elif ann.getName()=='rule_score' or ann.getName()=='global_score' or ann.getName()[:5]=='norm_':
                 try:
-                    # toRet[ann.getName()] = float(ann.getAttrValue('value'))
-                    toRet[ann.getName()] = {'value': float(ann.getAttrValue('value'))}
+                    toRet[ann.getName()] = float(ann.getAttrValue('value'))
+                    # toRet[ann.getName()] = {'value': float(ann.getAttrValue('value'))}
                 except ValueError:
                     toRet[ann.getName()] = None
             elif ann.getName()=='smiles':
