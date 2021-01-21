@@ -26,7 +26,11 @@ requirements:
     - rdkit # rpextractsink, rplibs
     - python-libsbml # rplibs
     - numpy # rplibs
-    - pandas # rplibs
+    - pandas # rplibs, rpthermo
+    - scipy # rpthermo
+    - equilibrator-api # rpthermo
+    - equilibrator-cache # rpthermo
+    - equilibrator-pathway # rpthermo
     - redis-py # rplibs
     - colored # rplibs
     - networkx # rplibs
