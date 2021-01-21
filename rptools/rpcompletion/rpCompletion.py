@@ -644,8 +644,6 @@ def create_groups(rpsbml,
     rpsbml_dict['pathway']['brsynth']['path_base_idx']    = path_base_idx
     # variant path (from real reactions) index
     rpsbml_dict['pathway']['brsynth']['path_variant_idx'] = path_variant_idx
-    # list of reaction ids in the pathway, in forward direction
-    rpsbml_dict['pathway']['brsynth']['reactions']        = []
 
     # Update rpSBML object
     rpsbml.updateBRSynthPathway(rpsbml_dict, pathway_id)
