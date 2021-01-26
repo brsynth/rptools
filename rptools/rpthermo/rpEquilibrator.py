@@ -1,13 +1,10 @@
-from equilibrator_api                      import ComponentContribution, Q_
-from equilibrator_assets.generate_compound import create_compound, get_or_create_compound
+from equilibrator_api                      import Q_
+from equilibrator_assets.generate_compound import get_or_create_compound
 from equilibrator_assets.group_decompose   import GroupDecompositionError
 from equilibrator_pathway                  import Pathway
-import equilibrator_cache
-import logging
+from equilibrator_cache                    import exceptions as equilibrator_exceptions
 import numpy as np
-import json
-import tempfile
-import os
+import logging
 
 
 # WARNING: taking the sum of the reaction thermodynamics is perhaps not the best way to do it
@@ -28,7 +25,7 @@ def pathway(rpsbml, cc, pathway_id='rp_pathway', update_rpsbml=True, logger=logg
     :return: Tuple with the following information, in order: sum dG_prime, std dG_prime, sum dG_prime_o, std dG_prime_o, sum dG_prime_m, std dG_prime_m. Also False if function error.
     """
 
-    rp_pathway = rpsbml.model.getPlugin('groups').getGroup(pathway_id)
+    rp_pathway = rpsbml.getModel().getPlugin('groups').getGroup(pathway_id)
 
     if not rp_pathway:
         logger.error('Cannot retreive the pathway: '+str(pathway_id))
@@ -44,11 +41,13 @@ def pathway(rpsbml, cc, pathway_id='rp_pathway', update_rpsbml=True, logger=logg
     pathway_physiological_dg_prime = []
     pathway_physiological_dg_prime_error = []
 
-    for react in [self.rpsbml.model.getReaction(i.getIdRef()) for i in rp_pathway.getListOfMembers()]:
+    calc_cmp = {}
+
+    for react in [rpsbml.getModel().getReaction(i.getIdRef()) for i in rp_pathway.getListOfMembers()]:
 
         logger.debug('Sending the following reaction to _reactionStrQuery: '+str(react))
 
-        res = _reactionStrQuery(react, cc, write_results)
+        res = _reactionStrQuery(react, rpsbml, cc, update_rpsbml, logger=logger)
 
         logger.debug('The result is :', res)
 
@@ -81,7 +80,7 @@ def pathway(rpsbml, cc, pathway_id='rp_pathway', update_rpsbml=True, logger=logg
             logger.info('Trying equilibrator_api component contribution')
             logger.debug('Trying to calculate using CC: '+str(react))
 
-            res = _reactionCmpQuery(react, write_results)
+            res = _reactionCmpQuery(react, rpsbml, cc, calc_cmp, update_rpsbml, logger=logger)
 
             if res:
                 pathway_standard_dg_prime.append(res[0])
@@ -119,20 +118,22 @@ def pathway(rpsbml, cc, pathway_id='rp_pathway', update_rpsbml=True, logger=logg
         'dfG_prime_o_std' : np.std(pathway_standard_dg_prime),
         'dfG_prime_m'     : np.sum(pathway_physiological_dg_prime),
         'dfG_prime_m_std' : np.std(pathway_physiological_dg_prime),
-        'dfG_uncert'      : np.sum(pathway_standard_dg_prime_error),
+        'dfG_uncert'      : np.mean(pathway_standard_dg_prime_error),
         'dfG_uncert_std'  : np.std(pathway_standard_dg_prime_error)
     }
 
 
 # TODO: when an inchikey is passed, (and you don't have any other xref) and equilibrator finds the correct species then update the MIRIAM annotations
-def _reactionStrQuery(libsbml_reaction, cc, update_rpsbml=False, logger=logging.getLogger(__name__)):
+def _reactionStrQuery(libsbml_reaction, rpsbml, cc, update_rpsbml=False, logger=logging.getLogger(__name__)):
     """Build the string reaction from a libSBML reaction object to send to equilibrator and return the different thermodynamics analysis available
 
     :param libsbml_reaction: A libsbml reaction object
+    :param rpsbml: An rpSBML object
     :param cc: Component contribution
     :param write_results: Write the results to the rpSBML file (Default: False)
 
     :type libsbml_reaction: libsbml.Reaction
+    :type rpsbml: rptools.rpSBML
     :type cc: ComponentContribution
     :type write_results: bool
 
@@ -145,7 +146,7 @@ def _reactionStrQuery(libsbml_reaction, cc, update_rpsbml=False, logger=logging.
     results = {}
 
     try:
-        reac_str = _makeReactionStr(libsbml_reaction)
+        reac_str = _makeReactionStr(libsbml_reaction, rpsbml, logger=logger)
         logger.debug('The reaction string is: '+str(reac_str))
         if not reac_str:
             logger.warning('Could not generate the reaction string for: '+str(libsbml_reaction))
@@ -155,9 +156,9 @@ def _reactionStrQuery(libsbml_reaction, cc, update_rpsbml=False, logger=logging.
                 rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_prime_m', 0.0, 'kj_per_mol')
                 rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_uncert', 0.0, 'kj_per_mol')
                 #Are there default values for these?
-                #self.rpsbml.addUpdateBRSynth(libsbml_reaction, 'reversibility_index', 0.0)
-                #self.rpsbml.addUpdateBRSynth(libsbml_reaction, 'balanced', rxn.is_balanced())
-            return False
+                #rpsbml.addUpdateBRSynth(libsbml_reaction, 'reversibility_index', 0.0)
+                #rpsbml.addUpdateBRSynth(libsbml_reaction, 'balanced', rxn.is_balanced())
+            return {}
 
         rxn = cc.parse_reaction_formula(reac_str)
         results['standard_dg']            = cc.standard_dg(rxn)
@@ -195,10 +196,12 @@ def _reactionStrQuery(libsbml_reaction, cc, update_rpsbml=False, logger=logging.
             'rxn_is_balanced': rxn.is_balanced(),
             'ln_reversibility_index': {
                 'value': results['ln_reversibility_index'],
-                'error': results['ln_reversibility_index_error'],
+                'error': results['ln_reversibility_index_error']
+                },
             'standard_dg': {
                 'value': float(results['standard_dg'].value.m),
                 'error': float(results['standard_dg'].error.m)
+                },
             'standard_dg_prime': {
                 'value': float(results['standard_dg_prime'].value.m),
                 'error': float(results['standard_dg_prime'].error.m)
@@ -214,11 +217,11 @@ def _reactionStrQuery(libsbml_reaction, cc, update_rpsbml=False, logger=logging.
         #         (float(standard_dg.value.m), float(standard_dg.error.m)),
         #         (float(standard_dg_prime.value.m), float(standard_dg_prime.error.m)), 
         #         (float(physiological_dg_prime.value.m), float(physiological_dg_prime.error.m)))
-    except equilibrator_cache.exceptions.ParseException:
+    except equilibrator_exceptions.ParseException:
         logger.warning('One of the reaction species cannot be parsed by equilibrator: '+str(reac_str))
-        return False
+        return {}
 
-    except equilibrator_cache.exceptions.MissingDissociationConstantsException:
+    except equilibrator_exceptions.MissingDissociationConstantsException:
         logger.warning('Some of the species have not been pre-caclulated using ChemAxon')
 
 
@@ -249,21 +252,21 @@ def _reactionStrQuery(libsbml_reaction, cc, update_rpsbml=False, logger=logging.
 #         .. automethod:: _reactionCmpQuery
 #         .. automethod:: _reactionStrQuery
 #         """
-#         self.logger = logging.getLogger(__name__)
-#         self.logger.debug('Started instance of rpEquilibrator')
-#         self.cc = ComponentContribution()
-#         self.cc.p_h = Q_(ph)
-#         self.cc.ionic_strength = Q_(str(ionic_strength)+' mM')
-#         self.cc.p_mg = Q_(pMg)
-#         self.cc.temperature = Q_(str(temp_k)+' K')
-#         self.ph = ph
-#         self.ionic_strength = ionic_strength
-#         self.pMg = pMg
-#         self.temp_k = temp_k
-#         #self.mnx_default_conc = json.load(open('data/mnx_default_conc.json', 'r'))
-#         self.mnx_default_conc = json.load(open(os.path.join(os.path.dirname(os.path.abspath( __file__ )), 'data', 'mnx_default_conc.json'), 'r'))
-#         self.rpsbml = rpsbml
-#         self.calc_cmp = {}
+#         logger = logging.getLogger(__name__)
+#         logger.debug('Started instance of rpEquilibrator')
+#         cc = ComponentContribution()
+#         cc.p_h = Q_(ph)
+#         cc.ionic_strength = Q_(str(ionic_strength)+' mM')
+#         cc.p_mg = Q_(pMg)
+#         cc.temperature = Q_(str(temp_k)+' K')
+#         ph = ph
+#         ionic_strength = ionic_strength
+#         pMg = pMg
+#         temp_k = temp_k
+#         #mnx_default_conc = json.load(open('data/mnx_default_conc.json', 'r'))
+#         mnx_default_conc = json.load(open(os.path.join(os.path.dirname(os.path.abspath( __file__ )), 'data', 'mnx_default_conc.json'), 'r'))
+#         rpsbml = rpsbml
+#         calc_cmp = {}
     
 
 #     ##################################################################################
@@ -272,7 +275,7 @@ def _reactionStrQuery(libsbml_reaction, cc, update_rpsbml=False, logger=logging.
 
 
 # TODO: metanetx.chemical:MNXM7 + bigg.metabolite:pi
-def _makeSpeciesStr(self, libsbml_species, ret_type='xref'):
+def _makeSpeciesStr(libsbml_species, rpsbml, ret_type='xref', logger=logging.getLogger(__name__)):
     """Private function that makes a Equilibrator friendly string of a species
 
     :param libsbml_species: A libsbml species object
@@ -294,20 +297,24 @@ def _makeSpeciesStr(self, libsbml_species, ret_type='xref'):
     :rtype: str
     :return: The string id of the species or False if fail
     """
-    self.logger.debug('ret_type: '+str(ret_type))
+
+    logger.debug('ret_type: '+str(ret_type))
+
     if ret_type=='name':
         return libsbml_species.getName()
+
     elif ret_type=='id':
         return libsbml_species.getId()
+
     elif ret_type=='xref':
         annot = libsbml_species.getAnnotation()
         if not annot:
-            self.logger.error('Cannot retreive the annotation')
+            logger.error('Cannot retreive the annotation')
             return False
-        miriam_dict = self.rpsbml.readMIRIAMAnnotation(annot)
-        self.logger.debug('miriam_dict: '+str(miriam_dict))
+        miriam_dict = rpsbml.readMIRIAMAnnotation(annot)
+        logger.debug('miriam_dict: '+str(miriam_dict))
         if not miriam_dict:
-            self.logger.warning('The object annotation does not have any MIRIAM entries')
+            logger.warning('The object annotation does not have any MIRIAM entries')
             return False
         if 'kegg' in miriam_dict:
             if miriam_dict['kegg']:
@@ -316,7 +323,7 @@ def _makeSpeciesStr(self, libsbml_species, ret_type='xref'):
                     int_list = [int(i.replace('C', '')) for i in miriam_dict['kegg']]
                     return 'KEGG:'+str(miriam_dict['kegg'][int_list.index(min(int_list))])
                 except ValueError:
-                    self.logger.warning('There is a non int value in: '+str(miriam_dict['kegg']))
+                    logger.warning('There is a non int value in: '+str(miriam_dict['kegg']))
         elif 'chebi' in miriam_dict:
             if miriam_dict['chebi']:
                 try:
@@ -324,7 +331,7 @@ def _makeSpeciesStr(self, libsbml_species, ret_type='xref'):
                     int_list = [int(i) for i in miriam_dict['chebi']]
                     return 'CHEBI:'+str(miriam_dict['chebi'][int_list.index(min(int_list))])
                 except ValueError:
-                    self.logger.warning('There is a non int value in: '+str(miriam_dict['chebi']))
+                    logger.warning('There is a non int value in: '+str(miriam_dict['chebi']))
         elif 'metanetx' in miriam_dict:
             if miriam_dict['metanetx']:
                 try:
@@ -332,41 +339,45 @@ def _makeSpeciesStr(self, libsbml_species, ret_type='xref'):
                     int_list = [int(i.replace('MNXM', '')) for i in miriam_dict['metanetx']]
                     return 'metanetx.chemical:'+str(miriam_dict['metanetx'][int_list.index(min(int_list))])
                 except ValueError:
-                    self.logger.warning('There is a non int value in: '+str(miriam_dict['metanetx']))
+                    logger.warning('There is a non int value in: '+str(miriam_dict['metanetx']))
         elif 'inchikey' in miriam_dict:
             if miriam_dict['inchikey']:
                 if len(miriam_dict['inchikey'])==1:
                     return miriam_dict['inchikey'][0]
                 else:
-                    self.logger.warning('There are multiple values of inchikey: '+str(miriam_dict['inchikey']))
-                    self.logger.warning('Taking the first one')
+                    logger.warning('There are multiple values of inchikey: '+str(miriam_dict['inchikey']))
+                    logger.warning('Taking the first one')
                     return miriam_dict['inchikey'][0]
         else:
-            self.logger.warning('Could not extract string input for '+str(miriam_dict))
+            logger.warning('Could not extract string input for '+str(miriam_dict))
             return False
-        self.logger.warning('The MIRIAM annotation does not have the required information')
+        logger.warning('The MIRIAM annotation does not have the required information')
         return False
     else:
-        self.logger.warning('Cannot determine ret_type: '+str(ret_type))
+        logger.warning('Cannot determine ret_type: '+str(ret_type))
 
 
-def _makeReactionStr(self, libsbml_reaction, ret_type='xref', ret_stoichio=True):
+def _makeReactionStr(libsbml_reaction, rpsbml, ret_type='xref', ret_stoichio=True, logger=logging.getLogger(__name__)):
     """Make the reaction formulae string to query equilibrator
 
     :param libsbml_reaction: A libsbml reaction object
+    :param rpsbml: An rpSBML object
     :param ret_type: Type of output. Valid output include: ['name', 'id', 'xref'] (Default: xref)
     :param ret_stoichio: Return the stoichio or not (Default: True)
 
     :type libsbml_reaction: libsbml.Reaction
+    :type rpsbml: rptools.rpSBML
     :type ret_type: str
     :type ret_stoichio: bool
 
     :rtype: str
     :return: The string id of the reaction or False if fail
     """
+
     reac_str = ''
+
     for rea in libsbml_reaction.getListOfReactants():
-        rea_str = self._makeSpeciesStr(self.rpsbml.model.getSpecies(rea.getSpecies()), ret_type)
+        rea_str = _makeSpeciesStr(rpsbml.getModel().getSpecies(rea.getSpecies()), rpsbml, ret_type, logger=logger)
         if rea_str:
             if ret_stoichio:
                 reac_str += str(rea.getStoichiometry())+' '+str(rea_str)+' + '
@@ -374,10 +385,12 @@ def _makeReactionStr(self, libsbml_reaction, ret_type='xref', ret_stoichio=True)
                 reac_str += str(rea_str)+' + '
         else:
             return False
+
     reac_str = reac_str[:-2]
-    reac_str += '<=> ' #TODO: need to find a way to determine the reversibility of the reaction
+    reac_str += '<=> ' # TODO: need to find a way to determine the reversibility of the reaction
+
     for pro in libsbml_reaction.getListOfProducts():
-        pro_str = self._makeSpeciesStr(self.rpsbml.model.getSpecies(pro.getSpecies()), ret_type)
+        pro_str = _makeSpeciesStr(rpsbml.getModel().getSpecies(pro.getSpecies()), rpsbml, ret_type, logger=logger)
         if pro_str:
             if ret_stoichio:
                 reac_str += str(pro.getStoichiometry())+' '+str(pro_str)+' + '
@@ -385,134 +398,164 @@ def _makeReactionStr(self, libsbml_reaction, ret_type='xref', ret_stoichio=True)
                 reac_str += str(pro_str)+' + '
         else:
             return False
+
     reac_str = reac_str[:-2]
-    self.logger.debug('reac_str: '+str(reac_str))
+
+    logger.debug('reac_str: '+str(reac_str))
+
     return reac_str
 
 
 ################### Equilibrator component contribution queries instead of using the native functions ###########
 
 
-def _speciesCmpQuery(self, libsbml_species):
+def _speciesCmpQuery(libsbml_species, rpsbml, cc, calc_cmp, logger=logging.getLogger(__name__)):
     """Use the native equilibrator-api compound contribution method
 
     :param libsbml_species: A libsbml species object
+    :param rpsbml: An rpSBML object
+    :param cc: Component contribution
 
     :type libsbml_species: libsbml.Reaction
+    :type rpsbml: rptools.rpSBML
+    :type cc: ComponentContribution
 
     :rtype: tuple
     :return: Tuple of size two with mu and sigma values in that order or (None, None) if fail
     """
+
     annot = libsbml_species.getAnnotation()
+
     if not annot:
-        self.logger.warning('The annotation of '+str(libsbml_species)+' is None....')
+        logger.warning('The annotation of '+str(libsbml_species)+' is None....')
         return None, None
-    brs_annot = self.rpsbml.readBRSYNTHAnnotation(libsbml_species.getAnnotation())
-    #TODO: handle the condition where there are no inchi values but there are SMILES -- should rarely, if ever happen
-    self.logger.debug('libsbml_species: '+str(libsbml_species))
-    #self.logger.debug('brs_annot: '+str(brs_annot))
-    #Try to get the cmp from the ID
-    spe_id = self._makeSpeciesStr(libsbml_species)
+
+    brs_annot = rpsbml.readBRSYNTHAnnotation(libsbml_species.getAnnotation())
+
+    # TODO: handle the condition where there are no inchi values but there are SMILES -- should rarely, if ever happen
+    logger.debug('libsbml_species: '+str(libsbml_species))
+    # logger.debug('brs_annot: '+str(brs_annot))
+    # Try to get the cmp from the ID
+    spe_id = _makeSpeciesStr(libsbml_species, rpsbml, logger=logger)
     spe_cmp = None
+
     if spe_id:
-        self.logger.debug('Trying to find the CMP using the xref string: '+str(spe_id))
-        spe_cmp = self.cc.ccache.get_compound(self._makeSpeciesStr(libsbml_species))
+        logger.debug('Trying to find the CMP using the xref string: '+str(spe_id))
+        spe_cmp = cc.ccache.get_compound(_makeSpeciesStr(libsbml_species, rpsbml, logger=logger))
+
     if not spe_cmp:
-        self.logger.debug('Trying to find the CMP using the structure')
-        #try to find it in the local data - we do this because there are repeated species in many files
-        if brs_annot['inchi'] in self.calc_cmp:
-            spe_cmp = self.calc_cmp[brs_annot['inchi']]
-        elif brs_annot['smiles'] in self.calc_cmp:
-            spe_cmp = self.calc_cmp[brs_annot['smiles']]
+        logger.debug('Trying to find the CMP using the structure')
+        # try to find it in the local data - we do this because there are repeated species in many files
+        if brs_annot['inchi'] in calc_cmp:
+            spe_cmp = calc_cmp[brs_annot['inchi']]
+        elif brs_annot['smiles'] in calc_cmp:
+            spe_cmp = calc_cmp[brs_annot['smiles']]
         else:
-            #if you cannot find it then calculate it
+            # if you cannot find it then calculate it
             try:
-                spe_cmp = get_or_create_compound(self.cc.ccache, brs_annot['inchi'], mol_format='inchi')
-                self.calc_cmp[brs_annot['inchi']] = spe_cmp
-                self.calc_cmp[brs_annot['smiles']] = spe_cmp
+                spe_cmp = get_or_create_compound(cc.ccache, brs_annot['inchi'], mol_format='inchi')
+                calc_cmp[brs_annot['inchi']] = spe_cmp
+                calc_cmp[brs_annot['smiles']] = spe_cmp
             except (OSError, KeyError, GroupDecompositionError) as e:
                 try:
-                    spe_cmp = get_or_create_compound(self.cc.ccache, brs_annot['smiles'], mol_format='smiles')
-                    self.calc_cmp[brs_annot['smiles']] = spe_cmp
-                    self.calc_cmp[brs_annot['inchi']] = spe_cmp
+                    spe_cmp = get_or_create_compound(cc.ccache, brs_annot['smiles'], mol_format='smiles')
+                    calc_cmp[brs_annot['smiles']] = spe_cmp
+                    calc_cmp[brs_annot['inchi']] = spe_cmp
                 except (OSError, KeyError, GroupDecompositionError) as e:
-                    self.logger.warning('The following species does not have brsynth annotation InChI or SMILES: '+str(libsbml_species.getId()))
-                    self.logger.warning('Or Equilibrator could not convert the structures')
-                    self.logger.warning(e)
+                    logger.warning('The following species does not have brsynth annotation InChI or SMILES: '+str(libsbml_species.getId()))
+                    logger.warning('Or Equilibrator could not convert the structures')
+                    logger.warning(e)
                     return None, None
-    if spe_cmp.id==4: #this is H+ and can be ignored
+
+    if spe_cmp.id == 4: # this is H+ and can be ignored
         return 'h', 'h'
-    self.logger.debug('spe_cmp: '+str(spe_cmp))
-    #mu, sigma = self.cc.predictor.preprocess.get_compound_prediction(eq_cmp[0])
-    mu, sigma = self.cc.predictor.preprocess.get_compound_prediction(spe_cmp)
+
+    logger.debug('spe_cmp: '+str(spe_cmp))
+
+    # WARNING: 3 values are returned (1 float + 2 arrays) while
+    #          2 values are expected (1 float + 1 array, cf. specifications of 'get_compound_prediction').
+    #          Then take the float and the first array (second one is small with very small values).
+    #          Checked with spe_cmp = Compound(id=74378, inchi_key=WHUUTDBJXJRKMK-VKHMYHEASA-M)
+    mu, sigma, unexpected = cc.predictor.preprocess.get_compound_prediction(spe_cmp)
+
     return mu, sigma
 
 
-def _reactionCmpQuery(self, libsbml_reaction, write_results=False, physio_param=1e-3):
+def _reactionCmpQuery(libsbml_reaction, rpsbml, cc, calc_cmp, update_rpsbml=False, physio_param=1e-3, logger=logging.getLogger(__name__)):
     """This method makes a list of structure compounds and uses equilibrator to return the reaction dG
 
     :param libsbml_reaction: A libsbml reaction object
+    :type rpsbml: rptools.rpSBML
+    :param cc: Component contribution
     :param write_results: Write the results to the rpSBML file (Default: False)
     :param physio_param: The physiological parameter, i.e. the concentration of the compounds to calculate the dG (Default: 1e-3)
 
     :type libsbml_reaction: libsbml.Reaction
+    :param rpsbml: An rpSBML object
+    :type cc: ComponentContribution
     :type write_results: bool
     :type physio_param: float
 
     :rtype: tuple
     :return: Tuple of size three with dfG_prime_o, dfG_prime_m, uncertainty values in that order or False if fail
     """
+
     mus = []
     sigma_vecs = []
     S = []
     dfG_prime_o = None
     dfG_prime_m = None
     uncertainty = None
+
     for rea in libsbml_reaction.getListOfReactants():
-        self.logger.debug('------------------- '+str(rea.getSpecies())+' --------------')
-        mu, sigma = self._speciesCmpQuery(self.rpsbml.model.getSpecies(rea.getSpecies()))
-        self.logger.debug('mu: '+str(mu))
+        logger.debug('------------------- '+str(rea.getSpecies())+' --------------')
+        mu, sigma = _speciesCmpQuery(rpsbml.getModel().getSpecies(rea.getSpecies()), rpsbml, cc, calc_cmp, logger=logger)
+        logger.debug('mu: '+str(mu))
         if not mu:
-            self.logger.warning('Failed to calculate the reaction mu thermodynamics using compound query')
-            if write_results:
-                self.rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_prime_o', 0.0, 'kj_per_mol')
-                self.rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_prime_m', 0.0, 'kj_per_mol')
-                self.rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_uncert', 0.0, 'kj_per_mol')
+            logger.warning('Failed to calculate the reaction mu thermodynamics using compound query')
+            if update_rpsbml:
+                rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_prime_o', 0.0, 'kj_per_mol')
+                rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_prime_m', 0.0, 'kj_per_mol')
+                rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_uncert', 0.0, 'kj_per_mol')
             return False
-        elif mu=='h': #skipping the Hydrogen
+        elif mu == 'h': # skipping the Hydrogen
             continue
         mus.append(mu)
         sigma_vecs.append(sigma)
         S.append([-rea.getStoichiometry()])
+
     for pro in libsbml_reaction.getListOfProducts():
-        mu, sigma = self._speciesCmpQuery(self.rpsbml.model.getSpecies(pro.getSpecies()))
+        mu, sigma = _speciesCmpQuery(rpsbml.getModel().getSpecies(pro.getSpecies()), rpsbml, cc, calc_cmp, logger=logger)
         if not mu:
-            self.logger.warning('Failed to calculate the reaction mu thermodynamics using compound query')
-            if write_results:
-                self.rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_prime_o', 0.0, 'kj_per_mol')
-                self.rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_prime_m', 0.0, 'kj_per_mol')
-                self.rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_uncert', 0.0, 'kj_per_mol')
+            logger.warning('Failed to calculate the reaction mu thermodynamics using compound query')
+            if update_rpsbml:
+                rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_prime_o', 0.0, 'kj_per_mol')
+                rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_prime_m', 0.0, 'kj_per_mol')
+                rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_uncert', 0.0, 'kj_per_mol')
             return False
-        elif mu=='h': #skipping the Hydrogen
+        elif mu == 'h': # skipping the Hydrogen
             continue
         mus.append(mu)
         sigma_vecs.append(sigma)
         S.append([pro.getStoichiometry()])
+
     mus = Q_(mus, 'kJ/mol')
     sigma_vecs = Q_(sigma_vecs, 'kJ/mol')
     np_S = np.array(S)
     dfG_prime_o = np_S.T@mus
     dfG_prime_o = float(dfG_prime_o.m[0])
     ###### adjust fot physio parameters to calculate the dGm'
-    #TODO: check with Elad
-    dfG_prime_m = float(dfG_prime_o)+float(self.cc.RT.m)*sum([float(sto[0])*float(np.log(co)) for sto, co in zip(S, [physio_param]*len(S))])
+    # TODO: check with Elad
+    dfG_prime_m = float(dfG_prime_o)+float(cc.RT.m)*sum([float(sto[0])*float(np.log(co)) for sto, co in zip(S, [physio_param]*len(S))])
     uncertainty = np_S.T@sigma_vecs
     uncertainty = uncertainty@uncertainty.T
     uncertainty = uncertainty.m[0][0]
-    if write_results:
-        self.rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_prime_o', dfG_prime_o, 'kj_per_mol')
-        self.rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_prime_m', dfG_prime_m, 'kj_per_mol')
-        self.rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_uncert', uncertainty, 'kj_per_mol')
+
+    if update_rpsbml:
+        rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_prime_o', dfG_prime_o, 'kj_per_mol')
+        rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_prime_m', dfG_prime_m, 'kj_per_mol')
+        rpsbml.addUpdateBRSynth(libsbml_reaction, 'dfG_uncert', uncertainty, 'kj_per_mol')
+
     return dfG_prime_o, dfG_prime_m, uncertainty
 
 
@@ -558,10 +601,10 @@ def toNetworkSBtab(self, output, pathway_id='rp_pathway', thermo_id='dfG_prime_o
     :rtype: bool
     :return: Success or failure of the function
     """
-    groups = self.rpsbml.model.getPlugin('groups')
+    groups = rpsbml.getModel().getPlugin('groups')
     rp_pathway = groups.getGroup(pathway_id)
     if not rp_pathway:
-        self.logger.error('Cannot retreive the pathway: '+str(pathway_id))
+        logger.error('Cannot retreive the pathway: '+str(pathway_id))
         return False
     with open(output, 'w') as fo:
         ####################### Make the header of the document ##############
@@ -569,9 +612,9 @@ def toNetworkSBtab(self, output, pathway_id='rp_pathway', thermo_id='dfG_prime_o
         fo.write("!!SBtab TableID='Configuration' TableType='Config'\t\t\t\n")
         fo.write("!Option\t!Value\t!Comment\t\n")
         fo.write("algorithm\tMDF\tECM, or MDF\t\n")
-        fo.write("p_h\t"+str(self.ph)+"\t\t\n")
-        fo.write("ionic_strength\t"+str(self.ionic_strength)+" mM\t\t\n")
-        fo.write("p_mg\t"+str(self.pMg)+"\t\t\n")
+        fo.write("p_h\t"+str(ph)+"\t\t\n")
+        fo.write("ionic_strength\t"+str(ionic_strength)+" mM\t\t\n")
+        fo.write("p_mg\t"+str(pMg)+"\t\t\n")
         fo.write("stdev_factor    "+str(stdev_factor)+"\n")
         fo.write("\t\t\t\n")
         ####################### Make the reaction list ######################
@@ -579,27 +622,27 @@ def toNetworkSBtab(self, output, pathway_id='rp_pathway', thermo_id='dfG_prime_o
         fo.write("!ID\t!ReactionFormula\t\t\n")
         #TODO: need to sort it in the reverse order
         #TODO: use the rpGraph to sort the pathway in the right order
-        ordered_react = [self.rpsbml.model.getReaction(i.getIdRef()) for i in rp_pathway.getListOfMembers()]
+        ordered_react = [rpsbml.getModel().getReaction(i.getIdRef()) for i in rp_pathway.getListOfMembers()]
         ordered_react.sort(key=lambda x: int(x.getId().replace('RP', '')), reverse=True)
-        #for react in [self.rpsbml.model.getReaction(i.getIdRef()) for i in rp_pathway.getListOfMembers()]:   
+        #for react in [rpsbml.getModel().getReaction(i.getIdRef()) for i in rp_pathway.getListOfMembers()]:   
         for react in ordered_react:
-            react_str = self._makeReactionStr(react, 'id', True)
+            react_str = _makeReactionStr(react, 'id', True)
             if react_str:
                 fo.write(str(react.getId())+"\t"+str(react_str)+"\n")
             else:
-                self.logger.error('Cannot build the reaction: '+str(rect))
+                logger.error('Cannot build the reaction: '+str(rect))
                 return False
         fo.write("\t\t\t\n")
         fo.write("\t\t\t\n")
         ########################## Make the species list ###################
         fo.write("!!SBtab TableID='Compound' TableType='Compound'\t\t\t\n")
         fo.write("!ID\t!Identifiers\t\t\n")
-        rp_species = self.rpsbml.readUniqueRPspecies(pathway_id)
+        rp_species = rpsbml.readUniqueRPspecies(pathway_id)
         for spe_id in rp_species:
-            spe = self.rpsbml.model.getSpecies(spe_id)
-            miriam_dict = self.rpsbml.readMIRIAMAnnotation(spe.getAnnotation())
+            spe = rpsbml.getModel().getSpecies(spe_id)
+            miriam_dict = rpsbml.readMIRIAMAnnotation(spe.getAnnotation())
             if not miriam_dict:
-                self.logger.warning('The object annotation does not have any MIRIAM entries')
+                logger.warning('The object annotation does not have any MIRIAM entries')
                 return False
             iden_str = None
             if 'kegg' in miriam_dict:
@@ -609,7 +652,7 @@ def toNetworkSBtab(self, output, pathway_id='rp_pathway', thermo_id='dfG_prime_o
                         int_list = [int(i.replace('C', '')) for i in miriam_dict['kegg']]
                         iden_str = 'KEGG:'+str(miriam_dict['kegg'][int_list.index(min(int_list))])
                     except ValueError:
-                        self.logger.warning('There is a non int value in: '+str(miriam_dict['kegg']))
+                        logger.warning('There is a non int value in: '+str(miriam_dict['kegg']))
             if 'chebi' in miriam_dict and not iden_str:
                 if miriam_dict['chebi']:
                     try:
@@ -617,7 +660,7 @@ def toNetworkSBtab(self, output, pathway_id='rp_pathway', thermo_id='dfG_prime_o
                         int_list = [int(i) for i in miriam_dict['chebi']]
                         iden_str = 'CHEBI:'+str(miriam_dict['chebi'][int_list.index(min(int_list))])
                     except ValueError:
-                        self.logger.warning('There is a non int value in: '+str(miriam_dict['chebi']))
+                        logger.warning('There is a non int value in: '+str(miriam_dict['chebi']))
             if 'metanetx' in miriam_dict and not iden_str:
                 if miriam_dict['metanetx']:
                     try:
@@ -625,25 +668,25 @@ def toNetworkSBtab(self, output, pathway_id='rp_pathway', thermo_id='dfG_prime_o
                         int_list = [int(i.replace('MNXM', '')) for i in miriam_dict['metanetx']]
                         iden_str = 'metanetx.chemical:'+str(miriam_dict['metanetx'][int_list.index(min(int_list))])
                     except ValueError:
-                        self.logger.warning('There is a non int value in: '+str(miriam_dict['metanetx']))
+                        logger.warning('There is a non int value in: '+str(miriam_dict['metanetx']))
             if 'inchikey' in miriam_dict and not iden_str:
                 if miriam_dict['inchikey']:
                     if len(miriam_dict['inchikey'])==1:
                         iden_str = miriam_dict['inchikey'][0]
                     else:
-                        self.logger.warning('There are multiple values of inchikey: '+str(miriam_dict['inchikey']))
-                        self.logger.warning('Taking the first one')
+                        logger.warning('There are multiple values of inchikey: '+str(miriam_dict['inchikey']))
+                        logger.warning('Taking the first one')
                         iden_str = miriam_dict['inchikey'][0]
             if not iden_str:
-                self.logger.warning('Could not extract string input for '+str(miriam_dict))
+                logger.warning('Could not extract string input for '+str(miriam_dict))
             fo.write(str(spe_id)+"\t"+str(iden_str)+"\t\t\n")
         fo.write("\t\t\t\n")
         ################## Add FBA values ##############################
         #TODO: perhaps find a better way than just setting this to 1
         fo.write("!!SBtab TableID='Flux' TableType='Quantity' Unit='mM/s'\t\t\t\n")
         fo.write("!QuantityType\t!Reaction\t!Value\t\n")
-        for react in [self.rpsbml.model.getReaction(i.getIdRef()) for i in rp_pathway.getListOfMembers()]:
-            brs_annot = self.rpsbml.readBRSYNTHAnnotation(react.getAnnotation())
+        for react in [rpsbml.getModel().getReaction(i.getIdRef()) for i in rp_pathway.getListOfMembers()]:
+            brs_annot = rpsbml.readBRSYNTHAnnotation(react.getAnnotation())
             if fba_id:
                 if fba_id in brs_annot:
                     #the saved value is mmol_per_gDW_per_hr while rpEq required mmol_per_s
@@ -651,7 +694,7 @@ def toNetworkSBtab(self, output, pathway_id='rp_pathway', thermo_id='dfG_prime_o
                     #given the values that seems wrong
                     fo.write("rate of reaction\t"+str(react.getId())+"\t"+str(brs_annot[fba_id]['value'])+"\t\n")
                 else:
-                    self.logger.warning('Cannot retreive the FBA value '+str(fba_id)+'. Setting a default value of 1.')
+                    logger.warning('Cannot retreive the FBA value '+str(fba_id)+'. Setting a default value of 1.')
                     fo.write("rate of reaction\t"+str(react.getId())+"\t1\t\n")
             else:
                 fo.write("rate of reaction\t"+str(react.getId())+"\t1\t\n")
@@ -660,23 +703,23 @@ def toNetworkSBtab(self, output, pathway_id='rp_pathway', thermo_id='dfG_prime_o
         fo.write("!!SBtab TableID='ConcentrationConstraint' TableType='Quantity' Unit='mM'\t\t\t\n")
         fo.write("!QuantityType\t!Compound\t!Min\t!Max\n")
         for spe_id in rp_species: 
-            self.logger.debug('========= '+str(spe_id)+' ========')
+            logger.debug('========= '+str(spe_id)+' ========')
             is_found = False
-            spe = self.rpsbml.model.getSpecies(spe_id)
-            miriam_dict = self.rpsbml.readMIRIAMAnnotation(spe.getAnnotation())
-            self.logger.debug(miriam_dict)
+            spe = rpsbml.getModel().getSpecies(spe_id)
+            miriam_dict = rpsbml.readMIRIAMAnnotation(spe.getAnnotation())
+            logger.debug(miriam_dict)
             if not miriam_dict:
-                self.logger.warning('The object annotation does not have any MIRIAM entries')
+                logger.warning('The object annotation does not have any MIRIAM entries')
                 continue
             if 'metanetx' in miriam_dict:
-                self.logger.debug(miriam_dict['metanetx'])
+                logger.debug(miriam_dict['metanetx'])
                 for mnx in miriam_dict['metanetx']:
-                    if mnx in list(self.mnx_default_conc.keys()) and not is_found:
-                        self.logger.debug('Found default concentration range for '+str(spe.getId())+' ('+str(mnx)+'): '+str(self.mnx_default_conc[mnx]))
-                        fo.write("concentration\t"+spe.getId()+"\t"+str(self.mnx_default_conc[mnx]['c_min'])+"\t"+str(self.mnx_default_conc[mnx]['c_max'])+"\n")
+                    if mnx in list(mnx_default_conc.keys()) and not is_found:
+                        logger.debug('Found default concentration range for '+str(spe.getId())+' ('+str(mnx)+'): '+str(mnx_default_conc[mnx]))
+                        fo.write("concentration\t"+spe.getId()+"\t"+str(mnx_default_conc[mnx]['c_min'])+"\t"+str(mnx_default_conc[mnx]['c_max'])+"\n")
                         is_found = True
             if not is_found:
-                self.logger.debug('Using default values for '+str(spe.getId()))
+                logger.debug('Using default values for '+str(spe.getId()))
                 fo.write("concentration\t"+spe.getId()+"\t0.001\t10\n")
         fo.write("\t\t\t\n")
         ############################ Add the thermo value ###########################
@@ -684,21 +727,21 @@ def toNetworkSBtab(self, output, pathway_id='rp_pathway', thermo_id='dfG_prime_o
         if thermo_id:
             fo.write("!!SBtab TableID='Thermodynamics' TableType='Quantity' StandardConcentration='M'\t\t\t\n")
             fo.write("!QuantityType\t!Reaction\t!Compound\t!Value\t!Unit\n")
-            for react in [self.rpsbml.model.getReaction(i.getIdRef()) for i in rp_pathway.getListOfMembers()]:
-                brs_annot = self.rpsbml.readBRSYNTHAnnotation(react.getAnnotation())
+            for react in [rpsbml.getModel().getReaction(i.getIdRef()) for i in rp_pathway.getListOfMembers()]:
+                brs_annot = rpsbml.readBRSYNTHAnnotation(react.getAnnotation())
                 try:
                     #TODO: switch to dfG_prime_m when you are sure how to calculate it using the native equilibrator function
                     if thermo_id in brs_annot:
                         if brs_annot[thermo_id]:
                             fo.write("reaction gibbs energy\t"+str(react.getId())+"\t\t"+str(brs_annot['dfG_prime_o']['value'])+"\tkJ/mol\n")
                         else:
-                            self.logger.error(str(thermo_id)+' is empty. Was rpThermodynamics run on this SBML? Aborting...')
+                            logger.error(str(thermo_id)+' is empty. Was rpThermodynamics run on this SBML? Aborting...')
                             return False
                     else:
-                        self.logger.error('There is no '+str(thermo_id)+' in the reaction '+str(react.getId()))
+                        logger.error('There is no '+str(thermo_id)+' in the reaction '+str(react.getId()))
                         return False
                 except KeyError:
-                    self.logger.error('The reaction '+str(react.getId())+' does not seem to have the following thermodynamic value: '+str(thermo_id))
+                    logger.error('The reaction '+str(react.getId())+' does not seem to have the following thermodynamic value: '+str(thermo_id))
                     return False
     return True
 
@@ -722,37 +765,37 @@ def MDF(self, pathway_id='rp_pathway', thermo_id='dfG_prime_o', fba_id='fba_obj_
     :return: MDF of the pathway
     """
     to_ret_mdf = None
-    groups = self.rpsbml.model.getPlugin('groups')
+    groups = rpsbml.getModel().getPlugin('groups')
     rp_pathway = groups.getGroup(pathway_id)
     with tempfile.TemporaryDirectory() as tmpOutputFolder:
         path_sbtab = os.path.join(tmpOutputFolder, 'tmp_sbtab.tsv')
-        sbtab_status = self.toNetworkSBtab(path_sbtab, pathway_id=pathway_id, thermo_id=thermo_id, fba_id=fba_id, stdev_factor=stdev_factor)
+        sbtab_status = toNetworkSBtab(path_sbtab, pathway_id=pathway_id, thermo_id=thermo_id, fba_id=fba_id, stdev_factor=stdev_factor)
         if not sbtab_status:
-            self.logger.error('There was a problem generating the SBtab... aborting')
+            logger.error('There was a problem generating the SBtab... aborting')
             return 0.0
         try:
-            pp = Pathway.from_sbtab(path_sbtab, comp_contrib=self.cc)
+            pp = Pathway.from_sbtab(path_sbtab, comp_contrib=cc)
             pp.update_standard_dgs()
             try:
                 mdf_sol = pp.calc_mdf()
             except:
-                self.logger.warning('The calc_mdf function failed')
-                self.logger.warning('Exception: Cannot solve MDF primal optimization problem')
-                self.rpsbml.addUpdateBRSynth(rp_pathway, 'MDF', 0.0, 'kj_per_mol')
+                logger.warning('The calc_mdf function failed')
+                logger.warning('Exception: Cannot solve MDF primal optimization problem')
+                rpsbml.addUpdateBRSynth(rp_pathway, 'MDF', 0.0, 'kj_per_mol')
                 return 0.0
             #mdf_sol = pp.mdf_analysis()
             #plt_reac_plot = mdf_sol.reaction_plot
             #plt_cmp_plot = mdf_sol.compound_plot
             to_ret_mdf = float(mdf_sol.mdf.m)
             if write_results:
-                self.rpsbml.addUpdateBRSynth(rp_pathway, 'MDF', float(mdf_sol.mdf.m), 'kj_per_mol')
+                rpsbml.addUpdateBRSynth(rp_pathway, 'MDF', float(mdf_sol.mdf.m), 'kj_per_mol')
         except KeyError as e:
-            self.logger.warning('Cannot calculate MDF')
-            self.logger.warning(e)
-            self.rpsbml.addUpdateBRSynth(rp_pathway, 'MDF', 0.0, 'kj_per_mol')
+            logger.warning('Cannot calculate MDF')
+            logger.warning(e)
+            rpsbml.addUpdateBRSynth(rp_pathway, 'MDF', 0.0, 'kj_per_mol')
             return 0.0
-        except equilibrator_cache.exceptions.MissingDissociationConstantsException as e:
-            self.logger.warning('Some species are invalid: '+str(e))
-            self.rpsbml.addUpdateBRSynth(rp_pathway, 'MDF', 0.0, 'kj_per_mol')
+        except equilibrator_exceptions.MissingDissociationConstantsException as e:
+            logger.warning('Some species are invalid: '+str(e))
+            rpsbml.addUpdateBRSynth(rp_pathway, 'MDF', 0.0, 'kj_per_mol')
             return 0.0
     return to_ret_mdf

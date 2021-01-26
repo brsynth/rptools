@@ -6,7 +6,7 @@ Created on Jan 21 2021
 """
 
 
-from rptools.rpthermo.rpthermo import XXX
+from rptools.rpthermo.rpThermo import runThermo
 from rptools.rpthermo.Args     import build_args_parser
 
-__all__ = ['XXX', 'build_args_parser']
+__all__ = ['runThermo', 'build_args_parser']

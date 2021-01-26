@@ -8,6 +8,7 @@ rpTools are dedicated to work around rpSBML data structure. Tools are the follow
 
 * rpCompletion: [README.md](rptools/rpcompletion/README.md)
 * rpFBA: [README.md](rptools/rpfba/README.md)
+* rpThermo: [README.md](rptools/rpthermo/README.md)
 * rpExtractSink: [README.md](rptools/rpextractsink/README.md)
 * rpLibs: [README.md](rptools/rplibs/README.md)
 
