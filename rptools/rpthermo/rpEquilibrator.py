@@ -472,13 +472,12 @@ def _speciesCmpQuery(libsbml_species, rpsbml, cc, calc_cmp, logger=logging.getLo
 
     logger.debug('spe_cmp: '+str(spe_cmp))
 
-    # WARNING: 3 values are returned (1 float + 2 arrays) while
-    #          2 values are expected (1 float + 1 array, cf. specifications of 'get_compound_prediction').
-    #          Then take the float and the first array (second one is small with very small values).
-    #          Checked with spe_cmp = Compound(id=74378, inchi_key=WHUUTDBJXJRKMK-VKHMYHEASA-M)
-    mu, sigma, unexpected = cc.predictor.preprocess.get_compound_prediction(spe_cmp)
+    # mu -- The first value is the formation energy mean estimate (as before)
+    # uncertainty_array -- The second value is an array representing the uncertainty (a projection in the subspace of known reactions). If you take the inner product of that vector with itself, you'll get the variance of the estimate. An inner product with the array of another compound would yield the co-variance of their estimates.
+    # null_space -- The third return-value is similar to the second, but is a projection on the null-space. If the inner product with another such vector is not zero, it means the estimate is completely unreliable and should not be used.
+    mu, uncertainty_array, null_space = cc.predictor.preprocess.get_compound_prediction(spe_cmp)
 
-    return mu, sigma
+    return mu, math.sqrt(numpy.inner(uncertainty_array))
 
 
 def _reactionCmpQuery(libsbml_reaction, rpsbml, cc, calc_cmp, update_rpsbml=False, physio_param=1e-3, logger=logging.getLogger(__name__)):
