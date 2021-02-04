@@ -1,13 +1,13 @@
-import logging
+from logging import (
+    Logger,
+    getLogger
+)
 from cobra.flux_analysis import pfba
 from rptools.rplibs      import rpSBML
-
-# logger = logger.getLogger(__name__)
-# logger.setLevel(logger.INFO)
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
-    datefmt='%d-%m-%Y %H:%M:%S',
+from typing import (
+    List,
+    Dict,
+    Tuple
 )
 
 
@@ -50,13 +50,15 @@ logging.basicConfig(
 #     return rpsbml
 
 
-def rp_fba(rpsbml,
-           reaction_id,
-           coefficient=1.0,
-           is_max=True,
-           pathway_id='rp_pathway',
-           objective_id=None,
-           logger=logging.getLogger(__name__)):
+def rp_fba(
+          rpsbml: rpSBML,
+     reaction_id:    str,
+     coefficient:  float = 1.0,
+          is_max:   bool = True,
+      pathway_id:    str = 'rp_pathway',
+    objective_id:    str = None,
+          logger: Logger = getLogger(__name__)
+) -> Tuple[float, rpSBML]:
     """Run FBA using a single objective
 
     :param reaction_id: The id of the reactions involved in the objective
@@ -74,29 +76,71 @@ def rp_fba(rpsbml,
     :return: Tuple with the results of the FBA and boolean indicating the success or failure of the function
     :rtype: tuple
     """
-    
-    fbc_plugin = rpsbml.getModel().getPlugin('fbc')
-    rpsbml.checklibSBML(fbc_plugin, 'Getting FBC package')
-    objective_id = rpsbml.findCreateObjective([reaction_id], [coefficient], is_max, objective_id)
-    # run the FBA
-    rpsbml.checklibSBML(fbc_plugin.setActiveObjectiveId(objective_id),
-                        'Setting active objective '+str(objective_id))
-    cobraModel = rpsbml.convertToCobra()
-    if not cobraModel:
-        return 0.0, False
-    cobra_results = cobraModel.optimize()
-    rpsbml.addAnalysisResults(objective_id, cobra_results, pathway_id)
-    return cobra_results.objective_value, rpsbml
+    return _rp_fba(
+              rpsbml = rpsbml,
+         reaction_id = reaction_id,
+            sim_type = 'fba',
+         coefficient = coefficient,
+              is_max = is_max,
+          pathway_id = pathway_id,
+        objective_id = objective_id,
+              logger = logger
+    )
 
 
-def rp_pfba(rpsbml,
-            reaction_id,
-            coefficient=1.0,
-            fraction_of_optimum=0.95,
-            is_max=True,
-            pathway_id='rp_pathway',
-            objective_id=None,
-            logger=logging.getLogger(__name__)):
+def rp_pfba(
+          rpsbml: rpSBML,
+     reaction_id:    str,
+     coefficient:  float = 1.0,
+     frac_of_opt:  float = 0.95,
+          is_max:   bool = True,
+      pathway_id:    str = 'rp_pathway',
+    objective_id:    str = None,
+          logger: Logger = getLogger(__name__)
+) -> Tuple[float, bool]:
+    """Run parsimonious FBA using a single objective
+
+    :param reaction_id: The id of the reactions involved in the objective
+    :param coefficient: The coefficient associated with the reactions id (Default: 1.0)
+    :param fraction_of_optimum: Between 0.0 and 1.0 determining the fraction of optimum (Default: 0.95)
+    :param is_max: Maximise or minimise the objective (Default: True)
+    :param pathway_id: The id of the heterologous pathway (Default: rp_pathway)
+    :param objective_id: Overwrite the default id (Default: None)
+
+    :type reaction_id: str
+    :type coefficient: float
+    :type fraction_of_optimum: float
+    :type is_max: bool
+    :type pathway_id: str
+    :type objective_id: str
+
+    :return: Tuple with the results of the FBA and boolean indicating the success or failure of the function
+    :rtype: tuple
+    """
+    return _rp_fba(
+              rpsbml = rpsbml,
+         reaction_id = reaction_id,
+            sim_type = 'pfba',
+         coefficient = coefficient,
+         frac_of_opt = frac_of_opt,
+              is_max = is_max,
+          pathway_id = pathway_id,
+        objective_id = objective_id,
+              logger = logger
+    )
+
+
+def _rp_fba(
+          rpsbml: rpSBML,
+     reaction_id:    str,
+        sim_type:    str,
+     coefficient:  float = 1.0,
+     frac_of_opt:  float = 0.95,
+          is_max:   bool = True,
+      pathway_id:    str = 'rp_pathway',
+    objective_id:    str = None,
+          logger: Logger = getLogger(__name__)
+) -> Tuple[float, bool]:
     """Run parsimonious FBA using a single objective
 
     :param reaction_id: The id of the reactions involved in the objective
@@ -118,29 +162,56 @@ def rp_pfba(rpsbml,
     """
     
     fbc_plugin = rpsbml.getModel().getPlugin('fbc')
-    rpsbml.checklibSBML(fbc_plugin, 'Getting FBC package')
-    objective_id = rpsbml.findCreateObjective([reaction_id], [coefficient], is_max, objective_id)
+    rpsbml.checklibSBML(
+        fbc_plugin,
+        'Getting FBC package'
+    )
+    objective_id = rpsbml.findCreateObjective(
+        [reaction_id],
+        [coefficient],
+        is_max,
+        objective_id
+    )
+
     # run the FBA
-    rpsbml.checklibSBML(fbc_plugin.setActiveObjectiveId(objective_id),
-                        'Setting active objective '+str(objective_id))
+    rpsbml.checklibSBML(
+        fbc_plugin.setActiveObjectiveId(objective_id),
+        'Setting active objective '+str(objective_id)
+    )
+
     cobraModel = rpsbml.convertToCobra()
     if not cobraModel:
         return 0.0, False
-    cobra_results = pfba(cobraModel, fraction_of_optimum)
-    rpsbml.addAnalysisResults(objective_id, cobra_results, pathway_id)
+
+    if sim_type == 'fba':
+        cobra_results = cobraModel.optimize()
+    elif sim_type == 'pfba':
+        cobra_results = pfba(cobraModel, frac_of_opt)
+    else:
+        logger.error('Cannot recognise sim_type: '+str(sim_type))
+        return 0.0, None
+
+    rpsbml.addAnalysisResults(
+        objective_id,
+        cobra_results,
+        pathway_id
+    )
+
     return cobra_results.objective_value, rpsbml
 
 
-def rp_fraction(rpsbml,
-                source_reaction,
-                source_coefficient,
-                target_reaction,
-                target_coefficient,
-                fraction_of_source=0.75,
-                is_max=True,
-                pathway_id='rp_pathway',
-                objective_id=None,
-                logger=logging.getLogger(__name__)):
+def rp_fraction(
+          rpsbml: rpSBML,
+      src_rxn_id:    str,
+       src_coeff:  float,
+      tgt_rxn_id:    str,
+       tgt_coeff:  float,
+     frac_of_src:  float = 0.75,
+          is_max:   bool = True,
+      pathway_id:    str = 'rp_pathway',
+    objective_id:    str = None,
+          logger: Logger = getLogger(__name__)
+) -> Tuple[float, bool]:
     """Optimise for a target reaction while fixing a source reaction to the fraction of its optimum
 
     :param source_reaction: The id of the source reaction
@@ -168,8 +239,8 @@ def rp_fraction(rpsbml,
     # retreive the biomass objective and flux results and set as maxima
     fbc_plugin = rpsbml.getModel().getPlugin('fbc')
     rpsbml.checklibSBML(fbc_plugin, 'Getting FBC package')
-    logger.debug('findCreateObjective: '+str(source_reaction))
-    source_obj_id = rpsbml.findCreateObjective([source_reaction], [source_coefficient], is_max)
+    logger.debug('findCreateObjective: '+str(src_rxn_id))
+    source_obj_id = rpsbml.findCreateObjective([src_rxn_id], [src_coeff], is_max)
     # TODO: use the rpSBML BRSynth annotation parser
     source_flux = None
     try:
@@ -201,17 +272,17 @@ def rp_fraction(rpsbml,
             logger.error('No annotation available for: '+str(source_obj_id))
         source_flux = float(fbc_obj_annot.getChild('RDF').getChild('BRSynth').getChild('brsynth').getChild(0).getAttrValue('value'))
     # TODO: add another to check if the objective id exists
-    logger.debug('FBA source flux ('+str(source_reaction)+') is: '+str(source_flux))
+    logger.debug('FBA source flux ('+str(src_rxn_id)+') is: '+str(source_flux))
     if not objective_id:
-        objective_id = 'obj_'+str(target_reaction)+'__restricted_'+str(source_reaction)
+        objective_id = 'obj_'+str(tgt_rxn_id)+'__restricted_'+str(src_rxn_id)
     logger.debug('findCreateObjective() for '+str(objective_id))
-    objective_id = rpsbml.findCreateObjective([target_reaction], [target_coefficient], is_max, objective_id)
+    objective_id = rpsbml.findCreateObjective([tgt_rxn_id], [tgt_coeff], is_max, objective_id)
     logger.debug('Optimising the objective: '+str(objective_id))
-    logger.debug('Setting upper bound: '+str(source_flux*fraction_of_source))
-    logger.debug('Setting loer bound: '+str(source_flux*fraction_of_source))
-    old_upper_bound, old_lower_bound = rpsbml.setReactionConstraints(source_reaction,
-                                                                     source_flux*fraction_of_source,
-                                                                     source_flux*fraction_of_source)
+    logger.debug('Setting upper bound: '+str(source_flux*frac_of_src))
+    logger.debug('Setting loer bound: '+str(source_flux*frac_of_src))
+    old_upper_bound, old_lower_bound = rpsbml.setReactionConstraints(src_rxn_id,
+                                                                     source_flux*frac_of_src,
+                                                                     source_flux*frac_of_src)
     rpsbml.checklibSBML(fbc_plugin.setActiveObjectiveId(objective_id),
                         'Setting active objective '+str(objective_id))
     cobraModel = rpsbml.convertToCobra()
@@ -225,7 +296,7 @@ def rp_fraction(rpsbml,
     logger.debug('Biomass: '+str(cobra_results.fluxes.biomass))
     logger.debug('Target: '+str(cobra_results.fluxes.Rxn_sink))
     # reset the bounds to the original values for the target
-    old_upper_bound, old_lower_bound = rpsbml.setReactionConstraints(source_reaction,
+    old_upper_bound, old_lower_bound = rpsbml.setReactionConstraints(src_rxn_id,
                                                                      old_upper_bound,
                                                                      old_lower_bound)
     logger.debug('The objective '+str(objective_id)+' results '+str(cobra_results.objective_value))
@@ -246,7 +317,7 @@ def runFBA(sbml_path, gem_sbml, outFile,
            # fill_orphan_species=False,
            species_group_id='central_species',
            sink_species_group_id='rp_sink_species',
-           logger=logging.getLogger(__name__)):
+           logger: Logger = getLogger(__name__)):
     """Single rpSBML simulation
 
     :param file_name: The name of the model
@@ -336,27 +407,40 @@ def runFBA(sbml_path, gem_sbml, outFile,
     #                               logger)
     # ####### FBA ########
     if sim_type == 'fraction':
-        obj_val,rpsbml_gem = rp_fraction(rpsbml_gem,
-                                         source_reaction, source_coefficient,
-                                         target_reaction, target_coefficient,
-                                         fraction_of,
-                                         is_max,
-                                         pathway_id, objective_id,
-                                         logger=logger)
+        obj_val, rpsbml_gem = rp_fraction(
+            rpsbml_gem,
+            source_reaction,
+            source_coefficient,
+            target_reaction,
+            target_coefficient,
+            fraction_of,
+            is_max,
+            pathway_id,
+            objective_id,
+            logger=logger
+        )
     elif sim_type == 'fba':
-        obj_val,rpsbml_gem = rp_fba(rpsbml_gem,
-                                    target_reaction, target_coefficient,
-                                    is_max,
-                                    pathway_id, objective_id,
-                                    logger=logger)
+        obj_val,rpsbml_gem = rp_fba(
+            rpsbml_gem,
+            target_reaction,
+            target_coefficient,
+            is_max,
+            pathway_id,
+            objective_id,
+            logger=logger
+        )
     ####### pFBA #######
     elif sim_type == 'pfba':
-        obj_val,rpsbml_gem = rp_pfba(rpsbml_gem,
-                                     target_reaction, target_coefficient,
-                                     fraction_of,
-                                     is_max,
-                                     pathway_id, objective_id,
-                                     logger=logger)
+        obj_val,rpsbml_gem = rp_pfba(
+            rpsbml_gem,
+            target_reaction,
+            target_coefficient,
+            fraction_of,
+            is_max,
+            pathway_id,
+            objective_id,
+            logger=logger
+        )
     else:
         logger.error('Cannot recognise sim_type: '+str(sim_type))
     '''
