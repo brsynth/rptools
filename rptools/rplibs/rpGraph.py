@@ -32,7 +32,7 @@ class rpGraph:
         """
         self.logger = logger
 
-        self.logger.info('New instance of rpGraph')
+        self.logger.debug('New instance of rpGraph')
 
         self.rpsbml = rpsbml
         self.pathway_id = pathway_id
@@ -164,10 +164,10 @@ class rpGraph:
         only_produced_species = []
         for node_name in self.G.nodes():
             node = self.G.nodes.get(node_name)
-            self.logger.debug('node_name: '+str(node_name))
-            self.logger.debug('node: '+str(node))
+            # self.logger.debug('node_name: '+str(node_name))
+            # self.logger.debug('node: '+str(node))
             if node['type']=='species':
-                #NOTE: if central species then must also be rp_pathway species
+                # NOTE: if central species then must also be rp_pathway species
                 if (only_central and node['central_species']==True) or (only_rp_pathway and node['rp_pathway']==True) or (not only_central and not only_rp_pathway):
                     if len(list(self.G.successors(node_name)))==0 and len(list(self.G.predecessors(node_name)))>0:
                         only_produced_species.append(node_name)

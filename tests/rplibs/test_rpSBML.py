@@ -201,20 +201,34 @@ class Test_rpSBML(TestCase):
 
     def test_readReactionSpecies(self):
         self.assertDictEqual(self.rpsbml.readReactionSpecies(
-                self.rpsbml.getModel().getReaction('rxn_3')),
+            self.rpsbml.getModel().getReaction('rxn_3')),
                 {
                     'left': {'CMPD_0000000004__64__MNXC3': 1,
                              'MNXM1__64__MNXC3': 1},
                     'right': {'TARGET_0000000001__64__MNXC3': 1,
-                              'MNXM13__64__MNXC3': 1}})
+                              'MNXM13__64__MNXC3': 1}
+                }
+        )
 
 
     def test_mergeModels(self):
-        target_rpsbml = rpSBML(os_path.join(self.data_path, 'e_coli_model.sbml'))
-        rpSBML.mergeModels(self.rpsbml,
-                           target_rpsbml,
-                           logger=self.logger)
-        ref_target_rpsbml = rpSBML(os_path.join(self.data_path, 'merged_sbml.xml'))
+        target_rpsbml = rpSBML(
+            os_path.join(
+                self.data_path,
+                'e_coli_model.sbml'
+            )
+        )
+        spe_src_tgt, rxns_src_tgt = rpSBML.mergeModels(
+            self.rpsbml,
+            target_rpsbml,
+            logger=self.logger
+            )
+        ref_target_rpsbml = rpSBML(
+            os_path.join(
+                self.data_path,
+                'merged_sbml.xml'
+            )
+        )
         self.assertEqual(target_rpsbml, ref_target_rpsbml)
 
 
