@@ -5,6 +5,7 @@ from rptools.rpfba.rpFBA import rp_fba, rp_fraction, rp_pfba
 from rptools.rplibs      import rpSBML
 from brs_utils import create_logger
 
+
 class Test_rpFBA(TestCase):
 
     """
@@ -66,6 +67,7 @@ class Test_rpFBA(TestCase):
 
         # make sure that the results are written to the file
         pathway = rpsbml.toDict()['pathway']['brsynth']
+        print(pathway)
         self.assertAlmostEqual(
             pathway['fba_obj_Rxn_sink']['value'],
             ref_score
