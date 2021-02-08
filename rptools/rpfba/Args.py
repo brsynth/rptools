@@ -1,4 +1,5 @@
 from argparse  import ArgumentParser
+from rptools._version import __version__
 
 def build_args_parser():
     parser = ArgumentParser(prog='rpfba', description='Calculate FBA to generate rpFBA collection')
@@ -30,7 +31,7 @@ def _add_arguments(parser):
                         help='id of the sink species (default: rp_sink_species)')
     parser.add_argument('--objective_id',
                         type=str,
-                        default='None',
+                        default=None,
                         help='overwrite the auto-generated id of the results (default: None)')
     parser.add_argument('--compartment_id',
                         type=str,
@@ -38,6 +39,7 @@ def _add_arguments(parser):
                         help='SBML compartment id (default: MNXC3)')
     parser.add_argument('--sim_type',
                         type=str,
+                        choices=['fba', 'pfba', 'fraction'],
                         default='fraction',
                         help='type of simulation to use. Available simulation types include: \'fraction_reaction\', \'fba\', \'rpfba\'')
     parser.add_argument('--source_reaction',
@@ -46,7 +48,7 @@ def _add_arguments(parser):
                         help='reaction id of the source reaction')
     parser.add_argument('--target_reaction',
                         type=str,
-                        default='RP1_sink',
+                        default='Rxn_sink',
                         help='reaction id of the target reaction. Note that if \'fba\' or \'rpfba\' options are used, then these are ignored')
     parser.add_argument('--source_coefficient',
                         type=float,
@@ -62,6 +64,7 @@ def _add_arguments(parser):
     #                     help='number of workers (multi-threads)')
     parser.add_argument('--is_max',
                         action='store_true',
+                        default=True,
                         help='maximise the objective (default)')
     parser.add_argument('--fraction_of',
                         type=float,
@@ -71,7 +74,11 @@ def _add_arguments(parser):
                         action='store_true',
                         help='output the merged model (default)')
     parser.add_argument('--log', metavar='ARG',
-                        type=str, choices=['debug', 'info', 'warning', 'error', 'critical'],
-                        default='error',
+                        type=str, choices=['debug', 'info', 'warning', 'error', 'critical',
+                                           'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+                        default='def_info',
                         help='Adds a console logger for the specified level (default: error)')
+    parser.add_argument('--version', action='version',
+                        version='rptools.%(prog)s {}'.format(__version__),
+                        help='show the version number and exit')
     return parser
