@@ -232,26 +232,58 @@ class Test_rpSBML(TestCase):
         self.assertEqual(target_rpsbml, ref_target_rpsbml)
 
 
-    def test_mergeSBMLFiles(self):
+    def test_mergeFiles(self):
         with NamedTemporaryFile() as tempf:
-            rpSBML.mergeSBMLFiles(os_path.join(self.data_path, 'rpsbml.xml'),
-                                  os_path.join(self.data_path, 'e_coli_model.sbml'),
-                                  tempf.name,
-                                  logger=self.logger)
-            self.assertEqual(rpSBML(tempf.name), rpSBML(os_path.join(self.data_path, 'merged_sbml.xml')))
+            rpSBML.mergeFiles(
+                os_path.join(
+                    self.data_path,
+                    'rpsbml.xml'
+                ),
+                os_path.join(
+                    self.data_path,
+                    'e_coli_model.sbml'
+                ),
+                tempf.name,
+                logger = self.logger
+            )
+            self.assertEqual(
+                rpSBML(tempf.name),
+                rpSBML(
+                    os_path.join(
+                        self.data_path,
+                        'merged_sbml.xml'
+                    )
+                )
+            )
 
 
     def test_print(self):
-        rpsbml = rpSBML(name='rpSBML_test', logger=self.logger)
-        rpsbml.genericModel('RetroPath_Pathway_test',
-                            'RP_model_test',
-                            self.comp_xref,
-                            'MNXC3',
-                            999999,
-                            0)
+        rpsbml = rpSBML(
+            name='rpSBML_test',
+            logger=self.logger
+        )
+        rpsbml.genericModel(
+            'RetroPath_Pathway_test',
+            'RP_model_test',
+            self.comp_xref,
+            'MNXC3',
+            999999,
+            0
+        )
         rpsbml.createGroup('rp_pathway')
         rpsbml.createGroup('central_species')
         with NamedTemporaryFile() as tempf:
             rpsbml.writeSBML(tempf.name)
-            self.assertListEqual(list(io_open(tempf.name)),
-                                 list(io_open(os_path.join(self.data_path, 'rpSBML_test_sbml.xml'))))
+            self.assertListEqual(
+                list(
+                    io_open(tempf.name)
+                ),
+                list(
+                    io_open(
+                        os_path.join(
+                            self.data_path,
+                            'rpSBML_test_sbml.xml'
+                        )
+                    )
+                )
+            )
