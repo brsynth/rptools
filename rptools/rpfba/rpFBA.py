@@ -3,8 +3,9 @@ from logging import (
     getLogger
 )
 from cobra.flux_analysis import pfba
-from cobra               import io    as cobra_io
-from cobra.core.model    import Model as cobra_model
+from cobra               import io     as cobra_io
+from cobra.core.model    import Model  as cobra_model
+from pandas.core.series  import Series as np_series
 from rptools.rplibs      import rpSBML
 from typing import (
     List,
@@ -176,7 +177,7 @@ def _rp_fba(
         logger.error('Cannot recognise sim_type: ' + str(sim_type))
         return -2, rpsbml
 
-    addAnalysisResults(
+    writeFBAResults(
         rpsbml,
         objective_id,
         cobra_results,
@@ -266,7 +267,7 @@ def rp_fraction(
         cobraModel = cobra(rpsbml)
         if not cobraModel:
             logger.error('Converting libSBML to CobraPy returned False')
-            addAnalysisResults(
+            writeFBAResults(
                 rpsbml,
                 source_obj_id,
                 0.0,
@@ -275,7 +276,7 @@ def rp_fraction(
             return 0.0, None
 
         cobra_results = cobraModel.optimize()
-        addAnalysisResults(
+        writeFBAResults(
             rpsbml,
             source_obj_id,
             cobra_results,
@@ -316,7 +317,7 @@ def rp_fraction(
     cobraModel = cobra(rpsbml)
     if not cobraModel:
         # although this may not be the greatest idea, set flux to 0.0 when cobrapy error
-        addAnalysisResults(
+        writeFBAResults(
             rpsbml,
             objective_id,
             0.0,
@@ -324,7 +325,7 @@ def rp_fraction(
         )
         return 0.0, None
     cobra_results = cobraModel.optimize()
-    addAnalysisResults(
+    writeFBAResults(
         rpsbml,
         objective_id,
         cobra_results,
@@ -428,18 +429,6 @@ def runFBA(
     rpsbml = rpSBML(rpsbml_path, logger=logger)
     logger.debug('input_sbml: ' + str(rpsbml))
 
-    # Save the central species
-    # groups = rpsbml.getPlugin('groups')
-    # central = groups.getGroup(species_group_id)
-    # sink_group = groups.getGroup(sink_species_group_id)
-    # rp_group = groups.getGroup(pathway_id)
-    # cent_spe = [str(i.getIdRef()) for i in central.getListOfMembers()]
-    # sink_spe = [str(i.getIdRef()) for i in sink_group.getListOfMembers()]
-    # rp_reac  = [str(i.getIdRef()) for i in rp_group.getListOfMembers()]
-    # logger.debug('old central species: '+str(cent_spe))
-    # logger.debug('old sink species: '+str(sink_spe))
-    # logger.debug('old rp reactions: '+str(rp_reac))
-
     rpsbml_gem = rpSBML(gem_sbml_path, logger=logger)
     logger.debug('rpsbml_gem: ' + str(rpsbml_gem))
 
@@ -458,10 +447,6 @@ def runFBA(
     if tgt_rxn_id in reactions:
         logger.warning('The target_reaction ('+str(tgt_rxn_id)+') has been detected in model '+str(outFile)+', ignoring this model...')
         return False
-    # rev_reactions = {v: k for k, v in reactions.items()}
-    # logger.debug('species: ' + str(species))
-    # logger.debug('reactions:     ' + str(reactions))
-    # logger.debug('rev_reactions: ' + str(rev_reactions))
 
     ######## FBA ########
     if sim_type == 'fraction':
@@ -512,6 +497,22 @@ def runFBA(
         rpfba.runMultiObjective(reactions, coefficients, is_max, pathway_id)
     '''
     if dont_merge:
+        # Save the central species
+        groups = rpsbml.getPlugin('groups')
+        central = groups.getGroup(species_group_id)
+        sink_group = groups.getGroup(sink_species_group_id)
+        rp_group = groups.getGroup(pathway_id)
+        cent_spe = [str(i.getIdRef()) for i in central.getListOfMembers()]
+        sink_spe = [str(i.getIdRef()) for i in sink_group.getListOfMembers()]
+        rp_reac  = [str(i.getIdRef()) for i in rp_group.getListOfMembers()]
+        logger.debug('old central species: '+str(cent_spe))
+        logger.debug('old sink species: '+str(sink_spe))
+        logger.debug('old rp reactions: '+str(rp_reac))
+
+        rev_reactions = {v: k for k, v in reactions.items()}
+        logger.debug('species:       ' + str(species))
+        logger.debug('reactions:     ' + str(reactions))
+        logger.debug('rev_reactions: ' + str(rev_reactions))
         logger.info('Building model with heterologous pathway only')
         groups = rpsbml_gem.getPlugin('groups')
         rp_pathway = groups.getGroup(pathway_id)
@@ -523,7 +524,7 @@ def runFBA(
             logger.debug(reacFBA)
             try:
                 #reacIN = rpsbml.model.getReaction(reactions_convert[member.getIdRef()])
-                reacIN = rpsbml.getModel().getReaction(rev_reactions_convert[member.getIdRef()])
+                reacIN = rpsbml.getModel().getReaction(rev_reactions[member.getIdRef()])
             except KeyError:
                 reacIN = rpsbml.getModel().getReaction(member.getIdRef())
             logger.debug(reacIN)
@@ -632,7 +633,7 @@ def cobra(
     return cobraModel
 
 
-def addAnalysisResults(
+def writeFBAResults(
     rpsbml: rpSBML,
     objective_id: str,
     cobra_results,
@@ -654,66 +655,180 @@ def addAnalysisResults(
 
     rpsbml.logger.debug('----- Setting the results for '+str(objective_id)+ ' -----')
 
-    rp_pathway = rpsbml.getGroup(
-        rpsbml.getPlugin('groups'),
-        pathway_id
+    write_objective_to_pathway(
+        cobra_results.objective_value,
+        rpsbml,
+        pathway_id,
+        objective_id
     )
 
-    # write the results to the rp_pathway
-    rpsbml.logger.debug('Set '+str(pathway_id)+' with '+str('fba_'+str(objective_id))+' to '+str(cobra_results.objective_value))
-    rpsbml.updateBRSynth(
-        rp_pathway,
-        'fba_'+str(objective_id),
-        str(cobra_results.objective_value),
-        'mmol_per_gDW_per_hr',
-        False
+    write_fluxes_to_objectives(
+        cobra_results.fluxes,
+        cobra_results.objective_value,
+        rpsbml,
+        objective_id,
+    )
+
+    write_fluxes_to_reactions(
+        cobra_results.fluxes,
+        rpsbml,
+        pathway_id,
+        objective_id
+    )
+
+
+def write_fluxes_to_objectives(
+    fluxes: np_series,
+    objective_value: float,
+    rpsbml: rpSBML,
+    objective_id: str
+) -> None:
+    """
+    Write Cobra results to the reactions of pathway with id pathway_id in rpsbml object.
+
+    Parameters
+    ----------
+    fluxes: np_series
+        Fluxes.
+    objective_value: float
+        Value of the objective.
+    rpsbml: rpSBML
+        rpSBML object of which reactions will be updated with results
+    objective_id: str
+        The id of the objective to optimise
+    """
+
+    rpsbml.logger.debug(
+        'Set the objective ' + str(objective_id) \
+      + ' a flux_value of ' + str(objective_value)
     )
 
     # get the objective
     obj = getObjective(
         rpsbml,
         objective_id,
-        cobra_results.objective_value
+        objective_value
     )
 
-    rpsbml.logger.debug('Set the objective '+str(objective_id)+' a flux_value of '+str(cobra_results.objective_value))
     for flux_obj in obj.getListOfFluxObjectives():
-        # sometimes flux cannot be returned
-        if cobra_results.fluxes.get(flux_obj.getReaction()) is None:
-            rpsbml.logger.warning('Cobra BUG: Cannot retreive '+str(flux_obj.getReaction())+' flux from cobrapy... setting to 0.0')
-            rpsbml.updateBRSynth(
-                flux_obj,
-                'flux_value',
-                str(0.0),
-                'mmol_per_gDW_per_hr',
-                False
-            )
-            rpsbml.logger.debug('Set the reaction '+str(flux_obj.getReaction())+' a flux_value of '+str(0.0))
-        else:
-            rpsbml.updateBRSynth(
-                flux_obj,
-                'flux_value',
-                str(cobra_results.fluxes.get(flux_obj.getReaction())),
-                'mmol_per_gDW_per_hr',
-                False
-            )
-            rpsbml.logger.debug('Set the reaction '+str(flux_obj.getReaction())+' a flux_value of '+str(cobra_results.fluxes.get(flux_obj.getReaction())))
 
-    # write all the results to the reactions of pathway_id
-    for member in rp_pathway.getListOfMembers():
-        reac = rpsbml.getModel().getReaction(member.getIdRef())
-        if reac is None:
-            rpsbml.logger.error('Cannot retreive the following reaction: '+str(member.getIdRef()))
-            #return False
-            continue
-        rpsbml.logger.debug('Set the reaction '+str(member.getIdRef())+' a '+str('fba_'+str(objective_id))+' of '+str(cobra_results.fluxes.get(reac.getId())))
+        rxn = flux_obj.getReaction()
+        flux = fluxes.get(rxn)
+
+        # sometimes flux cannot be returned
+        if flux is None:
+            rpsbml.logger.warning(
+                'Cobra BUG: Cannot retreive ' + str(rxn) \
+              + ' flux from cobrapy... setting to 0.0'
+            )
+            flux = 0.0
+
+        rpsbml.logger.debug(
+            'Set the reaction ' + str(rxn) \
+            + ' a flux_value of ' + str(flux)
+        )
         rpsbml.updateBRSynth(
-            reac,
-            'fba_'+str(objective_id),
-            str(cobra_results.fluxes.get(reac.getId())),
+            flux_obj,
+            'flux_value',
+            str(flux),
             'mmol_per_gDW_per_hr',
             False
         )
+
+
+def write_fluxes_to_reactions(
+    fluxes: np_series,
+    rpsbml: rpSBML,
+    pathway_id: str,
+    objective_id: str
+) -> None:
+    """
+    Write Cobra results to the reactions of pathway with id pathway_id in rpsbml object.
+
+    Parameters
+    ----------
+    fluxes: np_series
+        Fluxes.
+    rpsbml: rpSBML
+        rpSBML object of which reactions will be updated with results
+    pathway_id: str
+        The id of the pathway within reactions will be updated
+    objective_id: str
+        The id of the objective to optimise
+    """
+
+    rp_pathway = rpsbml.getGroup(
+        rpsbml.getPlugin('groups'),
+        pathway_id
+    )
+
+    for member in rp_pathway.getListOfMembers():
+
+        rxn = rpsbml.getModel().getReaction(member.getIdRef())
+
+        if rxn is None:
+            rpsbml.logger.error(
+                'Cannot retreive the following reaction: ' \
+              + str(member.getIdRef())
+            )
+            #return False
+            continue
+        
+        flux = fluxes.get(rxn.getId())
+
+        rpsbml.logger.debug(
+            'Set the reaction ' + str(member.getIdRef()) \
+          + ' a ' + str('fba_' + str(objective_id)) \
+          + ' of ' + str(flux))
+        rpsbml.updateBRSynth(
+            rxn,
+            'fba_'+str(objective_id),
+            str(flux),
+            'mmol_per_gDW_per_hr',
+            False
+        )
+
+
+def write_objective_to_pathway(
+    objective_value: float,
+    rpsbml: rpSBML,
+    pathway_id: str,
+    objective_id: str
+) -> None:
+    """
+    Write Cobra results to the pathway with id pathway_id in rpsbml object.
+
+    Parameters
+    ----------
+    objective_value: float
+        Value of the objective.
+    rpsbml: rpSBML
+        rpSBML object of which reactions will be updated with results
+    pathway_id: str
+        The id of the pathway within reactions will be updated
+    objective_id: str
+        The id of the objective to optimise
+    """
+
+    rp_pathway = rpsbml.getGroup(
+        rpsbml.getPlugin('groups'),
+        pathway_id
+    )
+
+    rpsbml.logger.debug(
+        'Set ' + str(pathway_id) + ' with ' \
+      + str('fba_'+str(objective_id)) + ' to ' \
+      + str(objective_value)
+    )
+
+    rpsbml.updateBRSynth(
+        rp_pathway,
+        'fba_'+str(objective_id),
+        str(objective_value),
+        'mmol_per_gDW_per_hr',
+        False
+    )
+
 
 
 def getObjective(
@@ -722,9 +837,9 @@ def getObjective(
     objective_value: float 
 ) -> None:
 
-    fbc_plugin = rpsbml.getPlugin('fbc')
-
-    objective = fbc_plugin.getObjective(objective_id)
+    objective = rpsbml.getPlugin(
+        'fbc'
+    ).getObjective(objective_id)
 
     rpsbml.checklibSBML(
         objective,
@@ -806,7 +921,7 @@ def getObjective(
 #     if not cobraModel:
 #         return False
 #     cobra_results = cobraModel.optimize()
-#     rpsbml.addAnalysisResults(objective_id, cobra_results, pathway_id)
+#     rpsbml.writeFBAResults(objective_id, cobra_results, pathway_id)
 #     return rpsbml
 
 
