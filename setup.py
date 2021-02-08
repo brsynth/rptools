@@ -12,12 +12,17 @@ def read_readme(filename):
 ## RELEASE
 def get_version(filename):
     with open(filename, 'r') as f:
-        line = f.readline()
-        while line:
-            match = re_search("^## (\d\.\d\.\d)$", line)
-            if match:
-                return match.group(1)
-            line = f.readline()
+        m = re_search('"(.+)"', f.readline().split('=')[1])
+        if m:
+            return m.group(1)
+
+    # with open(filename, 'r') as f:
+    #     line = f.readline()
+    #     while line:
+    #         match = re_search("^## (\d\.\d\.\d)$", line)
+    #         if match:
+    #             return match.group(1)
+    #         line = f.readline()
 
 
 ## EXTRAS INFOS
@@ -64,7 +69,7 @@ extras_infos = get_extras(os_path.join('extras', '.env'))
 ## SETUP
 setup(
     name                          = extras_infos['package'],
-    version                       = get_version('RELEASE'),
+    version                       = get_version(os_path.join(extras_infos['package'], '_version.py')),
     author                        = extras_infos['authors'],
     author_email                  = extras_infos['corr_authors'],
     description                   = extras_infos['descr'],
