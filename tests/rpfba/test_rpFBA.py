@@ -32,7 +32,7 @@ class Test_rpFBA(TestCase):
         ref_score = 9.230769230769237
         obj_value, rpsbml = rp_fba(
                  rpsbml = self.rpsbml,
-            reaction_id = 'Rxn_sink',
+            reaction_id = 'rxn_sink',
                  logger = self.logger
         )
         self.assertTrue(rpsbml)
@@ -43,7 +43,7 @@ class Test_rpFBA(TestCase):
         # make sure that the results are written to the file
         pathway = rpsbml.toDict()['pathway']['brsynth']
         self.assertAlmostEqual(
-            pathway['fba_obj_Rxn_sink']['value'],
+            pathway['fba_obj_rxn_sink']['value'],
             ref_score
         )
 
@@ -54,7 +54,7 @@ class Test_rpFBA(TestCase):
                 rpsbml = self.rpsbml,
             src_rxn_id = 'biomass',
              src_coeff = 1.0,
-            tgt_rxn_id = 'Rxn_sink',
+            tgt_rxn_id = 'rxn_sink',
              tgt_coeff = 1.0,
                 logger = self.logger
         )
@@ -69,7 +69,7 @@ class Test_rpFBA(TestCase):
         pathway = rpsbml.toDict()['pathway']['brsynth']
         print(pathway)
         self.assertAlmostEqual(
-            pathway['fba_obj_Rxn_sink']['value'],
+            pathway['fba_obj_rxn_sink']['value'],
             ref_score
         )
         self.assertAlmostEqual(
@@ -82,7 +82,7 @@ class Test_rpFBA(TestCase):
         ref_score = 859.3846153846168
         obj_value, rpsbml = rp_pfba(
                  rpsbml = self.rpsbml,
-            reaction_id = 'Rxn_sink',
+            reaction_id = 'rxn_sink',
                  logger = self.logger
         )
         self.assertTrue(rpsbml)
@@ -93,6 +93,6 @@ class Test_rpFBA(TestCase):
         # make sure that the results are written to the file
         pathway = rpsbml.toDict()['pathway']['brsynth']
         self.assertAlmostEqual(
-            pathway['fba_obj_Rxn_sink']['value'],
+            pathway['fba_obj_rxn_sink']['value'],
             ref_score
         )

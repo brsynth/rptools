@@ -71,7 +71,7 @@ def _add_arguments(parser):
     parser.add_argument(
         '--target_reaction',
         type=str,
-        default='Rxn_sink',
+        default='rxn_sink',
         help='reaction id of the target reaction. Note that if \'fba\' or \'rpfba\' options are used, then these are ignored'
     )
     parser.add_argument(
