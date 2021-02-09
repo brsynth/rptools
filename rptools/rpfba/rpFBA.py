@@ -3,9 +3,10 @@ from logging import (
     getLogger
 )
 from cobra.flux_analysis import pfba
-from cobra               import io     as cobra_io
-from cobra.core.model    import Model  as cobra_model
-from pandas.core.series  import Series as np_series
+from cobra               import io       as cobra_io
+from cobra.core.model    import Model    as cobra_model
+from cobra.core.solution import Solution as cobra_solution
+from pandas.core.series  import Series   as np_series
 from rptools.rplibs      import rpSBML
 from typing import (
     List,
@@ -150,7 +151,8 @@ def _rp_fba(
     
     fbc_plugin = rpsbml.getPlugin('fbc')
 
-    objective_id = rpsbml.FindOrCreateObjective(
+    objective_id = FindOrCreateObjective(
+        rpsbml,
         [reaction_id],
         [coefficient],
         is_max,
@@ -237,17 +239,20 @@ def rp_fraction(
 
     # retreive the biomass objective and flux results and set as maxima
     fbc_plugin = rpsbml.getPlugin('fbc')
-    source_obj_id = rpsbml.FindOrCreateObjective([src_rxn_id], [src_coeff], is_max)
+    source_obj_id = FindOrCreateObjective(
+        rpsbml,
+        [src_rxn_id],
+        [src_coeff],
+        is_max
+    )
 
     # TODO: use the rpSBML BRSynth annotation parser
-    source_flux = None
     try:
         fbc_obj = fbc_plugin.getObjective(source_obj_id)
         # TODO: if this is None need to set it up
         fbc_obj_annot = fbc_obj.getAnnotation()
-        if not fbc_obj_annot:
+        if fbc_obj_annot is None:
             raise ValueError
-        source_flux = float(fbc_obj_annot.getChild('RDF').getChild('BRSynth').getChild('brsynth').getChild(0).getAttrValue('value'))
         logger.debug('Already calculated flux for '+str(source_obj_id))
 
     except (AttributeError, ValueError) as e:
@@ -256,7 +261,7 @@ def rp_fraction(
 
         ### FBA ###
         # logger.info('Running the FBA (fraction of reaction)...')
-        # self.runFBA(source_reaction, source_coefficient, is_max, pathway_id)
+        # rpsbml.runFBA(source_reaction, source_coefficient, is_max, pathway_id)
         rpsbml.checklibSBML(
             fbc_plugin.setActiveObjectiveId(
                 source_obj_id
@@ -264,23 +269,11 @@ def rp_fraction(
             'Setting active objective '+str(source_obj_id)
         )
 
-        cobraModel = cobra(rpsbml)
-        if not cobraModel:
-            logger.error('Converting libSBML to CobraPy returned False')
-            writeFBAResults(
-                rpsbml,
-                source_obj_id,
-                0.0,
-                pathway_id
-            )
-            return 0.0, None
-
-        cobra_results = cobraModel.optimize()
-        writeFBAResults(
-            rpsbml,
-            source_obj_id,
-            cobra_results,
-            pathway_id
+        cobra_results = RunCobraAndWriteResults(
+            rpsbml = rpsbml,
+            objective_id = source_obj_id,
+            pathway_id = pathway_id,
+            logger = logger
         )
 
         # cobra_results.objective_value
@@ -288,14 +281,28 @@ def rp_fraction(
         fbc_obj_annot = fbc_obj.getAnnotation()
         if fbc_obj_annot is None:
             logger.error('No annotation available for: '+str(source_obj_id))
-        source_flux = float(fbc_obj_annot.getChild('RDF').getChild('BRSynth').getChild('brsynth').getChild(0).getAttrValue('value'))
+
+    source_flux = float(
+        fbc_obj_annot.getChild(
+            'RDF'
+        ).getChild(
+            'BRSynth'
+        ).getChild(
+            'brsynth'
+        ).getChild(
+            0
+        ).getAttrValue(
+            'value'
+        )
+    )
 
     # TODO: add another to check if the objective id exists
     logger.debug('FBA source flux ('+str(src_rxn_id)+') is: '+str(source_flux))
     if not objective_id:
         objective_id = 'obj_'+str(tgt_rxn_id)+'__restricted_'+str(src_rxn_id)
 
-    objective_id = rpsbml.FindOrCreateObjective(
+    objective_id = FindOrCreateObjective(
+        rpsbml,
         [tgt_rxn_id],
         [tgt_coeff],
         is_max,
@@ -303,8 +310,8 @@ def rp_fraction(
     )
 
     logger.debug('Optimising the objective: '+str(objective_id))
-    logger.debug('Setting upper bound: '+str(source_flux*frac_of_src))
-    logger.debug('Setting loer bound: '+str(source_flux*frac_of_src))
+    logger.debug('     Setting upper bound: '+str(source_flux*frac_of_src))
+    logger.debug('      Setting loer bound: '+str(source_flux*frac_of_src))
     old_upper_bound, old_lower_bound = rpsbml.setReactionConstraints(
         src_rxn_id,
         source_flux*frac_of_src,
@@ -314,34 +321,124 @@ def rp_fraction(
         fbc_plugin.setActiveObjectiveId(objective_id),
         'Setting active objective '+str(objective_id)
     )
-    cobraModel = cobra(rpsbml)
-    if not cobraModel:
-        # although this may not be the greatest idea, set flux to 0.0 when cobrapy error
-        writeFBAResults(
-            rpsbml,
-            objective_id,
-            0.0,
-            pathway_id
-        )
-        return 0.0, None
-    cobra_results = cobraModel.optimize()
-    writeFBAResults(
-        rpsbml,
-        objective_id,
-        cobra_results,
-        pathway_id
+
+    cobra_results = RunCobraAndWriteResults(
+        rpsbml = rpsbml,
+        objective_id = objective_id,
+        pathway_id = pathway_id,
+        logger = logger
     )
+
     ##### print the biomass results ######
     logger.debug('Biomass: '+str(cobra_results.fluxes.biomass))
-    logger.debug('Target: '+str(cobra_results.fluxes.rxn_sink))
+    logger.debug(' Target: '+str(cobra_results.fluxes.rxn_sink))
+
     # reset the bounds to the original values for the target
     old_upper_bound, old_lower_bound = rpsbml.setReactionConstraints(
         src_rxn_id,
         old_upper_bound,
         old_lower_bound
     )
+
     logger.debug('The objective '+str(objective_id)+' results '+str(cobra_results.objective_value))
+
     return cobra_results.objective_value, rpsbml
+
+
+def FindOrCreateObjective(
+    rpsbml: rpSBML,
+    reactions: List[str],
+    coefficients: List[float],
+    isMax: bool = True,
+    objective_id: str = None
+) -> str:
+    """Find the objective (with only one reaction associated) based on the reaction ID and if not found create it
+
+    :param reactions: List of the reactions id's to set as objectives
+    :param coefficients: List of the coefficients about the objectives
+    :param isMax: Maximise or minimise the objective
+    :param objective_id: overwite the default id if created (from obj_[reactions])
+
+    :type reactions: list
+    :type coefficients: list
+    :type isMax: bool
+    :type objective_id: str
+
+    :raises FileNotFoundError: If the file cannot be found
+    :raises AttributeError: If the libSBML command encounters an error or the input value is None
+
+    :rtype: str
+    :return: Objective ID
+    """
+    fbc_plugin = rpsbml.getPlugin('fbc')
+
+    if objective_id is None:
+        objective_id = 'obj_'+'_'.join(reactions)
+        rpsbml.logger.debug('Set objective as \''+str(objective_id)+'\'')
+
+    for objective in fbc_plugin.getListOfObjectives():
+
+        if objective.getId()==objective_id:
+            rpsbml.logger.warning('The specified objective id ('+str(objective_id)+') already exists')
+            return objective_id
+
+        if not set([i.getReaction() for i in objective.getListOfFluxObjectives()])-set(reactions):
+            # TODO: consider setting changing the name of the objective
+            rpsbml.logger.warning('The specified objective id ('+str(objective_id)+') has another objective with the same reactions: '+str(objective.getId()))
+            return objective.getId()
+
+    # If cannot find a valid objective create it
+    rpsbml.createMultiFluxObj(objective_id,
+                            reactions,
+                            coefficients,
+                            isMax)
+
+    return objective_id
+
+
+def RunCobraAndWriteResults(
+    rpsbml: rpSBML,
+    objective_id: str,
+    pathway_id: str,
+    logger: Logger = getLogger(__name__)
+) -> cobra_solution:
+    """
+    Run Cobra and write results to the rpsbml object.
+
+    Parameters
+    ----------
+    rpsbml: rpSBML
+        rpSBML object of which reactions will be updated with results
+    objective_id: str
+        The id of the objective to optimise
+    pathway_id: str
+        The id of the pathway within reactions will be updated
+    logger
+        Logger object
+    """
+
+    cobraModel = cobra(rpsbml)
+
+    if not cobraModel:
+        logger.error('Converting libSBML to CobraPy returned False')
+        # writeFBAResults(
+        #     rpsbml,
+        #     source_obj_id,
+        #     0.0,
+        #     pathway_id
+        # )
+        return -1, None
+
+    cobra_results = cobraModel.optimize()
+    
+    writeFBAResults(
+        rpsbml,
+        objective_id,
+        cobra_results,
+        pathway_id
+    )
+
+    return cobra_results
 
 
 # TODO: do not use the species_group_id and the sink_species_group_id. Loop through all the groups (and if the same) and overwrite the annotation instead
@@ -409,21 +506,21 @@ def runFBA(
     :rtype: bool
     """
 
-    logger.debug('rpsbml_path:           ' + str(rpsbml_path))
-    logger.debug('gem_sbml_path:         ' + str(gem_sbml_path))
-    logger.debug('outFile:               ' + str(outFile))
-    logger.debug('sim_type:              ' + str(sim_type))
-    logger.debug('src_rxn_id:            ' + src_rxn_id)
-    logger.debug('src_coeff:             ' + str(src_coeff))
-    logger.debug('tgt_rxn_id:            ' + tgt_rxn_id)
-    logger.debug('tgt_coeff:             ' + str(tgt_coeff))
-    logger.debug('frac_of_src:           ' + str(frac_of_src))
-    logger.debug('is_max:                ' + str(is_max))
-    logger.debug('dont_merge:            ' + str(dont_merge))
-    logger.debug('pathway_id:            ' + pathway_id)
-    logger.debug('objective_id:          ' + str(objective_id))
-    logger.debug('compartment_id:        ' + str(compartment_id))
-    logger.debug('species_group_id:      ' + str(species_group_id))
+    logger.debug('          rpsbml_path: ' + str(rpsbml_path))
+    logger.debug('        gem_sbml_path: ' + str(gem_sbml_path))
+    logger.debug('              outFile: ' + str(outFile))
+    logger.debug('             sim_type: ' + str(sim_type))
+    logger.debug('           src_rxn_id: ' + src_rxn_id)
+    logger.debug('            src_coeff: ' + str(src_coeff))
+    logger.debug('           tgt_rxn_id: ' + tgt_rxn_id)
+    logger.debug('            tgt_coeff: ' + str(tgt_coeff))
+    logger.debug('          frac_of_src: ' + str(frac_of_src))
+    logger.debug('               is_max: ' + str(is_max))
+    logger.debug('           dont_merge: ' + str(dont_merge))
+    logger.debug('           pathway_id: ' + pathway_id)
+    logger.debug('         objective_id: ' + str(objective_id))
+    logger.debug('       compartment_id: ' + str(compartment_id))
+    logger.debug('     species_group_id: ' + str(species_group_id))
     logger.debug('sink_species_group_id: ' + str(sink_species_group_id))
 
     rpsbml = rpSBML(rpsbml_path, logger=logger)
@@ -445,8 +542,12 @@ def runFBA(
     # BUG: when merging the rxn_sink (very rare cases) can be recognised if another reaction contains the same species as a reactant
     ## under such as scenario the algorithm will consider that they are the same -- TODO: overwrite it
     if tgt_rxn_id in reactions:
-        logger.warning('The target_reaction ('+str(tgt_rxn_id)+') has been detected in model '+str(outFile)+', ignoring this model...')
-        return False
+        logger.warning(
+            'The target_reaction ('+str(tgt_rxn_id)+')' \
+          + ' has been detected in model ' + str(outFile) \
+          + ', ignoring this model...'
+        )
+        return 0.0, None
 
     ######## FBA ########
     if sim_type == 'fraction':
@@ -489,6 +590,8 @@ def runFBA(
         return 0.0, None
 
     if obj_val < 0:
+        # logger.error('The Cobra model computed is None')
+        logger.error('Exiting program')
         return obj_val, rpsbml
 
     '''
@@ -619,12 +722,12 @@ def cobra(
     try:
         with NamedTemporaryFile() as temp_f:
             rpsbml.writeSBML(temp_f.name)
-            #self.logger.info(glob(tmpOutputFolder+'/*'))
-            #self.logger.info(cobra.io.validate_sbml_model(glob(tmpOutputFolder+'/*')[0]))
+            #rpsbml.logger.info(glob(tmpOutputFolder+'/*'))
+            #rpsbml.logger.info(cobra.io.validate_sbml_model(glob(tmpOutputFolder+'/*')[0]))
             cobraModel = cobra_io.read_sbml_model(temp_f.name, use_fbc_package=True)
-        #self.cobraModel = cobra.io.read_sbml_model(self.rpsbml.document.toXMLNode().toXMLString(), use_fbc_package=True)
+        #rpsbml.cobraModel = cobra.io.read_sbml_model(rpsbml.rpsbml.document.toXMLNode().toXMLString(), use_fbc_package=True)
         #use CPLEX
-        # self.cobraModel.solver = 'cplex'
+        # rpsbml.cobraModel.solver = 'cplex'
 
     except cobra_io.sbml.CobraSBMLError as e:
         rpsbml.logger.error(e)
@@ -636,7 +739,7 @@ def cobra(
 def writeFBAResults(
     rpsbml: rpSBML,
     objective_id: str,
-    cobra_results,
+    cobra_results: cobra_solution,
     pathway_id: str = 'rp_pathway'
 ) -> None:
     """Method to hardcode into BRSynth annotations the results of a COBRA analysis

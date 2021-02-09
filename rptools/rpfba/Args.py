@@ -13,14 +13,14 @@ def build_args_parser():
 
 def _add_arguments(parser):
     parser.add_argument(
-        'input_sbml',
+        'pathway',
         type=str,
-        help='input SBML file'
+        help='SBML file that contains an heterologous pathway'
     )
     parser.add_argument(
-        'gem_sbml',
+        'model',
         type=str,
-        help='GEM file')
+        help='GEM model file')
     parser.add_argument(
         'outfile',
         type=str,
@@ -56,7 +56,7 @@ def _add_arguments(parser):
         help='SBML compartment id (default: MNXC3)'
     )
     parser.add_argument(
-        '--sim_type',
+        '--sim',
         type=str,
         choices=['fba', 'pfba', 'fraction'],
         default='fraction',
@@ -66,25 +66,25 @@ def _add_arguments(parser):
         '--source_reaction',
         type=str,
         default='biomass',
-        help='reaction id of the source reaction'
+        help='reaction id of the source reaction (default: biomass)'
     )
     parser.add_argument(
         '--target_reaction',
         type=str,
         default='rxn_sink',
-        help='reaction id of the target reaction. Note that if \'fba\' or \'rpfba\' options are used, then these are ignored'
+        help='reaction id of the target reaction (default: rxn_sink). Note: if \'fba\' or \'rpfba\' options are used, then these are ignored'
     )
     parser.add_argument(
         '--source_coefficient',
         type=float,
         default=1.0,
-        help='source coefficient'
+        help='source coefficient (default: 1.0)'
     )
     parser.add_argument(
         '--target_coefficient',
         type=float,
         default=1.0,
-        help='target coefficient'
+        help='target coefficient (default: 1.0)'
     )
     # parser.add_argument('--num_workers',
     #                     type=int,
@@ -94,13 +94,13 @@ def _add_arguments(parser):
         '--is_max',
         action='store_true',
         default=True,
-        help='maximise the objective (default)'
+        help='maximise the objective'
     )
     parser.add_argument(
         '--fraction_of',
         type=float,
         default=0.75,
-        help='fraction of the optimum. Note that this value is ignored is \'fba\' is used'
+        help='fraction of the optimum (default: 0.75). Note: this value is ignored is \'fba\' is used'
     )
     parser.add_argument(
         '--dont_merge',
@@ -108,7 +108,8 @@ def _add_arguments(parser):
         help='output the merged model (default)'
     )
     parser.add_argument(
-        '--log', metavar='ARG',
+        '--log',
+        metavar='ARG',
         type=str,
         choices=[
             'debug', 'info', 'warning', 'error', 'critical',
@@ -118,8 +119,9 @@ def _add_arguments(parser):
         help='Adds a console logger for the specified level (default: error)'
     )
     parser.add_argument(
-        '--version', action='version',
-        version='rptools.%(prog)s {}'.format(__version__),
+        '--version',
+        action='version',
+        version='%(prog)s {}'.format(__version__),
         help='show the version number and exit'
     )
     return parser

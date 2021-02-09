@@ -21,10 +21,10 @@ def entry_point():
     logger.debug(args)
 
     result = runFBA(
-                  rpsbml_path = args.input_sbml,
-                gem_sbml_path = args.gem_sbml,
+                  rpsbml_path = args.pathway,
+                gem_sbml_path = args.model,
                       outFile = args.outfile,
-                     sim_type = args.sim_type,
+                     sim_type = args.sim,
                    src_rxn_id = args.source_reaction,
                    tgt_rxn_id = args.target_reaction,
                     src_coeff = args.source_coefficient,
