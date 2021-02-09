@@ -1,4 +1,3 @@
-import logging
 from unittest import TestCase
 from os import path as os_path
 from rptools.rpfba.rpFBA import (
@@ -7,12 +6,18 @@ from rptools.rpfba.rpFBA import (
     rp_pfba
 )
 from rptools.rplibs import rpSBML
-from tests.main import Main
-from brs_utils import extract_gz
-from tempfile import TemporaryDirectory
+from tempfile import (
+    TemporaryDirectory,
+    mkdtemp
+)
+from shutil    import rmtree
+from brs_utils import (
+    create_logger,
+    extract_gz
+)
 
 
-class Test_rpFBA(Main):
+class Test_rpFBA(TestCase):
 
 
     data_path = os_path.join(
@@ -24,9 +29,14 @@ class Test_rpFBA(Main):
         'merged.xml.gz'
     )
 
-
     def setUp(self):
-        super().setUp()
+        self.logger = create_logger(__name__, 'ERROR')
+
+        # Create persistent temp folder
+        # to deflate compressed data file so that
+        # it remains reachable outside of this method.
+        # Has to remove manually it in tearDown() method 
+        self.temp_d = mkdtemp()
         self.merged_path = extract_gz(
             self.merged_path_gz,
             self.temp_d
@@ -38,6 +48,10 @@ class Test_rpFBA(Main):
                 inFile = self.merged_path,
                 logger = self.logger
             )
+
+
+    def tearDown(self):
+        rmtree(self.temp_d)
 
 
     def test_fba(self):

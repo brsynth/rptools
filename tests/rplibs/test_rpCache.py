@@ -7,10 +7,12 @@ Created on Jul 15 2020
 # import logging
 from unittest  import TestCase
 from rptools.rplibs import rpCache
-from tests.rplibs.main import Main_rplibs
+from main import Main_rplibs
 from brs_utils import extract_gz
-from os        import remove as os_rm
-from os        import path as os_path
+from os import (
+    remove as os_rm,
+    path as os_path
+)
 
 
 class Test_rpCache(Main_rplibs):

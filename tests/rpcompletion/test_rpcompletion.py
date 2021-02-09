@@ -8,16 +8,26 @@ import logging
 from tempfile             import TemporaryDirectory
 from rptools.rplibs       import rpCache, rpSBML
 from rptools.rpcompletion import rp_completion
-from rptools.rpcompletion.rpCompletion import build_side_rxn, rp2paths_to_dict
+from rptools.rpcompletion.rpCompletion import (
+    build_side_rxn,
+    rp2paths_to_dict
+)
 from os                   import path  as os_path
 from os                   import stat  as os_stat
 from io                   import open  as io_open
 from json                 import load  as json_load
 from json                 import dumps as json_dumps
-from tests.main           import Main
+from unittest import TestCase
+from brs_utils import (
+    create_logger,
+)
 
 
-class Test_rpCompletion(Main):
+class Test_rpCompletion(TestCase):
+
+
+    def setUp(self):
+        self.logger = create_logger(__name__, 'ERROR')
 
 
     def test_rp_completion(self):

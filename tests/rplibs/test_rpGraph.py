@@ -8,7 +8,7 @@ from unittest       import TestCase
 from rptools.rplibs import rpSBML, rpGraph
 from os             import path as os_path
 from pathlib        import Path
-from tests.rplibs.main import Main_rplibs
+from main import Main_rplibs
 
 
 class Test_rpGraph(Main_rplibs):

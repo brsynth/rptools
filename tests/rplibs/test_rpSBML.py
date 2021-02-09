@@ -13,7 +13,7 @@ from                os import path  as os_path
 from              json import load  as json_load
 from              json import loads as json_loads
 from                io import open  as io_open
-from tests.rplibs.main import Main_rplibs
+from main import Main_rplibs
 from brs_utils         import extract_gz
 
 

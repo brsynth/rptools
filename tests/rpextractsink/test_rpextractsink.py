@@ -5,7 +5,7 @@ Created on June 17 2020
 """
 
 # Generic for test process
-from tests.main import Main
+from unittest import TestCase
 
 # Specific for tool
 from rptools.rpextractsink import genSink
@@ -16,18 +16,27 @@ from pathlib  import Path
 from tempfile import NamedTemporaryFile
 from filecmp  import cmp
 from os       import path as os_path
-import logging
+from brs_utils import (
+    create_logger,
+    extract_gz
+)
+from shutil    import rmtree
+from tempfile  import mkdtemp
 
 
 # Cette classe est un groupe de tests. Son nom DOIT commencer
 # par 'Test' et la classe DOIT hériter de unittest.TestCase.
 # 'Test_' prefix is mandatory
-class Test_rpExtractSink(Main):
+class Test_rpExtractSink(TestCase):
 
 
     data_path = os_path.join(
         os_path.dirname(__file__),
         'data'
+    )
+    e_coli_model_path_gz = os_path.join(
+        data_path,
+        'e_coli_model.sbml.gz'
     )
 
     rpcache = rpCache(
@@ -37,7 +46,22 @@ class Test_rpExtractSink(Main):
 
 
     def setUp(self):
-        super().setUp()
+        self.logger = create_logger(__name__, 'ERROR')
+
+        # Create persistent temp folder
+        # to deflate compressed data file so that
+        # it remains reachable outside of this method.
+        # Has to remove manually it in tearDown() method 
+        self.temp_d = mkdtemp()
+
+        self.e_coli_model_path = extract_gz(
+            self.e_coli_model_path_gz,
+            self.temp_d
+        )
+
+
+    def tearDown(self):
+        rmtree(self.temp_d)
 
 
     def test_genSink(self):
