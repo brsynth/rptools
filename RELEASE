@@ -1,5 +1,9 @@
 # Release history
 
+## 2.3.0
+- fix rpfba tool
+- refactor datasets to save disk space
+
 ## 2.2.1
 - Clean code in rpcompletion
 

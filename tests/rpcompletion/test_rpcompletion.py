@@ -5,43 +5,50 @@ Created on Jul 15 2020
 """
 
 import logging
-from unittest             import TestCase
 from tempfile             import TemporaryDirectory
 from rptools.rplibs       import rpCache, rpSBML
 from rptools.rpcompletion import rp_completion
-from rptools.rpcompletion.rpCompletion import build_side_rxn, rp2paths_to_dict
+from rptools.rpcompletion.rpCompletion import (
+    build_side_rxn,
+    rp2paths_to_dict
+)
 from os                   import path  as os_path
 from os                   import stat  as os_stat
 from io                   import open  as io_open
 from json                 import load  as json_load
 from json                 import dumps as json_dumps
+from unittest import TestCase
+from brs_utils import (
+    create_logger,
+)
 
 
 class Test_rpCompletion(TestCase):
 
+
     def setUp(self):
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(getattr(logging, 'ERROR'))
-        self.logger.formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
+        self.logger = create_logger(__name__, 'ERROR')
 
 
     def test_rp_completion(self):
         with TemporaryDirectory() as temp_d:
             # temp_d = '/tmp/joan20'
-            result = rp_completion(self.rpcache,
-                                   self.rp2_pathways,
-                                   self.rp2paths_compounds,
-                                   self.rp2paths_pathways,
-                                   temp_d,
-                                   upper_flux_bound=999999,
-                                   lower_flux_bound=0,
-                                   max_subpaths_filter=10,
-                                   pathway_id='rp_pathway',
-                                   compartment_id='MNXC3',
-                                   species_group_id='central_species',
-                                   sink_species_group_id='rp_sink_species',
-                                   pubchem_search=False,
-                                   logger=self.logger)
+            result = rp_completion(
+                self.rpcache,
+                self.rp2_pathways,
+                self.rp2paths_compounds,
+                self.rp2paths_pathways,
+                temp_d,
+                upper_flux_bound=999999,
+                lower_flux_bound=0,
+                max_subpaths_filter=10,
+                pathway_id='rp_pathway',
+                compartment_id='MNXC3',
+                species_group_id='central_species',
+                sink_species_group_id='rp_sink_species',
+                pubchem_search=False,
+                logger=self.logger
+            )
             # Useless to sort files since smiles could be equivalent and not equal, then checksum will be different
             for file, size in self.files:
                 self.assertTrue(os_path.isfile(os_path.join(temp_d, file)))

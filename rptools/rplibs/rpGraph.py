@@ -32,7 +32,7 @@ class rpGraph:
         """
         self.logger = logger
 
-        self.logger.info('New instance of rpGraph')
+        self.logger.debug('New instance of rpGraph')
 
         self.rpsbml = rpsbml
         self.pathway_id = pathway_id
@@ -79,7 +79,12 @@ class rpGraph:
         rp_species_id = self.rpsbml.readUniqueRPspecies(pathway_id)
         rp_reactions_id = [i.getIdRef() for i in rp_pathway.getListOfMembers()]
         self.logger.debug('rp_reactions_id: '+str(rp_reactions_id))
-        self.G = nx.DiGraph(brsynth=self.rpsbml.readBRSYNTHAnnotation(rp_pathway.getAnnotation()))
+        self.G = nx.DiGraph(
+            brsynth = self.rpsbml.readBRSYNTHAnnotation(
+                annot = rp_pathway.getAnnotation(),
+                logger = self.logger
+            )
+        )
         #### add ALL the species and reactions ####
         #nodes
         for species in rpsbml_model.getListOfSpecies():
@@ -95,39 +100,57 @@ class rpGraph:
             #add it if GEM then all, or if rp_pathway
             if is_rp_pathway or is_gem_sbml:
                 self.num_species += 1
-                self.G.add_node(species.getId(),
-                                type='species',
-                                name=species.getName(),
-                                miriam=self.rpsbml.readMIRIAMAnnotation(species.getAnnotation()),
-                                brsynth=self.rpsbml.readBRSYNTHAnnotation(species.getAnnotation()),
-                                central_species=is_central,
-                                sink_species=is_sink,
-                                rp_pathway=is_rp_pathway)
+                self.G.add_node(
+                    species.getId(),
+                    type = 'species',
+                    name = species.getName(),
+                    miriam = self.rpsbml.readMIRIAMAnnotation(
+                        species.getAnnotation()
+                    ),
+                    brsynth = self.rpsbml.readBRSYNTHAnnotation(
+                        annot = species.getAnnotation(),
+                        logger = self.logger
+                    ),
+                    central_species = is_central,
+                    sink_species = is_sink,
+                    rp_pathway = is_rp_pathway
+                )
         for reaction in rpsbml_model.getListOfReactions():
             is_rp_pathway = False
             if reaction.getId() in rp_reactions_id:
                 is_rp_pathway = True
             if is_rp_pathway or is_gem_sbml:
                 self.num_reactions += 1
-                self.G.add_node(reaction.getId(),
-                                type='reaction',
-                                miriam=self.rpsbml.readMIRIAMAnnotation(reaction.getAnnotation()),
-                                brsynth=self.rpsbml.readBRSYNTHAnnotation(reaction.getAnnotation()),
-                                rp_pathway=is_rp_pathway)
+                self.G.add_node(
+                    reaction.getId(),
+                    type = 'reaction',
+                    miriam = self.rpsbml.readMIRIAMAnnotation(
+                        reaction.getAnnotation()
+                    ),
+                    brsynth = self.rpsbml.readBRSYNTHAnnotation(
+                        reaction.getAnnotation(),
+                        logger = self.logger
+                    ),
+                    rp_pathway = is_rp_pathway
+                )
         #edges
         for reaction in rpsbml_model.getListOfReactions():
             self.logger.debug('Adding edges for the reaction: '+str(reaction.getId()))
             if reaction.getId() in rp_reactions_id or is_gem_sbml:
                 for reac in reaction.getListOfReactants():
                     self.logger.debug('\taAdding edge '+str(reac.species)+' --> '+str(reaction.getId()))
-                    self.G.add_edge(reac.species,
-                                    reaction.getId(),
-                                    stoichio=reac.stoichiometry)
+                    self.G.add_edge(
+                        reac.species,
+                        reaction.getId(),
+                        stoichio = reac.stoichiometry
+                    )
                 for prod in reaction.getListOfProducts():
                     self.logger.debug('\taAdding edge '+str(reaction.getId())+' --> '+str(prod.species))
-                    self.G.add_edge(reaction.getId(),
-                                    prod.species,
-                                    stoichio=reac.stoichiometry)
+                    self.G.add_edge(
+                        reaction.getId(),
+                        prod.species,
+                        stoichio=reac.stoichiometry
+                    )
 
 
     def onlyConsumedSpecies(self, only_central=False, only_rp_pathway=True):
@@ -164,10 +187,10 @@ class rpGraph:
         only_produced_species = []
         for node_name in self.G.nodes():
             node = self.G.nodes.get(node_name)
-            self.logger.debug('node_name: '+str(node_name))
-            self.logger.debug('node: '+str(node))
+            # self.logger.debug('node_name: '+str(node_name))
+            # self.logger.debug('node: '+str(node))
             if node['type']=='species':
-                #NOTE: if central species then must also be rp_pathway species
+                # NOTE: if central species then must also be rp_pathway species
                 if (only_central and node['central_species']==True) or (only_rp_pathway and node['rp_pathway']==True) or (not only_central and not only_rp_pathway):
                     if len(list(self.G.successors(node_name)))==0 and len(list(self.G.predecessors(node_name)))>0:
                         only_produced_species.append(node_name)
