@@ -41,7 +41,13 @@ class rpSBML:
 
     """This class uses the libSBML object and handles it by adding BRSynth annotation
     """
-    def __init__(self, inFile='', document=None, name='', logger=getLogger(__name__)):
+    def __init__(
+        self,
+        inFile = '',
+        document = None,
+        name = '',
+        logger = getLogger(__name__)
+    ):
         """Constructor for the rpSBML class
 
         Note that the user can pass either a document libSBML object or a path to a SBML file. If a path is passed it overwrite the passed document object.
@@ -70,6 +76,7 @@ class rpSBML:
                 self.readSBML(inFile)
             except FileNotFoundError as e:
                 self.logger.error(e)
+                exit(-1)
         else:
             self.document = document if document else None
 
@@ -77,7 +84,10 @@ class rpSBML:
         self.setName(name if name else self.getName())
 
         # scores
-        self.score = {'value': -1, 'nb_rules': 0}
+        self.score = {
+            'value': -1,
+            'nb_rules': 0
+        }
         self.global_score = 0
 
         # headers
@@ -2965,60 +2975,6 @@ class rpSBML:
 
 
     #####################################################################
-    ########################## FindCreate ###############################
-    #####################################################################
-    def FindOrCreateObjective(
-        self,
-        reactions: List[str],
-        coefficients: List[float],
-        isMax: bool = True,
-        objective_id: str = None
-    ) -> str:
-        """Find the objective (with only one reaction associated) based on the reaction ID and if not found create it
-
-        :param reactions: List of the reactions id's to set as objectives
-        :param coefficients: List of the coefficients about the objectives
-        :param isMax: Maximise or minimise the objective
-        :param objective_id: overwite the default id if created (from obj_[reactions])
-
-        :type reactions: list
-        :type coefficients: list
-        :type isMax: bool
-        :type objective_id: str
-
-        :raises FileNotFoundError: If the file cannot be found
-        :raises AttributeError: If the libSBML command encounters an error or the input value is None
-
-        :rtype: str
-        :return: Objective ID
-        """
-        fbc_plugin = self.getPlugin('fbc')
-
-        if objective_id is None:
-            objective_id = 'obj_'+'_'.join(reactions)
-            self.logger.debug('Set objective as \''+str(objective_id)+'\'')
-
-        for objective in fbc_plugin.getListOfObjectives():
-
-            if objective.getId()==objective_id:
-                self.logger.warning('The specified objective id ('+str(objective_id)+') already exists')
-                return objective_id
-
-            if not set([i.getReaction() for i in objective.getListOfFluxObjectives()])-set(reactions):
-                # TODO: consider setting changing the name of the objective
-                self.logger.warning('The specified objective id ('+str(objective_id)+') has another objective with the same reactions: '+str(objective.getId()))
-                return objective.getId()
-
-        # If cannot find a valid objective create it
-        self.createMultiFluxObj(objective_id,
-                                reactions,
-                                coefficients,
-                                isMax)
-
-        return objective_id
-
-
-    #####################################################################
     ########################## READ #####################################
     #####################################################################
     # TODO: add error handling if the groups does not exist
@@ -3627,12 +3583,14 @@ class rpSBML:
     #########################################################################
     ############################# MODEL APPEND ##############################
     #########################################################################
-    def setReactionConstraints(self,
-                               reaction_id,
-                               upper_bound,
-                               lower_bound,
-                               unit='mmol_per_gDW_per_hr',
-                               is_constant=True):
+    def setReactionConstraints(
+        self,
+        reaction_id: str,
+        upper_bound: float,
+        lower_bound: float,
+        unit: str = 'mmol_per_gDW_per_hr',
+        is_constant: bool = True
+    ):
         """Set a given reaction's upper and lower bounds
 
         Sets the upper and lower bounds of a reaction. Note that if the numerical values passed
@@ -3653,22 +3611,28 @@ class rpSBML:
         :rtype: tuple or bool
         :return: bool if there is an error and tuple of the lower and upper bound
         """
+
         reaction = self.getModel().getReaction(reaction_id)
+
         if not reaction:
             self.logger.error('Cannot find the reaction: '+str(reaction_id))
             return False
+ 
         reac_fbc = reaction.getPlugin('fbc')
         rpSBML.checklibSBML(reac_fbc, 'extending reaction for FBC')
+ 
         ########## upper bound #############
         old_upper_value = self.getModel().getParameter(reac_fbc.getUpperFluxBound()).value
         upper_param = self.createReturnFluxParameter(upper_bound, unit, is_constant)
         rpSBML.checklibSBML(reac_fbc.setUpperFluxBound(upper_param.getId()),
             'setting '+str(reaction_id)+' upper flux bound')
+ 
         ######### lower bound #############
         old_lower_value = self.getModel().getParameter(reac_fbc.getLowerFluxBound()).value
         lower_param = self.createReturnFluxParameter(lower_bound, unit, is_constant)
         rpSBML.checklibSBML(reac_fbc.setLowerFluxBound(lower_param.getId()),
             'setting '+str(reaction_id)+' lower flux bound')
+
         return old_upper_value, old_lower_value
 
 
