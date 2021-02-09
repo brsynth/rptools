@@ -190,7 +190,7 @@
           <speciesReference species="MNXM11__64__MNXC3" stoichiometry="1" constant="true"/>
         </listOfProducts>
       </reaction>
-      <reaction metaid="b0e8d95d263519a4d780f40c409183c72eacbea19653effc5c41069ed4cf9269" sboTerm="SBO:0000176" id="rxn_sink" reversible="true" fast="false" fbc:lowerFluxBound="B_0" fbc:upperFluxBound="B_999999">
+      <reaction metaid="b0e8d95d263519a4d780f40c409183c72eacbea19653effc5c41069ed4cf9269" sboTerm="SBO:0000176" id="rxn_target" reversible="true" fast="false" fbc:lowerFluxBound="B_0" fbc:upperFluxBound="B_999999">
         <annotation>
           <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
             <rdf:Description rdf:about="#b0e8d95d263519a4d780f40c409183c72eacbea19653effc5c41069ed4cf9269">

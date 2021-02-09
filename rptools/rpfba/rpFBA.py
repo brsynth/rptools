@@ -331,7 +331,7 @@ def rp_fraction(
 
     ##### print the biomass results ######
     logger.debug('Biomass: '+str(cobra_results.fluxes.biomass))
-    logger.debug(' Target: '+str(cobra_results.fluxes.rxn_sink))
+    logger.debug(' Target: '+str(cobra_results.fluxes.rxn_target))
 
     # reset the bounds to the original values for the target
     old_upper_bound, old_lower_bound = rpsbml.setReactionConstraints(

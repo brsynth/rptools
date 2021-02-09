@@ -71,8 +71,8 @@ def _add_arguments(parser):
     parser.add_argument(
         '--target_reaction',
         type=str,
-        default='rxn_sink',
-        help='reaction id of the target reaction (default: rxn_sink). Note: if \'fba\' or \'rpfba\' options are used, then these are ignored'
+        default='rxn_target',
+        help='reaction id of the target reaction (default: rxn_target). Note: if \'fba\' or \'rpfba\' options are used, then these are ignored'
     )
     parser.add_argument(
         '--source_coefficient',
