@@ -1,6 +1,0 @@
-__pycache__
-.DS_Store
-.pypirc
-.pytest_cache
-*.cxl
-license*
