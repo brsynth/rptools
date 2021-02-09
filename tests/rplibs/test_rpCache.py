@@ -4,20 +4,21 @@ Created on Jul 15 2020
 @author: Joan Hérisson
 """
 
-import logging
+# import logging
 from unittest  import TestCase
 from rptools.rplibs import rpCache
+from tests.rplibs.main import Main_rplibs
 from brs_utils import extract_gz
 from os        import remove as os_rm
 from os        import path as os_path
 
 
-class Test_rpCache(TestCase):
+class Test_rpCache(Main_rplibs):
 
-    def setUp(self):
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(getattr(logging, 'ERROR'))
-        self.logger.formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
+
+    # def setUp(self):
+    #     super().setUp()
+
 
     def test_all_attr_db(self):
         r"""Test of loading all attributes in rpCache and store them in a db.
@@ -31,6 +32,7 @@ class Test_rpCache(TestCase):
             with self.subTest(attr=attr, length=length):
                 self.assertEqual(len(rpcache.get(attr)), length)
 
+
     def test_all_attr_file(self):
         r"""Test of loading all attributes in rpCache and store them in files.
 
@@ -42,6 +44,7 @@ class Test_rpCache(TestCase):
             with self.subTest(attr=attr, length=length):
                 self.assertEqual(len(rpcache.get(attr)), length)
 
+
     def test_single_attr_file(self):
         r"""Test of loading each attribute in rpCache and store it in a file.
 
@@ -52,6 +55,7 @@ class Test_rpCache(TestCase):
             with self.subTest(attr=attr, length=length):
                 rpcache = rpCache('file', [attr], logger=self.logger)
                 self.assertEqual(len(rpcache.get(attr)), length)
+
 
     def test_generate_cache(self):
         r"""Test of genrating all rpCache files from input_cache.
@@ -65,6 +69,7 @@ class Test_rpCache(TestCase):
             outfile = extract_gz(file, self.outdir)
             self.assertTrue(Main._check_file_size(outfile, size))
             os_rm(outfile)
+
 
     outdir = 'cache-3.2'
 

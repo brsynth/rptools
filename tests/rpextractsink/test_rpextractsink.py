@@ -5,7 +5,7 @@ Created on June 17 2020
 """
 
 # Generic for test process
-from unittest import TestCase
+from tests.main import Main
 
 # Specific for tool
 from rptools.rpextractsink import genSink
@@ -22,33 +22,60 @@ import logging
 # Cette classe est un groupe de tests. Son nom DOIT commencer
 # par 'Test' et la classe DOIT hériter de unittest.TestCase.
 # 'Test_' prefix is mandatory
-class Test_rpExtractSink(TestCase):
+class Test_rpExtractSink(Main):
 
-    rpcache   = rpCache('file', ['cid_strc'])
-    data_path = os_path.join(os_path.dirname(__file__), 'data')
+
+    data_path = os_path.join(
+        os_path.dirname(__file__),
+        'data'
+    )
+
+    rpcache = rpCache(
+        'file',
+        ['cid_strc']
+    )
+
 
     def setUp(self):
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(getattr(logging, 'ERROR'))
-        self.logger.formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
+        super().setUp()
+
 
     def test_genSink(self):
         outfile = NamedTemporaryFile(delete=True)
-        genSink(self.rpcache,
-                input_sbml=os_path.join(self.data_path, 'e_coli_model.sbml'),
-                output_sink=outfile.name,
-                remove_dead_end=False,
-                logger=self.logger)
+        genSink(
+            self.rpcache,
+            input_sbml = self.e_coli_model_path,
+            output_sink = outfile.name,
+            remove_dead_end = False,
+            logger = self.logger
+        )
         self.assertTrue(
-            cmp(Path(outfile.name), os_path.join(self.data_path, 'output_sink.csv')))
+            cmp(
+                Path(outfile.name),
+                os_path.join(
+                    self.data_path,
+                    'output_sink.csv'
+                )
+            )
+        )
         outfile.close()
+
 
     def test_genSink_rmDE(self):
         outfile = NamedTemporaryFile(delete=True)
-        genSink(self.rpcache,
-                input_sbml=os_path.join(self.data_path, 'e_coli_model.sbml'),
-                output_sink=outfile.name,
-                remove_dead_end=True)
+        genSink(
+            self.rpcache,
+            input_sbml = self.e_coli_model_path,
+            output_sink = outfile.name,
+            remove_dead_end = True
+        )
         self.assertTrue(
-            cmp(Path(outfile.name), os_path.join(self.data_path, 'output_sink_woDE.csv')))
+            cmp(
+                Path(outfile.name),
+                os_path.join(
+                    self.data_path,
+                    'output_sink_woDE.csv'
+                )
+            )
+        )
         outfile.close()
