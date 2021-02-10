@@ -28,9 +28,13 @@ class Test_rpFBA(TestCase):
         data_path,
         'merged.xml.gz'
     )
+    model_path_gz = os_path.join(
+        data_path,
+        'e_coli_model.sbml.gz'
+    )
 
     def setUp(self):
-        self.logger = create_logger(__name__, 'ERROR')
+        self.logger = create_logger(__name__, 'DEBUG')
 
         # Create persistent temp folder
         # to deflate compressed data file so that
@@ -41,13 +45,19 @@ class Test_rpFBA(TestCase):
             self.merged_path_gz,
             self.temp_d
         )
+        self.model_path = extract_gz(
+            self.model_path_gz,
+            self.temp_d
+        )
         # objects below have to be created for each test instance
         # since some tests can modified them
-        with TemporaryDirectory() as temp_d:
-            self.rpsbml = rpSBML(
-                inFile = self.merged_path,
-                logger = self.logger
-            )
+        self.rpsbml = rpSBML(
+            inFile = self.model_path,
+            logger = self.logger
+        )
+        import json
+        print(json.dumps(self.rpsbml.toDict(), indent=4))
+        exit()
 
 
     def tearDown(self):
@@ -56,18 +66,18 @@ class Test_rpFBA(TestCase):
 
     def test_fba(self):
         ref_score = 9.230769230769237
-        obj_value, rpsbml = rp_fba(
+        cobra_results = rp_fba(
                  rpsbml = self.rpsbml,
             reaction_id = 'rxn_target',
                  logger = self.logger
         )
-        self.assertTrue(rpsbml)
+        self.assertTrue(self.rpsbml)
         self.assertAlmostEqual(
-            obj_value,
+            cobra_results.objective_value,
             ref_score
         )
         # make sure that the results are written to the file
-        pathway = rpsbml.toDict()['pathway']['brsynth']
+        pathway = self.rpsbml.toDict()['pathway']['brsynth']
         self.assertAlmostEqual(
             pathway['fba_obj_rxn_target']['value'],
             ref_score
@@ -76,7 +86,7 @@ class Test_rpFBA(TestCase):
 
     def test_fraction(self):
         ref_score = 2.3076923076923888
-        obj_value, rpsbml = rp_fraction(
+        cobra_results = rp_fraction(
                 rpsbml = self.rpsbml,
             src_rxn_id = 'biomass',
              src_coeff = 1.0,
@@ -85,9 +95,9 @@ class Test_rpFBA(TestCase):
                 logger = self.logger
         )
 
-        self.assertTrue(rpsbml)
+        self.assertTrue(self.rpsbml)
         self.assertAlmostEqual(
-            obj_value,
+            cobra_results.objective_value,
             ref_score
         )
 
@@ -104,19 +114,23 @@ class Test_rpFBA(TestCase):
 
 
     def test_pfba(self):
-        ref_score = 859.3846153846168
-        obj_value, rpsbml = rp_pfba(
+        # ref_score = 859.3846153846168
+        ref_score = 1761.107066440342
+        cobra_results = rp_pfba(
                  rpsbml = self.rpsbml,
             reaction_id = 'rxn_target',
                  logger = self.logger
         )
-        self.assertTrue(rpsbml)
+        self.assertTrue(self.rpsbml)
         self.assertAlmostEqual(
-            obj_value,
+            cobra_results.objective_value,
             ref_score
         )
         # make sure that the results are written to the file
-        pathway = rpsbml.toDict()['pathway']['brsynth']
+        pathway = self.rpsbml.toDict()['pathway']['brsynth']
+        import json
+        print(json.dumps(self.rpsbml.toDict(), indent=4))
+        exit()
         self.assertAlmostEqual(
             pathway['fba_obj_rxn_target']['value'],
             ref_score
