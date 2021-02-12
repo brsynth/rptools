@@ -1,5 +1,12 @@
 # Release history
 
+## 2.4.0
+- rpSBML: rewrite methods
+- rpFBA: rewrite functions
+- add test datasets
+- add the ability of rpSBML class to read file from gzip format
+- method mergeModels() returns the merged model rather than modify objects passed as arguments
+
 ## 2.3.0
 - fix rpfba tool
 - refactor datasets to save disk space

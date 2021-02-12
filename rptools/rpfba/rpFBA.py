@@ -116,7 +116,9 @@ def runFBA(
         target_rpsbml = rpsbml_gem,
         logger = logger
     )
+
     logger.debug('rpsbml_merged: ' + str(rpsbml_merged))
+    logger.debug('reactions_in_both: ' + str(reactions_in_both))
 
     # NOTE: reactions is organised with key being the rpsbml reaction and value being the rpsbml_gem value`
     # BUG: when merging the rxn_sink (very rare cases) can be recognised if another reaction contains the same species as a reactant

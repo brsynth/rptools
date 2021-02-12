@@ -536,7 +536,7 @@ class rpSBML:
         sink_species_group_id: str = 'rp_sink_species',
         pathway_id: str = 'rp_pathway',
         logger: Logger = getLogger(__name__)
-    ):
+    ) -> bool:
         """Public function that merges two SBML files together
 
         :param path_source: Path of the source SBML file
@@ -1105,7 +1105,7 @@ class rpSBML:
         logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
         logger.debug('comp_source_target: ' + str(comp_source_target))
 
-        species = rpSBML.compareSpecies(
+        species = rpSBML.speciesMatchWith(
             comp_source_target,
             source_sbml_doc,
             self.getDocument(),
@@ -1232,6 +1232,33 @@ class rpSBML:
         return species
 
 
+    @staticmethod
+    def reactionsInBoth(
+        rpsbml_1: 'rpSBML',
+        rpsbml_2: 'rpSBML',
+        species: Dict,
+        logger: Logger = getLogger(__name__)
+    ) -> Dict:
+
+        reactions_in_both = {}
+
+        for rxn_1 in rpsbml_1.getModel().getListOfReactions():
+
+            logger.debug('rxn_1: ' + str(rxn_1))
+
+            for rxn_2 in rpsbml_2.getModel().getListOfReactions():
+                match = rpSBML.reactionsAreEqual(
+                    species,
+                    rxn_1,
+                    rxn_2,
+                    logger = logger
+                )
+                if match:
+                    reactions_in_both[rxn_1.getId()] = rxn_2.getId()
+        
+        return reactions_in_both
+
+
     def copyReactions(
         self,
         source_sbml_doc: libsbml.SBMLDocument,
@@ -1247,7 +1274,7 @@ class rpSBML:
             target_reaction: libsbml.Reaction,
             species: Dict,
             logger: Logger = getLogger(__name__)
-        ):
+        ) -> None:
 
             logger.debug('source_reaction: ' + str(source_reaction))
             logger.debug('target_reaction: ' + str(target_reaction))
@@ -1305,7 +1332,6 @@ class rpSBML:
                 )
 
             # return target_reactant, source_reaction_reactantID
-
 
         def copyProducts(
             source_reaction: libsbml.Reaction,
@@ -1370,7 +1396,6 @@ class rpSBML:
                 )
 
             # return target_product
-
 
         reactions_in_both = {}
 
@@ -1862,7 +1887,7 @@ class rpSBML:
         Compare that all the measured species of a reactions are found within sim species to match with a reaction.
         We assume that there cannot be two reactions that have the same species and reactants. This is maintained by SBML
 
-        :param species_match: The species match dictionary returned by compareSpecies()
+        :param species_match: The species match dictionary returned by speciesMatchWith()
         :param target_rpsbml: The target rpSBMl object
         :param source_rpsbml: The source rpSBML object
 
@@ -2073,6 +2098,8 @@ class rpSBML:
 
         def fill_targets(
             target_reaction: libsbml.Reaction,
+            species_source_target: Dict,
+            logger: Logger = getLogger(__name__)
         ) -> List[libsbml.SpeciesReference]:
             targets = []
             for i in target_reaction.getListOfReactants():
@@ -2092,11 +2119,19 @@ class rpSBML:
  
         ## REACTANTS
         source_reactants = [i.species for i in source_reaction.getListOfReactants()]
-        target_reactants = fill_targets(target_reaction)
+        target_reactants = fill_targets(
+            target_reaction = target_reaction,
+            species_source_target = species_source_target,
+            logger = logger
+        )
 
         ## PRODUCTS
         source_products = [i.species for i in source_reaction.getListOfProducts()]
-        target_products = fill_targets(target_reaction)
+        target_products = fill_targets(
+            target_reaction = target_reaction,
+            species_source_target = species_source_target,
+            logger = logger
+        )
 
         reactants = set(source_reactants) - set(target_reactants)
         products  = set(source_products)  - set(target_products)
@@ -2124,7 +2159,7 @@ class rpSBML:
     # TODO: for all the measured species compare with the simualted one. Then find the measured and simulated species that match the best and exclude the
     # simulated species from potentially matching with another
     @staticmethod
-    def compareSpecies(
+    def speciesMatchWith(
         comp_source_target: Dict,
         source_sbml_doc: libsbml.SBMLDocument,
         target_sbml_doc: libsbml.SBMLDocument,
