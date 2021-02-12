@@ -190,14 +190,13 @@ def runFBA(
         cent_spe = [str(i.getIdRef()) for i in central.getListOfMembers()]
         sink_spe = [str(i.getIdRef()) for i in sink_group.getListOfMembers()]
         rp_reac  = [str(i.getIdRef()) for i in rp_group.getListOfMembers()]
-        logger.debug('old central species: '+str(cent_spe))
-        logger.debug('old sink species: '+str(sink_spe))
-        logger.debug('old rp reactions: '+str(rp_reac))
+        logger.debug('old central species: ' + str(cent_spe))
+        logger.debug('old sink species:    ' + str(sink_spe))
+        logger.debug('old rp reactions:    ' + str(rp_reac))
 
-        rev_reactions = {v: k for k, v in reactions.items()}
-        logger.debug('species:       ' + str(species))
-        logger.debug('reactions:     ' + str(reactions))
-        logger.debug('rev_reactions: ' + str(rev_reactions))
+        rev_reactions = {v: k for k, v in reactions_in_both.items()}
+        logger.debug('reactions_in_both: ' + str(reactions_in_both))
+        logger.debug('rev_reactions:     ' + str(rev_reactions))
         logger.info('Building model with heterologous pathway only')
         groups = rpsbml_merged.getPlugin('groups')
         rp_pathway = groups.getGroup(pathway_id)
@@ -222,7 +221,7 @@ def runFBA(
         target_groupsID = [i.getId() for i in target_groups.getListOfGroups()]
         for source_group in source_groups.getListOfGroups():
             logger.info('Replacing group id: '+str(source_group.getId()))
-            if source_group.getId()==species_group_id:
+            if source_group.getId() == species_group_id:
                 target_group = target_groups.getGroup(source_group.getId())
                 # TODO: #### replace the new potentially incorect central species with the normal ones #####
                 # delete all the previous members
