@@ -21,7 +21,13 @@ from typing import (
     Tuple,
     Generic
 )
-
+from brs_utils import(
+    extract_gz
+)
+from filetype import guess
+from tempfile import (
+    TemporaryDirectory,
+)
 ## @package RetroPath SBML writer
 # Documentation for SBML representation of the different model
 #
@@ -72,11 +78,18 @@ class rpSBML:
         # document
         # if an sbml file is given, then read it (self.document will be created)
         if not inFile is None:
-            try:
-                self.readSBML(inFile)
-            except FileNotFoundError as e:
-                self.logger.error(str(e) + inFile)
-                exit(-1)
+            infile = inFile
+            kind = guess(infile)
+            with TemporaryDirectory() as temp_d:
+                if kind:
+                    self.logger.debug('inFile is detected as ' + str(kind))
+                    if kind.mime == 'application/gzip':
+                        infile = extract_gz(inFile, temp_d)
+                try:
+                    self.readSBML(infile)
+                except FileNotFoundError as e:
+                    self.logger.error(str(e) + infile)
+                    exit(-1)
 
         else:
             if rpsbml is None:
@@ -2895,6 +2908,7 @@ class rpSBML:
         :rtype: None
         :return: Dictionnary of the pathway annotation
         """
+        self.logger.debug('Read SBML file from ' + inFile)
         # if not os_path.isfile(inFile):
         #     self.logger.error('Invalid input file: ' + inFile)
         #     raise FileNotFoundError

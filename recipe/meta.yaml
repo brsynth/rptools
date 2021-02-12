@@ -36,6 +36,7 @@ requirements:
     - colored # rplibs
     - networkx # rplibs
     - cobra # rplibs
+    - filetype  # rplibs (conda-forge)
 
 test:
   source_files:
