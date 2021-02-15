@@ -1,4 +1,31 @@
 from os import path as os_path
+from argparse import (
+    ArgumentParser,
+    Namespace
+)
+from logging import Logger
+
+
+def init(
+    parser: ArgumentParser,
+    args: Namespace
+) -> Logger:
+    from brs_utils import create_logger
+    from rptools._version import __version__
+
+    # Create logger
+    logger = create_logger(parser.prog, args.log)
+
+    logger.info(
+        'rptools {version} ({prog})\n'.format(
+            prog = logger.name,
+            version = __version__
+        )
+    )
+    logger.debug(args)
+
+    return logger
+
 
 def _cli():
 
@@ -20,6 +47,6 @@ def _cli():
 
     return 0
 
-import os
+
 if __name__ == '__main__':
     _cli()

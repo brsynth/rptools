@@ -2,23 +2,14 @@ from rptools.rpfba import (
     runFBA,
     build_args_parser
 )
-from brs_utils import create_logger
-from rptools._version import __version__
+
 
 def entry_point():
     parser = build_args_parser()
     args   = parser.parse_args()
 
-    # Create logger
-    logger = create_logger(parser.prog, args.log)
-
-    logger.info(
-        '{prog} {version}\n'.format(
-            prog = logger.name,
-            version = __version__
-        )
-    )
-    logger.debug(args)
+    from rptools.__main__ import init
+    logger = init(parser, args)
 
     rpsbml = runFBA(
                   rpsbml_path = args.pathway,

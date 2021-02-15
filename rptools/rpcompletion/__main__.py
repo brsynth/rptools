@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import logging
 from rptools.rplibs       import rpCache
 from rptools.rpcompletion import rp_completion, build_args_parser
 
@@ -11,14 +10,8 @@ def _cli():
 
     args.pubchem_search = args.pubchem_search.lower() in ['true', 't']
 
-    # Create logger
-    logger = logging.getLogger('rptools - rpCompletion')
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-            '%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.setLevel(getattr(logging, args.log.upper()))
+    from rptools.__main__ import init
+    logger = init(parser, args)
 
     cache = rpCache(db='file', logger=logger)
 

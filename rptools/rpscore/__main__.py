@@ -2,25 +2,16 @@ from rptools.rpscore import (
     compute_globalscore,
     build_args_parser
 )
-from brs_utils import create_logger
 from rptools.rplibs import rpSBML
-from rptools._version import __version__
+
 
 def entry_point():
   
     parser = build_args_parser()
     args   = parser.parse_args()
 
-    # Create logger
-    logger = create_logger(parser.prog, args.log)
-
-    logger.info(
-        '{prog} {version}\n'.format(
-            prog = logger.name,
-            version = __version__
-        )
-    )
-    logger.debug(args)
+    from rptools.__main__ import init
+    logger = init(parser, args)
 
     rpsbml = rpSBML(
         inFile = args.pathway_file,
@@ -40,7 +31,8 @@ def entry_point():
                 fba_floor = args.fba_floor,
                pathway_id = args.pathway_id,
              objective_id = args.objective_id,
-                thermo_id = args.thermo_id
+                thermo_id = args.thermo_id,
+                   logger = logger
     )
 
     score = rpsbml_dict['pathway']['brsynth']['global_score']
@@ -51,7 +43,7 @@ def entry_point():
         rpsbml.updateBRSynthPathway(rpsbml_dict, args.pathway_id)
         rpsbml.writeSBML(args.outfile)
 
-    print(score)
+    logger.info('\nGlobal Score = ' + str(score))
 
 
 if __name__ == '__main__':
