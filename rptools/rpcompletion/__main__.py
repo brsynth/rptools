@@ -32,7 +32,7 @@ def _cli():
                                logger=logger)
         return result
     except ValueError as e:
-        logging.error(str(e))
+        logger.error(str(e))
         return 2
 
 
