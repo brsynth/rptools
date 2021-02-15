@@ -44,7 +44,7 @@ class Test_rpFBA(TestCase):
 
 
     def setUp(self):
-        self.logger = create_logger(__name__, 'DEBUG')
+        self.logger = create_logger(__name__, 'ERROR')
 
         self.rpsbml = rpSBML(
             inFile = self.rpsbml_path,
@@ -156,7 +156,7 @@ class Test_rpFBA(TestCase):
                 self,
                 'merged_rpsbml_' + str(i+1)
             )
-            cobra_results, objective_id, rpsbml = rp_fraction(
+            cobra_results, rpsbml = rp_fraction(
                     rpsbml = rpsbml,
                 src_rxn_id = 'biomass',
                 src_coeff = 1.0,
@@ -173,14 +173,6 @@ class Test_rpFBA(TestCase):
             self.assertAlmostEqual(
                 cobra_results.objective_value,
                 scores[0]
-            )
-
-            write_results(
-                rpsbml = rpsbml,
-                objective_id = objective_id,
-                cobra_results = cobra_results,
-                pathway_id = self.pathway_id,
-                logger = self.logger
             )
 
             # make sure that the results are written to the file

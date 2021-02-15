@@ -132,7 +132,7 @@ def runFBA(
 
     ######## FBA ########
     if sim_type == 'fraction':
-        cobra_results, objective_id, rpsbml_merged = rp_fraction(
+        cobra_results, rpsbml_merged = rp_fraction(
                   rpsbml = rpsbml_merged,
               src_rxn_id = src_rxn_id,
                src_coeff = src_coeff,
@@ -393,7 +393,7 @@ def rp_fraction(
       pathway_id:    str = 'rp_pathway',
     objective_id:    str = None,
           logger: Logger = getLogger(__name__)
-) -> Tuple[cobra_solution, str, rpSBML]:
+) -> Tuple[cobra_solution, rpSBML]:
     """Optimise for a target reaction while fixing a source reaction to the fraction of its optimum
 
     :param source_reaction: The id of the source reaction
@@ -565,7 +565,7 @@ def rp_fraction(
 
     logger.debug('The objective '+str(objective_id)+' results '+str(cobra_results.objective_value))
 
-    return cobra_results, objective_id, rpsbml
+    return cobra_results, rpsbml
 
 
 def runCobra(
@@ -787,9 +787,6 @@ def write_fluxes_to_reactions(
         
         flux = fluxes.get(rxn.getId())
 
-        # print(fluxes.values)
-        # exit()
-        
         logger.debug(
             'Set the reaction ' + str(member.getIdRef()) \
           + ' a ' + str('fba_' + str(objective_id)) \
