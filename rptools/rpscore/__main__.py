@@ -37,11 +37,9 @@ def entry_point():
 
     score = rpsbml_dict['pathway']['brsynth']['global_score']
 
-    # rpsbml.setGlobalScore(score)
-
     if args.outfile != '':
         rpsbml.updateBRSynthPathway(rpsbml_dict, args.pathway_id)
-        rpsbml.writeSBML(args.outfile)
+        rpsbml.writeToFile(args.outfile)
 
     logger.info('\nGlobal Score = ' + str(score))
 
