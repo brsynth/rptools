@@ -197,10 +197,10 @@ def runFBA(
             reactions_in_both = reactions_in_both,
             logger = logger
         )
-        logger.info('Writing model with heterologous pathway only into file..')
+        logger.info('Returning model with heterologous pathway only')
         return rpsbml
     else:
-        logger.info('Writing the full model into file..')
+        logger.info('Returning the full model')
         return rpsbml_merged
 
 

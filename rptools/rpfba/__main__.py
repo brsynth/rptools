@@ -40,6 +40,8 @@ def entry_point():
     )
 
     if not rpsbml is None:
+      logger.info('Writing into file...')
+      rpsbml.writeToFile(args.outfile)
       logger.info('  |--> written in ' + args.outfile)
 
 
