@@ -206,6 +206,24 @@ class rpSBML:
             return self.getModel().getName() if self.getModel() else None
 
 
+    def getObjective(
+        self,
+        objective_id: str,
+        objective_value: float 
+    ) -> None:
+
+        objective = self.getPlugin(
+            'fbc'
+        ).getObjective(objective_id)
+
+        self.checklibSBML(
+            objective,
+            'Getting objective '+str(objective_id)
+        )
+
+        return objective
+
+
     def setName(self, name):
         self.modelName = name if name else 'dummy'
 
@@ -576,7 +594,7 @@ class rpSBML:
             logger
         )
 
-        merged_rpsbml.writeSBML(output_merged)
+        merged_rpsbml.writeToFile(output_merged)
 
         return True
 
@@ -2441,7 +2459,7 @@ class rpSBML:
         value,
         message: str,
         logger: Logger = getLogger(__name__)
-    ):
+    ) -> None:
         """Private function that checks the libSBML calls.
 
         Check that the libSBML python calls do not return error INT and if so, display the error. Taken from: http://sbml.org/Software/libSBML/docs/python-api/create_simple_model_8py-example.html
@@ -2927,6 +2945,130 @@ class rpSBML:
         return True
 
 
+    def find_or_create_objective(
+        self,
+        reactions: List[str],
+        coefficients: List[float],
+        is_max: bool = True,
+        objective_id: str = None
+    ) -> str:
+    
+        if objective_id is None:
+            objective_id = 'obj_'+'_'.join(reactions)
+            self.logger.debug('Set objective as \''+str(objective_id)+'\'')
+
+        obj_id = self.search_objective(
+            reactions = reactions,
+            objective_id = objective_id
+        )
+
+        # If cannot find a valid objective create it
+        if obj_id is None:
+            self.create_multiflux_objective(
+                fluxobj_id = objective_id,
+                reactionNames = reactions,
+                coefficients = coefficients,
+                is_max = is_max
+            )
+        else:
+            objective_id = obj_id
+
+        return objective_id
+
+
+    def search_objective(
+        self,
+        reactions: List[str],
+        objective_id: str
+    ) -> str:
+        """Find the objective (with only one reaction associated) based on the reaction ID and if not found create it
+
+        :param reactions: List of the reactions id's to set as objectives
+        :param coefficients: List of the coefficients about the objectives
+        :param isMax: Maximise or minimise the objective
+        :param objective_id: overwite the default id if created (from obj_[reactions])
+
+        :type reactions: list
+        :type coefficients: list
+        :type isMax: bool
+        :type objective_id: str
+
+        :raises FileNotFoundError: If the file cannot be found
+        :raises AttributeError: If the libSBML command encounters an error or the input value is None
+
+        :rtype: str
+        :return: Objective ID
+        """
+        fbc_plugin = self.getPlugin('fbc')
+
+        for objective in fbc_plugin.getListOfObjectives():
+
+            if objective.getId() == objective_id:
+                self.logger.warning('The specified objective id ('+str(objective_id)+') already exists')
+                return objective_id
+
+            if not set([i.getReaction() for i in objective.getListOfFluxObjectives()])-set(reactions):
+                # TODO: consider setting changing the name of the objective
+                self.logger.warning('The specified objective id ('+str(objective_id)+') has another objective with the same reactions: '+str(objective.getId()))
+                return objective.getId()
+
+        return None
+
+
+    def create_multiflux_objective(
+        self,
+        fluxobj_id: str,
+        reactionNames: List[str],
+        coefficients: List[float],
+        is_max: bool = True,
+        meta_id: str = None
+    ) -> None:
+        """Create libSBML flux objective
+
+        Using the FBC package one can add the FBA flux objective directly to the model. Can add multiple reactions. This function sets a particular reaction as objective with maximization or minimization objectives
+
+        :param fluxobj_id: The id of the flux objective
+        :param reactionNames: The list of string id's of the reaction that is associated with the reaction
+        :param coefficients: The list of int defining the coefficients of the flux objective
+        :param isMax: Define if the objective is coefficient (Default: True)
+        :param meta_id: Meta id (Default: None)
+
+        :type fluxobj_id: str
+        :type reactionNames: list
+        :type coefficients: list
+        :type isMax: bool
+        :type meta_id: str
+
+        :rtype: None
+        :return: None
+        """
+
+        if len(reactionNames) != len(coefficients):
+            self.logger.error('The size of reactionNames is not the same as coefficients')
+            exit()
+
+        fbc_plugin = self.getPlugin('fbc')
+        target_obj = fbc_plugin.createObjective()
+        target_obj.setAnnotation(self._defaultBRSynthAnnot(meta_id))
+        target_obj.setId(fluxobj_id)
+
+        if is_max:
+            target_obj.setType('maximize')
+        else:
+            target_obj.setType('minimize')
+
+        fbc_plugin.setActiveObjectiveId(fluxobj_id) # this ensures that we are using this objective when multiple
+
+        for reac, coef in zip(reactionNames, coefficients):
+            target_flux_obj = target_obj.createFluxObjective()
+            target_flux_obj.setReaction(reac)
+            target_flux_obj.setCoefficient(coef)
+            if not meta_id:
+                meta_id = self._genMetaID(str(fluxobj_id))
+            target_flux_obj.setMetaId(meta_id)
+            target_flux_obj.setAnnotation(self._defaultBRSynthAnnot(meta_id))
+
+
     #####################################################################
     ########################## INPUT/OUTPUT #############################
     #####################################################################
@@ -2943,10 +3085,12 @@ class rpSBML:
         :rtype: None
         :return: Dictionnary of the pathway annotation
         """
+
         self.logger.debug('Read SBML file from ' + inFile)
         # if not os_path.isfile(inFile):
         #     self.logger.error('Invalid input file: ' + inFile)
         #     raise FileNotFoundError
+
         self.document = libsbml.readSBMLFromFile(inFile)
         rpSBML.checklibSBML(self.getDocument(), 'reading input file')
         errors = self.getDocument().getNumErrors()
@@ -2985,7 +3129,7 @@ class rpSBML:
     # @param model libSBML model to be saved to file
     # @param model_id model id, note that the name of the file will be that
     # @param path Non required parameter that will define the path where the model will be saved
-    def writeSBML(self, filename=None):
+    def writeToFile(self, filename: str = None) -> None:
         """Export the metabolic network to a SBML file
 
         :param path: Path to the output SBML file
@@ -2998,15 +3142,21 @@ class rpSBML:
         :rtype: bool
         :return: Success or failure of the command
         """
+
         ext = ''
+
         if not str(self.getName()).endswith('_sbml'):
             ext = '_sbml'
+
         if filename:
             out_filename = filename
         else:
             out_filename = str(self.getName())+ext+'.xml'
-        libsbml.writeSBMLToFile(self.getDocument(), out_filename)
-        return True
+
+        libsbml.writeSBMLToFile(
+            self.getDocument(),
+            out_filename
+        )
 
 
     def readReactionSpecies(self, reaction):
@@ -4275,46 +4425,19 @@ class rpSBML:
         target_flux_obj.setAnnotation(self._defaultBRSynthAnnot(meta_id))
 
 
-    def createMultiFluxObj(self, fluxobj_id, reactionNames, coefficients, isMax=True, meta_id=None):
-        """Create libSBML flux objective
+    def activateObjective(
+        self,
+        objective_id: str,
+        plugin: str = 'fbc'
+    ) -> None:
 
-        Using the FBC package one can add the FBA flux objective directly to the model. Can add multiple reactions. This function sets a particular reaction as objective with maximization or minimization objectives
+        self.logger.debug('Activate objective ' + objective_id)
 
-        :param fluxobj_id: The id of the flux objective
-        :param reactionNames: The list of string id's of the reaction that is associated with the reaction
-        :param coefficients: The list of int defining the coefficients of the flux objective
-        :param isMax: Define if the objective is coefficient (Default: True)
-        :param meta_id: Meta id (Default: None)
-
-        :type fluxobj_id: str
-        :type reactionNames: list
-        :type coefficients: list
-        :type isMax: bool
-        :type meta_id: str
-
-        :rtype: None
-        :return: None
-        """
-        if not len(reactionNames)==len(coefficients):
-            self.logger.error('The size of reactionNames is not the same as coefficients')
-            return False
-        fbc_plugin = self.getModel().getPlugin('fbc')
-        target_obj = fbc_plugin.createObjective()
-        target_obj.setAnnotation(self._defaultBRSynthAnnot(meta_id))
-        target_obj.setId(fluxobj_id)
-        if isMax:
-            target_obj.setType('maximize')
-        else:
-            target_obj.setType('minimize')
-        fbc_plugin.setActiveObjectiveId(fluxobj_id) # this ensures that we are using this objective when multiple
-        for reac, coef in zip(reactionNames, coefficients):
-            target_flux_obj = target_obj.createFluxObjective()
-            target_flux_obj.setReaction(reac)
-            target_flux_obj.setCoefficient(coef)
-            if not meta_id:
-                meta_id = self._genMetaID(str(fluxobj_id))
-            target_flux_obj.setMetaId(meta_id)
-            target_flux_obj.setAnnotation(self._defaultBRSynthAnnot(meta_id))
+        plugin = self.getPlugin(plugin)
+        self.checklibSBML(
+            plugin.setActiveObjectiveId(objective_id),
+            'Setting active objective '+str(objective_id)
+        )
 
 
     ##############################################################################################

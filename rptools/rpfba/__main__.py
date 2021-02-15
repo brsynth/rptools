@@ -20,10 +20,9 @@ def entry_point():
     )
     logger.debug(args)
 
-    result = runFBA(
+    rpsbml = runFBA(
                   rpsbml_path = args.pathway,
                 gem_sbml_path = args.model,
-                      outFile = args.outfile,
                      sim_type = args.sim,
                    src_rxn_id = args.source_reaction,
                    tgt_rxn_id = args.target_reaction,
@@ -40,7 +39,8 @@ def entry_point():
                        logger = logger
     )
 
-    return result
+    if not rpsbml is None:
+      logger.info('  |--> written in ' + args.outfile)
 
 
 if __name__ == '__main__':

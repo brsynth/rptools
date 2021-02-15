@@ -535,7 +535,7 @@ def write_rp2paths_to_rpSBML(cache,
 
         # Write results to files
         for rpsbml_item in best_rpsbml:
-            rpsbml_item.rpsbml_obj.writeSBML(os_path.join(outFolder, str(rpsbml_item.rpsbml_obj.modelName))+'_sbml.xml')
+            rpsbml_item.rpsbml_obj.writeToFile(os_path.join(outFolder, str(rpsbml_item.rpsbml_obj.modelName))+'_sbml.xml')
 
     return 0
 

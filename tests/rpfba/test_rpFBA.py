@@ -1,9 +1,11 @@
 from unittest import TestCase
 from os import path as os_path
+from rptools.rpfba import rpFBA
 from rptools.rpfba.rpFBA import (
-    rp_fba,
+    # rp_fba,
     rp_fraction,
-    rp_pfba
+    # rp_pfba,
+    write_results
 )
 from rptools.rplibs import rpSBML
 from tempfile import (
@@ -38,6 +40,7 @@ class Test_rpFBA(TestCase):
     )
 
     rxn_tgt = 'rxn_target'
+    pathway_id = 'rp_pathway'
 
 
     def setUp(self):
@@ -72,138 +75,190 @@ class Test_rpFBA(TestCase):
             )
 
 
-    def test_fba_1(self):
-        ref_score = 9.230769230769237
-        obj_value, rpsbml = rp_fba(
-                 rpsbml = self.merged_rpsbml_1,
-            reaction_id = self.rxn_tgt,
-                 logger = self.logger
-        )
-        self.assertTrue(rpsbml)
-        self.assertAlmostEqual(
-            obj_value,
-            ref_score
-        )
-        # make sure that the results are written to the file
-        pathway = rpsbml.toDict()['pathway']['brsynth']
-        self.assertAlmostEqual(
-            pathway['fba_obj_'+self.rxn_tgt]['value'],
-            ref_score
-        )
+    def test_fba_pfba(self):
+        objective_id = 'obj_' + self.rxn_tgt
+        ref_scores = {
+            'fba': [
+                9.230769230769237,
+                5.144315545243618
+            ],
+            'pfba': [
+                859.3846153846168,
+                471.6390839533362
+            ]
+        }
+        for f, scores in ref_scores.items():
+            func = getattr(rpFBA, 'rp_' + f)
+            for i in range(len(scores)):
+                with self.subTest(
+                    func = func,
+                    scores = scores,
+                    i = i
+                ):
+                    ref_score = scores[i]
+                    rpsbml = getattr(
+                        self,
+                        'merged_rpsbml_' + str(i+1)
+                    )
+
+                    objective_id = rpsbml.find_or_create_objective(
+                        reactions = [self.rxn_tgt],
+                        coefficients = [1.0],
+                        is_max = True,
+                        objective_id = objective_id
+                    )
+                    rpsbml.activateObjective(
+                        objective_id = objective_id,
+                        plugin = 'fbc'
+                    )
+
+                    cobra_solution = func(
+                            rpsbml = rpsbml,
+                            logger = self.logger
+                    )
+
+                    self.assertTrue(rpsbml)
+                    self.assertAlmostEqual(
+                        cobra_solution.objective_value,
+                        ref_score
+                    )
+
+                    write_results(
+                        rpsbml = rpsbml,
+                        objective_id = objective_id,
+                        cobra_results = cobra_solution,
+                        pathway_id = self.pathway_id,
+                        logger = self.logger
+                    )
+                    # make sure that the results are written to the file
+                    pathway = rpsbml.toDict()['pathway']['brsynth']
+                    self.assertAlmostEqual(
+                        pathway['fba_obj_'+self.rxn_tgt]['value'],
+                        ref_score
+                    )
 
 
-    def test_fba_2(self):
-        ref_score = 5.144315545243618
-        obj_value, rpsbml = rp_fba(
-                 rpsbml = self.merged_rpsbml_2,
-            reaction_id = self.rxn_tgt,
-                 logger = self.logger
-        )
-        self.assertTrue(rpsbml)
-        self.assertAlmostEqual(
-            obj_value,
-            ref_score
-        )
-        # make sure that the results are written to the file
-        pathway = rpsbml.toDict()['pathway']['brsynth']
-        self.assertAlmostEqual(
-            pathway['fba_obj_'+self.rxn_tgt]['value'],
-            ref_score
-        )
+    def test_fraction(self):
+        ref_scores = [
+            [
+                2.3076923076923888,
+                3.6794124272706443
+            ],
+            [
+                1.3296695186776557,
+                0.7638744755010182
+            ]
+        ]
 
+        for i in range(len(ref_scores)):
+            scores = ref_scores[i]
+            rpsbml = getattr(
+                self,
+                'merged_rpsbml_' + str(i+1)
+            )
+            cobra_results, objective_id, rpsbml = rp_fraction(
+                    rpsbml = rpsbml,
+                src_rxn_id = 'biomass',
+                src_coeff = 1.0,
+                tgt_rxn_id = self.rxn_tgt,
+                tgt_coeff = 1.0,
+                frac_of_src = 0.75,
+                    is_max = True,
+                pathway_id = self.pathway_id,
+                objective_id = None,
+                    logger = self.logger
+            )
 
-    def test_fraction_1(self):
-        ref_score = 2.3076923076923888
-        obj_value, rpsbml = rp_fraction(
-                rpsbml = self.merged_rpsbml_1,
-            src_rxn_id = 'biomass',
-             src_coeff = 1.0,
-            tgt_rxn_id = self.rxn_tgt,
-             tgt_coeff = 1.0,
+            self.assertTrue(rpsbml)
+            self.assertAlmostEqual(
+                cobra_results.objective_value,
+                scores[0]
+            )
+
+            write_results(
+                rpsbml = rpsbml,
+                objective_id = objective_id,
+                cobra_results = cobra_results,
+                pathway_id = self.pathway_id,
                 logger = self.logger
-        )
+            )
 
-        self.assertTrue(rpsbml)
-        self.assertAlmostEqual(
-            obj_value,
-            ref_score
-        )
-
-        # make sure that the results are written to the file
-        pathway = rpsbml.toDict()['pathway']['brsynth']
-        self.assertAlmostEqual(
-            pathway['fba_obj_'+self.rxn_tgt+'__restricted_biomass']['value'],
-            ref_score
-        )
-        self.assertAlmostEqual(
-            pathway['fba_obj_biomass']['value'],
-            3.6794124272706443
-        )
+            # make sure that the results are written to the file
+            pathway = rpsbml.toDict()['pathway']['brsynth']
+            self.assertAlmostEqual(
+                pathway['fba_obj_'+self.rxn_tgt+'__restricted_biomass']['value'],
+                scores[0]
+            )
+            self.assertAlmostEqual(
+                pathway['fba_obj_biomass']['value'],
+                scores[1]
+            )
 
 
-    def test_fraction_2(self):
-        ref_score = 1.3296695186776557
-        obj_value, rpsbml = rp_fraction(
-                rpsbml = self.merged_rpsbml_2,
-            src_rxn_id = 'biomass',
-             src_coeff = 1.0,
-            tgt_rxn_id = self.rxn_tgt,
-             tgt_coeff = 1.0,
-                logger = self.logger
-        )
+    # def test_fraction_2(self):
+    #     ref_score = 1.3296695186776557
+    #     obj_value, rpsbml = rp_fraction(
+    #             rpsbml = self.merged_rpsbml_2,
+    #         src_rxn_id = 'biomass',
+    #          src_coeff = 1.0,
+    #         tgt_rxn_id = self.rxn_tgt,
+    #          tgt_coeff = 1.0,
+    #             logger = self.logger
+    #     )
 
-        self.assertTrue(rpsbml)
-        self.assertAlmostEqual(
-            obj_value,
-            ref_score
-        )
+    #     self.assertTrue(rpsbml)
+    #     self.assertAlmostEqual(
+    #         obj_value,
+    #         ref_score
+    #     )
 
-        # make sure that the results are written to the file
-        pathway = rpsbml.toDict()['pathway']['brsynth']
-        self.assertAlmostEqual(
-            pathway['fba_obj_'+self.rxn_tgt+'__restricted_biomass']['value'],
-            ref_score
-        )
-        self.assertAlmostEqual(
-            pathway['fba_obj_biomass']['value'],
-            0.7638744755010182
-        )
+    #     # make sure that the results are written to the file
+    #     pathway = rpsbml.toDict()['pathway']['brsynth']
+    #     self.assertAlmostEqual(
+    #         pathway['fba_obj_'+self.rxn_tgt+'__restricted_biomass']['value'],
+    #         ref_score
+    #     )
+    #     self.assertAlmostEqual(
+    #         pathway['fba_obj_biomass']['value'],
+    #         0.572905856625764
+    #     )
 
 
-    def test_pfba_1(self):
-        ref_score = 859.3846153846168
-        obj_value, rpsbml = rp_pfba(
-                 rpsbml = self.merged_rpsbml_1,
-            reaction_id = self.rxn_tgt,
-                 logger = self.logger
-        )
-        self.assertTrue(rpsbml)
-        self.assertAlmostEqual(
-            obj_value,
-            ref_score
-        )
-        # make sure that the results are written to the file
-        pathway = rpsbml.toDict()['pathway']['brsynth']
-        self.assertAlmostEqual(
-            pathway['fba_obj_'+self.rxn_tgt]['value'],
-            ref_score
-        )
+    # def test_pfba_1(self):
+    #     ref_score = 859.3846153846168
+    #     obj_value, rpsbml = rp_pfba(
+    #              rpsbml = self.merged_rpsbml_1,
+    #         reaction_id = self.rxn_tgt,
+    #              logger = self.logger
+    #     )
+    #     self.assertTrue(rpsbml)
+    #     self.assertAlmostEqual(
+    #         obj_value,
+    #         ref_score
+    #     )
+    #     # make sure that the results are written to the file
+    #     pathway = rpsbml.toDict()['pathway']['brsynth']
+    #     self.assertAlmostEqual(
+    #         pathway['fba_obj_'+self.rxn_tgt]['value'],
+    #         ref_score
+    #     )
 
-    def test_pfba_2(self):
-        ref_score = 471.6390839533362
-        obj_value, rpsbml = rp_pfba(
-                 rpsbml = self.merged_rpsbml_2,
-            reaction_id = self.rxn_tgt,
-                 logger = self.logger
-        )
-        self.assertTrue(rpsbml)
-        self.assertAlmostEqual(
-            obj_value,
-            ref_score
-        )
-        # make sure that the results are written to the file
-        pathway = rpsbml.toDict()['pathway']['brsynth']
-        self.assertAlmostEqual(
-            pathway['fba_obj_'+self.rxn_tgt]['value'],
-            ref_score
-        )
+    # def test_pfba_2(self):
+    #     ref_score = 859.3846153846168
+    #     ref_score = 471.6390839533362
+    #     obj_value, rpsbml = rp_pfba(
+    #              rpsbml = self.merged_rpsbml_2,
+    #         reaction_id = self.rxn_tgt,
+    #              logger = self.logger
+    #     )
+    #     self.assertTrue(rpsbml)
+    #     self.assertAlmostEqual(
+    #         obj_value,
+    #         ref_score
+    #     )
+    #     # make sure that the results are written to the file
+    #     pathway = rpsbml.toDict()['pathway']['brsynth']
+    #     self.assertAlmostEqual(
+    #         pathway['fba_obj_'+self.rxn_tgt]['value'],
+    #         ref_score
+    #     )
