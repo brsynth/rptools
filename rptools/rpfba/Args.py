@@ -46,7 +46,7 @@ def _add_arguments(parser):
     parser.add_argument(
         '--objective_id',
         type=str,
-        default=None,
+        default='obj_fraction',
         help='overwrite the auto-generated id of the results (default: None)'
     )
     parser.add_argument(
