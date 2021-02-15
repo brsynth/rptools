@@ -20,7 +20,7 @@ def _add_arguments(parser):
     parser.add_argument(
         '--outfile',
         type = str,
-        default = ''
+        default = '',
         help = 'Path to write rpSBML with global score'
     )
     parser.add_argument(

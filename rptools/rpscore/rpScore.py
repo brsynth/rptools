@@ -35,7 +35,8 @@ def compute_globalscore(
     fba_floor: float = 0.0,
     pathway_id: str = 'rp_pathway',
     objective_id: str = 'obj_fraction',
-    thermo_id: str = 'dfG_prime_m'
+    thermo_id: str = 'dfG_prime_m',
+    logger: Logger = getLogger(__name__)
 ) -> Dict:
     """From a rpsbml object, retreive the different characteristics of a pathway and combine them to calculate a global score.
 
@@ -60,10 +61,10 @@ def compute_globalscore(
     """
 
     # WARNING: we do this because the list gets updated
-    rpsbml.logger.debug('thermo_ceil:  '+str(thermo_ceil))
-    rpsbml.logger.debug('thermo_floor: '+str(thermo_floor))
-    rpsbml.logger.debug('fba_ceil:     '+str(fba_ceil))
-    rpsbml.logger.debug('fba_floor:    '+str(fba_floor))
+    logger.debug('thermo_ceil:  '+str(thermo_ceil))
+    logger.debug('thermo_floor: '+str(thermo_floor))
+    logger.debug('fba_ceil:     '+str(fba_ceil))
+    logger.debug('fba_floor:    '+str(fba_floor))
 
     bounds = {
         'thermo': {
@@ -86,7 +87,7 @@ def compute_globalscore(
         scores,
         bounds,
         pathway_id,
-        rpsbml.logger
+        logger
     )
 
     rpsbml_dict = score_from_pathway(
@@ -94,43 +95,44 @@ def compute_globalscore(
         scores,
         bounds,
         pathway_id,
-        rpsbml.logger
+        logger
     )
-    
+
     #################################################
     ################# GLOBAL ########################
     #################################################
 
     ##### global score #########
-    try:
+    weights = {
+        'norm_rule_score': weight_rule_score,
+        'norm_'+str(thermo_id): weight_thermo,
+        'norm_steps': weight_rp_steps,
+        'norm_fba_'+str(objective_id): weight_fba
+    }
+    scores_l = weights_l = []
+    logger.info('Checking scores...')
+    for key in weights.keys():
+        try:
+            score = rpsbml_dict['pathway']['brsynth'][key]
+            scores_l += [score]
+            weights_l += [weights[key]]
+            logger.info('   |- \'' + key + '\' added...')
+        except KeyError as e:
+            key = str(e)
+            logger.debug('KeyError: ' + key)
+            logger.warning('   |- ' + key + ' not found...')
+            # msg = 'It seems that '
+            # if key.startswith('\'norm_dfG_'):
+            #     msg += 'Thermo '
+            # elif key.startswith('\'norm_fba_'):
+            #     msg += 'FBA '
+            # msg += 'step has not been completed '
+            # logger.warning('   |- ' + msg)
 
-        globalScore = np_avg(
-            [
-                rpsbml_dict['pathway']['brsynth']['norm_rule_score'],
-                rpsbml_dict['pathway']['brsynth']['norm_'+str(thermo_id)],
-                rpsbml_dict['pathway']['brsynth']['norm_steps'],
-                rpsbml_dict['pathway']['brsynth']['norm_fba_'+str(objective_id)]
-            ],
-            weights=[
-                weight_rule_score,
-                weight_thermo,
-                weight_rp_steps,
-                weight_fba
-            ]
-        )
-
-    except ZeroDivisionError:
-        globalScore = 0.0
-
-    except KeyError as e:
-        key = str(e)
-        rpsbml.logger.error('KeyError: ' + key)
-        msg = 'Make sure that '
-        if key.startswith('\'norm_dfG_'):
-            rpsbml.logger.error(msg + 'Thermo step is completed')
-        elif key.startswith('\'norm_fba_'):
-            rpsbml.logger.error(msg + 'FBA step is completed')
-        globalScore = 0.0
+    globalScore = np_avg(
+        scores_l,
+        weights = weights_l
+    )
 
     rpsbml_dict['pathway']['brsynth']['global_score'] = globalScore
 
