@@ -45,9 +45,10 @@ test:
     - {{ name|lower }}
   requires:
     - pytest
+    - pytest-cov
   commands:
     - python -m {{ name|lower }} --help
-    - cd tests ; pytest -v
+    - cd tests ; pytest -v --cov
 
 about:
   home: https://github.com/brsynth/{{ name|lower }}
