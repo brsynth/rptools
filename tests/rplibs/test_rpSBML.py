@@ -78,9 +78,9 @@ class Test_rpSBML(Main_rplibs):
         self.assertAlmostEqual(self.rpsbml.getScore(), self.ref_score)
 
 
-    def test_globalscore(self):
-        global_score = self.rpsbml.compute_globalscore()
-        self.assertAlmostEqual(global_score, 0.5760957019721074)
+    # def test_globalscore(self):
+    #     global_score = self.rpsbml.compute_globalscore()
+    #     self.assertAlmostEqual(global_score, 0.5760957019721074)
 
 
     '''
