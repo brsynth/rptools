@@ -121,13 +121,6 @@ def compute_globalscore(
             key = str(e)
             logger.debug('KeyError: ' + key)
             logger.warning('   |- ' + key + ' not found...')
-            # msg = 'It seems that '
-            # if key.startswith('\'norm_dfG_'):
-            #     msg += 'Thermo '
-            # elif key.startswith('\'norm_fba_'):
-            #     msg += 'FBA '
-            # msg += 'step has not been completed '
-            # logger.warning('   |- ' + msg)
 
     globalScore = np_avg(
         scores_l,
@@ -281,7 +274,6 @@ def minmax_score(
     # then value > ceil
     else:
         norm = 1.0
-    # rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value'] = norm
 
     return norm
 
