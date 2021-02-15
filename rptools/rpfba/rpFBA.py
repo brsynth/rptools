@@ -109,29 +109,31 @@ def runFBA(
     logger.debug('rpsbml_gem: ' + str(rpsbml_gem))
 
     logger.info('Merging rpSBML models: ' + rpsbml.getName() + ' and ' + rpsbml_gem.getName() + '...')
-    species, reactions = rpSBML.mergeModels(
+
+    rpsbml_merged, reactions_in_both = rpSBML.mergeModels(
         source_rpsbml = rpsbml,
         target_rpsbml = rpsbml_gem,
         logger = logger
     )
-    logger.debug('input_sbml: ' + str(rpsbml))
-    logger.debug('rpsbml_gem: ' + str(rpsbml_gem))
+
+    logger.debug('rpsbml_merged: ' + str(rpsbml_merged))
+    logger.debug('reactions_in_both: ' + str(reactions_in_both))
 
     # NOTE: reactions is organised with key being the rpsbml reaction and value being the rpsbml_gem value`
     # BUG: when merging the rxn_sink (very rare cases) can be recognised if another reaction contains the same species as a reactant
     ## under such as scenario the algorithm will consider that they are the same -- TODO: overwrite it
-    if tgt_rxn_id in reactions:
+    if tgt_rxn_id in reactions_in_both:
         logger.warning(
-            'The target_reaction ('+str(tgt_rxn_id)+')' \
-          + ' has been detected in model ' + str(gem_sbml_path) \
-          + ', ignoring this model...'
+            'The target_reaction ('+str(tgt_rxn_id)+') ' \
+          + 'has been detected in model ' + str(gem_sbml_path.getName()) + ', ' \
+          + 'ignoring this model...'
         )
         return None
 
-    ######## Fraction of reaction ########
+    ######## FBA ########
     if sim_type == 'fraction':
-        cobra_results = rp_fraction(
-                  rpsbml = rpsbml_gem,
+        cobra_results, objective_id, rpsbml_merged = rp_fraction(
+                  rpsbml = rpsbml_merged,
               src_rxn_id = src_rxn_id,
                src_coeff = src_coeff,
               tgt_rxn_id = tgt_rxn_id,
@@ -143,47 +145,37 @@ def runFBA(
                   logger = logger
         )
     else:
-        objective_id = FindOrCreateObjective(
-            rpsbml_gem,
-            [tgt_rxn_id],
-            [tgt_coeff],
-            is_max,
-            objective_id
+        objective_id = rpsbml_merged.find_or_create_objective(
+            reactions = [tgt_rxn_id],
+            coefficients = [tgt_coeff],
+            is_max = is_max,
+            objective_id = objective_id
         )
-
-        ####### FBA #######
+        rpsbml_merged.activateObjective(
+            objective_id = objective_id,
+            plugin = 'fbc'
+        )
         if sim_type == 'fba':
             cobra_results = rp_fba(
-                      rpsbml = rpsbml_gem,
-                 reaction_id = tgt_rxn_id,
-                 coefficient = tgt_coeff,
-                      is_max = is_max,
-                  pathway_id = pathway_id,
-                objective_id = objective_id,
+                      rpsbml = rpsbml_merged,
                       logger = logger
             )
-
         ####### pFBA #######
         elif sim_type == 'pfba':
             cobra_results = rp_pfba(
-                     rpsbml = rpsbml_gem,
-                 reaction_id = tgt_rxn_id,
-                 coefficient = tgt_coeff,
+                      rpsbml = rpsbml_merged,
                  frac_of_opt = frac_of_src,
-                      is_max = is_max,
-                  pathway_id = pathway_id,
-                objective_id = objective_id,
                       logger = logger
             )
         else:
             logger.error('Cannot recognise sim_type: ' + str(sim_type))
             return None
-
-        writeFBAResults(
-            rpsbml_gem,
-            objective_id,
-            cobra_results,
-            pathway_id
+        write_results(
+            rpsbml = rpsbml_merged,
+            objective_id = objective_id,
+            cobra_results = cobra_results,
+            pathway_id = pathway_id,
+            logger = logger
         )
 
     if cobra_results is None:
@@ -197,117 +189,131 @@ def runFBA(
         rpfba.runMultiObjective(reactions, coefficients, is_max, pathway_id)
     '''
     if dont_merge:
-        # Save the central species
-        groups = rpsbml.getPlugin('groups')
-        central = groups.getGroup(species_group_id)
-        sink_group = groups.getGroup(sink_species_group_id)
-        rp_group = groups.getGroup(pathway_id)
-        cent_spe = [str(i.getIdRef()) for i in central.getListOfMembers()]
-        sink_spe = [str(i.getIdRef()) for i in sink_group.getListOfMembers()]
-        rp_reac  = [str(i.getIdRef()) for i in rp_group.getListOfMembers()]
-        logger.debug('old central species: '+str(cent_spe))
-        logger.debug('old sink species: '+str(sink_spe))
-        logger.debug('old rp reactions: '+str(rp_reac))
-
-        rev_reactions = {v: k for k, v in reactions.items()}
-        logger.debug('species:       ' + str(species))
-        logger.debug('reactions:     ' + str(reactions))
-        logger.debug('rev_reactions: ' + str(rev_reactions))
-        logger.info('Building model with heterologous pathway only')
-        groups = rpsbml_gem.getPlugin('groups')
-        rp_pathway = groups.getGroup(pathway_id)
-        logger.debug('---- Reactions ----')
-        for member in rp_pathway.getListOfMembers():
-            #### reaction annotation
-            logger.debug(member.getIdRef())
-            reacFBA = rpsbml_gem.getModel().getReaction(member.getIdRef())
-            logger.debug(reacFBA)
-            try:
-                #reacIN = rpsbml.model.getReaction(reactions_convert[member.getIdRef()])
-                reacIN = rpsbml.getModel().getReaction(rev_reactions[member.getIdRef()])
-            except KeyError:
-                reacIN = rpsbml.getModel().getReaction(member.getIdRef())
-            logger.debug(reacIN)
-            logger.debug(reacFBA.getAnnotation())
-            reacIN.setAnnotation(reacFBA.getAnnotation())
-            #### species TODO: only for shadow price
-        #### add groups ####
-        source_groups = rpsbml_gem.getPlugin('groups')
-        target_groups = rpsbml.getPlugin('groups')
-        target_groupsID = [i.getId() for i in target_groups.getListOfGroups()]
-        for source_group in source_groups.getListOfGroups():
-            logger.info('Replacing group id: '+str(source_group.getId()))
-            if source_group.getId()==species_group_id:
-                target_group = target_groups.getGroup(source_group.getId())
-                # TODO: #### replace the new potentially incorect central species with the normal ones #####
-                # delete all the previous members
-                logger.info('Removing central_species')
-                for i in range(target_group.getNumMembers()):
-                    logger.debug('Deleting group member: '+str(target_group.getMember(0).getIdRef()))
-                    target_group.removeMember(0)
-                # add the new ones
-                for cs in cent_spe:
-                    logger.info('Creating new member: '+str(cs))
-                    newM = target_group.createMember()
-                    newM.setIdRef(cs)
-            elif source_group.getId()==sink_species_group_id:
-                target_group = target_groups.getGroup(source_group.getId())
-                logger.info('Removing sink species')
-                for i in range(target_group.getNumMembers()):
-                    logger.info('Deleting group member: '+str(target_group.getMember(0).getIdRef()))
-                    target_group.removeMember(0)
-                #add the new ones
-                for cs in sink_spe:
-                    logger.info('Creating new member: '+str(cs))
-                    newM = target_group.createMember()
-                    newM.setIdRef(cs)
-            elif source_group.getId() in target_groupsID:
-                target_group = target_groups.getGroup(source_group.getId())
-                target_group.setAnnotation(source_group.getAnnotation())
-            '''
-            elif source_group.getId()==pathway_id:
-                target_group = target_groups.getGroup(source_group.getId())
-                logger.debug('Removing rp ractions')
-                for i in range(target_group.getNumMembers()):
-                    logger.debug('Deleting group member: '+str(target_group.getMember(0).getIdRef()))
-                    target_group.removeMember(0)
-                #add the new ones
-                for cs in rp_reac:
-                    logger.debug('Creating new member: '+str(cs))
-                    newM = target_group.createMember()
-                    newM.setIdRef(cs)
-            '''
-        #### add objectives ####
-        source_fbc = rpsbml_gem.getPlugin('fbc')
-        target_fbc = rpsbml.getPlugin('fbc')
-        target_objID = [i.getId() for i in target_fbc.getListOfObjectives()]
-        for source_obj in source_fbc.getListOfObjectives():
-            source_obj_id = source_obj.getId()
-            if source_obj.getId() in target_objID:
-                target_obj = target_fbc.getObjective(source_obj.getId())
-                target_obj.setAnnotation(source_obj.getAnnotation())
-                for target_fluxObj in target_obj.getListOfFluxObjectives():
-                    for source_fluxObj in source_obj.getListOfFluxObjectives():
-                        if target_fluxObj.getReaction()==source_fluxObj.getReaction():
-                            target_fluxObj.setAnnotation(source_fluxObj.getAnnotation())
-            else:
-                target_fbc.addObjective(source_obj)
-        # rpsbml.createMultiFluxObj('obj_RP1_sink', ['RP1_sink'], [1])
-        target_fbc.setActiveObjectiveId(source_obj_id) # tmp random assigenement of objective
-        logger.info('Writing model with heterologous pathway only into file..')
+        heterologousPathway(
+            rpsbml = rpsbml,
+            rpsbml_merged = rpsbml_merged,
+            species_group_id = species_group_id,
+            sink_species_group_id = sink_species_group_id,
+            pathway_id = pathway_id,
+            reactions_in_both = reactions_in_both,
+            logger = logger
+        )
+        logger.info('Returning model with heterologous pathway only')
         return rpsbml
     else:
-        logger.info('Writing the full model into file..')
-        return rpsbml_gem
+        logger.info('Returning the full model')
+        return rpsbml_merged
+
+
+def heterologousPathway(
+    rpsbml: rpSBML,
+    rpsbml_merged: rpSBML,
+    species_group_id: str,
+    sink_species_group_id: str,
+    pathway_id: str,
+    reactions_in_both: Dict,
+    logger: Logger = getLogger(__name__)
+) -> None:
+    # Save the central species
+    groups = rpsbml.getPlugin('groups')
+    central = groups.getGroup(species_group_id)
+    sink_group = groups.getGroup(sink_species_group_id)
+    rp_group = groups.getGroup(pathway_id)
+    cent_spe = [str(i.getIdRef()) for i in central.getListOfMembers()]
+    sink_spe = [str(i.getIdRef()) for i in sink_group.getListOfMembers()]
+    rp_reac  = [str(i.getIdRef()) for i in rp_group.getListOfMembers()]
+    logger.debug('old central species: ' + str(cent_spe))
+    logger.debug('old sink species:    ' + str(sink_spe))
+    logger.debug('old rp reactions:    ' + str(rp_reac))
+
+    rev_reactions = {v: k for k, v in reactions_in_both.items()}
+    logger.debug('reactions_in_both: ' + str(reactions_in_both))
+    logger.debug('rev_reactions:     ' + str(rev_reactions))
+    logger.info('Building model with heterologous pathway only')
+    groups = rpsbml_merged.getPlugin('groups')
+    rp_pathway = groups.getGroup(pathway_id)
+    logger.debug('---- Reactions ----')
+    for member in rp_pathway.getListOfMembers():
+        #### reaction annotation
+        logger.debug(member.getIdRef())
+        reacFBA = rpsbml_merged.getModel().getReaction(member.getIdRef())
+        logger.debug(reacFBA)
+        try:
+            #reacIN = rpsbml.model.getReaction(reactions_convert[member.getIdRef()])
+            reacIN = rpsbml.getModel().getReaction(rev_reactions[member.getIdRef()])
+        except KeyError:
+            reacIN = rpsbml.getModel().getReaction(member.getIdRef())
+        logger.debug(reacIN)
+        logger.debug(reacFBA.getAnnotation())
+        reacIN.setAnnotation(reacFBA.getAnnotation())
+        #### species TODO: only for shadow price
+    #### add groups ####
+    source_groups = rpsbml_merged.getPlugin('groups')
+    target_groups = rpsbml.getPlugin('groups')
+    target_groupsID = [i.getId() for i in target_groups.getListOfGroups()]
+    for source_group in source_groups.getListOfGroups():
+        logger.debug('Replacing group id: '+str(source_group.getId()))
+        if source_group.getId() == species_group_id:
+            target_group = target_groups.getGroup(source_group.getId())
+            # TODO: #### replace the new potentially incorect central species with the normal ones #####
+            # delete all the previous members
+            logger.debug('Removing central_species')
+            for i in range(target_group.getNumMembers()):
+                logger.debug('Deleting group member: '+str(target_group.getMember(0).getIdRef()))
+                target_group.removeMember(0)
+            # add the new ones
+            for cs in cent_spe:
+                logger.debug('Creating new member: '+str(cs))
+                newM = target_group.createMember()
+                newM.setIdRef(cs)
+        elif source_group.getId()==sink_species_group_id:
+            target_group = target_groups.getGroup(source_group.getId())
+            logger.debug('Removing sink species')
+            for i in range(target_group.getNumMembers()):
+                logger.debug('Deleting group member: '+str(target_group.getMember(0).getIdRef()))
+                target_group.removeMember(0)
+            #add the new ones
+            for cs in sink_spe:
+                logger.debug('Creating new member: '+str(cs))
+                newM = target_group.createMember()
+                newM.setIdRef(cs)
+        elif source_group.getId() in target_groupsID:
+            target_group = target_groups.getGroup(source_group.getId())
+            target_group.setAnnotation(source_group.getAnnotation())
+        '''
+        elif source_group.getId()==pathway_id:
+            target_group = target_groups.getGroup(source_group.getId())
+            logger.debug('Removing rp ractions')
+            for i in range(target_group.getNumMembers()):
+                logger.debug('Deleting group member: '+str(target_group.getMember(0).getIdRef()))
+                target_group.removeMember(0)
+            #add the new ones
+            for cs in rp_reac:
+                logger.debug('Creating new member: '+str(cs))
+                newM = target_group.createMember()
+                newM.setIdRef(cs)
+        '''
+    #### add objectives ####
+    source_fbc = rpsbml_merged.getPlugin('fbc')
+    target_fbc = rpsbml.getPlugin('fbc')
+    target_objID = [i.getId() for i in target_fbc.getListOfObjectives()]
+    for source_obj in source_fbc.getListOfObjectives():
+        source_obj_id = source_obj.getId()
+        if source_obj.getId() in target_objID:
+            target_obj = target_fbc.getObjective(source_obj.getId())
+            target_obj.setAnnotation(source_obj.getAnnotation())
+            for target_fluxObj in target_obj.getListOfFluxObjectives():
+                for source_fluxObj in source_obj.getListOfFluxObjectives():
+                    if target_fluxObj.getReaction()==source_fluxObj.getReaction():
+                        target_fluxObj.setAnnotation(source_fluxObj.getAnnotation())
+        else:
+            target_fbc.addObjective(source_obj)
+    # rpsbml.createMultiFluxObj('obj_RP1_sink', ['RP1_sink'], [1])
+    target_fbc.setActiveObjectiveId(source_obj_id) # tmp random assignement of objective
 
 
 def rp_fba(
           rpsbml: rpSBML,
-     reaction_id:    str,
-     coefficient:  float = 1.0,
-          is_max:   bool = True,
-      pathway_id:    str = 'rp_pathway',
-    objective_id:    str = None,
           logger: Logger = getLogger(__name__)
 ) -> cobra_solution:
     """Run FBA using a single objective
@@ -329,32 +335,18 @@ def rp_fba(
     """
     logger.info('Running FBA...')
     logger.debug('rpsbml:       ' + str(rpsbml))
-    logger.debug('reaction_id:  ' + reaction_id)
-    logger.debug('coefficient:  ' + str(coefficient))
-    logger.debug('is_max:       ' + str(is_max))
-    logger.debug('pathway_id:   ' + pathway_id)
-    logger.debug('objective_id: ' + str(objective_id))
 
-    return _rp_fba(
-              rpsbml = rpsbml,
-         reaction_id = reaction_id,
-            sim_type = 'fba',
-         coefficient = coefficient,
-              is_max = is_max,
-          pathway_id = pathway_id,
-        objective_id = objective_id,
-              logger = logger
+    cobra_results = runCobra(
+        rpsbml = rpsbml,
+        logger = logger
     )
+
+    return cobra_results
 
 
 def rp_pfba(
           rpsbml: rpSBML,
-     reaction_id:    str,
-     coefficient:  float = 1.0,
      frac_of_opt:  float = 0.95,
-          is_max:   bool = True,
-      pathway_id:    str = 'rp_pathway',
-    objective_id:    str = None,
           logger: Logger = getLogger(__name__)
 ) -> cobra_solution:
     """Run parsimonious FBA using a single objective
@@ -378,78 +370,14 @@ def rp_pfba(
     """
     logger.info('Running FBA (parsimonious)...')
     logger.debug('rpsbml:       ' + str(rpsbml))
-    logger.debug('reaction_id:  ' + reaction_id)
-    logger.debug('coefficient:  ' + str(coefficient))
     logger.debug('frac_of_opt:  ' + str(frac_of_opt))
-    logger.debug('is_max:       ' + str(is_max))
-    logger.debug('pathway_id:   ' + pathway_id)
-    logger.debug('objective_id: ' + str(objective_id))
-
-    return _rp_fba(
-              rpsbml = rpsbml,
-         reaction_id = reaction_id,
-            sim_type = 'pfba',
-         coefficient = coefficient,
-         frac_of_opt = frac_of_opt,
-              is_max = is_max,
-          pathway_id = pathway_id,
-        objective_id = objective_id,
-              logger = logger
-    )
-
-
-def _rp_fba(
-          rpsbml: rpSBML,
-     reaction_id:    str,
-        sim_type:    str,
-     coefficient:  float = 1.0,
-     frac_of_opt:  float = 0.95,
-          is_max:   bool = True,
-      pathway_id:    str = 'rp_pathway',
-    objective_id:    str = None,
-          logger: Logger = getLogger(__name__)
-) -> cobra_solution:
-    """Run parsimonious FBA using a single objective
-
-    :param reaction_id: The id of the reactions involved in the objective
-    :param coefficient: The coefficient associated with the reactions id (Default: 1.0)
-    :param fraction_of_optimum: Between 0.0 and 1.0 determining the fraction of optimum (Default: 0.95)
-    :param is_max: Maximise or minimise the objective (Default: True)
-    :param pathway_id: The id of the heterologous pathway (Default: rp_pathway)
-    :param objective_id: Overwrite the default id (Default: None)
-
-    :type reaction_id: str
-    :type coefficient: float
-    :type fraction_of_optimum: float
-    :type is_max: bool
-    :type pathway_id: str
-    :type objective_id: str
-
-    :return: Tuple with the results of the FBA and boolean indicating the success or failure of the function
-    :rtype: tuple
-    """
-    
-    # fbc_plugin = rpsbml.getPlugin('fbc')
-
-    # rpsbml.checklibSBML(
-    #     fbc_plugin.setActiveObjectiveId(objective_id),
-    #     'Setting active objective '+str(objective_id)
-    # )
 
     cobraModel = cobra(rpsbml)
     if not cobraModel:
+        logger.error('cobraModel is None')
         return None
-        # logger.error('cobraModel is None')
-        # return 0.0, rpsbml
 
-    # run the FBA
-    if sim_type == 'fba':
-        cobra_results = cobraModel.optimize()
-    elif sim_type == 'pfba':
-        cobra_results = pfba(cobraModel, frac_of_opt)
-    else:
-        logger.error('Cannot recognise sim_type: ' + str(sim_type))
-        return None
+    cobra_results = pfba(cobraModel, frac_of_opt)
 
     return cobra_results
 
@@ -465,7 +393,7 @@ def rp_fraction(
       pathway_id:    str = 'rp_pathway',
     objective_id:    str = None,
           logger: Logger = getLogger(__name__)
-) -> Tuple[float, rpSBML]:
+) -> Tuple[cobra_solution, str, rpSBML]:
     """Optimise for a target reaction while fixing a source reaction to the fraction of its optimum
 
     :param source_reaction: The id of the source reaction
@@ -501,13 +429,28 @@ def rp_fraction(
     logger.debug('pathway_id:   ' + pathway_id)
     logger.debug('objective_id: ' + str(objective_id))
 
+    def get_annot_objective(
+        rpsbml: rpSBML,
+        objective_id: str
+    ) -> str:
+
+        fbc_plugin = rpsbml.getPlugin('fbc')
+        fbc_obj = fbc_plugin.getObjective(objective_id)
+
+        fbc_obj_annot = fbc_obj.getAnnotation()
+        # TODO: if this is None need to set it up
+        if fbc_obj_annot is None:
+            return None
+
+        logger.debug('Already calculated flux for '+str(objective_id))
+
+        return fbc_obj_annot
 
     # retreive the biomass objective and flux results and set as maxima
-    source_obj_id = FindOrCreateObjective(
-        rpsbml,
-        [src_rxn_id],
-        [src_coeff],
-        is_max
+    src_obj_id = rpsbml.find_or_create_objective(
+        reactions = [src_rxn_id],
+        coefficients = [src_coeff],
+        is_max = is_max
     )
 
     # objective = rpsbml.getPlugin(
@@ -523,51 +466,39 @@ def rp_fraction(
 
     # fbc_plugin = rpsbml.getPlugin('fbc')
     # TODO: use the rpSBML BRSynth annotation parser
-    try:
-        fbc_obj = getObjective(
-            rpsbml,
-            source_obj_id
-        )
-        # fbc_obj = fbc_plugin.getObjective(source_obj_id)
-        # TODO: if this is None need to set it up
-        fbc_obj_annot = fbc_obj.getAnnotation()
-        if fbc_obj_annot is None:
-            raise ValueError
-            logger.debug('Already calculated flux for '+str(source_obj_id))
+    # try:
+    fbc_obj_annot = get_annot_objective(rpsbml, src_obj_id)
 
-    except (
-        AttributeError,
-        ValueError
-    ) as e:
-        logger.debug(e)
+    # except (AttributeError, ValueError) as e:
+    if fbc_obj_annot is None:
+        # logger.debug(e)
         logger.debug('Performing FBA to calculate the source reaction')
 
-        # ### FBA ###
-        # # logger.info('Running the FBA (fraction of reaction)...')
-        # # rpsbml.runFBA(source_reaction, source_coefficient, is_max, pathway_id)
-        # rpsbml.checklibSBML(
-        #     fbc_plugin.setActiveObjectiveId(
-        #         source_obj_id
-        #     ),
-        #     'Setting active objective '+str(source_obj_id)
-        # )
+        ### FBA ###
+        # logger.info('Running the FBA (fraction of reaction)...')
+        # rpsbml.runFBA(source_reaction, source_coefficient, is_max, pathway_id)
+        rpsbml.activateObjective(
+            objective_id = src_obj_id,
+            plugin = 'fbc'
+        )
 
-        cobra_results = RunCobraAndWriteResults(
+        cobra_results = runCobra(
             rpsbml = rpsbml,
-            objective_id = source_obj_id,
+            logger = logger
+        )
+
+        write_results(
+            rpsbml = rpsbml,
+            objective_id = src_obj_id,
+            cobra_results = cobra_results,
             pathway_id = pathway_id,
             logger = logger
         )
 
         # cobra_results.objective_value
-        fbc_obj = getObjective(
-            rpsbml,
-            source_obj_id
-        )
-        # fbc_obj = fbc_plugin.getObjective(source_obj_id)
-        fbc_obj_annot = fbc_obj.getAnnotation()
+        fbc_obj_annot = get_annot_objective(rpsbml, src_obj_id)
         if fbc_obj_annot is None:
-            logger.error('No annotation available for: '+str(source_obj_id))
+            logger.error('No annotation available for: '+str(src_obj_id))
 
     source_flux = float(
         fbc_obj_annot.getChild(
@@ -588,26 +519,35 @@ def rp_fraction(
     if not objective_id:
         objective_id = 'obj_'+str(tgt_rxn_id)+'__restricted_'+str(src_rxn_id)
 
-    objective_id = FindOrCreateObjective(
-        rpsbml,
-        [tgt_rxn_id],
-        [tgt_coeff],
-        is_max,
-        objective_id
+    objective_id = rpsbml.find_or_create_objective(
+        reactions = [tgt_rxn_id],
+        coefficients = [tgt_coeff],
+        is_max = is_max,
+        objective_id = objective_id
     )
 
     logger.debug('Optimising the objective: '+str(objective_id))
     logger.debug('     Setting upper bound: '+str(source_flux*frac_of_src))
-    logger.debug('      Setting loer bound: '+str(source_flux*frac_of_src))
+    logger.debug('     Setting lower bound: '+str(source_flux*frac_of_src))
     old_upper_bound, old_lower_bound = rpsbml.setReactionConstraints(
         src_rxn_id,
         source_flux*frac_of_src,
         source_flux*frac_of_src
     )
+    rpsbml.activateObjective(
+        objective_id = objective_id,
+        plugin = 'fbc'
+    )
 
-    cobra_results = RunCobraAndWriteResults(
+    cobra_results = runCobra(
+        rpsbml = rpsbml,
+        logger = logger
+    )
+
+    write_results(
         rpsbml = rpsbml,
         objective_id = objective_id,
+        cobra_results = cobra_results,
         pathway_id = pathway_id,
         logger = logger
     )
@@ -625,71 +565,11 @@ def rp_fraction(
 
     logger.debug('The objective '+str(objective_id)+' results '+str(cobra_results.objective_value))
 
-    return cobra_results.objective_value, rpsbml
+    return cobra_results, objective_id, rpsbml
 
 
-def FindOrCreateObjective(
+def runCobra(
     rpsbml: rpSBML,
-    reactions: List[str],
-    coefficients: List[float],
-    isMax: bool = True,
-    objective_id: str = None
-) -> str:
-    """Find the objective (with only one reaction associated) based on the reaction ID and if not found create it
-
-    :param reactions: List of the reactions id's to set as objectives
-    :param coefficients: List of the coefficients about the objectives
-    :param isMax: Maximise or minimise the objective
-    :param objective_id: overwite the default id if created (from obj_[reactions])
-
-    :type reactions: list
-    :type coefficients: list
-    :type isMax: bool
-    :type objective_id: str
-
-    :raises FileNotFoundError: If the file cannot be found
-    :raises AttributeError: If the libSBML command encounters an error or the input value is None
-
-    :rtype: str
-    :return: Objective ID
-    """
-    fbc_plugin = rpsbml.getPlugin('fbc')
-
-    if objective_id is None:
-        objective_id = 'obj_'+'_'.join(reactions)
-        rpsbml.logger.debug('Set objective as \''+str(objective_id)+'\'')
-
-    for objective in fbc_plugin.getListOfObjectives():
-
-        rpsbml.checklibSBML(
-            fbc_plugin.setActiveObjectiveId(objective.getId()),
-            'Setting active objective '+str(objective.getId())
-        )
-
-        if objective.getId() == objective_id:
-            rpsbml.logger.warning('The specified objective id ('+str(objective_id)+') already exists')
-            return objective_id
-
-        if not set([i.getReaction() for i in objective.getListOfFluxObjectives()])-set(reactions):
-            # TODO: consider setting changing the name of the objective
-            rpsbml.logger.warning('The specified objective id ('+str(objective_id)+') has another objective with the same reactions: '+str(objective.getId()))
-            return objective.getId()
-
-    # If cannot find a valid objective create it
-    rpsbml.createMultiFluxObj(
-        objective_id,
-        reactions,
-        coefficients,
-        isMax
-    )
-
-    return objective_id
-
-
-def RunCobraAndWriteResults(
-    rpsbml: rpSBML,
-    objective_id: str,
-    pathway_id: str,
     logger: Logger = getLogger(__name__)
 ) -> cobra_solution:
     """
@@ -705,32 +585,16 @@ def RunCobraAndWriteResults(
         The id of the pathway within reactions will be updated
     logger
         Logger object
-    Returns
-    -------
-    solution: cobra_solution
     """
 
     cobraModel = cobra(rpsbml)
 
     if not cobraModel:
         logger.error('Converting libSBML to CobraPy returned False')
-        # writeFBAResults(
-        #     rpsbml,
-        #     source_obj_id,
-        #     0.0,
-        #     pathway_id
-        # )
-        return -1, None
+        return None
 
     cobra_results = cobraModel.optimize()
     
-    writeFBAResults(
-        rpsbml,
-        objective_id,
-        cobra_results,
-        pathway_id
-    )
-
     return cobra_results
 
 
@@ -747,7 +611,7 @@ def cobra(
 
     try:
         with NamedTemporaryFile() as temp_f:
-            rpsbml.writeSBML(temp_f.name)
+            rpsbml.writeToFile(temp_f.name)
             #rpsbml.logger.info(glob(tmpOutputFolder+'/*'))
             #rpsbml.logger.info(cobra.io.validate_sbml_model(glob(tmpOutputFolder+'/*')[0]))
             cobraModel = cobra_io.read_sbml_model(temp_f.name, use_fbc_package=True)
@@ -762,11 +626,12 @@ def cobra(
     return cobraModel
 
 
-def writeFBAResults(
+def write_results(
     rpsbml: rpSBML,
     objective_id: str,
     cobra_results: cobra_solution,
-    pathway_id: str = 'rp_pathway'
+    pathway_id: str = 'rp_pathway',
+    logger: Logger = getLogger(__name__)
 ) -> None:
     """Method to hardcode into BRSynth annotations the results of a COBRA analysis
 
@@ -783,12 +648,18 @@ def writeFBAResults(
     """
 
     rpsbml.logger.debug('----- Setting the results for '+str(objective_id)+ ' -----')
+    rpsbml.logger.debug('rpsbml: ' + str(rpsbml))
+    rpsbml.logger.debug('objective_id: ' + str(objective_id))
+    rpsbml.logger.debug('cobra_results: ' + str(cobra_results))
+    rpsbml.logger.debug('cobra_results.objective_value: ' + str(cobra_results.objective_value))
+    rpsbml.logger.debug('pathway_id: ' + str(pathway_id))
 
     write_objective_to_pathway(
         cobra_results.objective_value,
         rpsbml,
         pathway_id,
-        objective_id
+        objective_id,
+        logger
     )
 
     write_fluxes_to_objectives(
@@ -796,13 +667,15 @@ def writeFBAResults(
         cobra_results.objective_value,
         rpsbml,
         objective_id,
+        logger
     )
 
     write_fluxes_to_reactions(
         cobra_results.fluxes,
         rpsbml,
         pathway_id,
-        objective_id
+        objective_id,
+        logger
     )
 
 
@@ -810,7 +683,8 @@ def write_fluxes_to_objectives(
     fluxes: np_series,
     objective_value: float,
     rpsbml: rpSBML,
-    objective_id: str
+    objective_id: str,
+    logger: Logger = getLogger(__name__)
 ) -> None:
     """
     Write Cobra results to the reactions of pathway with id pathway_id in rpsbml object.
@@ -833,9 +707,9 @@ def write_fluxes_to_objectives(
     )
 
     # get the objective
-    obj = getObjective(
-        rpsbml,
-        objective_id
+    obj = rpsbml.getObjective(
+        objective_id,
+        objective_value
     )
 
     rpsbml.updateBRSynth(
@@ -876,7 +750,8 @@ def write_fluxes_to_reactions(
     fluxes: np_series,
     rpsbml: rpSBML,
     pathway_id: str,
-    objective_id: str
+    objective_id: str,
+    logger: Logger = getLogger(__name__)
 ) -> None:
     """
     Write Cobra results to the reactions of pathway with id pathway_id in rpsbml object.
@@ -903,7 +778,7 @@ def write_fluxes_to_reactions(
         rxn = rpsbml.getModel().getReaction(member.getIdRef())
 
         if rxn is None:
-            rpsbml.logger.error(
+            logger.error(
                 'Cannot retreive the following reaction: ' \
               + str(member.getIdRef())
             )
@@ -912,10 +787,14 @@ def write_fluxes_to_reactions(
         
         flux = fluxes.get(rxn.getId())
 
-        rpsbml.logger.debug(
+        # print(fluxes.values)
+        # exit()
+        
+        logger.debug(
             'Set the reaction ' + str(member.getIdRef()) \
           + ' a ' + str('fba_' + str(objective_id)) \
           + ' of ' + str(flux))
+
         rpsbml.updateBRSynth(
             rxn,
             'fba_'+str(objective_id),
@@ -929,7 +808,8 @@ def write_objective_to_pathway(
     objective_value: float,
     rpsbml: rpSBML,
     pathway_id: str,
-    objective_id: str
+    objective_id: str,
+    logger: Logger = getLogger(__name__)
 ) -> None:
     """
     Write Cobra results to the pathway with id pathway_id in rpsbml object.
@@ -951,7 +831,7 @@ def write_objective_to_pathway(
         pathway_id
     )
 
-    rpsbml.logger.debug(
+    logger.debug(
         'Set ' + str(pathway_id) + ' with ' \
       + str('fba_'+str(objective_id)) + ' to ' \
       + str(objective_value)
@@ -965,22 +845,6 @@ def write_objective_to_pathway(
         False
     )
 
-
-def getObjective(
-    rpsbml: rpSBML,
-    objective_id: str
-) -> sbml_objective:
-
-    objective = rpsbml.getPlugin(
-        'fbc'
-    ).getObjective(objective_id)
-
-    rpsbml.checklibSBML(
-        objective,
-        'Getting objective '+str(objective_id)
-    )
-
-    return objective
 
 
 

@@ -105,7 +105,7 @@ def _add_arguments(parser):
     parser.add_argument(
         '--dont_merge',
         action='store_true',
-        help='output the merged model (default)'
+        help='output the heterologous pathway only (default)'
     )
     parser.add_argument(
         '--log',

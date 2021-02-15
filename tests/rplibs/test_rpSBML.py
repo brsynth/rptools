@@ -59,7 +59,7 @@ class Test_rpSBML(Main_rplibs):
 
 
     def test_initWithDocument(self):
-        rpsbml = rpSBML(document=self.rpsbml.getDocument())
+        rpsbml = rpSBML(rpsbml = self.rpsbml)
         self.assertEqual(rpsbml.getName(), self.ref_name)
 
 
@@ -270,7 +270,7 @@ class Test_rpSBML(Main_rplibs):
             inFile = self.e_coli_model_path,
             logger = self.logger
         )
-        spe_src_tgt, rxns_src_tgt = rpSBML.mergeModels(
+        merged_rpsbml, reactions_in_both = rpSBML.mergeModels(
             self.rpsbml,
             target_rpsbml,
             logger = self.logger
@@ -279,7 +279,7 @@ class Test_rpSBML(Main_rplibs):
             inFile = self.merged_path,
             logger = self.logger
         )
-        self.assertEqual(target_rpsbml, ref_target_rpsbml)
+        self.assertEqual(merged_rpsbml, ref_target_rpsbml)
 
 
     def test_mergeFiles(self):
@@ -325,7 +325,7 @@ class Test_rpSBML(Main_rplibs):
         rpsbml.createGroup('rp_pathway')
         rpsbml.createGroup('central_species')
         with NamedTemporaryFile() as tempf:
-            rpsbml.writeSBML(tempf.name)
+            rpsbml.writeToFile(tempf.name)
             self.assertListEqual(
                 list(
                     io_open(tempf.name)
