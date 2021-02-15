@@ -1,5 +1,8 @@
 # Release history
 
+## 3.0.0
+- New feature: rpscore
+
 ## 2.4.0
 - rpSBML: rewrite methods
 - rpFBA: rewrite functions
