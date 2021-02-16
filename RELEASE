@@ -1,7 +1,10 @@
 # Release history
 
+## 4.0.0
+- New module: rpranker
+
 ## 3.0.0
-- New feature: rpscore
+- New module: rpscore
 
 ## 2.4.0
 - rpSBML: rewrite methods

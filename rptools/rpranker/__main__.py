@@ -25,7 +25,13 @@ def entry_point():
 
     if args.outfile != '':
         with open(args.outfile, 'w') as fp:
-            fp.write(str(ranked_pathways))
+            for item in ranked_pathways:
+                fp.write(
+                    '{score} {filename}\n'.format(
+                        score  = item[0],
+                        filename = item[1]
+                    )
+                )
 
     if not args.silent:
         if args.log.lower() in ['critical', 'error', 'warning']:
