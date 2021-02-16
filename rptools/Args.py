@@ -7,7 +7,7 @@ from typing import(
 
 def build_args_parser(
     prog: str,
-    description: str = ''
+    description: str = '',
     m_add_args: Callable = None,
 ) -> ArgumentParser:
 
