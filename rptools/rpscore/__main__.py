@@ -41,7 +41,10 @@ def entry_point():
         rpsbml.updateBRSynthPathway(rpsbml_dict, args.pathway_id)
         rpsbml.writeToFile(args.outfile)
 
-    logger.info('\nGlobal Score = ' + str(score))
+    if args.log.lower() in ['critical', 'error', 'warning']:
+        print(score)
+    else:
+        logger.info('\nGlobal Score = ' + str(score))
 
 
 if __name__ == '__main__':

@@ -100,8 +100,8 @@ def _add_arguments(parser):
         metavar='ARG',
         type=str,
         choices=[
-            'debug', 'info', 'warning', 'error', 'critical',
-            'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
+            'debug', 'info', 'warning', 'error', 'critical', 'silent', 'quiet'
+            'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', 'SILENT', 'QUIET'
         ],
         default='def_info',
         help='Adds a console logger for the specified level (default: error)'
