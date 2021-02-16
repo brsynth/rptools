@@ -1,8 +1,0 @@
-1.1.1 - Dec 11, 2020
-    - fix function calls
-
-1.1.0 - Dec 11, 2020
-    - add logger customisable from outside of the module
-
-1.0.0 - Dec 9, 2020
-    - first release
