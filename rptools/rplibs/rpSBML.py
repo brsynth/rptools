@@ -77,7 +77,7 @@ class rpSBML:
 
         # document
         # if an sbml file is given, then read it (self.document will be created)
-        if not inFile is None:
+        if inFile is not None:
             infile = inFile
             kind = guess(infile)
             with TemporaryDirectory() as temp_d:

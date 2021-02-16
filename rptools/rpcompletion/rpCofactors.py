@@ -49,7 +49,7 @@ def add_side_species(cache, full_reac, rr_reac, logger=logging.getLogger(__name_
         ### update the reaction rule string
         try:
             smi = cache.cid_strc[toAdd]['smiles']
-            if not smi is None:
+            if smi is not None:
                 for sto_add in range(int(full_reac[toAdd])):
                     smiles += '.'+str(smi)
         except KeyError:
