@@ -79,17 +79,17 @@ class rpSBML:
         # if an sbml file is given, then read it (self.document will be created)
         if inFile is not None:
             infile = inFile
-            kind = guess(infile)
-            with TemporaryDirectory() as temp_d:
-                if kind:
-                    self.logger.debug('inFile is detected as ' + str(kind))
-                    if kind.mime == 'application/gzip':
-                        infile = extract_gz(inFile, temp_d)
-                try:
+            try:
+                kind = guess(infile)
+                with TemporaryDirectory() as temp_d:
+                    if kind:
+                        self.logger.debug('inFile is detected as ' + str(kind))
+                        if kind.mime == 'application/gzip':
+                            infile = extract_gz(inFile, temp_d)
                     self.readSBML(infile)
-                except FileNotFoundError as e:
-                    self.logger.error(str(e) + infile)
-                    exit(-1)
+            except FileNotFoundError as e:
+                self.logger.error(str(e))
+                exit(-1)
 
         else:
             if rpsbml is None:
