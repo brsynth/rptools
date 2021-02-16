@@ -13,7 +13,7 @@ def init(
     from brs_utils import create_logger
     from rptools._version import __version__
 
-    if args.log.lower() in ['silent', 'quiet']:
+    if args.log.lower() in ['silent', 'quiet'] or args.silent:
         args.log = 'CRITICAL'
 
     # Create logger

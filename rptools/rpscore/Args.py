@@ -2,16 +2,7 @@ from argparse  import ArgumentParser
 from rptools._version import __version__
 
 
-def build_args_parser():
-    parser = ArgumentParser(
-        prog='rpscore',
-        description='Calculate global score by combining all scores (rules, FBA, Thermo)'
-    )
-    parser = _add_arguments(parser)
-    return parser
-
-
-def _add_arguments(parser):
+def add_arguments(parser):
     parser.add_argument(
         'pathway_file',
         type = str,
@@ -95,21 +86,5 @@ def _add_arguments(parser):
         default = 'dfG_prime_m',
         help = 'The ID of the Gibbs free energy that may be used. May be either dfG_prime_m or dfG_prime_o (Default: dfG_prime_m)'
     )
-    parser.add_argument(
-        '--log',
-        metavar='ARG',
-        type=str,
-        choices=[
-            'debug', 'info', 'warning', 'error', 'critical', 'silent', 'quiet'
-            'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', 'SILENT', 'QUIET'
-        ],
-        default='def_info',
-        help='Adds a console logger for the specified level (default: error)'
-    )
-    parser.add_argument(
-        '--version',
-        action='version',
-        version='%(prog)s {}'.format(__version__),
-        help='show the version number and exit'
-    )
+
     return parser

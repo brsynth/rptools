@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 from rptools.rplibs      import rpCache
-from rptools.rplibs.Args import build_args_parser
+from rptools.rplibs.Args import add_arguments
+from rptools import build_args_parser
 
 
 def gen_cache(outdir, logger):
@@ -9,7 +10,11 @@ def gen_cache(outdir, logger):
 
 
 def _cli():
-    parser = build_args_parser()
+    parser = build_args_parser(
+        prog = 'rpcache',
+        description = 'Pre-compute data',
+        m_add_args = add_arguments
+    )
     args  = parser.parse_args()
 
     from rptools.__main__ import init

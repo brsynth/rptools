@@ -1,11 +1,16 @@
 from rptools.rpfba import (
     runFBA,
-    build_args_parser
 )
+from rptools.rpfba.Args import add_arguments
+from rptools import build_args_parser
 
 
 def entry_point():
-    parser = build_args_parser()
+    parser = build_args_parser(
+        prog = 'rpfba',
+        description = 'Process to Flux Balance Analysis',
+        m_add_args = add_arguments
+    )
     args   = parser.parse_args()
 
     from rptools.__main__ import init

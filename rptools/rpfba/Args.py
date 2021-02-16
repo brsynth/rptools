@@ -2,16 +2,7 @@ from argparse  import ArgumentParser
 from rptools._version import __version__
 
 
-def build_args_parser():
-    parser = ArgumentParser(
-        prog='rpfba',
-        description='Calculate FBA to generate rpFBA collection'
-    )
-    parser = _add_arguments(parser)
-    return parser
-
-
-def _add_arguments(parser):
+def add_arguments(parser):
     parser.add_argument(
         'pathway',
         type=str,
@@ -106,22 +97,5 @@ def _add_arguments(parser):
         '--dont_merge',
         action='store_true',
         help='output the heterologous pathway only (default)'
-    )
-    parser.add_argument(
-        '--log',
-        metavar='ARG',
-        type=str,
-        choices=[
-            'debug', 'info', 'warning', 'error', 'critical',
-            'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
-        ],
-        default='def_info',
-        help='Adds a console logger for the specified level (default: error)'
-    )
-    parser.add_argument(
-        '--version',
-        action='version',
-        version='%(prog)s {}'.format(__version__),
-        help='show the version number and exit'
     )
     return parser

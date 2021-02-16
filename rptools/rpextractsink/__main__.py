@@ -1,11 +1,17 @@
 #!/usr/bin/env python
 
-from rptools.rpextractsink  import genSink, build_args_parser
+from rptools.rpextractsink  import genSink
 from rptools.rplibs         import rpCache
+from rptools.rpextractsink.Args import add_arguments
+from rptools import build_args_parser
 
 
 def _cli():
-    parser = build_args_parser()
+    parser = build_args_parser(
+        prog = 'rpextractsink',
+        description = 'Generate the sink from a model SBML by specifying the compartment',
+        m_add_args = add_arguments
+    )
     args  = parser.parse_args()
 
     from rptools.__main__ import init

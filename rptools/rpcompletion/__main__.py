@@ -1,11 +1,17 @@
 #!/usr/bin/env python
 
 from rptools.rplibs       import rpCache
-from rptools.rpcompletion import rp_completion, build_args_parser
+from rptools.rpcompletion import rp_completion
+from rptools.rpcompletion.Args import add_arguments
+from rptools import build_args_parser
 
 
 def _cli():
-    parser = build_args_parser()
+    parser = build_args_parser(
+        prog = 'rpcompletion',
+        description = 'Parse RP2 pathways to generate rpSBML collection of unique and complete (cofactors) pathways',
+        m_add_args = add_arguments
+    )
     args  = parser.parse_args()
 
     args.pubchem_search = args.pubchem_search.lower() in ['true', 't']

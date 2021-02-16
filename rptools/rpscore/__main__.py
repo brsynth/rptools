@@ -1,14 +1,19 @@
 from rptools.rpscore import (
     compute_globalscore,
-    build_args_parser
 )
+from rptools.rpscore.Args import add_arguments
+from rptools import build_args_parser
 from rptools.rplibs import rpSBML
 
 
 def entry_point():
   
-    parser = build_args_parser()
-    args   = parser.parse_args()
+    parser = build_args_parser(
+        prog = 'rpscore',
+        description = 'Calculate global score by combining all scores (rules, FBA, Thermo)',
+        m_add_args = add_arguments
+    )
+    args = parser.parse_args()
 
     from rptools.__main__ import init
     logger = init(parser, args)
@@ -41,10 +46,11 @@ def entry_point():
         rpsbml.updateBRSynthPathway(rpsbml_dict, args.pathway_id)
         rpsbml.writeToFile(args.outfile)
 
-    if args.log.lower() in ['critical', 'error', 'warning']:
-        print(score)
-    else:
-        logger.info('\nGlobal Score = ' + str(score))
+    if not args.silent:
+        if args.log.lower() in ['critical', 'error', 'warning']:
+            print(score)
+        else:
+            logger.info('\nGlobal Score = ' + str(score))
 
 
 if __name__ == '__main__':
