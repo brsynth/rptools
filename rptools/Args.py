@@ -7,8 +7,8 @@ from typing import(
 
 def build_args_parser(
     prog: str,
-    m_add_args: Callable,
     description: str = ''
+    m_add_args: Callable = None,
 ) -> ArgumentParser:
 
     parser = ArgumentParser(
@@ -20,7 +20,8 @@ def build_args_parser(
     parser = _add_arguments(parser)
 
     # Add module specific arguments
-    parser = m_add_args(parser)
+    if m_add_args is not None:
+        parser = m_add_args(parser)
 
     return parser
 
