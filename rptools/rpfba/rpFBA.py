@@ -170,6 +170,10 @@ def runFBA(
         else:
             logger.error('Cannot recognise sim_type: ' + str(sim_type))
             return None
+
+        if cobra_results is None:
+            return None
+
         write_results(
             rpsbml = rpsbml_merged,
             objective_id = objective_id,
@@ -179,8 +183,6 @@ def runFBA(
         )
 
     if cobra_results is None:
-        logger.error('The Cobra model computed is None')
-        logger.error('Exiting program')
         return None
 
     '''
@@ -374,7 +376,6 @@ def rp_pfba(
 
     cobraModel = cobra(rpsbml)
     if not cobraModel:
-        logger.error('cobraModel is None')
         return None
 
     cobra_results = pfba(cobraModel, frac_of_opt)
@@ -486,6 +487,8 @@ def rp_fraction(
             rpsbml = rpsbml,
             logger = logger
         )
+        if cobra_results is None:
+            return None, rpsbml
 
         write_results(
             rpsbml = rpsbml,
@@ -543,6 +546,8 @@ def rp_fraction(
         rpsbml = rpsbml,
         logger = logger
     )
+    if cobra_results is None:
+        return None, rpsbml
 
     write_results(
         rpsbml = rpsbml,
@@ -590,7 +595,6 @@ def runCobra(
     cobraModel = cobra(rpsbml)
 
     if not cobraModel:
-        logger.error('Converting libSBML to CobraPy returned False')
         return None
 
     cobra_results = cobraModel.optimize()
