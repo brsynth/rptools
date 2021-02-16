@@ -80,7 +80,12 @@ class rpSBML:
         if inFile is not None:
             infile = inFile
             try:
-                kind = guess(infile)
+                try:
+                    kind = guess(infile)
+                except:
+                    logger.error('inFile has to be of type \'str\' (not ' + str(type(infile)) + ')')
+                    logger.info('Exiting...')
+                    exit()
                 with TemporaryDirectory() as temp_d:
                     if kind:
                         self.logger.debug('inFile is detected as ' + str(kind))
@@ -3289,10 +3294,106 @@ class rpSBML:
         return False
 
 
+    def read_global_score(
+        self,
+        pathway_id: str = 'rp_pathway'
+    ) -> float:
+        return self.toDict(
+            pathway_id = pathway_id,
+            keys = ['pathway']
+        )['pathway']['brsynth']['global_score']
+
+
+    def read_pathway(
+        self,
+        rp_pathway: libsbml.Group
+    ) -> Dict:
+        """
+        Read pathway field in rpSBML file fir rp_pathway.
+
+        Parameters
+        ----------
+        rp_pathway: libsbml.Group
+            Pathway to extract infos from
+
+        Returns
+        -------
+        pathway: Dict
+            Read fields
+        """
+        pathway = {}
+        pathway['brsynth'] = self.readBRSYNTHAnnotation(rp_pathway.getAnnotation(), self.logger)
+        return pathway
+
+
+    def read_reactions(
+        self,
+        rp_pathway: libsbml.Group
+    ) -> Dict:
+        """
+        Read reactions field in rpSBML file for rp_pathway.
+
+        Parameters
+        ----------
+        rp_pathway: libsbml.Group
+            Pathway to extract infos from
+
+        Returns
+        -------
+        pathway: Dict
+            Read fields
+        """
+        reactions = {}
+        for member in rp_pathway.getListOfMembers():
+            reaction = self.getModel().getReaction(member.getIdRef())
+            annot = reaction.getAnnotation()
+            reactions[member.getIdRef()] = {}
+            # add BRSynth annotations
+            reactions[member.getIdRef()]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
+            # add right and left species
+            species = self.readReactionSpecies(reaction)
+            reactions[member.getIdRef()]['brsynth']['left']  = species['left']
+            reactions[member.getIdRef()]['brsynth']['right'] = species['right']
+            # add MIRIAM annotations
+            reactions[member.getIdRef()]['miriam']  = self.readMIRIAMAnnotation(annot)
+        return reactions
+
+
+    def read_species(
+        self,
+        pathway_id: str
+    ) -> Dict:
+        """
+        Read species field in rpSBML file for pathway_id.
+
+        Parameters
+        ----------
+        pathway_id: str
+            ID of the pathway to read infos from
+
+        Returns
+        -------
+        pathway: Dict
+            Read fields
+        """
+        species_dict = {}
+        for spe_id in self.readUniqueRPspecies(pathway_id):
+            species = self.getModel().getSpecies(spe_id)
+            annot = species.getAnnotation()
+            species_dict[spe_id] = {}
+            species_dict[spe_id]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
+            species_dict[spe_id]['miriam']  = self.readMIRIAMAnnotation(annot)
+        return species_dict
+
+
     #########################################################################
     ################### CONVERT BETWEEEN FORMATS ############################
     #########################################################################
-    def toDict(self, pathway_id='rp_pathway'):
+    def toDict(
+        self,
+        pathway_id: str = 'rp_pathway',
+        keys: List[str] = ['pathway', 'reactions', 'species']
+    ) -> Dict:
         """Generate the dictionnary of all the annotations of a pathway species, reaction and pathway annotations
 
         :param pathway_id: The pathway ID (Default: rp_pathway)
@@ -3305,37 +3406,20 @@ class rpSBML:
 
         groups = self.getModel().getPlugin('groups')
         rp_pathway = groups.getGroup(pathway_id)
-        members = rp_pathway.getListOfMembers()
+
+        rpsbml_dict = {}
 
         # pathway
-        rpsbml_dict = {}
-        rpsbml_dict['pathway'] = {}
-        rpsbml_dict['pathway']['brsynth'] = self.readBRSYNTHAnnotation(rp_pathway.getAnnotation(), self.logger)
-        # rpsbml_dict['pathway']['brsynth']['reactions'] = self.readGroupMembers(pathway_id)
+        if 'pathway' in keys:
+            rpsbml_dict['pathway'] = self.read_pathway(rp_pathway)
 
         # reactions
-        rpsbml_dict['reactions'] = {}
-        for member in members:
-            reaction = self.getModel().getReaction(member.getIdRef())
-            annot = reaction.getAnnotation()
-            rpsbml_dict['reactions'][member.getIdRef()] = {}
-            # add BRSynth annotations
-            rpsbml_dict['reactions'][member.getIdRef()]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
-            # add right and left species
-            species = self.readReactionSpecies(reaction)
-            rpsbml_dict['reactions'][member.getIdRef()]['brsynth']['left']  = species['left']
-            rpsbml_dict['reactions'][member.getIdRef()]['brsynth']['right'] = species['right']
-            # add MIRIAM annotations
-            rpsbml_dict['reactions'][member.getIdRef()]['miriam']  = self.readMIRIAMAnnotation(annot)
+        if 'reactions' in keys:
+            rpsbml_dict['reactions'] = self.read_reactions(rp_pathway)
 
         # loop though all the species
-        rpsbml_dict['species'] = {}
-        for spe_id in self.readUniqueRPspecies(pathway_id):
-            species = self.getModel().getSpecies(spe_id)
-            annot = species.getAnnotation()
-            rpsbml_dict['species'][spe_id] = {}
-            rpsbml_dict['species'][spe_id]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
-            rpsbml_dict['species'][spe_id]['miriam']  = self.readMIRIAMAnnotation(annot)
+        if 'species' in keys:
+            rpsbml_dict['species'] = self.read_species(pathway_id)
 
         return rpsbml_dict
 
