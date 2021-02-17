@@ -85,7 +85,7 @@ class rpSBML:
                 except:
                     logger.error('inFile has to be of type \'str\' (not ' + str(type(infile)) + ')')
                     logger.info('Exiting...')
-                    exit()
+                    exit(-1)
                 with TemporaryDirectory() as temp_d:
                     if kind:
                         self.logger.debug('inFile is detected as ' + str(kind))

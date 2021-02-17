@@ -11,10 +11,22 @@ def add_arguments(parser):
         help = 'Paths to pathways with global score'
     )
     parser.add_argument(
+        '--top',
+        type = int,
+        default = '10',
+        help = 'Numbers of pathways to be selected'
+    )
+    parser.add_argument(
         '--outfile',
         type = str,
         default = '',
         help = 'Path to write out file with the ranking'
+    )
+    parser.add_argument(
+        '--outdir',
+        type = str,
+        default = '',
+        help = 'Path to write out selected pathways'
     )
 
     return parser
