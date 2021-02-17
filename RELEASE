@@ -1,7 +1,11 @@
 # Release history
 
+## 4.1.0
+- New feature (rpRanker): add the ability to copy selected pathways into a folder
+
 ## 4.0.0
 - New module: rpranker
+- rpSBML: add optional 'keys' arg in toDict() to specify part of rpSBML to parse
 
 ## 3.0.0
 - New module: rpscore
