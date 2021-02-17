@@ -17,16 +17,16 @@ def add_arguments(parser):
         help = 'Numbers of pathways to be selected'
     )
     parser.add_argument(
-        '--outfile',
+        '--rank_outfile',
         type = str,
         default = '',
-        help = 'Path to store selected pathways as a .tar.gz archive, unless --light is passed.'
+        help = 'Path to store the ranking result.'
     )
     parser.add_argument(
-        '--light',
-        action = 'store_true',
-        default = False,
-        help = 'If set, selected pathway filenames are stored into a file (default: False). Needs --outfile argument.'
+        '--data_outfile',
+        type = str,
+        default = '',
+        help = 'Path to store selected pathways as a .tar.gz archive.'
     )
     # parser.add_argument(
     #     '--outdir',

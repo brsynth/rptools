@@ -31,11 +31,6 @@ def entry_point():
     from rptools.__main__ import init
     logger = init(parser, args)
 
-    # Check arguments
-    if args.light and args.outfile == '':
-        logger.warning('\'light\' argument is passed without --outfile, ignoring it...')
-        args.light = False
-
     # Process to the ranking
     ranked_pathways = rank(
         pathways = args.pathways,
@@ -43,21 +38,28 @@ def entry_point():
     )
 
     # Write into a file the list of top ranked pathways
-    if args.outfile != '':
-        if args.light:
-            store_paths_into_file(
-                ranked_pathways[:args.top],
-                args.outfile
-            )
-        else:
-            store_into_tar_gz_file(
-                ranked_pathways[:args.top],
-                args.outfile
-            )
+    if args.rank_outfile != '':
+        store_paths_into_file(
+            ranked_pathways[:args.top],
+            args.rank_outfile
+        )
         logger.info(
-            '\nTop {top} pathways ranking is available in file {file}.'.format(
+            '\nThe {top} pathways with highest scores are available in file {file}.'.format(
                 top = args.top,
-                file = args.outfile
+                file = args.rank_outfile
+            )
+        )
+
+    # Write into an archive the top ranked pathways
+    if args.data_outfile != '':
+        store_into_tar_gz_file(
+            ranked_pathways[:args.top],
+            args.data_outfile
+        )
+        logger.info(
+            '\nThe {top} pathway paths with highest scores are available in file {file}.'.format(
+                top = args.top,
+                file = args.data_outfile
             )
         )
 
