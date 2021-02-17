@@ -31,6 +31,12 @@ def entry_point():
     from rptools.__main__ import init
     logger = init(parser, args)
 
+    # Check arguments
+    if args.light and args.outfile == '':
+        logger.warning('\'light\' argument is passed without --outfile, ignoring it...')
+        args.light = False
+
+    # Process to the ranking
     ranked_pathways = rank(
         pathways = args.pathways,
         logger = logger
@@ -38,10 +44,16 @@ def entry_point():
 
     # Write into a file the list of top ranked pathways
     if args.outfile != '':
-        store_into_tar_gz_file(
-            ranked_pathways[:args.top],
-            args.outfile
-        )
+        if args.light:
+            store_paths_into_file(
+                ranked_pathways[:args.top],
+                args.outfile
+            )
+        else:
+            store_into_tar_gz_file(
+                ranked_pathways[:args.top],
+                args.outfile
+            )
         logger.info(
             '\nTop {top} pathways ranking is available in file {file}.'.format(
                 top = args.top,
@@ -70,6 +82,20 @@ def entry_point():
             logger.info('   |-' + '\n   |-'.join('{}: {}'.format(*k) for k in enumerate(ranked_pathways)))
 
 
+def store_paths_into_file(
+    pathways: List[ Tuple[float, str] ],
+    outfile: str
+) -> None:
+    with open(outfile, 'w') as fp:
+        for item in pathways:
+            fp.write(
+                '{score} {filename}\n'.format(
+                    score  = item[0],
+                    filename = item[1]
+                )
+            )
+
+
 def store_into_tar_gz_file(
     pathways: List[ Tuple[float, str] ],
     outfile: str
@@ -94,5 +120,5 @@ def store_into_tar_gz_file(
 #         copy(item[1], outdir)
 
 
-# if __name__ == '__main__':
-#     entry_point()
+if __name__ == '__main__':
+    entry_point()
