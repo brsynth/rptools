@@ -1,7 +1,7 @@
 # Release history
 
 ## 4.1.0
-- New feature (rpRanker): add the ability to copy selected pathways into a folder
+- New feature (rpRanker): provides an .tar.gz file with selected pathways in
 
 ## 4.0.0
 - New module: rpranker
