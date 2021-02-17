@@ -1,5 +1,8 @@
 # Release history
 
+## 4.2.0
+- New feature (rpRanker): ability to store either pathway files or only the ranking result
+
 ## 4.1.0
 - New feature (rpRanker): provides an .tar.gz file with selected pathways in
 
