@@ -83,7 +83,12 @@ class rpSBML:
                 try:
                     kind = guess(infile)
                 except:
-                    logger.error('inFile has to be of type \'str\' (not ' + str(type(infile)) + ')')
+                    logger.error(
+                        'inFile {file} has to be of type \'str\' (not {type})'.format(
+                            file=infile,
+                            type=str(type(infile))
+                        )
+                    )
                     logger.info('Exiting...')
                     exit(-1)
                 with TemporaryDirectory() as temp_d:
@@ -101,6 +106,9 @@ class rpSBML:
                 self.document = None
             else:
                 self.document = rpsbml.getDocument().clone()
+
+        if not self.checkSBML():
+            logger.error('SBML file {file} not valid, exiting...'.format(file=infile))
 
         # model name
         self.setName(name if name else self.getName())
@@ -181,6 +189,11 @@ class rpSBML:
                 'reactome': 'reactome'
             }
         }
+
+
+    def checkSBML(self) -> bool:
+        self.logger.debug('Checking SBML format...')
+        return libsbml.SBMLValidator().validate(self.getDocument()) == 0
 
 
     def getModel(self):
