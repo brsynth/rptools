@@ -519,7 +519,11 @@ class rpSBML:
 
         merged_rpsbml.completeHeterologousPathway()
 
-        return merged_rpsbml, reactions_in_both
+        if merged_rpsbml.checkSBML():
+            return merged_rpsbml, reactions_in_both
+        else:
+            logger.error('Merging rpSBML objects results in a invalid SBML format')
+            return None, []
 
 
     @staticmethod
