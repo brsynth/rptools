@@ -40,7 +40,7 @@ def entry_point():
     else:
       logger.info('Writing into file...')
       rpsbml.writeToFile(args.outfile)
-      logger.info('  |--> written in ' + args.outfile)
+      logger.info('   |--> written in ' + args.outfile)
 
 
 if __name__ == '__main__':
