@@ -403,8 +403,8 @@ class rpSBML:
         """
         Merge two models species and reactions using the annotations to recognise the same species and reactions
 
-        The source model has to have both the GROUPS and FBC packages enabled in its SBML. The course must have a groups
-        called rp_pathway. If not use the readSBML() function to create a model
+        The source model has to have both the GROUPS and FBC packages enabled in its SBML.
+        The course must have a group called rp_pathway. If not, use the readSBML() function to create a model
         We add the reactions and species from the rpsbml to the target_model
 
         Parameters
@@ -432,7 +432,7 @@ class rpSBML:
         logger.debug('source_rpsbml: ' + str(source_rpsbml))
         logger.debug('target_rpsbml: ' + str(target_rpsbml))
 
-        # Copy target rpSBML objetc into a new one so that
+        # Copy target rpSBML object into a new one so that
         # it can be modified and returned
         merged_rpsbml = rpSBML(
             rpsbml = target_rpsbml,
@@ -441,11 +441,21 @@ class rpSBML:
 
         ## MODEL FBC ###################################
         # Find the ID's of the similar target_rpsbml.model species
-        target_fbc, source_fbc = rpSBML.getFBCModel(
-            source_sbml_doc = source_rpsbml.getDocument(),
-            target_sbml_doc = merged_rpsbml.getDocument(),
-            logger = logger
-        )
+        pkg = 'fbc'
+        url = 'http://www.sbml.org/sbml/level3/version1/fbc/version2'
+        source_fbc = source_rpsbml.enable_package(pkg, url)
+        target_fbc = merged_rpsbml.enable_package(pkg, url)
+
+        # pkg = 'groups'
+        # url = 'http://www.sbml.org/sbml/level3/version1/groups/version1'
+        # source_fbc = source_rpsbml.enable_package(pkg, url)
+        # target_fbc = merged_rpsbml.enable_package(pkg, url)
+
+        # target_fbc, source_fbc = rpSBML.getFBCModel(
+        #     source_sbml_doc = source_rpsbml.getDocument(),
+        #     target_sbml_doc = merged_rpsbml.getDocument(),
+        #     logger = logger
+        # )
 
         ## UNIT DEFINITIONS ############################
         # return the list of unit definitions id's for the target to avoid overwritting
@@ -517,58 +527,76 @@ class rpSBML:
             logger = logger
         )
 
-        merged_rpsbml.completeHeterologousPathway()
+        # merged_rpsbml.completeHeterologousPathway()
 
         if merged_rpsbml.checkSBML():
             return merged_rpsbml, reactions_in_both
         else:
             logger.error('Merging rpSBML objects results in a invalid SBML format')
-            return None, []
+            return None, None
 
 
-    @staticmethod
-    def getFBCModel(
-        source_sbml_doc: libsbml.SBMLDocument,
-        target_sbml_doc: libsbml.SBMLDocument,
-        logger: Logger = getLogger(__name__)
-    ) -> Tuple[
-            libsbml.FbcModelPlugin,
-            libsbml.FbcModelPlugin
-    ]:
-
-        logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
-        logger.debug('target_sbml_doc: ' + str(target_sbml_doc))
-        
-        if not target_sbml_doc.getModel().isPackageEnabled('fbc'):
+    def enable_package(
+        self,
+        pkg: str,
+        url: str
+    ) -> libsbml.FbcModelPlugin:
+        if not self.getModel().isPackageEnabled(pkg):
             rpSBML.checklibSBML(
-                target_sbml_doc.getModel().enablePackage(
-                    'http://www.sbml.org/sbml/level3/version1/fbc/version2',
-                    'fbc',
-                    True
-                ),
-                'Enabling the FBC package'
+                self.getModel().enablePackage(url, pkg, True),
+                'Enabling the ' + pkg + 'package'
             )
-        
-        if not source_sbml_doc.getModel().isPackageEnabled('fbc'):
-            rpSBML.checklibSBML(
-                source_sbml_doc.getModel().enablePackage(
-                    'http://www.sbml.org/sbml/level3/version1/fbc/version2',
-                    'fbc',
-                    True
-                ),
-                'Enabling the FBC package'
-            )
-        
-        target_fbc = target_sbml_doc.getModel().getPlugin('fbc')
-        source_fbc = source_sbml_doc.getModel().getPlugin('fbc')
-        
-        # note sure why one needs to set this as False
-        rpSBML.checklibSBML(
-            source_sbml_doc.setPackageRequired('fbc', False),
-            'enabling FBC package'
-        )
+        # # note sure why one needs to set this as False
+        # rpSBML.checklibSBML(
+        #     self.getDocument().setPackageRequired(pkg, False),
+        #     pkg + ' package not required'
+        # )
+        return self.getModel().getPlugin(pkg)
 
-        return target_fbc, source_fbc
+
+    # @staticmethod
+    # def getFBCModel(
+    #     source_sbml_doc: libsbml.SBMLDocument,
+    #     target_sbml_doc: libsbml.SBMLDocument,
+    #     logger: Logger = getLogger(__name__)
+    # ) -> Tuple[
+    #         libsbml.FbcModelPlugin,
+    #         libsbml.FbcModelPlugin
+    # ]:
+
+    #     logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
+    #     logger.debug('target_sbml_doc: ' + str(target_sbml_doc))
+        
+    #     if not target_sbml_doc.getModel().isPackageEnabled('fbc'):
+    #         rpSBML.checklibSBML(
+    #             target_sbml_doc.getModel().enablePackage(
+    #                 'http://www.sbml.org/sbml/level3/version1/fbc/version2',
+    #                 'fbc',
+    #                 True
+    #             ),
+    #             'Enabling the FBC package'
+    #         )
+        
+    #     if not source_sbml_doc.getModel().isPackageEnabled('fbc'):
+    #         rpSBML.checklibSBML(
+    #             source_sbml_doc.getModel().enablePackage(
+    #                 'http://www.sbml.org/sbml/level3/version1/fbc/version2',
+    #                 'fbc',
+    #                 True
+    #             ),
+    #             'Enabling the FBC package'
+    #         )
+        
+    #     target_fbc = target_sbml_doc.getModel().getPlugin('fbc')
+    #     source_fbc = source_sbml_doc.getModel().getPlugin('fbc')
+        
+    #     # note sure why one needs to set this as False
+    #     rpSBML.checklibSBML(
+    #         source_sbml_doc.setPackageRequired('fbc', False),
+    #         'enabling FBC package'
+    #     )
+
+    #     return target_fbc, source_fbc
 
 
     def copyUnitDefinitions(
@@ -1506,7 +1534,20 @@ class rpSBML:
         :rtype: bool
         :return: Success of failure of the function
         """
-        
+
+        # from cobra.io.sbml       import validate_sbml_model
+        # from json import dumps as json_dumps
+        # merged_rpsbml_path = '/tmp/merged.sbml'
+        # from inspect import currentframe, getframeinfo
+        # self.writeToFile(merged_rpsbml_path)
+        # (model, errors) = validate_sbml_model(merged_rpsbml_path)
+        # if model is None:
+        #     frameinfo = getframeinfo(currentframe())
+        #     print(frameinfo.filename, frameinfo.lineno)
+        #     self.logger.error('Something went wrong reading the SBML model')
+        #     self.logger.error(str(json_dumps(errors, indent=4)))
+        #     exit()
+
         rpgraph = rpGraph(
             self,
             True,
@@ -1530,8 +1571,8 @@ class rpSBML:
                 'rule_score': None,
                 'rule_ori_reac': None
             }
-            #note that here the pathwats are passed as NOT being part of the heterologous pathways and
-            #thus will be ignored when/if we extract the rp_pathway from the full GEM model
+            # note that here the pathways are passed as NOT being part of the heterologous pathways and
+            # thus will be ignored when/if we extract the rp_pathway from the full GEM model
             self.createReaction(
                 pro+'__consumption',
                 upper_flux_bound,
@@ -1539,6 +1580,15 @@ class rpSBML:
                 step,
                 compartment_id
             )
+            # print(pro)
+            # self.writeToFile(merged_rpsbml_path)
+            # (model, errors) = validate_sbml_model(merged_rpsbml_path)
+            # if model is None:
+            #     frameinfo = getframeinfo(currentframe())
+            #     print(frameinfo.filename, frameinfo.lineno)
+            #     self.logger.error('Something went wrong reading the SBML model')
+            #     self.logger.error(str(json_dumps(errors, indent=4)))
+            #     exit()
 
         for react in consumed_species_nid:
 
@@ -1559,6 +1609,15 @@ class rpSBML:
                 step,
                 compartment_id
             )
+
+        # self.writeToFile(merged_rpsbml_path)
+        # (model, errors) = validate_sbml_model(merged_rpsbml_path)
+        # if model is None:
+        #     frameinfo = getframeinfo(currentframe())
+        #     print(frameinfo.filename, frameinfo.lineno)
+        #     self.logger.error('Something went wrong reading the SBML model')
+        #     self.logger.error(str(json_dumps(errors, indent=4)))
+        #     return None
 
         return True
 
@@ -3948,7 +4007,7 @@ class rpSBML:
             return newParam
 
 
-    #TODO as of now not generic, works when creating a new SBML file, but no checks if modifying existing SBML file
+    # TODO as of now not generic, works when creating a new SBML file, but no checks if modifying existing SBML file
     def createReaction(self,
                        reac_id,
                        fluxUpperBound,
@@ -3961,7 +4020,11 @@ class rpSBML:
                        meta_id=None):
         """Create libSBML reaction
 
-        Create a reaction that is added to the self.model in the input compartment id. fluxBounds is a list of libSBML.UnitDefinition, length of exactly 2 with the first position that is the upper bound and the second is the lower bound. reactants_dict and reactants_dict are dictionnaries that hold the following parameters: name, compartment, stoichiometry
+        Create a reaction that is added to the self.model in the input compartment id.
+        fluxBounds is a list of libSBML.UnitDefinition, length of exactly 2 with
+        the first position that is the upper bound and the second is the lower bound.
+        reactants_dict and reactants_dict are dictionnaries that hold the following
+        parameters: name, compartment, stoichiometry
 
         :param name: Name of the reaction
         :param fluxUpperBound: The reaction fbc upper bound
@@ -4009,16 +4072,67 @@ class rpSBML:
         # TODO: check that the species exist
         # reactants_dict
         for reactant in step['left']:
+            # print(str(reactant))
+            # print(str(reactant)+'__64__'+str(compartment_id))
             spe = reac.createReactant()
-            rpSBML.checklibSBML(spe, 'create reactant')
+            rpSBML.checklibSBML(
+                spe,
+                'create reactant'
+            )
             # use the same writing convention as CobraPy
-            rpSBML.checklibSBML(spe.setSpecies(str(reactant)+'__64__'+str(compartment_id)), 'assign reactant species')
+            rpSBML.checklibSBML(
+                spe.setSpecies(str(reactant)+'__64__'+str(compartment_id)),
+                'assign reactant species'
+            )
+            # from cobra.io.sbml       import validate_sbml_model
+            # from json import dumps as json_dumps
+            # merged_rpsbml_path = '/tmp/merged.sbml'
+            # from inspect import currentframe, getframeinfo
+            # self.writeToFile(merged_rpsbml_path)
+            # (model, errors) = validate_sbml_model(merged_rpsbml_path)
+            # if model is None:
+            #     frameinfo = getframeinfo(currentframe())
+            #     print(frameinfo.filename, frameinfo.lineno)
+            #     self.logger.error('Something went wrong reading the SBML model')
+            #     self.logger.error(str(json_dumps(errors, indent=4)))
+            #     return None
             # TODO: check to see the consequences of heterologous parameters not being constant
-            rpSBML.checklibSBML(spe.setConstant(True), 'set "constant" on species '+str(reactant))
-            rpSBML.checklibSBML(spe.setStoichiometry(float(step['left'][reactant])),
-                'set stoichiometry ('+str(float(step['left'][reactant]))+')')
+            rpSBML.checklibSBML(
+                spe.setConstant(True),
+                'set "constant" on species '+str(reactant)
+            )
+            rpSBML.checklibSBML(
+                spe.setStoichiometry(float(step['left'][reactant])),
+                'set stoichiometry ('+str(float(step['left'][reactant]))+')'
+            )
+            # from cobra.io.sbml       import validate_sbml_model
+            # from json import dumps as json_dumps
+            # merged_rpsbml_path = '/tmp/merged.sbml'
+            # from inspect import currentframe, getframeinfo
+            # self.writeToFile(merged_rpsbml_path)
+            # (model, errors) = validate_sbml_model(merged_rpsbml_path)
+            # if model is None:
+            #     frameinfo = getframeinfo(currentframe())
+            #     print(frameinfo.filename, frameinfo.lineno)
+            #     self.logger.error('Something went wrong reading the SBML model')
+            #     self.logger.error(str(json_dumps(errors, indent=4)))
+            #     return None
+
         # TODO: check that the species exist
         # products_dict
+
+        # from cobra.io.sbml       import validate_sbml_model
+        # from json import dumps as json_dumps
+        # merged_rpsbml_path = '/tmp/merged.sbml'
+        # from inspect import currentframe, getframeinfo
+        # self.writeToFile(merged_rpsbml_path)
+        # (model, errors) = validate_sbml_model(merged_rpsbml_path)
+        # if model is None:
+        #     frameinfo = getframeinfo(currentframe())
+        #     print(frameinfo.filename, frameinfo.lineno)
+        #     self.logger.error('Something went wrong reading the SBML model')
+        #     self.logger.error(str(json_dumps(errors, indent=4)))
+        #     return None
 
         for product in step['right']:
             pro = reac.createProduct()
@@ -4028,6 +4142,20 @@ class rpSBML:
             rpSBML.checklibSBML(pro.setConstant(True), 'set "constant" on species '+str(product))
             rpSBML.checklibSBML(pro.setStoichiometry(float(step['right'][product])),
                 'set the stoichiometry ('+str(float(step['right'][product]))+')')
+
+        # from cobra.io.sbml       import validate_sbml_model
+        # from json import dumps as json_dumps
+        # merged_rpsbml_path = '/tmp/merged.sbml'
+        # from inspect import currentframe, getframeinfo
+        # self.writeToFile(merged_rpsbml_path)
+        # (model, errors) = validate_sbml_model(merged_rpsbml_path)
+        # if model is None:
+        #     frameinfo = getframeinfo(currentframe())
+        #     print(frameinfo.filename, frameinfo.lineno)
+        #     self.logger.error('Something went wrong reading the SBML model')
+        #     self.logger.error(str(json_dumps(errors, indent=4)))
+        #     return None
+
         ############################ MIRIAM ############################
         rpSBML.checklibSBML(reac.setAnnotation(self._defaultBothAnnot(meta_id)), 'creating annotation')
         self.addUpdateMIRIAM(reac, 'reaction', reacXref, meta_id)
@@ -4050,6 +4178,20 @@ class rpSBML:
             self.updateBRSynth(reac, 'rxn_idx', step['rxn_idx'], None, False, False, False, meta_id)
         # if step['sub_step']:
         #     self.updateBRSynth(reac, 'sub_step', step['sub_step'], None, False, False, False, meta_id)
+
+        # from cobra.io.sbml       import validate_sbml_model
+        # from json import dumps as json_dumps
+        # merged_rpsbml_path = '/tmp/merged.sbml'
+        # from inspect import currentframe, getframeinfo
+        # self.writeToFile(merged_rpsbml_path)
+        # (model, errors) = validate_sbml_model(merged_rpsbml_path)
+        # if model is None:
+        #     frameinfo = getframeinfo(currentframe())
+        #     print(frameinfo.filename, frameinfo.lineno)
+        #     self.logger.error('Something went wrong reading the SBML model')
+        #     self.logger.error(str(json_dumps(errors, indent=4)))
+        #     return None
+
         #### GROUPS #####
         if pathway_id:
             groups_plugin = self.getModel().getPlugin('groups')
