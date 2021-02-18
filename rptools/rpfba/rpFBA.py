@@ -4,6 +4,10 @@ from logging import (
 )
 from cobra.flux_analysis import pfba
 from cobra               import io        as cobra_io
+from cobra.io.sbml       import (
+    validate_sbml_model,
+    CobraSBMLError
+)
 from cobra.core.model    import Model     as cobra_model
 from cobra.core.solution import Solution  as cobra_solution
 from pandas.core.series  import Series    as np_series
@@ -17,6 +21,8 @@ from typing import (
 from tempfile import (
     NamedTemporaryFile
 )
+from json import dumps as json_dumps
+
 
 
 # TODO: add the pareto frontier optimisation as an automatic way to calculate the optimal fluxes
@@ -116,6 +122,9 @@ def runFBA(
         logger = logger
     )
 
+    if rpsbml_merged is None:
+        return None
+
     logger.debug('rpsbml_merged: ' + str(rpsbml_merged))
     logger.debug('reactions_in_both: ' + str(reactions_in_both))
 
@@ -129,6 +138,8 @@ def runFBA(
           + 'ignoring this model...'
         )
         return None
+
+    ## Check COBRA
 
     ######## FBA ########
     if sim_type == 'fraction':
@@ -374,7 +385,7 @@ def rp_pfba(
     logger.debug('rpsbml:       ' + str(rpsbml))
     logger.debug('frac_of_opt:  ' + str(frac_of_opt))
 
-    cobraModel = cobra(rpsbml)
+    cobraModel = cobra(rpsbml, logger)
     if not cobraModel:
         return None
 
@@ -592,7 +603,7 @@ def runCobra(
         Logger object
     """
 
-    cobraModel = cobra(rpsbml)
+    cobraModel = cobra(rpsbml, logger)
 
     if not cobraModel:
         return None
@@ -603,7 +614,8 @@ def runCobra(
 
 
 def cobra(
-    rpsbml: rpSBML
+    rpsbml: rpSBML,
+    logger: Logger = getLogger(__name__)
 ) -> cobra_model:
     """Convert the rpSBML object to cobra object
 
@@ -613,19 +625,15 @@ def cobra(
 
     rpsbml.logger.info('Creating Cobra object from rpSBML...')
 
-    try:
-        with NamedTemporaryFile() as temp_f:
-            rpsbml.writeToFile(temp_f.name)
-            #rpsbml.logger.info(glob(tmpOutputFolder+'/*'))
-            #rpsbml.logger.info(cobra.io.validate_sbml_model(glob(tmpOutputFolder+'/*')[0]))
+    with NamedTemporaryFile() as temp_f:
+        rpsbml.writeToFile(temp_f.name)
+        try:
             cobraModel = cobra_io.read_sbml_model(temp_f.name, use_fbc_package=True)
-        #rpsbml.cobraModel = cobra.io.read_sbml_model(rpsbml.rpsbml.document.toXMLNode().toXMLString(), use_fbc_package=True)
-        #use CPLEX
-        # rpsbml.cobraModel.solver = 'cplex'
-
-    except cobra_io.sbml.CobraSBMLError as e:
-        rpsbml.logger.error(e)
-        return None
+        except CobraSBMLError:
+            logger.error('Something went wrong reading the SBML model')
+            (model, errors) = validate_sbml_model(temp_f.name)
+            logger.error(str(json_dumps(errors, indent=4)))
+            return None
 
     return cobraModel
 
