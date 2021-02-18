@@ -1,5 +1,10 @@
 # Release history
 
+## 4.2.1
+- New feature (rpSBML): add checkSBML() method
+- Check SBML format in methods: __init__(), mergeModels()
+- Bypass completeHeterologousPathway() when merging rpSBML models
+
 ## 4.2.0
 - New feature (rpRanker): ability to store either pathway files or only the ranking result
 
