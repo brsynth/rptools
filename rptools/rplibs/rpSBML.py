@@ -108,7 +108,7 @@ class rpSBML:
                 self.document = rpsbml.getDocument().clone()
 
         if not self.checkSBML():
-            logger.error('SBML file {file} not valid, exiting...'.format(file=infile))
+            logger.error('SBML document not valid, exiting...')
 
         # model name
         self.setName(name if name else self.getName())
@@ -193,7 +193,10 @@ class rpSBML:
 
     def checkSBML(self) -> bool:
         self.logger.debug('Checking SBML format...')
-        return libsbml.SBMLValidator().validate(self.getDocument()) == 0
+        try:
+            return libsbml.SBMLValidator().validate(self.getDocument()) == 0
+        except ValueError:
+            return False
 
 
     def getModel(self):
@@ -248,6 +251,7 @@ class rpSBML:
 
     def setLogger(self, logger):
         self.logger = logger
+
 
     def compute_score(self, pathway_id: str = 'rp_pathway') -> float:
         self.score['value'] = 0
@@ -443,8 +447,8 @@ class rpSBML:
         # Find the ID's of the similar target_rpsbml.model species
         pkg = 'fbc'
         url = 'http://www.sbml.org/sbml/level3/version1/fbc/version2'
-        source_fbc = source_rpsbml.enable_package(pkg, url)
-        target_fbc = merged_rpsbml.enable_package(pkg, url)
+        source_rpsbml.enable_package(pkg, url)
+        merged_rpsbml.enable_package(pkg, url)
 
         # pkg = 'groups'
         # url = 'http://www.sbml.org/sbml/level3/version1/groups/version1'
@@ -460,71 +464,50 @@ class rpSBML:
         ## UNIT DEFINITIONS ############################
         # return the list of unit definitions id's for the target to avoid overwritting
         # WARNING: this means that the original unit definitions will be prefered over the new one
-        merged_rpsbml.copyUnitDefinitions(
-            source_sbml_doc = source_rpsbml.getDocument(),
-            logger = logger
-        )
+        merged_rpsbml.copyUnitDefinitions(source_rpsbml)
 
         ## COMPARTMENTS ################################
         # Compare by MIRIAM annotations
         # Note that key is source and value is target conversion
-        comp_source_target = merged_rpsbml.copyCompartments(
-            source_sbml_doc = source_rpsbml.getDocument(),
-            logger = logger
-        )
+        comp_source_target = merged_rpsbml.copyCompartments(source_rpsbml)
 
         ## PARAMETERS ##################################
         # WARNING: here we compare by ID
         # target_paramsID = rpSBML.getParameters(
-        merged_rpsbml.copyParameters(
-            source_sbml_doc = source_rpsbml.getDocument(),
-            logger = logger
-        )
+        merged_rpsbml.copyParameters(source_rpsbml)
 
         ## FBC GENE PRODUCTS ###########################
         # WARNING: here we compare by ID
-        target_genesProdID = rpSBML.getFBCGeneProducts(
-            source_fbc = source_fbc,
-            target_fbc = target_fbc,
-            logger = logger
-        )
+        merged_rpsbml.copyFBCGeneProducts(source_rpsbml)
 
         ## FBC OBJECTIVES ##############################
         # WARNING: here we compare by ID
-        targetObjectiveID, sourceObjectiveID = rpSBML.getFBCObjectives(
-            source_fbc = source_fbc,
-            target_fbc = target_fbc,
-            logger = logger
-        )
+        merged_rpsbml.copyFBCObjectives(source_rpsbml)
 
         ## SPECIES #####################################
         species = merged_rpsbml.copySpecies(
-            source_sbml_doc = source_rpsbml.getDocument(),
-            comp_source_target = comp_source_target,
-            logger = logger
+            source_sbml = source_rpsbml,
+            comp_source_target = comp_source_target
         )
 
         ## REACTIONS ###################################
         # TODO: consider the case where two reactions have the same ID's but are not the same reactions
         reactions_in_both = merged_rpsbml.copyReactions(
-            source_sbml_doc = source_rpsbml.getDocument(),
-            species = species,
-            logger = logger
+            source_sbml = source_rpsbml,
+            species = species
         )
 
         ## GROUPS ######################################
         # source_groups, target_groups = rpSBML.copyGroups(
         merged_rpsbml.copyGroups(
-            source_sbml_doc = source_rpsbml.getDocument(),
+            source_sbml = source_rpsbml,
             species = species,
-            reactions = reactions_in_both,
-            logger = logger
+            reactions = reactions_in_both
         )
 
         ## TITLES ######################################
         merged_rpsbml.copyTitles(
-            source_sbml_doc = source_rpsbml.getDocument(),
-            logger = logger
+            source_sbml = source_rpsbml
         )
 
         # merged_rpsbml.completeHeterologousPathway()
@@ -540,7 +523,8 @@ class rpSBML:
         self,
         pkg: str,
         url: str
-    ) -> libsbml.FbcModelPlugin:
+    ) -> None:
+    # ) -> libsbml.SBasePlugin:
         if not self.getModel().isPackageEnabled(pkg):
             rpSBML.checklibSBML(
                 self.getModel().enablePackage(url, pkg, True),
@@ -551,7 +535,7 @@ class rpSBML:
         #     self.getDocument().setPackageRequired(pkg, False),
         #     pkg + ' package not required'
         # )
-        return self.getModel().getPlugin(pkg)
+        # return self.getModel().getPlugin(pkg)
 
 
     # @staticmethod
@@ -601,11 +585,11 @@ class rpSBML:
 
     def copyUnitDefinitions(
         self,
-        source_sbml_doc: libsbml.SBMLDocument,
-        logger: Logger = getLogger(__name__)
+        source_sbml: 'rpSBML'
     ) -> None:
 
-        logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
+        source_sbml_doc = source_sbml.getDocument()
+        self.logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
 
         target_unitDefID = [i.getId() for i in self.getModel().getListOfUnitDefinitions()]
 
@@ -660,11 +644,12 @@ class rpSBML:
 
     def copyCompartments(
         self,
-        source_sbml_doc: libsbml.SBMLDocument,
-        logger: Logger = getLogger(__name__)
+        source_sbml: 'rpSBML'
     ) -> Dict:
 
-        logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
+        source_sbml_doc = source_sbml.getDocument()
+        
+        self.logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
 
         comp_source_target = {}
 
@@ -677,18 +662,18 @@ class rpSBML:
             source_annotation = source_compartment.getAnnotation()
 
             if not source_annotation:
-                logger.warning('No annotation for the source of compartment '+str(source_compartment.getId()))
+                self.logger.warning('No annotation for the source of compartment '+str(source_compartment.getId()))
 
             # compare by MIRIAM first
             for target_compartment in self.getModel().getListOfCompartments():
                 target_annotation = target_compartment.getAnnotation()
                 if not target_annotation:
-                    logger.warning('No annotation for the target of compartment: '+str(target_compartment.getId()))
+                    self.logger.warning('No annotation for the target of compartment: '+str(target_compartment.getId()))
                     continue
                 if rpSBML.compareMIRIAMAnnotations(
                     source_annotation,
                     target_annotation,
-                    logger
+                    self.logger
                 ):
                     found = True
                     comp_source_target[source_compartment.getId()] = target_compartment.getId()
@@ -760,11 +745,12 @@ class rpSBML:
 
     def copyParameters(
         self,
-        source_sbml_doc: libsbml.SBMLDocument,
-        logger: Logger = getLogger(__name__)
+        source_sbml: 'rpSBML'
     ) -> None:
 
-        logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
+        source_sbml_doc = source_sbml.getDocument()
+
+        self.logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
 
         target_paramsID = [i.getId() for i in self.getModel().getListOfParameters()]
 
@@ -810,15 +796,16 @@ class rpSBML:
         # return target_paramsID
 
 
-    @staticmethod
-    def getFBCGeneProducts(
-        source_fbc: libsbml.FbcModelPlugin,
-        target_fbc: libsbml.FbcModelPlugin,
-        logger: Logger = getLogger(__name__)
-    ) -> List[str]:
+    def copyFBCGeneProducts(
+        self,
+        source_rpsbml: 'rpSBML'
+    ) -> None:
 
-        logger.debug('source_fbc: ' + str(source_fbc))
-        logger.debug('target_fbc: ' + str(target_fbc))
+        source_fbc = source_rpsbml.getModel().getPlugin('fbc')
+        target_fbc = self.getModel().getPlugin('fbc')
+
+        self.logger.debug('source_fbc: ' + str(source_fbc))
+        self.logger.debug('target_fbc: ' + str(target_fbc))
 
         targetGenProductID = [i.getId() for i in target_fbc.getListOfGeneProducts()]
 
@@ -853,23 +840,25 @@ class rpSBML:
                     'setting target gene product meta_id'
                 )
 
-        return targetGenProductID
+        # return targetGenProductID
 
 
-    @staticmethod
-    def getFBCObjectives(
-        source_fbc: libsbml.FbcModelPlugin,
-        target_fbc: libsbml.FbcModelPlugin,
-        logger: Logger = getLogger(__name__)
-    ) -> Tuple[List[str], List[str]]:
+    def copyFBCObjectives(
+        self,
+        source_rpsbml: 'rpSBML'
+    ) -> None:
+    # ) -> Tuple[List[str], List[str]]:
 
         # TODO: if overlapping id's need to replace the id with modified, as for the species
 
-        logger.debug('source_fbc: ' + str(source_fbc))
-        logger.debug('target_fbc: ' + str(target_fbc))
+        source_fbc = source_rpsbml.getModel().getPlugin('fbc')
+        target_fbc = self.getModel().getPlugin('fbc')
+
+        self.logger.debug('source_fbc: ' + str(source_fbc))
+        self.logger.debug('target_fbc: ' + str(target_fbc))
 
         targetObjectiveID = [i.getId() for i in target_fbc.getListOfObjectives()]
-        sourceObjectiveID = [i.getId() for i in source_fbc.getListOfObjectives()]
+        # sourceObjectiveID = [i.getId() for i in source_fbc.getListOfObjectives()]
 
         for source_objective in source_fbc.getListOfObjectives():
 
@@ -936,24 +925,25 @@ class rpSBML:
         # self.logger.debug('targetObjectiveID: '+str(targetObjectiveID))
         # self.logger.debug('sourceObjectiveID: '+str(sourceObjectiveID))
 
-        return sourceObjectiveID, targetObjectiveID
+        # return sourceObjectiveID, targetObjectiveID
 
 
     def copySpecies(
         self,
-        source_sbml_doc: libsbml.SBMLDocument,
-        comp_source_target: Dict,
-        logger: Logger = getLogger(__name__)
+        source_sbml: 'rpSBML',
+        comp_source_target: Dict
     ) -> Dict:
 
-        logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
-        logger.debug('comp_source_target: ' + str(comp_source_target))
+        source_sbml_doc = source_sbml.getDocument()
+
+        self.logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
+        self.logger.debug('comp_source_target: ' + str(comp_source_target))
 
         species = rpSBML.speciesMatchWith(
             comp_source_target,
             source_sbml_doc,
             self.getDocument(),
-            logger = logger
+            logger = self.logger
         )
 
         # self.logger.debug('species: '+str(species))
@@ -965,7 +955,7 @@ class rpSBML:
             list_target = [i for i in species[source_species]]
 
             if source_species in list_target:
-                logger.warning('The source ('+str(source_species)+') and target species ids ('+str(list_target)+') are the same')
+                self.logger.warning('The source ('+str(source_species)+') and target species ids ('+str(list_target)+') are the same')
 
             # if match, replace the annotation from the source to the target
             if not species[source_species] == {}:
@@ -975,7 +965,7 @@ class rpSBML:
                     continue
                     # self.logger.warning('Source species '+str(member.getIdRef())+' has been created in the target model')
                 elif len(list_species)>1:
-                    logger.warning('There are multiple matches to the species '+str(source_species)+'... taking the first one: '+str(list_species))
+                    self.logger.warning('There are multiple matches to the species '+str(source_species)+'... taking the first one: '+str(list_species))
                 # TODO: loop throught the annotations and replace the non-overlapping information
                 target_member = self.getModel().getSpecies(list_species[0])
                 source_member = source_sbml_doc.getModel().getSpecies(source_species)
@@ -999,7 +989,7 @@ class rpSBML:
                 # self.logger.debug('Creating source species '+str(source_species)+' in target rpsbml')
                 source_species = source_sbml_doc.getModel().getSpecies(source_species)
                 if not source_species:
-                    logger.error('Cannot retreive model species: '+str(source_species))
+                    self.logger.error('Cannot retreive model species: '+str(source_species))
                 else:
                     rpSBML.checklibSBML(
                         source_species,
@@ -1105,13 +1095,14 @@ class rpSBML:
 
     def copyReactions(
         self,
-        source_sbml_doc: libsbml.SBMLDocument,
-        species: Dict,
-        logger: Logger = getLogger(__name__)
+        source_sbml: 'rpSBML',
+        species: Dict
     ) -> Dict:
 
-        logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
-        logger.debug('species: ' + str(species))
+        source_sbml_doc = source_sbml.getDocument()
+
+        self.logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
+        self.logger.debug('species: ' + str(species))
 
         def copyReactants(
             source_reaction: libsbml.Reaction,
@@ -1245,7 +1236,7 @@ class rpSBML:
 
         for source_reaction in source_sbml_doc.getModel().getListOfReactions():
 
-            logger.debug('source_reaction: ' + str(source_reaction))
+            self.logger.debug('source_reaction: ' + str(source_reaction))
 
             is_found = False
 
@@ -1254,7 +1245,7 @@ class rpSBML:
                     species,
                     source_reaction,
                     target_reaction,
-                    logger = logger
+                    logger = self.logger
                 )
                 if match:
                     # self.logger.debug('Source reaction '+str(source_reaction)+' matches with target reaction '+str(target_reaction))
@@ -1357,7 +1348,7 @@ class rpSBML:
                     source_reaction = source_reaction,
                     target_reaction = target_reaction,
                     species = species,
-                    logger = logger
+                    logger = self.logger
                 )
 
                 # Products
@@ -1367,7 +1358,7 @@ class rpSBML:
                     source_reaction = source_reaction,
                     target_reaction = target_reaction,
                     species = species,
-                    logger = logger
+                    logger = self.logger
                 )
 
         return reactions_in_both
@@ -1375,15 +1366,16 @@ class rpSBML:
 
     def copyGroups(
         self,
-        source_sbml_doc: libsbml.SBMLDocument,
+        source_sbml: 'rpSBML',
         species: Dict,
-        reactions: Dict,
-        logger: Logger = getLogger(__name__)
+        reactions: Dict
     ) -> None:
 
-        logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
-        logger.debug('species: ' + str(species))
-        logger.debug('reactions: ' + str(reactions))
+        source_sbml_doc = source_sbml.getDocument()
+
+        self.logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
+        self.logger.debug('species: ' + str(species))
+        self.logger.debug('reactions: ' + str(reactions))
 
         # TODO loop through the groups to add them
 
@@ -1415,8 +1407,8 @@ class rpSBML:
             'fetching the target model groups'
         )
 
-        logger.debug('species: '+str(species))
-        logger.debug('reactions: '+str(reactions))
+        self.logger.debug('species: '+str(species))
+        self.logger.debug('reactions: '+str(reactions))
 
         source_groups_ids = [i.id for i in source_groups.getListOfGroups()]
         target_groups_ids = [i.id for i in target_groups.getListOfGroups()]
@@ -1432,13 +1424,13 @@ class rpSBML:
                 if member.getIdRef() in species:
                     if species[member.getIdRef()]:
                         list_species = [i for i in species[member.getIdRef()]]
-                        logger.debug('species: '+str(species))
-                        logger.debug('list_species: '+str(list_species))
+                        self.logger.debug('species: '+str(species))
+                        self.logger.debug('list_species: '+str(list_species))
                         if len(list_species)==0:
                             continue
                             # self.logger.warning('Source species '+str(member.getIdRef())+' has been created in the target model')
                         elif len(list_species)>1:
-                            logger.warning('There are multiple matches to the species '+str(member.getIdRef())+'... taking the first one: '+str(list_species))
+                            self.logger.warning('There are multiple matches to the species '+str(member.getIdRef())+'... taking the first one: '+str(list_species))
                         rpSBML.checklibSBML(
                             member.setIdRef(list_species[0]),
                             'Setting name to the groups member'
@@ -1488,9 +1480,11 @@ class rpSBML:
 
     def copyTitles(
         self,
-        source_sbml_doc: libsbml.SBMLDocument,
+        source_sbml: 'rpSBML',
         logger: Logger = getLogger(__name__)
     ) -> None:
+
+        source_sbml_doc = source_sbml.getDocument()
 
         logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
 

@@ -36,6 +36,7 @@ class Test_rpSBML(Main_rplibs):
 
     def setUp(self):
         super().setUp()
+        # self.logger.setLevel('DEBUG')
         # objects below have to be created for each test instance
         # since some tests can modified them
         self.rpsbml  = rpSBML(
