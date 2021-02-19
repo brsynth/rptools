@@ -8,7 +8,6 @@ from os import (
     path as os_path,
     mkdir
 )
-from shutil import copy
 from typing import (
     List,
     Dict,
@@ -17,6 +16,10 @@ from typing import (
 from tempfile import TemporaryDirectory
 from brs_utils import compress_tar_gz
 from tarfile import open as tf_open
+from logging import (
+    Logger,
+    getLogger
+)
 
 
 def entry_point():
@@ -37,31 +40,36 @@ def entry_point():
         logger = logger
     )
 
+    if not args.silent:
+        logger.info('\nWriting resuts...')
+
     # Write into a file the list of top ranked pathways
     if args.rank_outfile != '':
         store_paths_into_file(
             ranked_pathways[:args.top],
             args.rank_outfile
         )
-        logger.info(
-            '\nThe {top} pathways with highest scores are available in file {file}.'.format(
-                top = args.top,
-                file = args.rank_outfile
+        if not args.silent:
+            logger.info(
+                '\nThe {top} pathways with highest scores are available in file {file}.'.format(
+                    top = args.top,
+                    file = args.rank_outfile
+                )
             )
-        )
 
     # Write into a folder the top ranked pathways
     if args.data_outdir != '':
         store_paths_into_folder(
-            ranked_pathways[:args.top],
-            args.data_outdir
+            pathways = [i[1] for i in ranked_pathways[:args.top]],
+            outdir = args.data_outdir
         )
-        logger.info(
-            '\nThe {top} pathways with highest scores are available in folder {folder}.'.format(
-                top = args.top,
-                folder = args.data_outdir
+        if not args.silent:
+            logger.info(
+                '\nThe {top} pathways with highest scores are available in folder {folder}.'.format(
+                    top = args.top,
+                    folder = args.data_outdir
+                )
             )
-        )
 
     # Write into an archive the top ranked pathways
     if args.data_outfile != '':
@@ -69,25 +77,13 @@ def entry_point():
             ranked_pathways[:args.top],
             args.data_outfile
         )
-        logger.info(
-            '\nThe {top} pathway paths with highest scores are available in file {file}.'.format(
-                top = args.top,
-                file = args.data_outfile
+        if not args.silent:
+            logger.info(
+                '\nThe {top} pathway paths with highest scores are available in file {file}.'.format(
+                    top = args.top,
+                    file = args.data_outfile
+                )
             )
-        )
-
-    # # Copy top ranked rpsbml files into a folder
-    # if args.outdir != '':
-    #     copy_into_folder(
-    #         ranked_pathways[:args.top],
-    #         args.outdir
-    #     )
-    #     logger.info(
-    #         '\nTop {top} pathways are available in folder {folder}.'.format(
-    #             top = args.top,
-    #             folder = args.outdir
-    #         )
-    #     )
 
     if not args.silent:
         if args.log.lower() in ['critical', 'error', 'warning']:
@@ -112,13 +108,35 @@ def store_paths_into_file(
 
 
 def store_paths_into_folder(
-    pathways: List[ Tuple[float, str] ],
-    outdir: str
+    pathways: List[str],
+    outdir: str,
+    logger: Logger = getLogger(__name__)
 ) -> None:
+    """
+    Store pathways into a folder.
+
+    Parameters
+    ----------
+    pathways: List[str]
+        Pathway filenames.
+    outdir: str
+        Folder to store files into.
+    logger : Logger
+        The logger object.
+
+    Returns
+    -------
+    None
+    """
     if not os_path.exists(outdir):
         mkdir(outdir)
-    for item in pathways:
-        copy(item[1], outdir)
+    for pathway in pathways:
+        rpSBML(
+            inFile = pathway,
+            logger = logger
+        ).writeToFile(
+            outdir = outdir
+        )
 
 
 def store_into_tar_gz_file(
