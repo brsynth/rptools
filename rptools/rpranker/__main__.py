@@ -50,6 +50,19 @@ def entry_point():
             )
         )
 
+    # Write into a folder the top ranked pathways
+    if args.data_outdir != '':
+        store_paths_into_folder(
+            ranked_pathways[:args.top],
+            args.data_outdir
+        )
+        logger.info(
+            '\nThe {top} pathways with highest scores are available in folder {folder}.'.format(
+                top = args.top,
+                folder = args.data_outdir
+            )
+        )
+
     # Write into an archive the top ranked pathways
     if args.data_outfile != '':
         store_into_tar_gz_file(
@@ -98,6 +111,16 @@ def store_paths_into_file(
             )
 
 
+def store_paths_into_folder(
+    pathways: List[ Tuple[float, str] ],
+    outdir: str
+) -> None:
+    if not os_path.exists(outdir):
+        mkdir(outdir)
+    for item in pathways:
+        copy(item[1], outdir)
+
+
 def store_into_tar_gz_file(
     pathways: List[ Tuple[float, str] ],
     outfile: str
@@ -110,16 +133,6 @@ def store_into_tar_gz_file(
                     path,
                     arcname = os_path.basename(path)
                 )
-
-
-# def copy_into_folder(
-#     pathways: List[ Tuple[float, str] ],
-#     outdir: str
-# ) -> None:
-#     if not os_path.exists(outdir):
-#         mkdir(outdir)
-#     for item in pathways:
-#         copy(item[1], outdir)
 
 
 if __name__ == '__main__':

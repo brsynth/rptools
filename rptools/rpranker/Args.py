@@ -28,6 +28,12 @@ def add_arguments(parser):
         default = '',
         help = 'Path to store selected pathways as a .tar.gz archive.'
     )
+    parser.add_argument(
+        '--data_outdir',
+        type = str,
+        default = '',
+        help = 'Path to store selected pathways within a folder.'
+    )
     # parser.add_argument(
     #     '--outdir',
     #     type = str,
