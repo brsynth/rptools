@@ -1,5 +1,8 @@
 # Release history
 
+## 4.2.2
+- rpRanker: Add --data_outdir option
+
 ## 4.2.1
 - New feature (rpSBML): add checkSBML() method
 - Check SBML format in methods: __init__(), mergeModels()
