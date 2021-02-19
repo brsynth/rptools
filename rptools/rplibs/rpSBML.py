@@ -2963,18 +2963,25 @@ class rpSBML:
     # @param model libSBML model to be saved to file
     # @param model_id model id, note that the name of the file will be that
     # @param path Non required parameter that will define the path where the model will be saved
-    def writeToFile(self, filename: str = None) -> None:
-        """Export the metabolic network to a SBML file
+    def writeToFile(
+        self,
+        filename: str = None,
+        outdir: str = None
+    ) -> str:
+        """
+        Write pathway to disk (optionally into a specific folder).
 
-        :param path: Path to the output SBML file
+        Parameters
+        ----------
+        filename: str
+            Filename to store the file under.
+        outdir: str
+            Folder to store the file into.
 
-        :type path: str
-
-        :raises FileNotFoundError: If the file cannot be found
-        :raises AttributeError: If the libSBML command encounters an error or the input value is None
-
-        :rtype: bool
-        :return: Success or failure of the command
+        Returns
+        -------
+        filename: str
+            Full path of the stored file
         """
 
         ext = ''
@@ -2982,15 +2989,23 @@ class rpSBML:
         if not str(self.getName()).endswith('_sbml'):
             ext = '_sbml'
 
-        if filename:
+        if filename is not None:
             out_filename = filename
         else:
             out_filename = str(self.getName())+ext+'.xml'
+        
+        if outdir is not None:
+            out_filename = os_path.join(
+                outdir,
+                os_path.basename(out_filename)
+            )
 
         libsbml.writeSBMLToFile(
             self.getDocument(),
             out_filename
         )
+
+        return out_filename
 
 
     def readReactionSpecies(self, reaction):
