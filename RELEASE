@@ -1,7 +1,10 @@
 # Release history
 
+## 4.2.3
+- rpRanker: rename outfiles properly (.xml)
+
 ## 4.2.2
-- rpRanker: Add --data_outdir option
+- rpRanker: add --data_outdir option
 
 ## 4.2.1
 - New feature (rpSBML): add checkSBML() method
