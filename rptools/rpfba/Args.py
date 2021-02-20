@@ -94,8 +94,9 @@ def add_arguments(parser):
         help='fraction of the optimum (default: 0.75). Note: this value is ignored is \'fba\' is used'
     )
     parser.add_argument(
-        '--dont_merge',
+        '--merge',
         action='store_true',
-        help='output the heterologous pathway only (default)'
+        default=False,
+        help='output the full merged model instead of heterologous pathway only (default: False)'
     )
     return parser

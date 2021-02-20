@@ -26,7 +26,7 @@ def entry_point():
                     tgt_coeff = args.target_coefficient,
                        is_max = args.is_max,
                   frac_of_src = args.fraction_of,
-                   dont_merge = args.dont_merge,
+                        merge = args.merge,
                    pathway_id = args.pathway_id,
                  objective_id = args.objective_id,
                compartment_id = args.compartment_id,

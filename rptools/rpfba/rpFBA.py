@@ -39,7 +39,7 @@ def runFBA(
                 tgt_coeff: float,
                    is_max: bool = True,
               frac_of_src: float = 0.75,
-               dont_merge: bool = True,
+                    merge: bool = False,
                pathway_id: str = 'rp_pathway',
              objective_id: str = None,
            compartment_id: str = 'MNXC3',
@@ -61,7 +61,7 @@ def runFBA(
     :param is_max: Maximise or minimise the objective
     :param fraction_of: The fraction of the optimum. Note that this value is ignored is fba is used
     :param tmpOutputFolder: The path to the output document
-    :param dont_merge: Output the merged model (Default: True)
+    :param merge: Output the merged model (Default: False)
     :param pathway_id: The id of the heterologous pathway (Default: rp_pathway)
     :param objective_id: Overwrite the auto-generated id of the results (Default: None)
     :param compartment_id: The SBML compartment id (Default: MNXC3)
@@ -79,7 +79,7 @@ def runFBA(
     :type is_max: bool
     :type fraction_of: float
     :type tmpOutputFolder: str
-    :type dont_merge: bool
+    :type merge: bool
     :type num_workers: int
     :type pathway_id: str
     :type objective_id: str
@@ -101,7 +101,7 @@ def runFBA(
     logger.debug('            tgt_coeff: ' + str(tgt_coeff))
     logger.debug('          frac_of_src: ' + str(frac_of_src))
     logger.debug('               is_max: ' + str(is_max))
-    logger.debug('           dont_merge: ' + str(dont_merge))
+    logger.debug('                merge: ' + str(merge))
     logger.debug('           pathway_id: ' + pathway_id)
     logger.debug('         objective_id: ' + str(objective_id))
     logger.debug('       compartment_id: ' + str(compartment_id))
@@ -201,7 +201,7 @@ def runFBA(
     elif sim_type=='multi_fba':
         rpfba.runMultiObjective(reactions, coefficients, is_max, pathway_id)
     '''
-    if dont_merge:
+    if not merge:
         heterologousPathway(
             rpsbml = rpsbml,
             rpsbml_merged = rpsbml_merged,
