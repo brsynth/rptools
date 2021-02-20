@@ -2963,6 +2963,13 @@ class rpSBML:
     # @param model libSBML model to be saved to file
     # @param model_id model id, note that the name of the file will be that
     # @param path Non required parameter that will define the path where the model will be saved
+    def build_filename_from_name(self) -> str:
+        ext = ''
+        if not str(self.getName()).endswith('_sbml'):
+            ext = '_sbml'
+        return str(self.getName())+ext+'.xml'
+
+
     def writeToFile(
         self,
         filename: str = None,
@@ -2992,7 +2999,7 @@ class rpSBML:
         if filename is not None:
             out_filename = filename
         else:
-            out_filename = str(self.getName())+ext+'.xml'
+            out_filename = self.build_filename_from_name()
         
         if outdir is not None:
             out_filename = os_path.join(
