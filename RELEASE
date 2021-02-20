@@ -1,5 +1,10 @@
 # Release history
 
+## 4.3.0
+- rpRanker: ability to rename output files
+- rpFBA: switch '--dont_merge' CLI argument into '--merge' (default: False)
+- rpSBML: add build_filename_from_name()
+
 ## 4.2.3
 - rpRanker: rename outfiles properly (.xml)
 
