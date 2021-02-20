@@ -6,7 +6,12 @@ from rptools import build_args_parser
 from rptools.rplibs import rpSBML
 from os import (
     path as os_path,
-    mkdir
+    mkdir,
+    rename as os_rename
+)
+from shutil import (
+    copy,
+    copyfile
 )
 from typing import (
     List,
@@ -34,6 +39,12 @@ def entry_point():
     from rptools.__main__ import init
     logger = init(parser, args)
 
+    # Check arguments
+    if args.rename:
+        if not args.data_outdir and not args.data_outfile:
+            logger.error('\'rename\' arg needs --data_outdir or --data_outfile arg. Exiting...')
+            return
+            
     # Process to the ranking
     ranked_pathways = rank(
         pathways = args.pathways,
@@ -41,7 +52,7 @@ def entry_point():
     )
 
     if not args.silent:
-        logger.info('\nWriting resuts...')
+        logger.info('\nWriting results...')
 
     # Write into a file the list of top ranked pathways
     if args.rank_outfile != '':
@@ -60,8 +71,9 @@ def entry_point():
     # Write into a folder the top ranked pathways
     if args.data_outdir != '':
         store_paths_into_folder(
-            pathways = [i[1] for i in ranked_pathways[:args.top]],
-            outdir = args.data_outdir
+            pathways = ranked_pathways[:args.top],
+            outdir = args.data_outdir,
+            rename = args.rename
         )
         if not args.silent:
             logger.info(
@@ -75,7 +87,8 @@ def entry_point():
     if args.data_outfile != '':
         store_into_tar_gz_file(
             ranked_pathways[:args.top],
-            args.data_outfile
+            args.data_outfile,
+            args.rename
         )
         if not args.silent:
             logger.info(
@@ -90,7 +103,9 @@ def entry_point():
             print(ranked_pathways)
         else:
             logger.info('\nRanked Pathways')
-            logger.info('   |-' + '\n   |-'.join('{}: {}'.format(*k) for k in enumerate(ranked_pathways)))
+            logger.info('   |-' + '\n   |-'.join(
+                '{}: {}'.format(*k) for k in enumerate(ranked_pathways))
+            )
 
 
 def store_paths_into_file(
@@ -108,8 +123,9 @@ def store_paths_into_file(
 
 
 def store_paths_into_folder(
-    pathways: List[str],
+    pathways: List[ Tuple[float, str, str] ],
     outdir: str,
+    rename: bool = False,
     logger: Logger = getLogger(__name__)
 ) -> None:
     """
@@ -117,10 +133,12 @@ def store_paths_into_folder(
 
     Parameters
     ----------
-    pathways: List[str]
-        Pathway filenames.
+    pathways: List[ Tuple[float, str, str] ]
+        Pathway (score, filenames, rpSBML name).
     outdir: str
         Folder to store files into.
+    rename: bool
+        Have files to be renamed with rpsbml names
     logger : Logger
         The logger object.
 
@@ -130,26 +148,69 @@ def store_paths_into_folder(
     """
     if not os_path.exists(outdir):
         mkdir(outdir)
-    for pathway in pathways:
-        rpSBML(
-            inFile = pathway,
-            logger = logger
-        ).writeToFile(
-            outdir = outdir
-        )
+
+    for i in range(len(pathways)):
+        orig_filename = pathways[i][1]
+        sbml_filename = pathways[i][2]
+        prefix = str(i) + ' - '
+
+        if rename:
+            outfile = os_path.join(
+                outdir,
+                prefix + sbml_filename
+            )
+        else:
+            outfile = os_path.join(
+                outdir,
+                prefix + os_path.basename(orig_filename)
+            )
+
+        copy(orig_filename, outfile)
+
+        # # Prepend ranking index to filename    
+        # os_rename(
+        #     outfile,
+        #     os_path.join(
+        #         os_path.dirname(outfile),
+        #         str(i)+'-'+os_path.basename(outfile)
+        #     )
+        # )
 
 
 def store_into_tar_gz_file(
-    pathways: List[ Tuple[float, str] ],
-    outfile: str
+    pathways: List[ Tuple[float, str, str] ],
+    outfile: str,
+    rename: bool = False,
+    logger: Logger = getLogger(__name__)
 ) -> None:
+    """
+    Store pathways into a folder.
+
+    Parameters
+    ----------
+    pathways: List[ Tuple[float, str, str] ]
+        Pathway (score, filenames, rpSBML name).
+    rename: bool
+        Have files to be renamed with rpsbml names
+    logger : Logger
+        The logger object.
+
+    Returns
+    -------
+    None
+    """
     with TemporaryDirectory() as temp_d:
         with tf_open(outfile, 'w:gz') as tar:
-            for item in pathways:
-                path = item[1]
+            for i in range(len(pathways)):
+                path = pathways[i][1]
+                prefix = str(i) + ' - '
+                if rename:
+                    arcname = os_path.basename(pathways[i][2])
+                else:
+                    arcname = os_path.basename(path)
                 tar.add(
                     path,
-                    arcname = os_path.basename(path)
+                    arcname = prefix + arcname
                 )
 
 

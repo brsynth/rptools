@@ -13,7 +13,7 @@ from typing import (
 def rank(
     pathways: List[str],
     logger: Logger = getLogger(__name__)
-) -> List[ Tuple[float, str] ]:
+) -> List[ Tuple[float, str, str] ]:
     """
     From a list of pathway (rpsbml) filenames, rank them according to global score.
 
@@ -39,10 +39,15 @@ def rank(
         )
         logger.info('Pathway {rp_name}'.format(rp_name = rpsbml.getName()))
         logger.info('   |- loaded from ' + pathway)
+        # get the score
         score = rpsbml.read_global_score()
-        sorted_pathways += [ (score, pathway) ]
+        # get the rpsbml name (in case of renaming files)
+        rpsbml_name = rpsbml.build_filename_from_name()
+        # append the new pathway with the score and rpsbml_name
+        sorted_pathways += [ (score, pathway, rpsbml_name) ]
         logger.info('   |- ranked with score: {score}'.format(score = score))
 
+    # Sort
     sorted_pathways.sort(
         reverse = True,
         key = lambda r: r[0]

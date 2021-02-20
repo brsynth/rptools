@@ -20,7 +20,7 @@ Advanced options:
 * **--target_coefficient**: (float, default=1.0) Objective coefficient for the target reaction.
 * **--is_max**: (boolean, default=True) Maximise or minimise the objective function
 * **--fraction_of**: (float, default=0.75) Portion of the maximal flux used to set the maximal and minimal bounds for the source reaction of the "fraction" simulation type
-* **--dont_merge**: (boolean, default=True) Return the merged GEM+heterologous pathway SBML or only the heterologous pathway SBML files
+* **--merge**: (boolean, default=True) Return the merged GEM+heterologous pathway SBML or only the heterologous pathway SBML files
 * **--log**: (string, default=error) Set the log level, choices are 'debug', 'info', 'warning', 'error', 'critical'
 
 ## Output
@@ -54,7 +54,7 @@ result = runFBA(args.input_sbml, args.gem_sbml, args.outfile,
                 args.source_coefficient, args.target_coefficient,
                 args.is_max,
                 args.fraction_of,
-                args.dont_merge,
+                args.merge,
                 args.pathway_id,
                 args.objective_id,
                 args.compartment_id,

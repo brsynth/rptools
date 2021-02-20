@@ -34,6 +34,12 @@ def add_arguments(parser):
         default = '',
         help = 'Path to store selected pathways within a folder.'
     )
+    parser.add_argument(
+        '--rename',
+        action = 'store_true',
+        default = False,
+        help = 'Rename files when --data_outdir or --data_outfile is set (default: False).'
+    )
     # parser.add_argument(
     #     '--outdir',
     #     type = str,
