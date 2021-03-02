@@ -16,6 +16,7 @@ on:
       - '.gitignore'
       - '.github'
       - '!.github/workflows/test*'
+      - '**/_version.py'
   pull_request:
     branches: [ master ]
 
