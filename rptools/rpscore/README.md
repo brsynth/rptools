@@ -10,11 +10,11 @@ Computes a global score for a pathway from the following:
 
 The global score (*GS*) is the weighted arithmetic mean of the following scores:
 
-* *RuleScore*: arithmetic mean of each reaction's rule score in the pathway
+* *RuleScore*: arithmetic mean of all reactions' rule score in the pathway
 
-* *FBAScore*: score of the flux balance analysis of the pathway
+* *FBAScore*: arithmetic mean of all reactions' score (normalised with min/max function) of the flux balance analysis of the pathway
 
-* *ThermoScore*: score of the thermodynamics of the pathway
+* *ThermoScore*: arithmetic mean of all reactions' score (normalised with min/max function) of the thermodynamics of the pathway
 
 * *NbReactions*: number of reactions in the pathway
 
