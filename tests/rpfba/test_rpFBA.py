@@ -30,10 +30,7 @@ class Test_rpFBA(TestCase):
         data_path,
         'merged.xml.gz'
     )
-    rpsbml_path = os_path.join(
-        data_path,
-        'rp_1_1_sbml.xml'
-    )
+    nb_rpsbml_paths = 2
     e_coli_model_path_gz = os_path.join(
         data_path,
         'e_coli_model.sbml.gz'
@@ -41,15 +38,48 @@ class Test_rpFBA(TestCase):
 
     rxn_tgt = 'rxn_target'
     pathway_id = 'rp_pathway'
+    fraction_scores = [
+        [
+            2.3076923076923888,
+            3.6794124272706443,
+            3.6794124272706443
+        ],
+        [
+            1.3296695186776557,
+            0.7638744755010182,
+            0.7638744755010182
+        ]
+    ]
+    fba_scores = {
+        'fba': [
+            9.230769230769237,
+            5.144315545243618,
+            3.398422535211268
+        ],
+        'pfba': [
+            859.3846153846168,
+            471.6390839533362,
+            382.1106535211269
+        ]
+    }
 
 
     def setUp(self):
         self.logger = create_logger(__name__, 'ERROR')
 
-        self.rpsbml = rpSBML(
-            inFile = self.rpsbml_path,
-            logger = self.logger
-        )
+        self.rpsbml_paths = [
+            os_path.join(
+                self.data_path,
+                'rpsbml_'+str(i+1)+'.xml'
+            ) for i in range(self.nb_rpsbml_paths)
+        ]
+
+        self.rpsbmls = [
+            rpSBML(
+                inFile = self.rpsbml_paths[i],
+                logger = self.logger
+            ) for i in range(self.nb_rpsbml_paths)
+        ]
 
         with TemporaryDirectory() as temp_d:
             self.e_coli_model_path = extract_gz(
@@ -69,7 +99,12 @@ class Test_rpFBA(TestCase):
                 logger = self.logger
             )
             self.merged_rpsbml_2, reactions_in_both = rpSBML.mergeModels(
-                source_rpsbml = self.rpsbml,
+                source_rpsbml = self.rpsbmls[0],
+                target_rpsbml = self.rpsbml_model,
+                logger = self.logger
+            )
+            self.merged_rpsbml_3, reactions_in_both = rpSBML.mergeModels(
+                source_rpsbml = self.rpsbmls[1],
                 target_rpsbml = self.rpsbml_model,
                 logger = self.logger
             )
@@ -77,17 +112,7 @@ class Test_rpFBA(TestCase):
 
     def test_fba_pfba(self):
         objective_id = 'obj_' + self.rxn_tgt
-        ref_scores = {
-            'fba': [
-                9.230769230769237,
-                5.144315545243618
-            ],
-            'pfba': [
-                859.3846153846168,
-                471.6390839533362
-            ]
-        }
-        for f, scores in ref_scores.items():
+        for f, scores in self.fba_scores.items():
             func = getattr(rpFBA, 'rp_' + f)
             for i in range(len(scores)):
                 with self.subTest(
@@ -141,19 +166,8 @@ class Test_rpFBA(TestCase):
 
 
     def test_fraction(self):
-        ref_scores = [
-            [
-                2.3076923076923888,
-                3.6794124272706443
-            ],
-            [
-                1.3296695186776557,
-                0.7638744755010182
-            ]
-        ]
-
-        for i in range(len(ref_scores)):
-            scores = ref_scores[i]
+        for i in range(len(self.fraction_scores)):
+            scores = self.fraction_scores[i]
             rpsbml = getattr(
                 self,
                 'merged_rpsbml_' + str(i+1)
