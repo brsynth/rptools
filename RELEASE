@@ -1,5 +1,8 @@
 # Release history
 
+## 4.4.0
+- rpFBA: ignore metabolites that are ony consumed/producted to avoid null scores
+
 ## 4.3.0
 - rpRanker: ability to rename output files
 - rpFBA: switch '--dont_merge' CLI argument into '--merge' (default: False)
