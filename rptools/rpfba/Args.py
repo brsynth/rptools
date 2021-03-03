@@ -99,4 +99,10 @@ def add_arguments(parser):
         default=False,
         help='output the full merged model instead of heterologous pathway only (default: False)'
     )
+    parser.add_argument(
+        '--dont_ignore_orphan_species',
+        action='store_true',
+        default=False,
+        help='Ignore metabolites that are only consumed or produced (default: False)'
+    )
     return parser

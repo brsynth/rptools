@@ -30,6 +30,7 @@ def entry_point():
                    pathway_id = args.pathway_id,
                  objective_id = args.objective_id,
                compartment_id = args.compartment_id,
+        ignore_orphan_species = not args.dont_ignore_orphan_species,
              species_group_id = args.species_group_id,
         sink_species_group_id = args.sink_species_group_id,
                        logger = logger

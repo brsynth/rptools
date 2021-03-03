@@ -43,7 +43,7 @@ def runFBA(
                pathway_id: str = 'rp_pathway',
              objective_id: str = None,
            compartment_id: str = 'MNXC3',
-    # fill_orphan_species=False,
+    ignore_orphan_species: bool = True,
          species_group_id: str = 'central_species',
     sink_species_group_id: str = 'rp_sink_species',
                    logger: Logger = getLogger(__name__)
@@ -105,6 +105,7 @@ def runFBA(
     logger.debug('           pathway_id: ' + pathway_id)
     logger.debug('         objective_id: ' + str(objective_id))
     logger.debug('       compartment_id: ' + str(compartment_id))
+    logger.debug('ignore_orphan_species: ' + str(ignore_orphan_species))
     logger.debug('     species_group_id: ' + str(species_group_id))
     logger.debug('sink_species_group_id: ' + str(sink_species_group_id))
 
@@ -124,6 +125,9 @@ def runFBA(
 
     if rpsbml_merged is None:
         return None
+    
+    if ignore_orphan_species:
+        rpsbml_merged.search_isolated_species()
 
     logger.debug('rpsbml_merged: ' + str(rpsbml_merged))
     logger.debug('reactions_in_both: ' + str(reactions_in_both))
@@ -145,6 +149,7 @@ def runFBA(
     if sim_type == 'fraction':
         cobra_results, rpsbml_merged = rp_fraction(
                   rpsbml = rpsbml_merged,
+              ignore_met = ignore_orphan_species,
               src_rxn_id = src_rxn_id,
                src_coeff = src_coeff,
               tgt_rxn_id = tgt_rxn_id,
@@ -169,12 +174,14 @@ def runFBA(
         if sim_type == 'fba':
             cobra_results = rp_fba(
                       rpsbml = rpsbml_merged,
+                  ignore_met = ignore_orphan_species,
                       logger = logger
             )
         ####### pFBA #######
         elif sim_type == 'pfba':
             cobra_results = rp_pfba(
                       rpsbml = rpsbml_merged,
+                  ignore_met = ignore_orphan_species,
                  frac_of_opt = frac_of_src,
                       logger = logger
             )
@@ -192,6 +199,8 @@ def runFBA(
             pathway_id = pathway_id,
             logger = logger
         )
+        # for group in rpsbml_merged.getModel().getPlugin('groups').getListOfGroups():
+        #     print(group)
 
     if cobra_results is None:
         return None
@@ -202,7 +211,7 @@ def runFBA(
         rpfba.runMultiObjective(reactions, coefficients, is_max, pathway_id)
     '''
     if not merge:
-        heterologousPathway(
+        complete_heterologous_pathway(
             rpsbml = rpsbml,
             rpsbml_merged = rpsbml_merged,
             species_group_id = species_group_id,
@@ -218,7 +227,7 @@ def runFBA(
         return rpsbml_merged
 
 
-def heterologousPathway(
+def complete_heterologous_pathway(
     rpsbml: rpSBML,
     rpsbml_merged: rpSBML,
     species_group_id: str,
@@ -306,6 +315,9 @@ def heterologousPathway(
                 newM = target_group.createMember()
                 newM.setIdRef(cs)
         '''
+    # add ignored_species group
+    rpsbml.set_isolated_species(rpsbml_merged.get_isolated_species())
+    create_ignored_species_group(rpsbml, logger)
     #### add objectives ####
     source_fbc = rpsbml_merged.getPlugin('fbc')
     target_fbc = rpsbml.getPlugin('fbc')
@@ -326,8 +338,9 @@ def heterologousPathway(
 
 
 def rp_fba(
-          rpsbml: rpSBML,
-          logger: Logger = getLogger(__name__)
+         rpsbml: rpSBML,
+     ignore_met: bool = True,
+         logger: Logger = getLogger(__name__)
 ) -> cobra_solution:
     """Run FBA using a single objective
 
@@ -348,9 +361,11 @@ def rp_fba(
     """
     logger.info('Running FBA...')
     logger.debug('rpsbml:       ' + str(rpsbml))
+    logger.debug('ignore_met:  ' + str(ignore_met))
 
     cobra_results = runCobra(
         rpsbml = rpsbml,
+        ignore_met = ignore_met,
         logger = logger
     )
 
@@ -358,9 +373,10 @@ def rp_fba(
 
 
 def rp_pfba(
-          rpsbml: rpSBML,
-     frac_of_opt:  float = 0.95,
-          logger: Logger = getLogger(__name__)
+         rpsbml: rpSBML,
+     ignore_met: bool = True,
+    frac_of_opt:  float = 0.95,
+         logger: Logger = getLogger(__name__)
 ) -> cobra_solution:
     """Run parsimonious FBA using a single objective
 
@@ -383,13 +399,20 @@ def rp_pfba(
     """
     logger.info('Running FBA (parsimonious)...')
     logger.debug('rpsbml:       ' + str(rpsbml))
+    logger.debug('ignore_met:  ' + str(ignore_met))
     logger.debug('frac_of_opt:  ' + str(frac_of_opt))
 
-    cobraModel = cobra(rpsbml, logger)
+    cobraModel = cobra(
+        rpsbml = rpsbml,
+        ignore_met = ignore_met,
+        logger = logger
+    )
     if not cobraModel:
         return None
 
     cobra_results = pfba(cobraModel, frac_of_opt)
+
+    logger.debug(cobra_results)
 
     return cobra_results
 
@@ -404,6 +427,7 @@ def rp_fraction(
           is_max:   bool = True,
       pathway_id:    str = 'rp_pathway',
     objective_id:    str = None,
+      ignore_met:   bool = True,
           logger: Logger = getLogger(__name__)
 ) -> Tuple[cobra_solution, rpSBML]:
     """Optimise for a target reaction while fixing a source reaction to the fraction of its optimum
@@ -432,6 +456,7 @@ def rp_fraction(
     
     logger.info('Processing FBA (fraction of reaction)...')
     logger.debug('rpsbml:       ' + str(rpsbml))
+    logger.debug('ignore_met:   ' + str(ignore_met))
     logger.debug('src_rxn_id:   ' + src_rxn_id)
     logger.debug('src_coeff:    ' + str(src_coeff))
     logger.debug('tgt_rxn_id:   ' + tgt_rxn_id)
@@ -496,6 +521,7 @@ def rp_fraction(
 
         cobra_results = runCobra(
             rpsbml = rpsbml,
+            ignore_met = ignore_met,
             logger = logger
         )
         if cobra_results is None:
@@ -555,6 +581,7 @@ def rp_fraction(
 
     cobra_results = runCobra(
         rpsbml = rpsbml,
+        ignore_met = ignore_met,
         logger = logger
     )
     if cobra_results is None:
@@ -586,6 +613,7 @@ def rp_fraction(
 
 def runCobra(
     rpsbml: rpSBML,
+    ignore_met: bool = True,
     logger: Logger = getLogger(__name__)
 ) -> cobra_solution:
     """
@@ -603,18 +631,28 @@ def runCobra(
         Logger object
     """
 
-    cobraModel = cobra(rpsbml, logger)
+    cobraModel = cobra(
+        rpsbml = rpsbml,
+        ignore_met = ignore_met,
+        logger = logger
+    )
 
     if not cobraModel:
         return None
 
-    cobra_results = cobraModel.optimize()
-    
+    cobra_results = cobraModel.optimize(
+        objective_sense='maximize',
+        raise_error=True
+    )
+
+    logger.debug(cobra_results)
+
     return cobra_results
 
 
 def cobra(
     rpsbml: rpSBML,
+    ignore_met: bool = True,
     logger: Logger = getLogger(__name__)
 ) -> cobra_model:
     """Convert the rpSBML object to cobra object
@@ -634,6 +672,12 @@ def cobra(
             (model, errors) = validate_sbml_model(temp_f.name)
             logger.error(str(json_dumps(errors, indent=4)))
             return None
+
+    if ignore_met:
+        isolated_species = [cmp.replace('__64__', '@') for cmp in rpsbml.get_isolated_species()]
+        cobraModel.remove_metabolites([cobraModel.metabolites.get_by_id(met) for met in isolated_species])
+
+    logger.debug(cobraModel)
 
     return cobraModel
 
@@ -671,6 +715,11 @@ def write_results(
         rpsbml,
         pathway_id,
         objective_id,
+        logger
+    )
+
+    create_ignored_species_group(
+        rpsbml,
         logger
     )
 
@@ -853,6 +902,54 @@ def write_objective_to_pathway(
         'mmol_per_gDW_per_hr',
         False
     )
+
+
+def create_ignored_species_group(
+    rpsbml: rpSBML,
+    logger: Logger = getLogger(__name__)
+) -> None:
+    """
+    Write ignored species during FBA to the pathway with id pathway_id in rpsbml object.
+
+    Parameters
+    ----------
+    rpsbml: rpSBML
+        rpSBML object of which reactions will be updated with results
+    pathway_id: str
+        The id of the pathway within reactions will be updated
+    """
+
+    group_id = 'ignored_species_for_FBA'
+
+    rpsbml.createGroup(group_id)
+
+    for spe in rpsbml.get_isolated_species():
+        rpsbml.addMember(
+            group_id = group_id,
+            idRef = spe
+        )
+
+    # for group in rpsbml.getModel().getPlugin('groups').getListOfGroups():
+    #     print(group)
+
+    # exit()
+
+
+    logger.debug(
+        'Create ' + str(group_id) + ' group with ' \
+      + str(rpsbml.get_isolated_species())
+    )
+
+    # ignored_spe = rpsbml.getGroup(
+    #     rpsbml.getPlugin('groups'),
+    #     group_id
+    # )
+
+    # rpsbml.updateBRSynth(
+    #     sbase_obj = ignored_spe,
+    #     annot_header = 'ignored_species',
+    #     value = str(rpsbml.get_isolated_species())
+    # )
 
 
 

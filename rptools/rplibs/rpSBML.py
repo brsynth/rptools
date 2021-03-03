@@ -348,9 +348,6 @@ class rpSBML:
         input_sbml: str,
         input_target: str,
         output_merged: str,
-        species_group_id: str = 'central_species',
-        sink_species_group_id: str = 'rp_sink_species',
-        pathway_id: str = 'rp_pathway',
         logger: Logger = getLogger(__name__)
     ) -> bool:
         """Public function that merges two SBML files together
@@ -510,7 +507,7 @@ class rpSBML:
             source_sbml = source_rpsbml
         )
 
-        # merged_rpsbml.completeHeterologousPathway()
+        # merged_rpsbml._checkSingleParent()
 
         if merged_rpsbml.checkSBML():
             return merged_rpsbml, reactions_in_both
@@ -1496,9 +1493,33 @@ class rpSBML:
         )
 
 
+    def get_isolated_species(self) -> List[str]:
+        """
+        Return speices that are isolated, i.e. are only consumed or only produced.
+
+        Returns
+        -------
+            List of isolated species
+        """
+        try:
+            return self.isolated_species
+        except AttributeError:
+            return []
+
+
+    def set_isolated_species(self, species: List[str]) -> None:
+        """
+        Set isolated species.
+
+        Parameters
+        ----------
+            species: List [str]
+        """
+        self.isolated_species = deepcopy(species)
+
     # @staticmethod
-    # def _checkSingleParent(
-    def completeHeterologousPathway(
+    def search_isolated_species(
+    # def completeHeterologousPathway(
         self,
         upper_flux_bound: float = 999999.0,
         lower_flux_bound: float = 0.0,
@@ -1553,6 +1574,14 @@ class rpSBML:
 
         consumed_species_nid = rpgraph.onlyConsumedSpecies()
         produced_species_nid = rpgraph.onlyProducedSpecies()
+
+        self.isolated_species = consumed_species_nid + produced_species_nid
+
+        return self.get_isolated_species()
+
+        print(consumed_species_nid)
+        print(produced_species_nid)
+        exit()
 
         for pro in produced_species_nid:
 
@@ -3062,10 +3091,11 @@ class rpSBML:
         """
         group = self.getModel().getPlugin('groups').getGroup(group_id)
         rpSBML.checklibSBML(group, 'retreiving '+group_id+' group')
-        members = []
-        for member in group.getListOfMembers():
-            members.append(member.getIdRef())
-        return members
+        return [m.getIdRef() for m in group.getListOfMembers()]
+        # members = []
+        # for member in group.getListOfMembers():
+        #     members.append(member.getIdRef())
+        # return members
 
 
     def readRPrules(self, pathway_id='rp_pathway'):
@@ -3782,11 +3812,11 @@ class rpSBML:
 
 
     ##### ADD SOURCE FROM ORPHAN #####
-    #if the heterologous pathway from the self.getModel() contains a sink molecule that is not included in the
+    # if the heterologous pathway from the self.getModel() contains a sink molecule that is not included in the
     # original model (we call orhpan species) then add another reaction that creates it
-    #TODO: that transports the reactions that creates the species in the
+    # TODO: that transports the reactions that creates the species in the
     # extracellular matrix and another reaction that transports it from the extracellular matrix to the cytoplasm
-    #TODO: does not work
+    # TODO: does not work
     def fillOrphan(self,
             rpsbml=None,
             pathway_id='rp_pathway',
@@ -4355,6 +4385,19 @@ class rpSBML:
         new_group.setKind(libsbml.GROUP_KIND_COLLECTION)
         new_group.setAnnotation(self._defaultBRSynthAnnot(meta_id))
 
+
+    def addMember(
+        self,
+        group_id: str,
+        idRef: str
+    ) -> None:
+        group = self.getGroup(
+            self.getPlugin('groups'),
+            group_id
+        )
+        member = group.createMember()
+        rpSBML.checklibSBML(member, 'Creating a new groups member')
+        rpSBML.checklibSBML(member.setIdRef(idRef), 'Setting name to the groups member')
 
     # def createGene(self, reac, step, meta_id=None):
     #     """Create libSBML gene

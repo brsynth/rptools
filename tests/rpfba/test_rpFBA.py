@@ -112,6 +112,8 @@ class Test_rpFBA(TestCase):
                         plugin = 'fbc'
                     )
 
+                    rpsbml.search_isolated_species()
+
                     cobra_solution = func(
                             rpsbml = rpsbml,
                             logger = self.logger
@@ -156,6 +158,7 @@ class Test_rpFBA(TestCase):
                 self,
                 'merged_rpsbml_' + str(i+1)
             )
+            rpsbml.search_isolated_species()
             cobra_results, rpsbml = rp_fraction(
                     rpsbml = rpsbml,
                 src_rxn_id = 'biomass',
