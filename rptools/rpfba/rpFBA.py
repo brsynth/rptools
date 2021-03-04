@@ -167,13 +167,10 @@ def runFBA(
             is_max = is_max,
             objective_id = objective_id
         )
-        rpsbml_merged.activateObjective(
-            objective_id = objective_id,
-            plugin = 'fbc'
-        )
         if sim_type == 'fba':
             cobra_results = rp_fba(
                       rpsbml = rpsbml_merged,
+                objective_id = objective_id,
                   ignore_met = ignore_orphan_species,
                       logger = logger
             )
@@ -339,9 +336,10 @@ def complete_heterologous_pathway(
 
 
 def rp_fba(
-         rpsbml: rpSBML,
-     ignore_met: bool = True,
-         logger: Logger = getLogger(__name__)
+          rpsbml: rpSBML,
+    objective_id: str,
+      ignore_met: bool = True,
+          logger: Logger = getLogger(__name__)
 ) -> cobra_solution:
     """Run FBA using a single objective
 
@@ -366,6 +364,7 @@ def rp_fba(
 
     cobra_results = runCobra(
         rpsbml = rpsbml,
+        objective_id = objective_id,
         ignore_met = ignore_met,
         logger = logger
     )
@@ -376,7 +375,7 @@ def rp_fba(
 def rp_pfba(
          rpsbml: rpSBML,
      ignore_met: bool = True,
-    frac_of_opt:  float = 0.95,
+    frac_of_opt: float = 0.95,
          logger: Logger = getLogger(__name__)
 ) -> cobra_solution:
     """Run parsimonious FBA using a single objective
@@ -412,7 +411,7 @@ def rp_pfba(
 
     if ignore_met:
         isolated_species = [cmp.replace('__64__', '@') for cmp in rpsbml.get_isolated_species()]
-        print([cobraModel.metabolites.get_by_id(met) for met in isolated_species])
+        # print([cobraModel.metabolites.get_by_id(met) for met in isolated_species])
         cobraModel.remove_metabolites([cobraModel.metabolites.get_by_id(met) for met in isolated_species])
 
     cobra_results = pfba(cobraModel, frac_of_opt)
@@ -645,8 +644,29 @@ def runCobra(
     if not cobraModel:
         return None
 
+    # print("Reactions")
+    # print("---------")
+    # for x in cobraModel.reactions:
+    #     print("%s : %s" % (x.id, x.reaction))
+
+    # x = cobraModel.reactions.rxn_1
+    # print("%s : %s" % (x.id, x.reaction))
+    # x = cobraModel.reactions.rxn_2
+    # print("%s : %s" % (x.id, x.reaction))
+    # x = cobraModel.reactions.rxn_3
+    # print("%s : %s" % (x.id, x.reaction))
+    # x = cobraModel.reactions.rxn_target
+    # print("%s : %s" % (x.id, x.reaction))
+
+    # remove isolated species from the model
     if ignore_met:
         isolated_species = [cmp.replace('__64__', '@') for cmp in rpsbml.get_isolated_species()]
+        # print("")
+        # print("Metabolites")
+        # print("-----------")
+        # for x in cobraModel.metabolites:
+        #     if x.id in isolated_species:
+        #         print('%9s : %s' % (x.id, x.formula))
         cobraModel.remove_metabolites([cobraModel.metabolites.get_by_id(met) for met in isolated_species])
 
     cobra_results = cobraModel.optimize(
