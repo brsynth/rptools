@@ -298,7 +298,7 @@ class rpSBML:
 
         self.logger.debug('rpsbml_dict: {0}'.format(rpsbml_dict))
 
-        rp_pathway = self.getModel().getPlugin('groups').getGroup(pathway_id)
+        rp_pathway = self.getGroup(pathway_id)
 
         for bd_id in rpsbml_dict['pathway']['brsynth']:
 
@@ -1457,22 +1457,40 @@ class rpSBML:
         # return source_groups, target_groups
 
 
+    def getListOfGroups(self) -> List[libsbml.Group]:
+
+        return list(self.getPlugin('groups').getListOfGroups())
+
+
     def getGroup(
         self,
-        groups: libsbml.GroupsModelPlugin,
-        pathway_id: str
+        group_id: str
     ) -> libsbml.Group:
 
-        rp_pathway = groups.getGroup(pathway_id)
+        # model_plugin = self.getPlugin('groups')
+
+        # print(list(model_plugin.getListOfGroups()))
+        # print(model_plugin.getElementBySId())
+        # exit()
+
+        return self.getPlugin('groups').getElementBySId(group_id)
+
+        # if group is None:
+        #     self.logger.warning('The group '+str(group_id)+' does not exist... creating it')
+        #     group = self.createGroup(group_id)
+        
+        # return group
+
+        # rp_pathway = groups.getGroup(pathway_id)
     
-        if rp_pathway is None:
-            self.logger.warning('The group '+str(pathway_id)+' does not exist... creating it')
-            self.createGroup(pathway_id)
-            rp_pathway = groups.getGroup(pathway_id)
+        # if rp_pathway is None:
+        #     self.logger.warning('The group '+str(pathway_id)+' does not exist... creating it')
+        #     self.createGroup(pathway_id)
+        #     rp_pathway = groups.getGroup(pathway_id)
     
-        self.checklibSBML(rp_pathway, 'Getting RP pathway')
+        # self.checklibSBML(rp_pathway, 'Getting RP pathway')
     
-        return rp_pathway
+        # return rp_pathway
 
 
     def copyTitles(
@@ -3089,7 +3107,7 @@ class rpSBML:
         :rtype: list
         :return: List of member id's of a particular group
         """
-        group = self.getModel().getPlugin('groups').getGroup(group_id)
+        group = self.getGroup(group_id)
         rpSBML.checklibSBML(group, 'retreiving '+group_id+' group')
         return [m.getIdRef() for m in group.getListOfMembers()]
         # members = []
@@ -3526,8 +3544,7 @@ class rpSBML:
         :return: Dictionnary of the pathway annotation
         """
 
-        groups = self.getModel().getPlugin('groups')
-        rp_pathway = groups.getGroup(pathway_id)
+        rp_pathway = self.getGroup(pathway_id)
 
         rpsbml_dict = {}
 
@@ -3832,8 +3849,7 @@ class rpSBML:
         """
         self.logger.info('Adding the orphan species to the GEM model')
         # only for rp species
-        groups = self.getModel().getPlugin('groups')
-        rp_pathway = groups.getGroup(pathway_id)
+        rp_pathway = self.getGroup(pathway_id)
         reaction_id = sorted([(int(''.join(x for x in i.id_ref if x.isdigit())), i.id_ref) for i in rp_pathway.getListOfMembers()], key=lambda tup: tup[0], reverse=True)[0][1]
         # for reaction_id in [i.getId() for i in self.getModel().getListOfReactions()]:
         for species_id in set([i.getSpecies() for i in self.getModel().getReaction(reaction_id).getListOfReactants()]+[i.getSpecies() for i in self.getModel().getReaction(reaction_id).getListOfProducts()]):
@@ -4240,8 +4256,7 @@ class rpSBML:
 
         #### GROUPS #####
         if pathway_id:
-            groups_plugin = self.getModel().getPlugin('groups')
-            hetero_group = groups_plugin.getGroup(pathway_id)
+            hetero_group = self.getGroup(pathway_id)
             if not hetero_group:
                 self.logger.warning('The pathway_id '+str(pathway_id)+' does not exist in the model')
             else:
@@ -4338,8 +4353,7 @@ class rpSBML:
         #### GROUPS #####
         # TODO: check that it actually exists
         if species_group_id:
-            groups_plugin = self.getModel().getPlugin('groups')
-            hetero_group = groups_plugin.getGroup(species_group_id)
+            hetero_group = self.getGroup(species_group_id)
             if not hetero_group:
                 self.logger.warning('The species_group_id '+str(species_group_id)+' does not exist in the model')
                 # TODO: consider creating it if
@@ -4351,8 +4365,7 @@ class rpSBML:
         # add the species to the sink species
         # self.logger.debug('in_sink_group_id: '+str(in_sink_group_id))
         if in_sink_group_id:
-            groups_plugin = self.getModel().getPlugin('groups')
-            sink_group = groups_plugin.getGroup(in_sink_group_id)
+            sink_group = self.getGroup(in_sink_group_id)
             if not sink_group:
                 self.logger.warning('The species_group_id '+str(in_sink_group_id)+' does not exist in the model')
                 # TODO: consider creating it if
@@ -4362,7 +4375,11 @@ class rpSBML:
                 rpSBML.checklibSBML(newM.setIdRef(str(species_id)+'__64__'+str(compartment_id)), 'Setting name to the groups member')
 
 
-    def createGroup(self, id, meta_id=None):
+    def createGroup(
+        self,
+        id: str,
+        meta_id: str = None
+    ) -> libsbml.GroupsModelPlugin:
         """Create libSBML pathway
 
         Create a group that is added to self.model
@@ -4379,11 +4396,12 @@ class rpSBML:
         groups_plugin = self.getModel().getPlugin('groups')
         new_group = groups_plugin.createGroup()
         new_group.setId(id)
-        if not meta_id:
+        if meta_id is None:
             meta_id = self._genMetaID(id)
         new_group.setMetaId(meta_id)
         new_group.setKind(libsbml.GROUP_KIND_COLLECTION)
         new_group.setAnnotation(self._defaultBRSynthAnnot(meta_id))
+        return new_group
 
 
     def addMember(
@@ -4391,10 +4409,7 @@ class rpSBML:
         group_id: str,
         idRef: str
     ) -> None:
-        group = self.getGroup(
-            self.getPlugin('groups'),
-            group_id
-        )
+        group = self.getGroup(group_id)
         member = group.createMember()
         rpSBML.checklibSBML(member, 'Creating a new groups member')
         rpSBML.checklibSBML(member.setIdRef(idRef), 'Setting name to the groups member')

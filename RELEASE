@@ -1,5 +1,9 @@
 # Release history
 
+## 4.4.1
+- rpSBML: modify getGroup() method arguments
+- rpSBML: add getListOfGroups() method
+
 ## 4.4.0
 - rpFBA: ignore metabolites that are ony consumed/producted to avoid null scores
 

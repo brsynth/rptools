@@ -71,11 +71,11 @@ class rpGraph:
         rpsbml_model = self.rpsbml.getModel()
         #rp_species = [rpsbml_model.getSpecies(i) for i in self.rpsbml.readUniqueRPspecies(pathway_id)]
         groups = rpsbml_model.getPlugin('groups')
-        c_s = groups.getGroup(central_species_group_id)
-        s_s = groups.getGroup(sink_species_group_id)
+        c_s = self.rpsbml.getGroup(central_species_group_id)
+        s_s = self.rpsbml.getGroup(sink_species_group_id)
         rp_central_species_id = [i.getIdRef() for i in c_s.getListOfMembers()]
         rp_sink_species_id = [i.getIdRef() for i in s_s.getListOfMembers()]
-        rp_pathway = groups.getGroup(pathway_id)
+        rp_pathway = self.rpsbml.getGroup(pathway_id)
         rp_species_id = self.rpsbml.readUniqueRPspecies(pathway_id)
         rp_reactions_id = [i.getIdRef() for i in rp_pathway.getListOfMembers()]
         self.logger.debug('rp_reactions_id: '+str(rp_reactions_id))

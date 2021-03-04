@@ -236,11 +236,12 @@ def complete_heterologous_pathway(
     reactions_in_both: Dict,
     logger: Logger = getLogger(__name__)
 ) -> None:
+
     # Save the central species
-    groups = rpsbml.getPlugin('groups')
-    central = groups.getGroup(species_group_id)
-    sink_group = groups.getGroup(sink_species_group_id)
-    rp_group = groups.getGroup(pathway_id)
+    # groups = rpsbml.getPlugin('groups')
+    central = rpsbml.getGroup(species_group_id)
+    sink_group = rpsbml.getGroup(sink_species_group_id)
+    rp_group = rpsbml.getGroup(pathway_id)
     cent_spe = [str(i.getIdRef()) for i in central.getListOfMembers()]
     sink_spe = [str(i.getIdRef()) for i in sink_group.getListOfMembers()]
     rp_reac  = [str(i.getIdRef()) for i in rp_group.getListOfMembers()]
@@ -253,7 +254,7 @@ def complete_heterologous_pathway(
     logger.debug('rev_reactions:     ' + str(rev_reactions))
     logger.info('Building model with heterologous pathway only')
     groups = rpsbml_merged.getPlugin('groups')
-    rp_pathway = groups.getGroup(pathway_id)
+    rp_pathway = rpsbml_merged.getGroup(pathway_id)
     logger.debug('---- Reactions ----')
     for member in rp_pathway.getListOfMembers():
         #### reaction annotation
@@ -272,11 +273,11 @@ def complete_heterologous_pathway(
     #### add groups ####
     source_groups = rpsbml_merged.getPlugin('groups')
     target_groups = rpsbml.getPlugin('groups')
-    target_groupsID = [i.getId() for i in target_groups.getListOfGroups()]
-    for source_group in source_groups.getListOfGroups():
+    target_groupsID = [i.getId() for i in rpsbml.getListOfGroups()]
+    for source_group in rpsbml_merged.getListOfGroups():
         logger.debug('Replacing group id: '+str(source_group.getId()))
         if source_group.getId() == species_group_id:
-            target_group = target_groups.getGroup(source_group.getId())
+            target_group = rpsbml.getGroup(source_group.getId())
             # TODO: #### replace the new potentially incorect central species with the normal ones #####
             # delete all the previous members
             logger.debug('Removing central_species')
@@ -289,7 +290,7 @@ def complete_heterologous_pathway(
                 newM = target_group.createMember()
                 newM.setIdRef(cs)
         elif source_group.getId()==sink_species_group_id:
-            target_group = target_groups.getGroup(source_group.getId())
+            target_group = rpsbml.getGroup(source_group.getId())
             logger.debug('Removing sink species')
             for i in range(target_group.getNumMembers()):
                 logger.debug('Deleting group member: '+str(target_group.getMember(0).getIdRef()))
@@ -300,7 +301,7 @@ def complete_heterologous_pathway(
                 newM = target_group.createMember()
                 newM.setIdRef(cs)
         elif source_group.getId() in target_groupsID:
-            target_group = target_groups.getGroup(source_group.getId())
+            target_group = rpsbml.getGroup(source_group.getId())
             target_group.setAnnotation(source_group.getAnnotation())
         '''
         elif source_group.getId()==pathway_id:
@@ -829,10 +830,7 @@ def write_fluxes_to_reactions(
         The id of the objective to optimise
     """
 
-    rp_pathway = rpsbml.getGroup(
-        rpsbml.getPlugin('groups'),
-        pathway_id
-    )
+    rp_pathway = rpsbml.getGroup(pathway_id)
 
     for member in rp_pathway.getListOfMembers():
 
@@ -884,10 +882,7 @@ def write_objective_to_pathway(
         The id of the objective to optimise
     """
 
-    rp_pathway = rpsbml.getGroup(
-        rpsbml.getPlugin('groups'),
-        pathway_id
-    )
+    rp_pathway = rpsbml.getGroup(pathway_id)
 
     logger.debug(
         'Set ' + str(pathway_id) + ' with ' \
