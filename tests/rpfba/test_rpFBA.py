@@ -1,10 +1,9 @@
 from unittest import TestCase
 from os import path as os_path
-from rptools.rpfba import rpFBA
 from rptools.rpfba.rpFBA import (
-    # rp_fba,
+    rp_fba,
+    rp_pfba,
     rp_fraction,
-    # rp_pfba,
     write_results
 )
 from rptools.rplibs import rpSBML
@@ -17,6 +16,7 @@ from brs_utils import (
     create_logger,
     extract_gz
 )
+from cobra.core.solution import Solution  as cobra_solution
 
 
 class Test_rpFBA(TestCase):
@@ -50,18 +50,16 @@ class Test_rpFBA(TestCase):
             0.7638744755010182
         ]
     ]
-    fba_scores = {
-        'fba': [
+    fba_scores = [
             9.230769230769237,
             5.144315545243618,
             3.398422535211268
-        ],
-        'pfba': [
+        ]
+    pfba_scores = [
             859.3846153846168,
             471.6390839533362,
             382.1106535211269
         ]
-    }
 
 
     def setUp(self):
@@ -110,59 +108,102 @@ class Test_rpFBA(TestCase):
             )
 
 
-    def test_fba_pfba(self):
+    def test_fba(self):
         objective_id = 'obj_' + self.rxn_tgt
-        for f, scores in self.fba_scores.items():
-            func = getattr(rpFBA, 'rp_' + f)
-            for i in range(len(scores)):
-                with self.subTest(
-                    func = func,
-                    scores = scores,
-                    i = i
-                ):
-                    ref_score = scores[i]
-                    rpsbml = getattr(
-                        self,
-                        'merged_rpsbml_' + str(i+1)
-                    )
+        for i in range(len(self.fba_scores)):
+            with self.subTest(
+                i = i
+            ):
+                ref_score = self.fba_scores[i]
+                rpsbml = getattr(
+                    self,
+                    'merged_rpsbml_' + str(i+1)
+                )
 
-                    objective_id = rpsbml.find_or_create_objective(
-                        reactions = [self.rxn_tgt],
-                        coefficients = [1.0],
-                        is_max = True,
-                        objective_id = objective_id
-                    )
-                    rpsbml.activateObjective(
-                        objective_id = objective_id,
-                        plugin = 'fbc'
-                    )
+                objective_id = rpsbml.find_or_create_objective(
+                    reactions = [self.rxn_tgt],
+                    coefficients = [1.0],
+                    is_max = True,
+                    objective_id = objective_id
+                )
 
-                    rpsbml.search_isolated_species()
+                rpsbml.search_isolated_species()
 
-                    cobra_solution = func(
-                            rpsbml = rpsbml,
-                            logger = self.logger
-                    )
-
-                    self.assertTrue(rpsbml)
-                    self.assertAlmostEqual(
-                        cobra_solution.objective_value,
-                        ref_score
-                    )
-
-                    write_results(
+                cobra_solution = rp_fba(
                         rpsbml = rpsbml,
                         objective_id = objective_id,
-                        cobra_results = cobra_solution,
-                        pathway_id = self.pathway_id,
                         logger = self.logger
-                    )
-                    # make sure that the results are written to the file
-                    pathway = rpsbml.toDict()['pathway']['brsynth']
-                    self.assertAlmostEqual(
-                        pathway['fba_obj_'+self.rxn_tgt]['value'],
-                        ref_score
-                    )
+                )
+
+                self._test(
+                    ref_score,
+                    rpsbml,
+                    cobra_solution,
+                    objective_id
+                )
+
+
+    def test_pfba(self):
+        objective_id = 'obj_' + self.rxn_tgt
+        for i in range(len(self.pfba_scores)):
+            with self.subTest(
+                i = i
+            ):
+                ref_score = self.pfba_scores[i]
+                rpsbml = getattr(
+                    self,
+                    'merged_rpsbml_' + str(i+1)
+                )
+
+                objective_id = rpsbml.find_or_create_objective(
+                    reactions = [self.rxn_tgt],
+                    coefficients = [1.0],
+                    is_max = True,
+                    objective_id = objective_id
+                )
+
+                rpsbml.search_isolated_species()
+
+                cobra_solution = rp_pfba(
+                        rpsbml = rpsbml,
+                        objective_id = objective_id,
+                        logger = self.logger
+                )
+
+                self._test(
+                    ref_score,
+                    rpsbml,
+                    cobra_solution,
+                    objective_id
+                )
+
+
+    def _test(
+        self,
+        ref_score: float,
+        rpsbml: rpSBML,
+        cobra_solution: cobra_solution,
+        objective_id: str
+    ) -> None:
+        self.assertTrue(rpsbml)
+        self.assertAlmostEqual(
+            cobra_solution.objective_value,
+            ref_score
+        )
+
+        write_results(
+            rpsbml = rpsbml,
+            objective_id = objective_id,
+            cobra_results = cobra_solution,
+            pathway_id = self.pathway_id,
+            logger = self.logger
+        )
+        # make sure that the results are written to the file
+        pathway = rpsbml.toDict()['pathway']['brsynth']
+        self.assertAlmostEqual(
+            pathway['fba_obj_'+self.rxn_tgt]['value'],
+            ref_score
+        )
 
 
     def test_fraction(self):

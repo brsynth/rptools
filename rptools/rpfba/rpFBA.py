@@ -178,6 +178,7 @@ def runFBA(
         elif sim_type == 'pfba':
             cobra_results = rp_pfba(
                       rpsbml = rpsbml_merged,
+                objective_id = objective_id,
                   ignore_met = ignore_orphan_species,
                  frac_of_opt = frac_of_src,
                       logger = logger
@@ -373,10 +374,11 @@ def rp_fba(
 
 
 def rp_pfba(
-         rpsbml: rpSBML,
-     ignore_met: bool = True,
-    frac_of_opt: float = 0.95,
-         logger: Logger = getLogger(__name__)
+          rpsbml: rpSBML,
+    objective_id: str,
+      ignore_met: bool = True,
+     frac_of_opt: float = 0.95,
+          logger: Logger = getLogger(__name__)
 ) -> cobra_solution:
     """Run parsimonious FBA using a single objective
 
@@ -401,6 +403,11 @@ def rp_pfba(
     logger.debug('rpsbml:       ' + str(rpsbml))
     logger.debug('ignore_met:  ' + str(ignore_met))
     logger.debug('frac_of_opt:  ' + str(frac_of_opt))
+
+    rpsbml.activateObjective(
+        objective_id = objective_id,
+        plugin = 'fbc'
+    )
 
     cobraModel = cobra_model(
         rpsbml = rpsbml,
