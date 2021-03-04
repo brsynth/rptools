@@ -403,13 +403,17 @@ def rp_pfba(
     logger.debug('ignore_met:  ' + str(ignore_met))
     logger.debug('frac_of_opt:  ' + str(frac_of_opt))
 
-    cobraModel = cobra(
+    cobraModel = cobra_model(
         rpsbml = rpsbml,
-        ignore_met = ignore_met,
         logger = logger
     )
     if not cobraModel:
         return None
+
+    if ignore_met:
+        isolated_species = [cmp.replace('__64__', '@') for cmp in rpsbml.get_isolated_species()]
+        print([cobraModel.metabolites.get_by_id(met) for met in isolated_species])
+        cobraModel.remove_metabolites([cobraModel.metabolites.get_by_id(met) for met in isolated_species])
 
     cobra_results = pfba(cobraModel, frac_of_opt)
 
@@ -515,13 +519,9 @@ def rp_fraction(
         ### FBA ###
         # logger.info('Running the FBA (fraction of reaction)...')
         # rpsbml.runFBA(source_reaction, source_coefficient, is_max, pathway_id)
-        rpsbml.activateObjective(
-            objective_id = src_obj_id,
-            plugin = 'fbc'
-        )
-
         cobra_results = runCobra(
             rpsbml = rpsbml,
+            objective_id = src_obj_id,
             ignore_met = ignore_met,
             logger = logger
         )
@@ -570,18 +570,17 @@ def rp_fraction(
     logger.debug('Optimising the objective: '+str(objective_id))
     logger.debug('     Setting upper bound: '+str(source_flux*frac_of_src))
     logger.debug('     Setting lower bound: '+str(source_flux*frac_of_src))
-    old_upper_bound, old_lower_bound = rpsbml.setReactionConstraints(
+
+    old_upper_bound, old_lower_bound = rpsbml.getReactionConstraints(src_rxn_id)
+    rpsbml.setReactionConstraints(
         src_rxn_id,
         source_flux*frac_of_src,
         source_flux*frac_of_src
     )
-    rpsbml.activateObjective(
-        objective_id = objective_id,
-        plugin = 'fbc'
-    )
 
     cobra_results = runCobra(
         rpsbml = rpsbml,
+        objective_id = objective_id,
         ignore_met = ignore_met,
         logger = logger
     )
@@ -601,7 +600,7 @@ def rp_fraction(
     logger.debug(' Target: '+str(cobra_results.fluxes.rxn_target))
 
     # reset the bounds to the original values for the target
-    old_upper_bound, old_lower_bound = rpsbml.setReactionConstraints(
+    rpsbml.setReactionConstraints(
         src_rxn_id,
         old_upper_bound,
         old_lower_bound
@@ -614,6 +613,7 @@ def rp_fraction(
 
 def runCobra(
     rpsbml: rpSBML,
+    objective_id: str,
     ignore_met: bool = True,
     logger: Logger = getLogger(__name__)
 ) -> cobra_solution:
@@ -632,14 +632,22 @@ def runCobra(
         Logger object
     """
 
-    cobraModel = cobra(
+    rpsbml.activateObjective(
+        objective_id = objective_id,
+        plugin = 'fbc'
+    )
+
+    cobraModel = cobra_model(
         rpsbml = rpsbml,
-        ignore_met = ignore_met,
         logger = logger
     )
 
     if not cobraModel:
         return None
+
+    if ignore_met:
+        isolated_species = [cmp.replace('__64__', '@') for cmp in rpsbml.get_isolated_species()]
+        cobraModel.remove_metabolites([cobraModel.metabolites.get_by_id(met) for met in isolated_species])
 
     cobra_results = cobraModel.optimize(
         objective_sense='maximize',
@@ -651,9 +659,8 @@ def runCobra(
     return cobra_results
 
 
-def cobra(
+def cobra_model(
     rpsbml: rpSBML,
-    ignore_met: bool = True,
     logger: Logger = getLogger(__name__)
 ) -> cobra_model:
     """Convert the rpSBML object to cobra object
@@ -673,10 +680,6 @@ def cobra(
             (model, errors) = validate_sbml_model(temp_f.name)
             logger.error(str(json_dumps(errors, indent=4)))
             return None
-
-    if ignore_met:
-        isolated_species = [cmp.replace('__64__', '@') for cmp in rpsbml.get_isolated_species()]
-        cobraModel.remove_metabolites([cobraModel.metabolites.get_by_id(met) for met in isolated_species])
 
     logger.debug(cobraModel)
 
@@ -916,7 +919,10 @@ def create_ignored_species_group(
 
     group_id = 'ignored_species_for_FBA'
 
-    rpsbml.createGroup(group_id)
+    rpsbml.createGroup(
+        id = group_id,
+        brs_annot = False
+    )
 
     for spe in rpsbml.get_isolated_species():
         rpsbml.addMember(

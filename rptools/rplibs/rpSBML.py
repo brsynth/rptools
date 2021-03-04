@@ -3775,6 +3775,28 @@ class rpSBML:
     #########################################################################
     ############################# MODEL APPEND ##############################
     #########################################################################
+    def getReactionConstraints(
+        self,
+        rxn_id: str
+    ) -> Tuple[float, float]:
+        """
+        Returns flux bounds.
+
+        Parameters
+        ----------
+        rxn_id: str
+            Reaction ID
+
+        Returns
+        -------
+        bounds: Tuple[float, float]
+            Tuple of lower and upper flux bounds
+        """
+        reac_fbc = self.getModel().getReaction(rxn_id).getPlugin('fbc')
+        old_lower_value = self.getModel().getParameter(reac_fbc.getLowerFluxBound()).value
+        old_upper_value = self.getModel().getParameter(reac_fbc.getUpperFluxBound()).value
+        return old_lower_value, old_upper_value
+
     def setReactionConstraints(
         self,
         reaction_id: str,
@@ -3782,7 +3804,7 @@ class rpSBML:
         lower_bound: float,
         unit: str = 'mmol_per_gDW_per_hr',
         is_constant: bool = True
-    ):
+    ) -> None:
         """Set a given reaction's upper and lower bounds
 
         Sets the upper and lower bounds of a reaction. Note that if the numerical values passed
@@ -3814,18 +3836,14 @@ class rpSBML:
         rpSBML.checklibSBML(reac_fbc, 'extending reaction for FBC')
  
         ########## upper bound #############
-        old_upper_value = self.getModel().getParameter(reac_fbc.getUpperFluxBound()).value
         upper_param = self.createReturnFluxParameter(upper_bound, unit, is_constant)
         rpSBML.checklibSBML(reac_fbc.setUpperFluxBound(upper_param.getId()),
             'setting '+str(reaction_id)+' upper flux bound')
  
         ######### lower bound #############
-        old_lower_value = self.getModel().getParameter(reac_fbc.getLowerFluxBound()).value
         lower_param = self.createReturnFluxParameter(lower_bound, unit, is_constant)
         rpSBML.checklibSBML(reac_fbc.setLowerFluxBound(lower_param.getId()),
             'setting '+str(reaction_id)+' lower flux bound')
-
-        return old_upper_value, old_lower_value
 
 
     ##### ADD SOURCE FROM ORPHAN #####
@@ -4378,6 +4396,7 @@ class rpSBML:
     def createGroup(
         self,
         id: str,
+        brs_annot: bool = True,
         meta_id: str = None
     ) -> libsbml.GroupsModelPlugin:
         """Create libSBML pathway
@@ -4400,7 +4419,8 @@ class rpSBML:
             meta_id = self._genMetaID(id)
         new_group.setMetaId(meta_id)
         new_group.setKind(libsbml.GROUP_KIND_COLLECTION)
-        new_group.setAnnotation(self._defaultBRSynthAnnot(meta_id))
+        if brs_annot:
+            new_group.setAnnotation(self._defaultBRSynthAnnot(meta_id))
         return new_group
 
 
