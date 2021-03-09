@@ -1,5 +1,8 @@
 # Release history
 
+## 4.4.2
+- fix(rpSBML): fix input file control (TypeError + FileNotFoundError)
+
 ## 4.4.1
 - rpSBML: modify getGroup() method arguments
 - rpSBML: add getListOfGroups() method
