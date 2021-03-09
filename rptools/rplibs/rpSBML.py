@@ -80,26 +80,20 @@ class rpSBML:
         if inFile is not None:
             infile = inFile
             try:
-                try:
-                    kind = guess(infile)
-                except:
-                    logger.error(
-                        'inFile {file} has to be of type \'str\' (not {type})'.format(
-                            file=infile,
-                            type=str(type(infile))
-                        )
-                    )
-                    logger.info('Exiting...')
-                    exit(-1)
-                with TemporaryDirectory() as temp_d:
-                    if kind:
-                        self.logger.debug('inFile is detected as ' + str(kind))
-                        if kind.mime == 'application/gzip':
-                            infile = extract_gz(inFile, temp_d)
-                    self.readSBML(infile)
+                kind = guess(infile)
             except FileNotFoundError as e:
                 self.logger.error(str(e))
                 exit(-1)
+            except TypeError as e:
+                logger.error(e)
+                logger.error('Exiting...')
+                exit(-1)
+            with TemporaryDirectory() as temp_d:
+                if kind:
+                    self.logger.debug('inFile is detected as ' + str(kind))
+                    if kind.mime == 'application/gzip':
+                        infile = extract_gz(inFile, temp_d)
+                self.readSBML(infile)
 
         else:
             if rpsbml is None:
