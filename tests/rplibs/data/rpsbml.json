@@ -31,7 +31,8 @@
             "norm_dfG_uncert": 0.7485292672224663,
             "norm_dfG_prime_o": 0.7497911027191192,
             "norm_rule_score": 0.5684564101634014,
-            "norm_steps": 0.8571428571428572
+            "norm_steps": 0.8571428571428572,
+            "nb_reactions": 3
         }
     },
     "reactions": {
