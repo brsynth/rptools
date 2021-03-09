@@ -83,10 +83,11 @@ class rpSBML:
                 kind = guess(infile)
             except FileNotFoundError as e:
                 self.logger.error(str(e))
+                self.logger.error('Exiting...')
                 exit(-1)
             except TypeError as e:
-                logger.error(e)
-                logger.error('Exiting...')
+                self.logger.error(e)
+                self.logger.error('Exiting...')
                 exit(-1)
             with TemporaryDirectory() as temp_d:
                 if kind:
@@ -102,7 +103,8 @@ class rpSBML:
                 self.document = rpsbml.getDocument().clone()
 
         if not self.checkSBML():
-            logger.error('SBML document not valid, exiting...')
+            self.logger.error('SBML document not valid')
+            self.logger.error('Exiting...')
 
         # model name
         self.setName(name if name else self.getName())
@@ -3542,13 +3544,17 @@ class rpSBML:
 
         rpsbml_dict = {}
 
-        # pathway
-        if 'pathway' in keys:
-            rpsbml_dict['pathway'] = self.read_pathway(rp_pathway)
-
         # reactions
         if 'reactions' in keys:
             rpsbml_dict['reactions'] = self.read_reactions(rp_pathway)
+
+        # pathway
+        if 'pathway' in keys:
+            rpsbml_dict['pathway'] = self.read_pathway(rp_pathway)
+            try:
+                rpsbml_dict['pathway']['brsynth']['nb_reactions'] = len(rpsbml_dict['reactions'].keys())
+            except KeyError:
+                rpsbml_dict['pathway']['brsynth']['nb_reactions'] = len(self.read_reactions(rp_pathway).keys())
 
         # loop though all the species
         if 'species' in keys:
