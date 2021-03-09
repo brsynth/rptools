@@ -3,7 +3,8 @@
         "brsynth": {
             "path_id": "rp_1_11",
             "path_base_idx": 1,
-            "path_variant_idx": 11
+            "path_variant_idx": 11,
+            "nb_reactions": 3
         }
     },
     "reactions": {
