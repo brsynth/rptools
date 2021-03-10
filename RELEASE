@@ -1,5 +1,8 @@
 # Release history
 
+## 4.4.4
+- fix(rpSBML): do not check SBML when creating an empty rpSBML
+
 ## 4.4.3
 - chore(rpSBML): add 'nb_reactions' key in output of toDict()
 
