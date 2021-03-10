@@ -184,48 +184,52 @@ def _pubchemStrctSearch(strct, itype='inchi', logger=logging.getLogger(__name__)
 # @param species_group_id The Groups id of the central species of the heterologous pathway
 # @param species_group_id The Groups id of the sink species of the heterologous pathway
 # @return Boolean The success or failure of the function
-def rp_completion(cache,
-                  rp2_pathways,
-                  rp2paths_compounds,
-                  rp2paths_pathways,
-                  outdir,
-                  upper_flux_bound=999999,
-                  lower_flux_bound=0,
-                  max_subpaths_filter=10,
-                  pathway_id='rp_pathway',
-                  compartment_id='MNXC3',
-                  species_group_id='central_species',
-                  sink_species_group_id='rp_sink_species',
-                  pubchem_search=False,
-                  logger=logging.getLogger(__name__)):
+def rp_completion(
+    cache,
+    rp2_pathways,
+    rp2paths_compounds,
+    rp2paths_pathways,
+    outdir,
+    upper_flux_bound=999999,
+    lower_flux_bound=0,
+    max_subpaths_filter=10,
+    pathway_id='rp_pathway',
+    compartment_id='MNXC3',
+    species_group_id='central_species',
+    sink_species_group_id='rp_sink_species',
+    pubchem_search=False,
+    logger=logging.getLogger(__name__)
+):
 
-    if max_subpaths_filter<0:
+    if max_subpaths_filter < 0:
         raise ValueError('Max number of subpaths cannot be less than 0: '+str(max_subpaths_filter))
 
     if not os_path.exists(outdir):
         os_mkdir(outdir)
     elif os_path.isfile(outdir):
         logger.error('Outdir name '+outdir+' already exists and is actually file. Stopping the process...')
-        exit()
+        exit(-1)
 
     rp_strc = _compounds(cache, rp2paths_compounds, logger=logger)
     rp_transformation, sink_molecules = _transformation(rp2_pathways, logger=logger)
 
-    return write_rp2paths_to_rpSBML(cache,
-                                    rp_strc,
-                                    rp_transformation,
-                                    sink_molecules,
-                                    rp2paths_pathways,
-                                    outdir,
-                                    upper_flux_bound,
-                                    lower_flux_bound,
-                                    max_subpaths_filter,
-                                    pathway_id,
-                                    compartment_id,
-                                    species_group_id,
-                                    sink_species_group_id,
-                                    pubchem_search,
-                                    logger=logger)
+    return write_rp2paths_to_rpSBML(
+        cache,
+        rp_strc,
+        rp_transformation,
+        sink_molecules,
+        rp2paths_pathways,
+        outdir,
+        upper_flux_bound,
+        lower_flux_bound,
+        max_subpaths_filter,
+        pathway_id,
+        compartment_id,
+        species_group_id,
+        sink_species_group_id,
+        pubchem_search,
+        logger=logger
+    )
 
 
 ## Function to parse the compounds.txt file
@@ -470,22 +474,29 @@ def build_side_rxn(side, deprecatedCID_cid, logger=logging.getLogger(__name__)):
 #  @max_subpaths_filter maximal numer of subpaths per paths
 #  @outFolder folder where to write files
 #  @return Boolean The success or failure of the function
-def write_rp2paths_to_rpSBML(cache,
-                             rp_strc, rp_transformation, sink_molecules,
-                             rp2paths_pathways,
-                             outFolder,
-                             upper_flux_bound=999999,
-                             lower_flux_bound=0,
-                             max_subpaths_filter=10,
-                             pathway_id='rp_pathway',
-                             compartment_id='MNXC3',
-                             species_group_id='central_species',
-                             sink_species_group_id='rp_sink_species',
-                             pubchem_search=False,
-                             logger=logging.getLogger(__name__)):
+def write_rp2paths_to_rpSBML(
+    cache,
+    rp_strc, rp_transformation, sink_molecules,
+    rp2paths_pathways,
+    outFolder,
+    upper_flux_bound=999999,
+    lower_flux_bound=0,
+    max_subpaths_filter=10,
+    pathway_id='rp_pathway',
+    compartment_id='MNXC3',
+    species_group_id='central_species',
+    sink_species_group_id='rp_sink_species',
+    pubchem_search=False,
+    logger=logging.getLogger(__name__)
+):
     # TODO: make sure that you account for the fact that each reaction may have multiple associated reactions
 
-    rp2paths_pathways = rp2paths_to_dict(rp2paths_pathways, cache.rr_reactions, cache.deprecatedCID_cid, logger=logger)
+    rp2paths_pathways = rp2paths_to_dict(
+        rp2paths_pathways,
+        cache.rr_reactions,
+        cache.deprecatedCID_cid,
+        logger=logger
+    )
 
     # for each line or rp2paths_pathways:
     #     generate comb
@@ -510,32 +521,45 @@ def write_rp2paths_to_rpSBML(cache,
             path_id     = 'rp_'+path_id_idx
 
             # 1) Create an rpSBML object with species
-            rpsbml, species = create_rpSBML(pathway_id, path_base_idx, path_variant_idx,
-                                            path_id, path_id_idx,
-                                            rp2paths_pathways[path_base_idx],
-                                            cache, compartment_id, upper_flux_bound, lower_flux_bound,
-                                            rp_strc, rp_transformation, sink_molecules,
-                                            species_group_id, sink_species_group_id,
-                                            pubchem_search)
+            rpsbml, species = create_rpSBML(
+                pathway_id, path_base_idx, path_variant_idx,
+                path_id, path_id_idx,
+                rp2paths_pathways[path_base_idx],
+                cache, compartment_id, upper_flux_bound, lower_flux_bound,
+                rp_strc, rp_transformation, sink_molecules,
+                species_group_id, sink_species_group_id,
+                pubchem_search
+            )
 
             # 2) Add complete reactions
-            rpsbml = complete_reactions(rpsbml, species, rp2paths_pathways[path_base_idx],
-                                        pathway_id, path_variant,
-                                        compartment_id, upper_flux_bound, lower_flux_bound,
-                                        rp_transformation)
+            rpsbml = complete_reactions(
+                rpsbml, species, rp2paths_pathways[path_base_idx],
+                pathway_id, path_variant,
+                compartment_id, upper_flux_bound, lower_flux_bound,
+                rp_transformation
+            )
 
             # 3) Get the cofactors
             rpsbml = add_cofactors(cache, rpsbml, logger=logger)
 
             # 4) Apply to best rpsbml list
-            best_rpsbml = apply_best_rpsbml(best_rpsbml, max_subpaths_filter,
-                                            rpsbml, path_id)
+            best_rpsbml = apply_best_rpsbml(
+                best_rpsbml,
+                max_subpaths_filter,
+                rpsbml,
+                path_id
+            )
 
             path_variant_idx += 1
 
         # Write results to files
         for rpsbml_item in best_rpsbml:
-            rpsbml_item.rpsbml_obj.writeToFile(os_path.join(outFolder, str(rpsbml_item.rpsbml_obj.modelName))+'_sbml.xml')
+            rpsbml_item.rpsbml_obj.writeToFile(
+                os_path.join(
+                    outFolder,
+                    str(rpsbml_item.rpsbml_obj.modelName)
+                ) + '_sbml.xml'
+            )
 
     return 0
 
@@ -553,14 +577,16 @@ def apply_best_rpsbml(best_rpsbml, max_subpaths_filter,
     return best_rpsbml
 
 
-def create_rpSBML(pathway_id, path_base_idx, path_variant_idx,
-                  path_id, path_id_idx,
-                  steps,
-                  cache, compartment_id, upper_flux_bound, lower_flux_bound,
-                  rp_strc, rp_transformation, sink_molecules,
-                  species_group_id, sink_species_group_id,
-                  pubchem_search,
-                  logger=logging.getLogger(__name__)):
+def create_rpSBML(
+    pathway_id, path_base_idx, path_variant_idx,
+    path_id, path_id_idx,
+    steps,
+    cache, compartment_id, upper_flux_bound, lower_flux_bound,
+    rp_strc, rp_transformation, sink_molecules,
+    species_group_id, sink_species_group_id,
+    pubchem_search,
+    logger=logging.getLogger(__name__)
+):
 
     rpsbml = rpSBML(name=path_id, logger=logger)
 

@@ -102,9 +102,10 @@ class rpSBML:
             else:
                 self.document = rpsbml.getDocument().clone()
 
-        if not self.checkSBML():
+        if rpsbml is not None and not self.checkSBML():
             self.logger.error('SBML document not valid')
             self.logger.error('Exiting...')
+            exit(-1)
 
         # model name
         self.setName(name if name else self.getName())
@@ -2696,6 +2697,48 @@ class rpSBML:
                 break
 
         return source_found
+
+
+    # def addInChiKey(self, input_sbml, output_sbml):
+    #     """Check the MIRIAM annotation for MetaNetX or CHEBI id's and try to recover the inchikey from cache and add it to MIRIAM
+    #     :param input_sbml: SBML file input
+    #     :param output_sbml: Output SBML file
+    #     :type input_sbml: str
+    #     :type output_sbml: str
+    
+    #     :rtype: bool
+    #     :return: Success or failure of the function
+    #     """
+    #     filename = input_sbml.split('/')[-1].replace('.rpsbml', '').replace('.sbml', '').replace('.xml', '')
+    #     self.logger.debug(filename)
+    #     rpsbml = rpSBML.rpSBML(filename, path=input_sbml)
+    #     for spe in rpsbml.model.getListOfSpecies():
+    #         inchikey = None
+    #         miriam_dict = rpsbml.readMIRIAMAnnotation(spe.getAnnotation())
+    #         if 'inchikey' in miriam_dict:
+    #             self.logger.info('The species '+str(spe.id)+' already has an inchikey... skipping')
+    #             continue
+    #         try:
+    #             for mnx in miriam_dict['metanetx']:
+    #                 inchikey = self.cid_strc[self._checkCIDdeprecated(mnx)]['inchikey']
+    #                 if inchikey:
+    #                     rpsbml.addUpdateMIRIAM(spe, 'species', {'inchikey': [inchikey]})
+    #                 else:
+    #                     self.logger.warning('The inchikey is empty for: '+str(spe.id))
+    #                 continue
+    #         except KeyError:
+    #             try:
+    #                 for chebi in miriam_dict['chebi']:
+    #                     inchikey = self.cid_strc[self._checkCIDdeprecated(self.chebi_cid[chebi])]['inchikey']
+    #                     if inchikey:
+    #                         rpsbml.addUpdateMIRIAM(spe, 'species', {'inchikey': [inchikey]})
+    #                     else:
+    #                         self.logger.warning('The inchikey is empty for: '+str(spe.id))
+    #                     continue
+    #             except KeyError:
+    #                 self.logger.warning('Cannot find the inchikey for: '+str(spe.id))
+    #     libsbml.writeSBMLToFile(rpsbml.document, output_sbml)
+    #     return True
 
 
     def addUpdateMIRIAM(self, sbase_obj, type_param, xref, meta_id=None):
