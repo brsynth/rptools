@@ -2252,26 +2252,27 @@ class rpSBML:
     #
     # @param pathway rpSBML object
     # @return dict object with species in it
-    @staticmethod
-    def _normalize_pathway(pathway, logger=getLogger(__name__)):
+    def _get_reactions_with_species_keys(
+        self,
+        keys = ['inchikey', 'inchi', 'smiles']
+    ) -> Dict:
 
-        model = pathway.document.getModel()
+        model = self.getModel()
 
         # Get Reactions
         reactions = {}
-        for reaction_id in pathway.readGroupMembers():
+        for reaction_id in self.readGroupMembers():
             reaction = model.getReaction(reaction_id)
-            reactions[reaction_id] = rpSBML.readBRSYNTHAnnotation(reaction.getAnnotation(), logger=logger)
+            reactions[reaction_id] = rpSBML.readBRSYNTHAnnotation(reaction.getAnnotation(), logger=self.logger)
 
         # Get Species
         species = {}
         for specie in model.getListOfSpecies():
-            species[specie.getId()] = rpSBML.readBRSYNTHAnnotation(specie.getAnnotation(), logger=logger)
+            species[specie.getId()] = rpSBML.readBRSYNTHAnnotation(specie.getAnnotation(), logger=self.logger)
 
         # Pathways dict
         d_reactions = {}
 
-        keys = ['inchikey', 'inchi', 'smiles']
         # Select Reactions already loaded (w/o Sink one then)
         for reaction_id in reactions:
 
@@ -2305,6 +2306,7 @@ class rpSBML:
 
         return d_reactions
 
+
     def __str__(self):
         for attr in inspect_getmembers(self):
             if not attr[0].startswith('_'):
@@ -2312,17 +2314,36 @@ class rpSBML:
                     # self.logger.info(attr)
                     print(attr)
 
+
     def __eq__(self, other):
+        # self_species = self.getModel().getListOfSpecies()
+        # other_species = other.getModel().getListOfSpecies()
+        # for rxn in self.getModel().getListOfReactions():
+        #     for elt in rxn.getListOfReactants():
+        #         print(elt.getSpecies(), elt.getStoichiometry(), self_species.get(elt.getSpecies()))
+        #     for elt in rxn.getListOfProducts():
+        #         print(elt.getSpecies(), elt.getStoichiometry(), other_species.get(elt.getSpecies()))
+            # print(list(rxn.getListOfReactants()))
+            # print(list(rxn.getListOfProducts()))
+        # print(list(self.getModel().getListOfReactions()))
+        # print(list(other.getModel().getListOfReactions()))
             # len(self.getModel().getListOfReactions())==len(other.getModel().getListOfReactions()) \
+        # return \
+        #     sorted(self.readGroupMembers()) == sorted(other.readGroupMembers()) \
+        # and self._get_reactions_with_species_keys(self.logger) == other._get_reactions_with_species_keys(other.logger)
         return \
-            sorted(self.readGroupMembers()) == sorted(other.readGroupMembers()) \
-        and rpSBML._normalize_pathway(self, self.logger) == rpSBML._normalize_pathway(other, self.logger)
+            self._get_reactions_with_species_keys() \
+            == \
+            other._get_reactions_with_species_keys()
+
 
     def __lt__(self, rpsbml):
         return self.getScore() < rpsbml.getScore()
 
+
     def __gt__(self, rpsbml):
         return self.getScore() > rpsbml.getScore()
+
 
     def __str__(self):
         return 'name: '      + str(self.getName())  + '\n' \
