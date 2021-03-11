@@ -53,7 +53,7 @@ def add_side_species(cache, full_reac, rr_reac, logger=logging.getLogger(__name_
                 for sto_add in range(int(full_reac[toAdd])):
                     smiles += '.'+str(smi)
         except KeyError:
-            logger.warning('Cannot find smiles structure for '+str(toAdd))
+            logger.debug('Cannot find smiles structure for '+str(toAdd))
 
     return smiles, side
 
@@ -225,7 +225,7 @@ def add_cofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway'
                     try:
                         inchi = cache.cid_strc[tmp_species]['inchi']
                     except KeyError:
-                        logger.warning('Cannot find the inchi for this species: '+str(tmp_species))
+                        logger.debug('Cannot find the inchi for this species: '+str(tmp_species))
                     try:
                         inchikey = cache.cid_strc[tmp_species]['inchikey']
                         logger.debug('Found the inchikey: '+str(inchikey))
@@ -242,12 +242,12 @@ def add_cofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway'
                         if isfound:
                             continue
                     except KeyError:
-                        logger.warning('Cannot find the inchikey for this species: '+str(species))
+                        logger.debug('Cannot find the inchikey for this species: '+str(species))
                     ##### Try to retreive the SMILES ############
                     try:
                         smiles = cache.cid_strc[tmp_species]['smiles']
                     except KeyError:
-                        logger.warning('Cannot find the smiles for this species: '+str(species))
+                        logger.debug('Cannot find the smiles for this species: '+str(species))
                     ###### Try to retreive the xref, using the inchikey if the cid fails #######
                     try:
                         xref = cache.cid_xref[tmp_species]
@@ -265,7 +265,7 @@ def add_cofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway'
                                     if tmp_cids:
                                         xref = cache.cid_xref[cache._checkCIDdeprecated(tmp_cids[0], cache.deprecatedCID_cid)]
                             except KeyError:
-                                logger.warning('Cannot find the xref for this species: '+str(species))
+                                logger.debug('Cannot find the xref for this species: '+str(species))
                                 xref = {}
                     #### Common Name ####
                     try:
@@ -279,7 +279,7 @@ def add_cofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway'
                                 if tmp_cids:
                                     chem_name = cache.cid_name[cache._checkCIDdeprecated(tmp_cids[0], cache.deprecatedCID_cid)]
                         except KeyError:
-                            logger.warning('Cannot find the name for this species: '+str(species))
+                            logger.debug('Cannot find the name for this species: '+str(species))
                     #### Finally create the species in the SBML file ######
                     rpsbml.createSpecies(tmp_species,
                             compartment_id,

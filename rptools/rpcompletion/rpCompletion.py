@@ -215,8 +215,15 @@ def rp_completion(
         logger.error('Outdir name '+outdir+' already exists and is actually file. Stopping the process...')
         exit(-1)
 
-    rp_strc = _compounds(cache, rp2paths_compounds, logger=logger)
-    rp_transformation, sink_molecules = _transformation(rp2_pathways, logger=logger)
+    rp_strc = _compounds(
+        cache,
+        rp2paths_compounds,
+        logger=logger
+    )
+    rp_transformation, sink_molecules = _transformation(
+        rp2_pathways,
+        logger=logger
+    )
 
     return write_rp2paths_to_rpSBML(
         cache,
