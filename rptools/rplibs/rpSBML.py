@@ -2267,6 +2267,8 @@ class rpSBML:
             Dictionnary of Reactants and Products of all reactions in the current pathway
         """
 
+        self.logger.debug(self)
+
         def _search_key(keys: List[str], dict: Dict) -> str:
             """
             From a given list of keys, returns the first one which is in the given dictionary.
@@ -2331,6 +2333,8 @@ class rpSBML:
                 d_products[key] = product.getStoichiometry()
             # Put all products dicts in reactions dict for which smiles notations are the keys
             d_reactions[reaction_id]['Products'] = d_products
+
+        self.logger.debug(d_reactions)
 
         return d_reactions
 

@@ -540,7 +540,8 @@ def write_rp2paths_to_rpSBML(
                 cache, compartment_id, upper_flux_bound, lower_flux_bound,
                 rp_strc, rp_transformation, sink_molecules,
                 species_group_id, sink_species_group_id,
-                pubchem_search
+                pubchem_search,
+                logger
             )
 
             # 2) Add complete reactions
@@ -553,6 +554,17 @@ def write_rp2paths_to_rpSBML(
 
             # 3) Get the cofactors
             rpsbml = add_cofactors(cache, rpsbml, logger=logger)
+
+            # for rxn_id in rpsbml.readGroupMembers():
+            #     reaction = rpsbml.getModel().getReaction(rxn_id)
+            #     print(rpsbml.getName())
+            #     print(rpsbml.getScore())
+            #     print(
+            #         rpSBML.readBRSYNTHAnnotation(
+            #             reaction.getAnnotation(),
+            #             logger=rpsbml.logger
+            #         )
+            #     )
 
             # 4) Apply to best rpsbml list
             best_rpsbml = apply_best_rpsbml(
@@ -630,7 +642,9 @@ def apply_best_rpsbml(
         best_rpsbml
     )
 
-    logger.debug(str([item.score for item in best_rpsbml]))
+    # for item in best_rpsbml:
+    #     print(item.rpsbml_obj._get_reactions_with_species_keys())
+    # logger.debug(str([item.rpsbml_obj._get_reactions_with_species_keys() for item in best_rpsbml]))
 
     # Keep only topX
     best_rpsbml = best_rpsbml[-max_subpaths_filter:]
