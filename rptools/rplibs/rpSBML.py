@@ -2241,65 +2241,93 @@ class rpSBML:
             return 0.0
 
 
-    @staticmethod
-    def _search_key(keys, dict):
-        for key in keys:
-            if key in dict:
-                return key
-
-
     ## Put species in a dictionnary for further comparison
     #
     # @param pathway rpSBML object
     # @return dict object with species in it
     def _get_reactions_with_species_keys(
         self,
-        keys = ['inchikey', 'inchi', 'smiles']
+        chem_repr = ['inchikey', 'inchi', 'smiles'],
+        group_id: str = 'rp_pathway'
     ) -> Dict:
+        """
+        Build a dictionary of reactions with 'Reactants' and 'Products' sub-dictionaries
+        where species are referenced by one of the keys in the given list of chemical representations.
 
-        model = self.getModel()
+        Parameters
+        ----------
+        chem_repr: List[str]
+            List of chemical representation names under which species will be referenced
+        group_id: str
+            Name of the group of whom the reactions are picked
+
+        Returns
+        -------
+        reactions: Dict
+            Dictionnary of Reactants and Products of all reactions in the current pathway
+        """
+
+        def _search_key(keys: List[str], dict: Dict) -> str:
+            """
+            From a given list of keys, returns the first one which is in the given dictionary.
+
+            Parameters
+            ----------
+            keys: List[str]
+                List of keys
+            dict: Dict
+                A dictionary
+
+            Returns
+            -------
+            key: str
+                The first key found in dict
+            """
+            for key in keys:
+                if key in dict:
+                    return key
 
         # Get Reactions
         reactions = {}
-        for reaction_id in self.readGroupMembers():
-            reaction = model.getReaction(reaction_id)
-            reactions[reaction_id] = rpSBML.readBRSYNTHAnnotation(reaction.getAnnotation(), logger=self.logger)
+        for rxn_id in self.readGroupMembers(group_id):
+            reaction = self.getModel().getReaction(rxn_id)
+            reactions[rxn_id] = rpSBML.readBRSYNTHAnnotation(
+                reaction.getAnnotation(),
+                logger=self.logger
+            )
 
         # Get Species
         species = {}
-        for specie in model.getListOfSpecies():
-            species[specie.getId()] = rpSBML.readBRSYNTHAnnotation(specie.getAnnotation(), logger=self.logger)
+        for spe in self.getModel().getListOfSpecies():
+            species[spe.getId()] = rpSBML.readBRSYNTHAnnotation(
+                spe.getAnnotation(),
+                logger=self.logger
+            )
 
         # Pathways dict
         d_reactions = {}
 
-        # Select Reactions already loaded (w/o Sink one then)
+        # Select reactions already loaded (w/o sink one then)
         for reaction_id in reactions:
-
-            # id = reactions[reaction]['smiles']
-            id = reaction_id
 
             d_reactions[reaction_id] = {}
 
             # Fill the reactants in a dedicated dict
             d_reactants = {}
-            for reactant in model.getReaction(reaction_id).getListOfReactants():# inchikey / inchi sinon miriam sinon IDs
-                # Il faut enregistrer toutes les infos (inchi, smiles, id)
-                key = rpSBML._search_key(keys, species[reactant.getSpecies()])
-                if key: key = species[reactant.getSpecies()][key]
-                else:
-                    key = reactant.getSpecies()
+            for reactant in self.getModel().getReaction(reaction_id).getListOfReactants():# inchikey / inchi sinon miriam sinon IDs
+                # Take the first key found in species
+                key = _search_key(chem_repr, species[reactant.getSpecies()])
+                key = species[reactant.getSpecies()][key] if key else reactant.getSpecies()
                 d_reactants[key] = reactant.getStoichiometry()
             # Put all reactants dicts in reactions dict for which smiles notations are the keys
             d_reactions[reaction_id]['Reactants'] = d_reactants
 
             # Fill the products in a dedicated dict
             d_products = {}
-            for product in model.getReaction(reaction_id).getListOfProducts():
-                key = rpSBML._search_key(keys, species[product.getSpecies()])
-                if key: key = species[product.getSpecies()][key]
-                else:
-                    key = product.getSpecies()
+            for product in self.getModel().getReaction(reaction_id).getListOfProducts():
+                # Take the first key found in species
+                key = _search_key(chem_repr, species[product.getSpecies()])
+                key = species[product.getSpecies()][key] if key else product.getSpecies()
                 d_products[key] = product.getStoichiometry()
             # Put all products dicts in reactions dict for which smiles notations are the keys
             d_reactions[reaction_id]['Products'] = d_products
