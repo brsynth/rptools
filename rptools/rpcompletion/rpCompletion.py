@@ -15,6 +15,11 @@ from rptools.rplibs                   import rpSBML
 from rptools.rpcompletion.rpCofactors import add_cofactors
 import logging
 import pandas as pd
+from typing import (
+    List,
+    Dict,
+    Tuple
+)
 
 
 class Species:
@@ -547,7 +552,8 @@ def write_rp2paths_to_rpSBML(
                 best_rpsbml,
                 max_subpaths_filter,
                 rpsbml,
-                path_id
+                path_id,
+                logger
             )
 
             path_variant_idx += 1
@@ -564,12 +570,60 @@ def write_rp2paths_to_rpSBML(
     return 0
 
 
-def apply_best_rpsbml(best_rpsbml, max_subpaths_filter,
-                      rpsbml, path_id):
+def apply_best_rpsbml(
+    best_rpsbml: List[rpSBML],
+    max_subpaths_filter: int,
+    rpsbml: rpSBML,
+    path_id: str,
+    logger=logging.getLogger(__name__)
+) -> rpSBML:
+    """
+    Given a rpSBML object, looks if an equivalent rpSBML (cf rpSBML::__eq__ method)
+    is present in the given list. If found, then compare scores and keep the highest.
+    Otherwise, insert it in the list.
+
+    Parameters
+    ----------
+    best_rpsbml: List[rpSBML]
+        List of rpSBML objects sorted by increasing scores
+    max_subpaths_filter: int
+        Number of top elements to return
+    rpsbml: rpSBML
+        rpSBML object to insert
+    path_id: str
+        ID of the current path
+    logger : Logger
+        The logger object.
+
+    Returns
+    -------
+    best_rpsbml: List[rpSBML]
+        List of rpSBML objects with highest scores
+    """
+
+    logger.debug('Best rpSBMLs:        ' + str([item for item in best_rpsbml]))
+    logger.debug('max_subpaths_filter: ' + str(max_subpaths_filter))
+    logger.debug('rpsbml:              ' + str(rpsbml))
+    logger.debug('path_id:             ' + path_id)
 
     # Insert the new rpsbml object in sorted list
-    sbml_item = SBML_Item(rpsbml.compute_score(), path_id, rpsbml)
-    best_rpsbml = insert_and_or_replace_in_sorted_list(sbml_item, best_rpsbml)
+    sbml_item = SBML_Item(
+        rpsbml.compute_score(),
+        path_id,
+        rpsbml
+    )
+    logger.debug(sbml_item)
+
+    # from bisect import insort as bisect_insort
+    # bisect_insort(best_rpsbml, sbml_item)
+
+    # Insert sbml_item in best_rpsbml list by increasing score
+    best_rpsbml = insert_and_or_replace_in_sorted_list(
+        sbml_item,
+        best_rpsbml
+    )
+
+    logger.debug(str([item.score for item in best_rpsbml]))
 
     # Keep only topX
     best_rpsbml = best_rpsbml[-max_subpaths_filter:]
