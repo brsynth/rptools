@@ -5,6 +5,7 @@ from argparse import (
 )
 from logging import Logger
 from rptools.Args import build_args_parser
+from colored import fg, bg, attr
 
 
 def init(
@@ -21,9 +22,12 @@ def init(
     logger = create_logger(parser.prog, args.log)
 
     logger.info(
-        'rptools {version} ({prog})\n'.format(
+        '{color}{typo}rptools {version}{rst}{color} ({prog}){rst}\n'.format(
             prog = logger.name,
-            version = __version__
+            version = __version__,
+            color=fg('white'),
+            typo=attr('bold'),
+            rst=attr('reset')
         )
     )
     logger.debug(args)

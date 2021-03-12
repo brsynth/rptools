@@ -14,7 +14,11 @@ from redis      import StrictRedis
 from credisdict import CRedisDict, wait_for_redis
 from hashlib    import sha512
 from pathlib    import Path
-from colored    import attr as c_attr
+from colored    import (
+    attr as c_attr,
+    fg,
+    bg
+)
 import logging
 
 
@@ -467,9 +471,11 @@ class rpCache:
 
     def _load_from_file(self, attribute):
         filename = attribute+rpCache._ext
-        print("Loading "+filename+"...", end = '', flush=True)
+        self.logger.info('{color}.'.format(color=fg('white')))
+        self.logger.debug("Loading "+filename+"...")
+        # print("Loading "+filename+"...", end = '', flush=True)
         data = self._load_cache_from_file(self._cache_dir+filename)
-        print_OK()
+        # print_OK()
         return data
 
 

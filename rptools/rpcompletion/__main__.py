@@ -4,6 +4,8 @@ from rptools.rplibs       import rpCache
 from rptools.rpcompletion import rp_completion
 from rptools.rpcompletion.Args import add_arguments
 from rptools import build_args_parser
+from colored import fg, bg, attr
+from logging import StreamHandler
 
 
 def _cli():
@@ -19,7 +21,23 @@ def _cli():
     from rptools.__main__ import init
     logger = init(parser, args)
 
+    StreamHandler.terminator = ""
+    logger.info(
+        '{color}{typo}Loading cache{rst}'.format(
+            color=fg('white'),
+            typo=attr('bold'),
+            rst=attr('reset')
+        )
+    )
     cache = rpCache(db='file', logger=logger)
+    StreamHandler.terminator = "\n"
+    logger.info(
+        '{color}{typo} OK{rst}'.format(
+            color=fg('green'),
+            typo=attr('bold'),
+            rst=attr('reset')
+        )
+    )
 
     try:
         result = rp_completion(
@@ -37,6 +55,21 @@ def _cli():
             args.sink_species_group_id,
             args.pubchem_search,
             logger=logger
+        )
+        StreamHandler.terminator = ""
+        logger.info(
+            '{color}{typo}Results are stored in {rst}'.format(
+                color=fg('white'),
+                typo=attr('bold'),
+                rst=attr('reset')
+            )
+        )
+        StreamHandler.terminator = "\n"
+        logger.info(
+            '{color}{outdir}\n'.format(
+                color=fg('grey_70'),
+                outdir=args.outdir
+            )
         )
         return result
     except ValueError as e:
