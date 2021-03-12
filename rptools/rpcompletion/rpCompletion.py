@@ -20,6 +20,8 @@ from typing import (
     Dict,
     Tuple
 )
+from colored import fg, bg, attr
+from logging import StreamHandler
 
 
 class Species:
@@ -518,10 +520,14 @@ def write_rp2paths_to_rpSBML(
     #         add cofactors
     #         dedup
 
-    for path_base_idx in rp2paths_pathways:
+    # topX pathways
+    best_rpsbml = []
 
-        # topX pathways
-        best_rpsbml = []
+    # StreamHandler.terminator = "\r"
+    # logger.info('{attr1}Complete reactions for{attr2}'.format(attr1=attr('bold'), attr2=attr('reset')))
+    # StreamHandler.terminator = "\n"
+
+    for path_base_idx in rp2paths_pathways:
 
         # Build all pathways from reaction list over step
         pathways_comb = list(map(list,list(itertools_product(*[list(rp2paths_pathways[path_base_idx][step]['reactions'].keys()) for step in rp2paths_pathways[path_base_idx]]))))
@@ -529,8 +535,26 @@ def write_rp2paths_to_rpSBML(
         path_variant_idx = 1
         for path_variant in pathways_comb:
 
-            path_id_idx = str(path_base_idx)+'_'+str(path_variant_idx)
+            path_id_idx = str(path_base_idx).zfill(3)+'_'+str(path_variant_idx).zfill(4)
             path_id     = 'rp_'+path_id_idx
+
+            StreamHandler.terminator = ""
+            logger.info(
+                '{color}{typo}Complete reactions for{rst} '.format(
+                    color=fg('white'),
+                    typo=attr('bold'),
+                    rst=attr('reset')
+                )
+            )
+            StreamHandler.terminator = "\r"
+            logger.info(
+                '{color}pathway {path_id}'.format(
+                    color=fg('grey_70'),
+                    path_id=path_id
+                )
+            )
+            # logger.info('pathway '+path_id)
+            StreamHandler.terminator = "\n"
 
             # 1) Create an rpSBML object with species
             rpsbml, species = create_rpSBML(
@@ -577,14 +601,34 @@ def write_rp2paths_to_rpSBML(
 
             path_variant_idx += 1
 
-        # Write results to files
-        for rpsbml_item in best_rpsbml:
-            rpsbml_item.rpsbml_obj.writeToFile(
-                os_path.join(
-                    outFolder,
-                    str(rpsbml_item.rpsbml_obj.modelName)
-                ) + '_sbml.xml'
-            )
+    # Erase the end of line
+    StreamHandler.terminator = ""
+    logger.info('\x1b[2K\r')
+
+    logger.info(
+        '{color}{typo}Complete pathway reactions{rst}'.format(
+            color=fg('white'),
+            typo=attr('bold'),
+            rst=attr('reset')
+        )
+    )
+    StreamHandler.terminator = "\n"
+    logger.info(
+        '{color}{typo} OK{rst}'.format(
+            color=fg('green'),
+            typo=attr('bold'),
+            rst=attr('reset')
+        )
+    )
+
+    # Write topX results to files
+    for rpsbml_item in best_rpsbml[-max_subpaths_filter:]:
+        rpsbml_item.rpsbml_obj.writeToFile(
+            os_path.join(
+                outFolder,
+                str(rpsbml_item.rpsbml_obj.modelName)
+            ) + '_sbml.xml'
+        )
 
     return 0
 
@@ -647,7 +691,7 @@ def apply_best_rpsbml(
     # logger.debug(str([item.rpsbml_obj._get_reactions_with_species_keys() for item in best_rpsbml]))
 
     # Keep only topX
-    best_rpsbml = best_rpsbml[-max_subpaths_filter:]
+    # best_rpsbml = best_rpsbml[-max_subpaths_filter:]
 
     return best_rpsbml
 
