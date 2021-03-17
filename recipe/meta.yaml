@@ -28,9 +28,9 @@ requirements:
     - numpy # rplibs
     - pandas # rplibs, rpthermo
     - scipy # rpthermo
-    # - equilibrator-api # rpthermo
-    # - equilibrator-cache # rpthermo
-    # - equilibrator-pathway # rpthermo
+    - equilibrator-api # rpthermo
+    - equilibrator-cache # rpthermo
+    - equilibrator-pathway # rpthermo
     - openbabel # rpthermo (equilibrator-assets)
     - redis-py # rplibs
     - colored # rplibs
