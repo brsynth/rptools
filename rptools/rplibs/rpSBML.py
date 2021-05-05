@@ -3205,8 +3205,10 @@ class rpSBML:
         :return: List of member id's of a particular group
         """
         group = self.getGroup(group_id)
-        rpSBML.checklibSBML(group, 'retreiving '+group_id+' group')
-        return [m.getIdRef() for m in group.getListOfMembers()]
+        if rpSBML.checklibSBML(group, 'retreiving '+group_id+' group') == 0:
+            return [m.getIdRef() for m in group.getListOfMembers()]
+        else:
+            return None
         # members = []
         # for member in group.getListOfMembers():
         #     members.append(member.getIdRef())
