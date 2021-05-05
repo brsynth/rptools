@@ -3624,7 +3624,8 @@ class rpSBML:
     def toDict(
         self,
         pathway_id: str = 'rp_pathway',
-        keys: List[str] = ['pathway', 'reactions', 'species']
+        keys: List[str] = ['pathway', 'reactions', 'species'],
+        groups: List[str] = ['central_species', 'rp_sink_species', 'ignored_species_for_FBA', 'rp_target_species']
     ) -> Dict:
         """Generate the dictionnary of all the annotations of a pathway species, reaction and pathway annotations
 
@@ -3651,6 +3652,11 @@ class rpSBML:
                 rpsbml_dict['pathway']['brsynth']['nb_reactions'] = len(rpsbml_dict['reactions'].keys())
             except KeyError:
                 rpsbml_dict['pathway']['brsynth']['nb_reactions'] = len(self.read_reactions(rp_pathway).keys())
+
+        # other groups
+        groups = ['central_species', 'rp_sink_species', 'ignored_species_for_FBA', 'rp_target_species']
+        for group in groups:
+            rpsbml_dict[group] = self.readGroupMembers(group)
 
         # loop though all the species
         if 'species' in keys:
