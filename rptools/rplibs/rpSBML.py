@@ -2361,7 +2361,7 @@ class rpSBML:
         # print(list(other.getModel().getListOfReactions()))
             # len(self.getModel().getListOfReactions())==len(other.getModel().getListOfReactions()) \
         # return \
-        #     sorted(self.readGroupMembers()) == sorted(other.readGroupMembers()) \
+        #     sorted(self.readGroupMembers('rp_pathway')) == sorted(other.readGroupMembers('rp_pathway')) \
         # and self._get_reactions_with_species_keys(self.logger) == other._get_reactions_with_species_keys(other.logger)
         return \
             self._get_reactions_with_species_keys() \
@@ -2401,7 +2401,7 @@ class rpSBML:
         value,
         message: str,
         logger: Logger = getLogger(__name__)
-    ) -> None:
+    ) -> int:
         """Private function that checks the libSBML calls.
 
         Check that the libSBML python calls do not return error INT and if so, display the error. Taken from: http://sbml.org/Software/libSBML/docs/python-api/create_simple_model_8py-example.html
@@ -2422,9 +2422,9 @@ class rpSBML:
         logger.debug('type('+str(value)+'): '+str(type(value)))
 
         if value is None:
-            logger.error('LibSBML returned a null value trying to ' + message + '.')
+            # logger.error('LibSBML returned a null value trying to ' + message + '.')
             return 1
-           raise SystemExit('LibSBML returned a null value trying to ' + message + '.')
+            raise SystemExit('LibSBML returned a null value trying to ' + message + '.')
 
         elif type(value) is int:
             if value != libsbml.LIBSBML_OPERATION_SUCCESS:
@@ -2435,7 +2435,7 @@ class rpSBML:
                         libsbml.OperationReturnValue_toString(value).strip() + '"'
                     ]
                 )
-                logger.error(err_msg)
+                # logger.error(err_msg)
                 return 2
                 raise SystemExit(err_msg)
 
@@ -3194,7 +3194,7 @@ class rpSBML:
     ########################## READ #####################################
     #####################################################################
     # TODO: add error handling if the groups does not exist
-    def readGroupMembers(self, group_id='rp_pathway'):
+    def readGroupMembers(self, group_id):
         """Return the members of a groups entry
 
         :param group_id: The pathway ID (Default: rp_pathway)
@@ -3208,6 +3208,7 @@ class rpSBML:
         if rpSBML.checklibSBML(group, 'retreiving '+group_id+' group') == 0:
             return [m.getIdRef() for m in group.getListOfMembers()]
         else:
+            self.logger.warning('Group \''+group_id+'\' not found')
             return None
         # members = []
         # for member in group.getListOfMembers():
@@ -3663,7 +3664,11 @@ class rpSBML:
         # other groups
         groups = ['central_species', 'rp_sink_species', 'ignored_species_for_FBA', 'rp_target_species']
         for group in groups:
-            rpsbml_dict[group] = self.readGroupMembers(group)
+            g = self.readGroupMembers(group)
+            if g is None:
+                rpsbml_dict[group] = {}
+            else:
+                rpsbml_dict[group] = self.readGroupMembers(group)
 
         # loop though all the species
         if 'species' in keys:
@@ -3832,14 +3837,14 @@ class rpSBML:
             self.logger.warning('The pathways are not of the same length')
             return False, {}
         ############## compare using the reactions ###################
-        for meas_step in measured_sbml.readGroupMembers():
+        for meas_step in measured_sbml.readGroupMembers('rp_pathway'):
             for rp_step in rp_rp_species:
                 if self.compareMIRIAMAnnotations(rp_rp_species[rp_step]['annotation'], meas_rp_species[meas_step]['annotation']):
                     found_meas_rp_species[meas_step]['found'] = True
                     found_meas_rp_species[meas_step]['rp_step'] = rp_step
                     break
         ############## compare using the species ###################
-        for meas_step in measured_sbml.readGroupMembers():
+        for meas_step in measured_sbml.readGroupMembers('rp_pathway'):
             # if not found_meas_rp_species[meas_step]['found']:
             for rp_step in rp_rp_species:
                 # We test to see if the meas reaction elements all exist in rp reaction and not the opposite
