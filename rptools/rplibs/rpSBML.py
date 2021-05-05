@@ -3592,8 +3592,8 @@ class rpSBML:
             reactions[member.getIdRef()]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
             # add right and left species
             species = self.readReactionSpecies(reaction)
-            reactions[member.getIdRef()]['brsynth']['left']  = species['left']
-            reactions[member.getIdRef()]['brsynth']['right'] = species['right']
+            reactions[member.getIdRef()]['left']  = species['left']
+            reactions[member.getIdRef()]['right'] = species['right']
             # add MIRIAM annotations
             reactions[member.getIdRef()]['miriam']  = self.readMIRIAMAnnotation(annot)
         return reactions
