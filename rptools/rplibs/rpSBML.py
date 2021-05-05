@@ -2422,6 +2422,8 @@ class rpSBML:
         logger.debug('type('+str(value)+'): '+str(type(value)))
 
         if value is None:
+            logger.error('LibSBML returned a null value trying to ' + message + '.')
+            return 1
            raise SystemExit('LibSBML returned a null value trying to ' + message + '.')
 
         elif type(value) is int:
@@ -2433,8 +2435,11 @@ class rpSBML:
                         libsbml.OperationReturnValue_toString(value).strip() + '"'
                     ]
                 )
+                logger.error(err_msg)
+                return 2
                 raise SystemExit(err_msg)
 
+        return 0
 
     def _nameToSbmlId(self, name):
         """String to SBML id's
