@@ -3,6 +3,7 @@ from rptools._version import __version__
 from typing import(
     Callable,
 )
+from brs_utils import add_logger_args
 
 
 def build_args_parser(
@@ -29,27 +30,14 @@ def build_args_parser(
 
 
 def _add_arguments(parser: ArgumentParser) -> ArgumentParser:
-    parser.add_argument(
-        '--log',
-        metavar='ARG',
-        type=str,
-        choices=[
-            'debug', 'info', 'warning', 'error', 'critical', 'silent', 'quiet',
-            'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', 'SILENT', 'QUIET'
-        ],
-        default='def_info',
-        help='Adds a console logger for the specified level (default: error)'
-    )
-    parser.add_argument(
-        '--silent',
-        action='store_true',
-        default=False,
-        help='run %(prog)s silently'
-    )
+    # Add arguments related to the logger
+    parser = add_logger_args(parser)
+
     parser.add_argument(
         '--version',
         action='version',
         version='%(prog)s {}'.format(__version__),
         help='show the version number and exit'
     )
+
     return parser
