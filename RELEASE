@@ -1,5 +1,12 @@
 # Release history
 
+## 4.5.0
+- chore(rplibs): add fields in toDict(): 'central_species', 'rp_sink_species', 'ignored_species_for_FBA', 'rp_target_species'
+- chore(rplibs.rpSBML): make checklibSBML() returns a value rather than exit
+- chore(rplibs.rpSBML): make readGroupMembers() returns None if group not found
+- chore(rplibs.rpSBML): remove default group_id in readGroupMembers()
+- chore(rplibs.rpSBML): BREAK! put 'left' end 'right' keys from 'brsynth' to reaction level
+
 ## 4.4.5
 - chore(rpcompletion): change out filenames nomenclature
 - style(printout): change printout display
