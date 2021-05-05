@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-from rptools.rplibs      import rpCache
+from rr_cache import rrCache
 from rptools.rplibs.Args import add_arguments
 from rptools import build_args_parser
 
 
 def gen_cache(outdir, logger):
-    rpCache.generate_cache(outdir, logger)
+    rprache.generate_cache(outdir, logger)
 
 
 def _cli():
@@ -21,7 +21,7 @@ def _cli():
     logger = init(parser, args)
 
     if args.cache_dir:
-        print("rpCache is going to be generated into " + args.cache_dir)
+        print("rrCache is going to be generated into " + args.cache_dir)
         gen_cache(args.cache_dir, logger)
 
 

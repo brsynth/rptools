@@ -66,19 +66,19 @@
                 "norm_dfG_prime_m": 0.5,
                 "norm_dfG_uncert": 0.4965578401017954,
                 "norm_dfG_prime_o": 0.5,
-                "norm_fba_obj_fraction": 0.49742028985507314,
-                "left": {
-                    "MNXM1__64__MNXC3": 1,
-                    "MNXM89557__64__MNXC3": 1,
-                    "MNXM6__64__MNXC3": 1,
-                    "MNXM3__64__MNXC3": 1
-                },
-                "right": {
-                    "CMPD_0000000013__64__MNXC3": 1,
-                    "MNXM5__64__MNXC3": 1,
-                    "MNXM7__64__MNXC3": 1,
-                    "MNXM9__64__MNXC3": 1
-                }
+                "norm_fba_obj_fraction": 0.49742028985507314
+            },
+            "left": {
+                "MNXM1__64__MNXC3": 1,
+                "MNXM89557__64__MNXC3": 1,
+                "MNXM6__64__MNXC3": 1,
+                "MNXM3__64__MNXC3": 1
+            },
+            "right": {
+                "CMPD_0000000013__64__MNXC3": 1,
+                "MNXM5__64__MNXC3": 1,
+                "MNXM7__64__MNXC3": 1,
+                "MNXM9__64__MNXC3": 1
             },
             "miriam": {}
         },
@@ -112,15 +112,15 @@
                 "norm_dfG_prime_m": 0.5,
                 "norm_dfG_uncert": 0.49895876059714706,
                 "norm_dfG_prime_o": 0.5,
-                "norm_fba_obj_fraction": 0.49742028985507314,
-                "left": {
-                    "CMPD_0000000013__64__MNXC3": 1,
-                    "MNXM89557__64__MNXC3": 1
-                },
-                "right": {
-                    "CMPD_0000000004__64__MNXC3": 1,
-                    "MNXM20__64__MNXC3": 1
-                }
+                "norm_fba_obj_fraction": 0.49742028985507314
+            },
+            "left": {
+                "CMPD_0000000013__64__MNXC3": 1,
+                "MNXM89557__64__MNXC3": 1
+            },
+            "right": {
+                "CMPD_0000000004__64__MNXC3": 1,
+                "MNXM20__64__MNXC3": 1
             },
             "miriam": {
                 "ec-code": [
@@ -158,15 +158,15 @@
                 "norm_dfG_prime_m": 0.5047374196453442,
                 "norm_dfG_uncert": 0.4994483634808615,
                 "norm_dfG_prime_o": 0.5030259358918722,
-                "norm_fba_obj_fraction": 0.49742028985507314,
-                "left": {
-                    "CMPD_0000000004__64__MNXC3": 1,
-                    "MNXM1__64__MNXC3": 1
-                },
-                "right": {
-                    "TARGET_0000000001__64__MNXC3": 1,
-                    "MNXM13__64__MNXC3": 1
-                }
+                "norm_fba_obj_fraction": 0.49742028985507314
+            },
+            "left": {
+                "CMPD_0000000004__64__MNXC3": 1,
+                "MNXM1__64__MNXC3": 1
+            },
+            "right": {
+                "TARGET_0000000001__64__MNXC3": 1,
+                "MNXM13__64__MNXC3": 1
             },
             "miriam": {
                 "ec-code": [
@@ -175,6 +175,19 @@
             }
         }
     },
+    "central_species": [
+        "CMPD_0000000004__64__MNXC3",
+        "CMPD_0000000013__64__MNXC3",
+        "MNXM89557__64__MNXC3",
+        "MNXM1__64__MNXC3",
+        "TARGET_0000000001__64__MNXC3"
+    ],
+    "rp_sink_species": [
+        "MNXM89557__64__MNXC3",
+        "MNXM1__64__MNXC3"
+    ],
+    "ignored_species_for_FBA": {},
+    "rp_target_species": {},
     "species": {
         "CMPD_0000000013__64__MNXC3": {
             "brsynth": {

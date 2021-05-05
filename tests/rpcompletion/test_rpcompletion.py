@@ -6,7 +6,8 @@ Created on Jul 15 2020
 
 import logging
 from tempfile             import TemporaryDirectory
-from rptools.rplibs       import rpCache, rpSBML
+from rr_cache import rrCache
+from rptools.rplibs       import rpSBML
 from rptools.rpcompletion import rp_completion
 from rptools.rpcompletion.rpCompletion import (
     build_side_rxn,
@@ -38,7 +39,7 @@ class Test_rpCompletion(TestCase):
         with TemporaryDirectory() as temp_d:
             temp_d = '/tmp/joan20'
             result = rp_completion(
-                self.rpcache,
+                self.cache,
                 self.rp2_pathways,
                 self.rp2paths_compounds,
                 self.rp2paths_pathways,
@@ -68,7 +69,7 @@ class Test_rpCompletion(TestCase):
                 # self.assertEqual(os_stat(os_path.join(temp_d, file)).st_size, size)
          
 
-    rpcache            = rpCache('file')
+    cache            = rrCache('file')
     data_path          = os_path.join(os_path.dirname(__file__), 'data' , 'lycopene')
     rp2_pathways       = os_path.join(data_path, '1-rp2_pathways.csv')
     rp2paths_compounds = os_path.join(data_path, '2-rp2paths_compounds.tsv')
@@ -142,5 +143,5 @@ class Test_rpCompletion(TestCase):
             # object_hook is used to convert str keys into int keys as stored in rpCompletion functions
             data = json_load(read_file, object_hook=lambda d: {int(k) if k.lstrip('-').isdigit() else k: v for k, v in d.items()})
             self.assertDictEqual(rp2paths_to_dict(self.rp2paths_pathways,
-                                                  self.rpcache.rr_reactions, self.rpcache.deprecatedCID_cid),
+                                                  self.cache.rr_reactions, self.cache.deprecatedCID_cid),
                                  data)

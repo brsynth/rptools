@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from rptools.rplibs import rpSBML, rpCache
+from rr_cache import rrCache
+from rptools.rplibs import rpSBML
 from libsbml        import writeSBMLToFile
 import logging
 
@@ -21,10 +22,10 @@ class inchikeyMIRIAM:
 
         self.logger.info('Started instance of inchikeyMIRIAM')
 
-        self.rpcache           = rpCache.rpCache('file', ['deprecatedCID_cid', 'cid_strc', 'chebi_cid'], logger=self.logger)
-        self.deprecatedCID_cid = self.rpcache.get('deprecatedCID_cid')
-        self.cid_strc          = self.rpcache.get('cid_strc')
-        self.chebi_cid         = self.rpcache.get('chebi_cid')
+        self.cache           = rrCache('file', ['deprecatedCID_cid', 'cid_strc', 'chebi_cid'], logger=self.logger)
+        self.deprecatedCID_cid = self.cache.get('deprecatedCID_cid')
+        self.cid_strc          = self.cache.get('cid_strc')
+        self.chebi_cid         = self.cache.get('chebi_cid')
 
 
     # def _checkCIDdeprecated(self, cid):
@@ -66,7 +67,7 @@ class inchikeyMIRIAM:
                 continue
             try:
                 for mnx in miriam_dict['metanetx']:
-                    inchikey = self.cid_strc[self.rpcache._checkCIDdeprecated(mnx, self.deprecatedCID_cid)]['inchikey']
+                    inchikey = self.cid_strc[self.cache._checkCIDdeprecated(mnx, self.deprecatedCID_cid)]['inchikey']
                     if inchikey:
                         rpsbml.addUpdateMIRIAM(spe, 'species', {'inchikey': [inchikey]})
                     else:
@@ -75,7 +76,7 @@ class inchikeyMIRIAM:
             except KeyError:
                 try:
                     for chebi in miriam_dict['chebi']:
-                        inchikey = self.cid_strc[self.rpcache._checkCIDdeprecated(self.chebi_cid[chebi], self.deprecatedCID_cid)]['inchikey']
+                        inchikey = self.cid_strc[self.cache._checkCIDdeprecated(self.chebi_cid[chebi], self.deprecatedCID_cid)]['inchikey']
                         if inchikey:
                             rpsbml.addUpdateMIRIAM(spe, 'species', {'inchikey': [inchikey]})
                         else:
