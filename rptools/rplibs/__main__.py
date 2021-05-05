@@ -6,7 +6,7 @@ from rptools import build_args_parser
 
 
 def gen_cache(outdir, logger):
-    rprache.generate_cache(outdir, logger)
+    rrCache.generate_cache(outdir, logger)
 
 
 def _cli():
