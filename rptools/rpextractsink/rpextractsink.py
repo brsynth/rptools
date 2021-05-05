@@ -92,7 +92,7 @@ def genSink(cache, input_sbml, output_sink, remove_dead_end=False, compartment_i
                 logger.warning('Cannot find MetaNetX ID for '+str(i.getId()))
                 continue
             try:
-                inchi = cache.cid_strc[mnx]['inchi']
+                inchi = cache.get('cid_strc')[mnx]['inchi']
             except KeyError:
                 inchi = None
             if inchi:
