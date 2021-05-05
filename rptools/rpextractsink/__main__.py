@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
+from rr_cache import rrCache
 from rptools.rpextractsink  import genSink
-from rptools.rplibs         import rpCache
 from rptools.rpextractsink.Args import add_arguments
 from rptools import build_args_parser
 
@@ -17,7 +17,7 @@ def _cli():
     from rptools.__main__ import init
     logger = init(parser, args)
 
-    rpcache = rpCache('file', ['cid_strc'], logger=logger)
+    rpcache = rrCache('file', ['cid_strc'], logger=logger)
     genSink(rpcache,
             args.input_sbml,
             args.output_sink,

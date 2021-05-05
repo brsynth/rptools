@@ -37,6 +37,7 @@ requirements:
     - networkx # rplibs
     - cobra # rplibs
     - filetype  # rplibs (conda-forge)
+    - rr_cache
 
 test:
   source_files:

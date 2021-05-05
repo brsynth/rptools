@@ -1,6 +1,6 @@
 # rpCompletion
 
-Completes mono-component reactions output by RetroPath2.0 with the appropriate cofactors. Creates sub-paths when multiple reaction rules are associated with a single reaction. Input is a single pathways file produced by RP2Paths. It stands on rpCache which store pre-computed data.
+Completes mono-component reactions output by RetroPath2.0 with the appropriate cofactors. Creates sub-paths when multiple reaction rules are associated with a single reaction. Input is a single pathways file produced by RP2Paths. It stands on rrCache which store pre-computed data.
 
 ## Input
 
@@ -17,7 +17,7 @@ Advanced options:
 * **-pathway_id**: (string, default=rp_pathway) ID of the heterologous pathway
 * **-compartment_id**: (string, default=MNXC3 (i.e. cytoplasm)) Heterologous pathway compartment ID
 * **-species_group_id**: (string, default=central_species) ID of the central species, i.e. not cofactors, in the heterologous reactions
-* **--store-mode, -sm**: (optional, string, default: file) Store mode. If 'file', rpCache is supposed to be stored in files. Else, the rpCache is supposed to be stored in a redis database which the name is the value of this input field. The redis server is considered to be up and running.
+* **--store-mode, -sm**: (optional, string, default: file) Store mode. If 'file', rrCache is supposed to be stored in files. Else, the rrCache is supposed to be stored in a redis database which the name is the value of this input field. The redis server is considered to be up and running.
 
 
 
