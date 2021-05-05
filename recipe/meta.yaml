@@ -17,7 +17,7 @@ requirements:
     - python {{ python }}
   run:
     - python {{ python }}
-    - brs_utils # rpcompletion, rpfba
+    - brs_utils # rpcompletion, rpfba, Args
     - credisdict # rpcompletion, rpfba, rplibs
     - requests # rpcompletion, rpfba, rplibs
     - urllib3 # rpcompletion, rpfba

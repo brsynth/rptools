@@ -266,7 +266,7 @@ def _compounds(cache, path, logger=logging.getLogger(__name__)):
         for row in reader:
             rp_strc[row[0]] = {'smiles': row[1]}  #, 'structure':row[1].replace('[','').replace(']','')
             try:
-                rp_strc[row[0]]['inchi'] = cache.cid_strc[row[0]]['inchi']
+                rp_strc[row[0]]['inchi'] = cache.get('cid_strc')[row[0]]['inchi']
             except KeyError:
                 #try to generate them yourself by converting them directly
                 try:
@@ -275,7 +275,7 @@ def _compounds(cache, path, logger=logging.getLogger(__name__)):
                 except NotImplementedError as e:
                     logger.warning('Could not convert the following SMILES to InChI: '+str(row[1]))
             try:
-                rp_strc[row[0]]['inchikey'] = cache.cid_strc[row[0]]['inchikey']
+                rp_strc[row[0]]['inchikey'] = cache.get('cid_strc')[row[0]]['inchikey']
                 #try to generate them yourself by converting them directly
                 #TODO: consider using the inchi writing instead of the SMILES notation to find the inchikey
             except KeyError:
@@ -507,8 +507,8 @@ def write_rp2paths_to_rpSBML(
 
     rp2paths_pathways = rp2paths_to_dict(
         rp2paths_pathways,
-        cache.rr_reactions,
-        cache.deprecatedCID_cid,
+        cache.get('rr_reactions'),
+        cache.get('deprecatedCID_cid'),
         logger=logger
     )
 
@@ -715,7 +715,7 @@ def create_rpSBML(
     rpsbml.genericModel(
             'RetroPath_Pathway_'+path_id_idx,
             'RP_model_'+path_id_idx,
-            cache.comp_xref[cache.deprecatedCompID_compid[compartment_id]],
+            cache.get('comp_xref')[cache.get('deprecatedCompID_compid')[compartment_id]],
             compartment_id,
             upper_flux_bound,
             lower_flux_bound)
@@ -880,14 +880,14 @@ def get_species(steps):
 def unique_species(cache, meta, rp_strc, pubchem_search, logger=logging.getLogger(__name__)):
 
     try:
-        chemName = cache.cid_strc[meta]['name']
+        chemName = cache.get('cid_strc')[meta]['name']
     except KeyError:
         chemName = None
 
     # compile as much info as you can
 
     # xref
-    try: xref = cache.cid_xref[meta]
+    try: xref = cache.get('cid_xref')[meta]
     except KeyError: xref = {}
     spe = Species(None, None, None, xref)
 
@@ -920,7 +920,7 @@ def unique_species(cache, meta, rp_strc, pubchem_search, logger=logging.getLogge
                     chemName = pubres['name']
                 if 'chebi' in pubres['xref']:
                     try:
-                        spe.xref = cache.cid_xref[cache.chebi_cid[pubres['xref']['chebi'][0]]]
+                        spe.xref = cache.get('cid_xref')[cache.get('chebi_cid')[pubres['xref']['chebi'][0]]]
                     except KeyError:
                         pass
                 # pubchem.fill_missing(pubres)
@@ -948,7 +948,7 @@ def unique_species(cache, meta, rp_strc, pubchem_search, logger=logging.getLogge
                 chemName = pubres['name']
             if 'chebi' in pubres['xref']:
                 try:
-                    spe.xref = cache.cid_xref[cache.chebi_cid[pubres['xref']['chebi'][0]]]
+                    spe.xref = cache.get('cid_xref')[cache.get('chebi_cid')[pubres['xref']['chebi'][0]]]
                 except KeyError:
                     pass
             if not pubchem.xref:
@@ -975,7 +975,7 @@ def unique_species(cache, meta, rp_strc, pubchem_search, logger=logging.getLogge
                 chemName = pubres['name']
             if 'chebi' in pubres['xref']:
                 try:
-                    spe.xref = cache.cid_xref[cache.chebi_cid[pubres['xref']['chebi'][0]]]
+                    spe.xref = cache.get('cid_xref')[cache.get('chebi_cid')[pubres['xref']['chebi'][0]]]
                 except KeyError:
                     pass
             if not pubchem.xref:
