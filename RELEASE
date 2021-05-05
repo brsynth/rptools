@@ -6,6 +6,7 @@
 - chore(rplibs.rpSBML): make readGroupMembers() returns None if group not found
 - chore(rplibs.rpSBML): remove default group_id in readGroupMembers()
 - chore(rplibs.rpSBML): BREAK! put 'left' end 'right' keys from 'brsynth' to reaction level
+- refactor: switch from rpCache to rrCache
 
 ## 4.4.5
 - chore(rpcompletion): change out filenames nomenclature
