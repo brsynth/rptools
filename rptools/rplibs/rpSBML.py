@@ -2423,7 +2423,7 @@ class rpSBML:
 
         if value is None:
             # logger.error('LibSBML returned a null value trying to ' + message + '.')
-            return 1
+            # return 1
             raise SystemExit('LibSBML returned a null value trying to ' + message + '.')
 
         elif type(value) is int:
@@ -2436,10 +2436,10 @@ class rpSBML:
                     ]
                 )
                 # logger.error(err_msg)
-                return 2
+                # return 2
                 raise SystemExit(err_msg)
 
-        return 0
+        # return 0
 
     def _nameToSbmlId(self, name):
         """String to SBML id's
@@ -3205,9 +3205,10 @@ class rpSBML:
         :return: List of member id's of a particular group
         """
         group = self.getGroup(group_id)
-        if rpSBML.checklibSBML(group, 'retreiving '+group_id+' group') == 0:
+        try:
+            rpSBML.checklibSBML(group, 'retreiving '+group_id+' group')
             return [m.getIdRef() for m in group.getListOfMembers()]
-        else:
+        except:
             self.logger.warning('Group \''+group_id+'\' not found')
             return None
         # members = []
