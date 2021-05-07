@@ -43,7 +43,7 @@ def get_reactions_data(rxn_dict):
         reaction_dict['ec_code'] = dictor(rxn_dict, f"{rxn_name}.miriam.ec-code")
 
         # We store the dfg_prime
-        reaction_dict['dfg_prime_m'] = dictor(rxn_dict, f"{rxn_name}.brsynth.dfg_prime_m.value")
+        reaction_dict['dfG_prime_m'] = dictor(rxn_dict, f"{rxn_name}.brsynth.dfG_prime_m.value")
 
         # We store the rule_score
         reaction_dict['rule_score'] = dictor(rxn_dict, f"{rxn_name}.brsynth.rule_score")
@@ -57,7 +57,7 @@ def get_reactions_data(rxn_dict):
     return reaction
 
 
-def to_data_js(sbml_files, source_path: str, output_folder, verbose=False, dev=False):
+def to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose=False, dev=False):
     """
     Return a list of dictionaries parsed from sbml files
     """
@@ -75,15 +75,14 @@ def to_data_js(sbml_files, source_path: str, output_folder, verbose=False, dev=F
 
         # if pathway name is found
         if dictor(pathway_dict, 'pathway.brsynth.path_id', default=False):
-
             rp_name = dictor(pathway_dict, "pathway.brsynth.path_id")
             if verbose:
-                print("path_id found:", rp_name)
+                print("Path_id found:", rp_name)
 
             # adding necessary values to the list
             rp_list.append({
                 'pathway_name': rp_name,
-                'dfg_prime_m': dictor(pathway_dict, "pathway.brsynth.dfg_prime_m.value"),
+                'dfG_prime_m': dictor(pathway_dict, "pathway.brsynth.dfG_prime_m.value"),
                 'global_score': dictor(pathway_dict, "pathway.brsynth.global_score"),
                 'fba_obj_fraction': dictor(pathway_dict, "pathway.brsynth.fba_obj_fraction.value"),
                 'norm_rule_score': dictor(pathway_dict, "pathway.brsynth.norm_rule_score"),
@@ -98,6 +97,8 @@ def to_data_js(sbml_files, source_path: str, output_folder, verbose=False, dev=F
                 #  Saving pathway_dict into separate json file
                 with open(output_folder + '/dev/' + rp_name + '.json', "w") as f:
                     json.dump(pathway_dict, f, indent=4)
+        elif verbose:
+            print("No path_id found, file ignored!")
 
     return rp_list
 
@@ -148,10 +149,17 @@ def write_to_one_html(templates_dir, data):
     return standalone_html_file
 
 
-def run_report(input_dir, source_path, output_folder, dev, verbose, standalone):
+def run_report(input_dir:bool, source_path:str, output_folder:str, dev:bool, verbose:bool, standalone:bool):
     """
         Converting SBML RP files into web report.
     """
+
+    """ print(input_dir)
+    print(source_path)
+    print(output_folder)
+    print(dev)
+    print(verbose)
+    print(standalone) """
 
     # Warning & errors logging
     logging.basicConfig(stream=sys.stderr,

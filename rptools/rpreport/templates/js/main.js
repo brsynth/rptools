@@ -75,7 +75,7 @@ function displayCards(event) {
         + "</td><td>"
         + parseFloat(selectedData[i]['fba_obj_fraction']).toFixed(3)
         + "</td><td>"
-        + parseFloat(selectedData[i]['dfg_prime_m']).toFixed(3)
+        + parseFloat(selectedData[i]['dfG_prime_m']).toFixed(3)
         + "</td><td>"
         + parseFloat(selectedData[i]['norm_rule_score']).toFixed(3)
         + "</td><td>"
@@ -160,8 +160,8 @@ function displayCards(event) {
       // building thermodynamic profile data
       thermodynamic_values.push({
           'reaction': RP_indexes[i],
-          'dfg_prime_m': JSON.stringify(selectedData[0]['reactions']
-              [RP_indexes[i]]['dfg_prime_m'])
+          'dfG_prime_m': JSON.stringify(selectedData[0]['reactions']
+              [RP_indexes[i]]['dfG_prime_m'])
       });
 
       // building rule score data
@@ -226,7 +226,7 @@ const columnDefs = [
    },
   {
     headerName: "ΔGm-1 (kJ / mol)",
-    field: "dfg_prime_m",
+    field: "dfG_prime_m",
     type: 'numericColumn',
     cellClassRules: {
       'text-success': 'x <= 0',
@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const gridDiv = document.querySelector('#myGrid');
   new agGrid.Grid(gridDiv, gridOptions);
 
-  // create new thermodynamic profile chart
+  // create thermodynamic profile chart
   chart = agCharts.AgChart.create({
     container: document.querySelector('#dfG_prime_chart'),
     title: {
@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
     series: [{
       type: 'scatter',
       xKey: 'reaction',
-      yKey: 'dfg_prime_m',
+      yKey: 'dfG_prime_m',
       tooltip: {
         renderer: function (params) {
           return {
@@ -430,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }],
   });
 
-  // create dfg_prime_m comparative chart
+  // create dfG_prime_m comparative chart
   dfgCompChart = agCharts.AgChart.create({
     container: document.getElementById('dfg_compar_chart'),
     title: {
@@ -443,7 +443,7 @@ document.addEventListener('DOMContentLoaded', function() {
     series: [{
       type: 'column',
       xKey: 'pathway_name',
-      yKeys: ['dfg_prime_m'],
+      yKeys: ['dfG_prime_m'],
       tooltip: {
         renderer: function (params) {
           return {
