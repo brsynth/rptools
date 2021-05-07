@@ -17,7 +17,7 @@ requirements:
     - python {{ python }}
   run:
     - python {{ python }}
-    - brs_utils # rpcompletion, rpfba
+    - brs_utils # rpcompletion, rpfba, Args
     - credisdict # rpcompletion, rpfba, rplibs
     - requests # rpcompletion, rpfba, rplibs
     - urllib3 # rpcompletion, rpfba
@@ -36,6 +36,7 @@ requirements:
     - colored # rplibs
     - networkx # rplibs
     - filetype  # rplibs (conda-forge)
+    - rr_cache
 
 test:
   source_files:

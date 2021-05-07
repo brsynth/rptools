@@ -48,7 +48,7 @@ def add_side_species(cache, full_reac, rr_reac, logger=logging.getLogger(__name_
 
         ### update the reaction rule string
         try:
-            smi = cache.cid_strc[toAdd]['smiles']
+            smi = cache.get('cid_strc')[toAdd]['smiles']
             if smi is not None:
                 for sto_add in range(int(full_reac[toAdd])):
                     smiles += '.'+str(smi)
@@ -75,7 +75,7 @@ def update_stochio(cache, rxn_side, full_reac, reac_smiles_side, pathway_cmp, lo
                 for i in range(stochio_diff):
                     ### update the reaction rule string
                     try:
-                        smi = cache.cid_strc[step_spe]['smiles']
+                        smi = cache.get('cid_strc')[step_spe]['smiles']
                         if not smi==None:
                             reac_smiles_side += '.'+str(smi)
                     except KeyError:
@@ -112,7 +112,7 @@ def complete_reaction(cache, rxn, reaction_from_rr,
                                   logger=logger)
         if not isSuccess:
             logger.warning('Could not recognise reaction rule for step: '+str(rxn))
-            return rxn, reac_smiles
+            return {}, {}, reac_smiles['left'], reac_smiles['right']
 
         # RIGHT SIDE
         isSuccess, \
@@ -127,11 +127,11 @@ def complete_reaction(cache, rxn, reaction_from_rr,
                                  logger=logger)
         if not isSuccess:
             logger.warning('Could not recognise reaction rule for step (2): '+str(rxn['rxn_idx']))
-            return rxn, reac_smiles
+            return {}, rxn_right, reac_smiles['left'], reac_smiles['right']
 
     except KeyError:
         logger.warning('Could not find the full reaction for reaction: '+str(rxn))
-        return rxn, reac_smiles
+        return {}, {}, reac_smiles['left'], reac_smiles['right']
 
     return rxn_left, rxn_right, reac_smiles['left'], reac_smiles['right']
 
@@ -143,8 +143,8 @@ def complete_reaction(cache, rxn, reaction_from_rr,
 # @return Boolean determine if the step is to be added
 def get_cofactors_rxn(cache, rxn, pathway_cmp, logger=logging.getLogger(__name__)):
 
-    reaction_from_rr      = cache.rr_reactions[rxn['rule_id']][rxn['rule_ori_reac']]
-    full_reaction_from_rr = cache.rr_full_reactions[cache._checkRIDdeprecated(rxn['rule_ori_reac'], cache.deprecatedRID_rid)]
+    reaction_from_rr      = cache.get('rr_reactions')[rxn['rule_id']][rxn['rule_ori_reac']]
+    full_reaction_from_rr = cache.get('rr_full_reactions')[cache._checkRIDdeprecated(rxn['rule_ori_reac'], cache.get('deprecatedRID_rid'))]
 
     # Prepare arguments
     if reaction_from_rr['rel_direction'] == -1:
@@ -194,8 +194,8 @@ def add_cofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway'
     # For each reaction id taken in forward direction
     for rxn_id in sorted(list(rpsbml_dict['reactions']), key=lambda x:rpsbml_dict['reactions'][x]['brsynth']['rxn_idx']):
 
-        rxn     =     rpsbml_dict['reactions'][rxn_id]['brsynth']
-        ori_rxn = ori_rpsbml_dict['reactions'][rxn_id]['brsynth']
+        rxn     =     rpsbml_dict['reactions'][rxn_id]
+        ori_rxn = ori_rpsbml_dict['reactions'][rxn_id]
 
         left, right, smiles = get_cofactors_rxn(cache, rxn, pathway_cmp, logger=logger)
         rxn['left'].update(left)
@@ -211,7 +211,7 @@ def add_cofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway'
 
             for species in reactants|products:
 
-                tmp_species = cache._checkCIDdeprecated(species, cache.deprecatedCID_cid)
+                tmp_species = cache._checkCIDdeprecated(species, cache.get('deprecatedCID_cid'))
                 # check to make sure that they do not yet exist and if not create a new one
                 # TODO, replace the species with an existing one if it is contained in the MIRIAM annotations
 
@@ -223,11 +223,11 @@ def add_cofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway'
                     chem_name = None
                     ###### Try to retreive the InChI ############
                     try:
-                        inchi = cache.cid_strc[tmp_species]['inchi']
+                        inchi = cache.get('cid_strc')[tmp_species]['inchi']
                     except KeyError:
                         logger.debug('Cannot find the inchi for this species: '+str(tmp_species))
                     try:
-                        inchikey = cache.cid_strc[tmp_species]['inchikey']
+                        inchikey = cache.get('cid_strc')[tmp_species]['inchikey']
                         logger.debug('Found the inchikey: '+str(inchikey))
                         #### TODO: find a better way to check if two species are the same ####
                         isfound = False
@@ -245,15 +245,15 @@ def add_cofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway'
                         logger.debug('Cannot find the inchikey for this species: '+str(species))
                     ##### Try to retreive the SMILES ############
                     try:
-                        smiles = cache.cid_strc[tmp_species]['smiles']
+                        smiles = cache.get('cid_strc')[tmp_species]['smiles']
                     except KeyError:
                         logger.debug('Cannot find the smiles for this species: '+str(species))
                     ###### Try to retreive the xref, using the inchikey if the cid fails #######
                     try:
-                        xref = cache.cid_xref[tmp_species]
+                        xref = cache.get('cid_xref')[tmp_species]
                     except KeyError:
                         try:
-                            xref = cache.cid_xref[tmp_species]
+                            xref = cache.get('cid_xref')[tmp_species]
                         except KeyError:
                             # if you cannot find using cid, try to retreive it using its inchikey
                             try:
@@ -263,21 +263,21 @@ def add_cofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway'
                                     tmp_cids = [i for i in cache.inchikey_cid[inchikey] if i[:3]=='MNX']
                                     #TODO: handle multiple matches. For now we assume that multiple MNX means that there are deprecated versions of the tool
                                     if tmp_cids:
-                                        xref = cache.cid_xref[cache._checkCIDdeprecated(tmp_cids[0], cache.deprecatedCID_cid)]
+                                        xref = cache.get('cid_xref')[cache._checkCIDdeprecated(tmp_cids[0], cache.get('deprecatedCID_cid'))]
                             except KeyError:
                                 logger.debug('Cannot find the xref for this species: '+str(species))
                                 xref = {}
                     #### Common Name ####
                     try:
-                        chem_name = cache.cid_name[cache._checkCIDdeprecated(tmp_species, cache.deprecatedCID_cid)]
+                        chem_name = cache.get('cid_name')[cache._checkCIDdeprecated(tmp_species, cache.get('deprecatedCID_cid'))]
                     except KeyError:
                         # if you cannot find using cid, try to retreive it using its inchikey
                         try:
                             if inchikey:
                                 # @Joan: Same question as above
-                                tmp_cids = [i for i in cache.inchikey_cid[inchikey] if i[:3]=='MNX']
+                                tmp_cids = [i for i in cache.get('inchikey_cid')[inchikey] if i[:3]=='MNX']
                                 if tmp_cids:
-                                    chem_name = cache.cid_name[cache._checkCIDdeprecated(tmp_cids[0], cache.deprecatedCID_cid)]
+                                    chem_name = cache.get('cid_name')[cache._checkCIDdeprecated(tmp_cids[0], cache.get('deprecatedCID_cid'))]
                         except KeyError:
                             logger.debug('Cannot find the name for this species: '+str(species))
                     #### Finally create the species in the SBML file ######
@@ -294,10 +294,10 @@ def add_cofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway'
             pre_reactants = [i.species for i in reac.getListOfReactants()]
             pre_products = [i.species for i in reac.getListOfProducts()]
             for pro in products:
-                if cache._checkCIDdeprecated(pro, cache.deprecatedCID_cid) in spe_conv:
-                    toadd = spe_conv[cache._checkCIDdeprecated(pro, cache.deprecatedCID_cid)]
+                if cache._checkCIDdeprecated(pro, cache.get('deprecatedCID_cid')) in spe_conv:
+                    toadd = spe_conv[cache._checkCIDdeprecated(pro, cache.get('deprecatedCID_cid'))]
                 else:
-                    toadd = str(cache._checkCIDdeprecated(pro, cache.deprecatedCID_cid))+'__64__'+str(compartment_id)
+                    toadd = str(cache._checkCIDdeprecated(pro, cache.get('deprecatedCID_cid')))+'__64__'+str(compartment_id)
                 # prod.setSpecies(str(self._checkCIDdeprecated(pro))+'__64__'+str(compartment_id))
                 if toadd in pre_products:
                     continue
@@ -306,10 +306,10 @@ def add_cofactors(cache, rpsbml, compartment_id='MNXC3', pathway_id='rp_pathway'
                 prod.setConstant(True)
                 prod.setStoichiometry(rxn['right'][pro])
             for sub in reactants:
-                if cache._checkCIDdeprecated(sub, cache.deprecatedCID_cid) in spe_conv:
-                    toadd = spe_conv[cache._checkCIDdeprecated(sub, cache.deprecatedCID_cid)]
+                if cache._checkCIDdeprecated(sub, cache.get('deprecatedCID_cid')) in spe_conv:
+                    toadd = spe_conv[cache._checkCIDdeprecated(sub, cache.get('deprecatedCID_cid'))]
                 else:
-                    toadd = str(cache._checkCIDdeprecated(sub, cache.deprecatedCID_cid))+'__64__'+str(compartment_id)
+                    toadd = str(cache._checkCIDdeprecated(sub, cache.get('deprecatedCID_cid')))+'__64__'+str(compartment_id)
                 # prod.setSpecies(str(self._checkCIDdeprecated(sub))+'__64__'+str(compartment_id))
                 if toadd in pre_reactants:
                     continue

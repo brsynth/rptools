@@ -9,7 +9,7 @@ from unittest import TestCase
 
 # Specific for tool
 from rptools.rpextractsink import genSink
-from rptools.rplibs        import rpCache
+from rr_cache import rrCache
 
 # Specific for tests themselves
 from pathlib  import Path
@@ -39,7 +39,7 @@ class Test_rpExtractSink(TestCase):
         'e_coli_model.sbml.gz'
     )
 
-    rpcache = rpCache(
+    cache = rrCache(
         'file',
         ['cid_strc']
     )
@@ -67,7 +67,7 @@ class Test_rpExtractSink(TestCase):
     def test_genSink(self):
         outfile = NamedTemporaryFile(delete=True)
         genSink(
-            self.rpcache,
+            self.cache,
             input_sbml = self.e_coli_model_path,
             output_sink = outfile.name,
             remove_dead_end = False,
@@ -88,7 +88,7 @@ class Test_rpExtractSink(TestCase):
     def test_genSink_rmDE(self):
         outfile = NamedTemporaryFile(delete=True)
         genSink(
-            self.rpcache,
+            self.cache,
             input_sbml = self.e_coli_model_path,
             output_sink = outfile.name,
             remove_dead_end = True

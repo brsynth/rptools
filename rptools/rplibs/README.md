@@ -2,7 +2,6 @@
 
 Libraries for rpTools, contains:
 * rpSBML
-* rpCache
 * inchikeyMIRIAM
 
 ## rpSBML
@@ -13,16 +12,6 @@ Defines SBML structure with additional fields relative to [RetroPath2](https://g
     * python-libsbml
     * [RDKit](https://www.RDKit.org) -->
 
-## rpCache
-
-### Memory management
-
-#### File mode
-This is the default mode. All cache data are stored into files on disk and loaded in memory each time the tool is used. In this mode, fingerprint in memory is equal to the size of cache files loaded in memory multiplied by the number of processes which are running at the same time. Option can be specified by `--store-mode file`.
-
-#### DB mode
-In order to save memory space, cache data can be loaded once in a database (redis) so that the memory space taken is equal to one instance of the cache, whatever the number of processes whic are running. Option can be specified by `--store-mode <db_host>`, where `db_host` is the hostname on which redis server is running.
-
 
 ### Install
 rpLibs is part of rpTools suite:
@@ -30,51 +19,6 @@ rpLibs is part of rpTools suite:
 ```sh
 [sudo] conda install -c brsynth -c conda-forge -c bioconda rptools
 ```
-
-### Use
-
-#### Load rpCache in memory
-**Full cache into files**
-```python
-from rptools.rplibs import rpCache
-
-rpcache = rpCache(db='file')
-print(rpcache.cid_src)
-```
-
-**Full cache into Redis DB**
-For multiple instances of rpCache simultaneously, rpCache can be loaded into one single Redis database:
-```python
-from rptools.rplibs import rpCache
-
-rpcache = rpCache(db='localhost')
-print(rpcache.cid_src)
-```
-`localhost` means that rpCache will look for a redis database locally. If there is not, it will start a brand new redis server. `localhost` could be replaced by any hostname that hosts the Redis database.
-
-**A part of cache**
-For less loading time and memory footprint, a part of the cache can be loaded:
-```python
-from rptools.rplibs import rpCache
-
-rpcache = rpCache(attrs='cid_strc')
-print(rpcache.cid_src)
-```
-
-#### (Re-)generate the cache
-**From Python code**
-```python
-from rptools.rplibs import rpCache
-
-rpCache.generate_cache(outdir)
-```
-
-**From CLI**
-After having installed rptools Python module:
-```sh
-python -m rptools.rplibs --gen_cache <folder>
-```
-
 
 ### Test
 Please follow instructions below ti run tests:
@@ -85,7 +29,7 @@ pytest -v
 For further tests and development tools, a CI toolkit is provided in `ci` folder (see [ci/README.md](ci/README.md)).
 
 ## inchikeyMIRIAM
-Uses the rpCache to parse an SBML file to find all the chemical species, and try to recover the inchikey and add it to the MIRIAM annotation.
+Uses the rrCache to parse an SBML file to find all the chemical species, and try to recover the inchikey and add it to the MIRIAM annotation.
 
 
 

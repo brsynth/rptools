@@ -59,7 +59,7 @@ def _removeDeadEnd(sbml_path):
 # NOTE: this only works for MNX models, since we are parsing the id
 # TODO: change this to read the annotations and extract the MNX id's
 #
-def genSink(rpcache, input_sbml, output_sink, remove_dead_end=False, compartment_id='MNXC3', logger=logging.getLogger(__name__)):
+def genSink(cache, input_sbml, output_sink, remove_dead_end=False, compartment_id='MNXC3', logger=logging.getLogger(__name__)):
     
     ### because cobrapy can be terrible and cause infinite loop depending on the input SBML model
     if remove_dead_end:
@@ -92,7 +92,7 @@ def genSink(rpcache, input_sbml, output_sink, remove_dead_end=False, compartment
                 logger.warning('Cannot find MetaNetX ID for '+str(i.getId()))
                 continue
             try:
-                inchi = rpcache.cid_strc[mnx]['inchi']
+                inchi = cache.get('cid_strc')[mnx]['inchi']
             except KeyError:
                 inchi = None
             if inchi:

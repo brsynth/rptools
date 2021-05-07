@@ -56,7 +56,6 @@ def get_reactions_data(rxn_dict):
 
     return reaction
 
-
 def to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose=False, dev=False):
     """
     Return a list of dictionaries parsed from sbml files
@@ -153,13 +152,6 @@ def run_report(input_dir:bool, source_path:str, output_folder:str, dev:bool, ver
     """
         Converting SBML RP files into web report.
     """
-
-    """ print(input_dir)
-    print(source_path)
-    print(output_folder)
-    print(dev)
-    print(verbose)
-    print(standalone) """
 
     # Warning & errors logging
     logging.basicConfig(stream=sys.stderr,
