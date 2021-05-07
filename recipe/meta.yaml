@@ -35,7 +35,6 @@ requirements:
     - redis-py # rplibs
     - colored # rplibs
     - networkx # rplibs
-    - cobra # rplibs
     - filetype  # rplibs (conda-forge)
 
 test:
