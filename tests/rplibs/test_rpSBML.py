@@ -187,7 +187,7 @@ class Test_rpSBML(Main_rplibs):
 
 
     def test_speciesExists(self):
-        self.assertTrue(self.rpsbml.speciesExists('MNXM89557'))
+        self.assertTrue(self.rpsbml.speciesExists('MNXM89557__64__MNXC3'))
         self.assertFalse(self.rpsbml.speciesExists('test'))
 
 
