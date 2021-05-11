@@ -3477,7 +3477,7 @@ class rpSBML:
     #####################################################################
     ######################### INQUIRE ###################################
     #####################################################################
-    def speciesExists(self, speciesName, compartment_id='MNXC3'):
+    def speciesExists(self, species, compartment_id='MNXC3'):
         """Determine if the model already contains a species according to its ID
 
         :param reaction: Reaction object of libSBML
@@ -3487,7 +3487,8 @@ class rpSBML:
         :rtype: bool
         :return: True if exists and False if not
         """
-        if speciesName in [i.getName() for i in self.getModel().getListOfSpecies()] or speciesName+'__64__'+compartment_id in [i.getId() for i in self.getModel().getListOfSpecies()]:
+        # if speciesName in [i.getName() for i in self.getModel().getListOfSpecies()] or speciesName+'__64__'+compartment_id in [i.getId() for i in self.getModel().getListOfSpecies()]:
+        if species in [i.getId() for i in self.getModel().getListOfSpecies()]:
             return True
         return False
 
@@ -4276,7 +4277,8 @@ class rpSBML:
             )
             # use the same writing convention as CobraPy
             rpSBML.checklibSBML(
-                spe.setSpecies(str(reactant)+'__64__'+str(compartment_id)),
+                # spe.setSpecies(str(reactant)+'__64__'+str(compartment_id)),
+                spe.setSpecies(str(reactant)),
                 'assign reactant species'
             )
             # from cobra.io.sbml       import validate_sbml_model
@@ -4332,7 +4334,8 @@ class rpSBML:
         for product in step['right']:
             pro = reac.createProduct()
             rpSBML.checklibSBML(pro, 'create product')
-            rpSBML.checklibSBML(pro.setSpecies(str(product)+'__64__'+str(compartment_id)), 'assign product species')
+            # rpSBML.checklibSBML(pro.setSpecies(str(product)+'__64__'+str(compartment_id)), 'assign product species')
+            rpSBML.checklibSBML(pro.setSpecies(str(product)), 'assign product species')
             # TODO: check to see the consequences of heterologous parameters not being constant
             rpSBML.checklibSBML(pro.setConstant(True), 'set "constant" on species '+str(product))
             rpSBML.checklibSBML(pro.setStoichiometry(float(step['right'][product])),
@@ -4461,7 +4464,8 @@ class rpSBML:
         # useless for FBA (usefull for ODE) but makes Copasi stop complaining
         rpSBML.checklibSBML(spe.setInitialConcentration(1.0), 'set an initial concentration')
         # same writting convention as COBRApy
-        rpSBML.checklibSBML(spe.setId(str(species_id)+'__64__'+str(compartment_id)), 'set species id')
+        # rpSBML.checklibSBML(spe.setId(str(species_id)+'__64__'+str(compartment_id)), 'set species id')
+        rpSBML.checklibSBML(spe.setId(str(species_id)), 'set species id')
         if not meta_id:
             meta_id = self._genMetaID(species_id)
         rpSBML.checklibSBML(spe.setMetaId(meta_id), 'setting reaction meta_id')
@@ -4493,7 +4497,8 @@ class rpSBML:
             else:
                 newM = hetero_group.createMember()
                 rpSBML.checklibSBML(newM, 'Creating a new groups member')
-                rpSBML.checklibSBML(newM.setIdRef(str(species_id)+'__64__'+str(compartment_id)), 'Setting name to the groups member')
+                # rpSBML.checklibSBML(newM.setIdRef(str(species_id)+'__64__'+str(compartment_id)), 'Setting name to the groups member')
+                rpSBML.checklibSBML(newM.setIdRef(str(species_id)), 'Setting name to the groups member')
         # TODO: check that it actually exists
         # add the species to the sink species
         # self.logger.debug('in_sink_group_id: '+str(in_sink_group_id))
@@ -4505,7 +4510,8 @@ class rpSBML:
             else:
                 newM = sink_group.createMember()
                 rpSBML.checklibSBML(newM, 'Creating a new groups member')
-                rpSBML.checklibSBML(newM.setIdRef(str(species_id)+'__64__'+str(compartment_id)), 'Setting name to the groups member')
+                # rpSBML.checklibSBML(newM.setIdRef(str(species_id)+'__64__'+str(compartment_id)), 'Setting name to the groups member')
+                rpSBML.checklibSBML(newM.setIdRef(str(species_id)), 'Setting name to the groups member')
 
 
     def createGroup(
