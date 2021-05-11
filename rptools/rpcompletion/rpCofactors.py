@@ -10,42 +10,6 @@ from rr_cache import rrCache
 from rptools.rplibs.rpSBML import rpSBML
 
 
-## Get the cofactors to monocomponent reactions
-#
-# @param rxn Reaction in the pathway
-# @param pathway_cmp Dictionnary of intermediate compounds with their public ID's
-# @return Boolean determine if the step is to be added
-def get_cofactors_rxn(
-    cache: rrCache,
-    rxn: Dict,
-    logger=logging.getLogger(__name__)
-) -> Dict:
-
-    rxn_annot = rxn['brsynth']
-    rule_id = rxn_annot['rule_id']
-    transfo = rxn_annot['smiles']
-    # rxn_id = cache._checkRIDdeprecated(rxn_annot['rule_ori_reac'], cache.get('deprecatedRID_rid'))
-    rxn_id = rxn_annot['rule_ori_reac']
-
-    # rule_id = 'RR-02-f85f00f767901186-16-F'
-    # transfo = '[H]OP(=O)(O[H])OP(=O)(O[H])OC([H])([H])C([H])=C(C([H])([H])[H])C([H])([H])C([H])([H])C([H])=C(C([H])([H])[H])C([H])([H])C([H])([H])C([H])=C(C([H])([H])[H])C([H])([H])C([H])([H])C([H])=C(C([H])([H])[H])C([H])([H])[H].O=P(O)(O)OP(=O)(O)O>>[H]OP(=O)(O[H])OP(=O)(O[H])OC([H])([H])C([H])([H])C(=C([H])[H])C([H])([H])[H].[H]OP(=O)(O[H])OP(=O)(O[H])OC([H])([H])C([H])=C(C([H])([H])[H])C([H])([H])C([H])([H])C([H])=C(C([H])([H])[H])C([H])([H])C([H])([H])C([H])=C(C([H])([H])[H])C([H])([H])[H]'
-    # rxn_id = 'MNXR100137'
-
-    # if rxn_id == 'MNXR95743':
-    #     print(rule_id)
-    #     from json import dumps
-    #     print(dumps(cache.get('rr_reactions')[rule_id], indent=4))
-    #     print(dumps(rxn, indent=4))
-
-    return rebuild_rxn(
-        cache=cache,
-        rxn_rule_id=rule_id,
-        transfo=transfo,
-        tmpl_rxn_id=rxn_id,
-        logger=logger
-    )
-
-
 def retrieve_infos(
     cache: rrCache,
     species: str,
@@ -206,9 +170,11 @@ def add_cofactors(
                         spe_infos['smiles']
                     )
 
-        added_species = get_cofactors_rxn(
-            cache,
-            rxn,
+        added_species = rebuild_rxn(
+            cache=cache,
+            rxn_rule_id=rxn['brsynth']['rule_id'],
+            transfo=rxn['brsynth']['smiles'],
+            tmpl_rxn_id=rxn['brsynth']['rule_ori_reac'],
             logger=logger
         )
 
