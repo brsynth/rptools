@@ -6,6 +6,8 @@ from typing import (
     Tuple
 )
 from rxn_rebuild import rebuild_rxn
+from rr_cache import rrCache
+from rptools.rplibs.rpSBML import rpSBML
 
 
 ## Get the cofactors to monocomponent reactions
@@ -14,7 +16,7 @@ from rxn_rebuild import rebuild_rxn
 # @param pathway_cmp Dictionnary of intermediate compounds with their public ID's
 # @return Boolean determine if the step is to be added
 def get_cofactors_rxn(
-    cache: 'rrCache',
+    cache: rrCache,
     rxn: Dict,
     logger=logging.getLogger(__name__)
 ) -> Dict:
@@ -45,7 +47,7 @@ def get_cofactors_rxn(
 
 
 def retrieve_infos(
-    cache: 'rrCache',
+    cache: rrCache,
     species: str,
     tmp_species: str,
     logger=logging.getLogger(__name__)
@@ -139,12 +141,12 @@ def retrieve_infos(
 #  @param rpsbml rpSBML object with a single model
 #  @return Boolean if True then you keep that model for the next step, if not then ignore it
 def add_cofactors(
-    cache: 'rrCache',
-    rpsbml: 'rpSBML',
+    cache: rrCache,
+    rpsbml: rpSBML,
     compartment_id: str='MNXC3',
     pathway_id: str='rp_pathway',
     logger=logging.getLogger(__name__)
-) -> 'rpSBML':
+) -> rpSBML:
     
     # This keeps the IDs conversions to the pathway
     pathway_cmp = {}
