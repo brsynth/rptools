@@ -5,141 +5,7 @@ from typing import (
     List,
     Tuple
 )
-
-
-
-################################################################
-######################### PUBLIC FUNCTIONS #####################
-################################################################
-
-## Given a dictionnary describing a monocomponent reaction, add the cofactors by comparing it with the original reaction
-#
-# @param step Dictionnary describing the reaction
-# @param reac_side String 'right' or 'left' describing the direction of the monocomponent reaction compared with the original reaction
-# @param rr_reac Dictionnary describing the monocomponent reaction from RetroRules
-# @param f_reac Dictionnary describing the full original reaction
-# @param pathway_cmp Dictionnary used to retreive the public ID of the intermediate compounds. Resets for each individual pathway
-#
-def complete_reac(cache, rxn_side, rr_reac, full_reac, mono_side, reac_smiles_side, pathway_cmp, logger=logging.getLogger(__name__)):
-
-    if mono_side:
-        ## add the unknown species to pathway_cmp for the next steps
-        rr_mono_cmp   = list(rr_reac.keys())
-        step_mono_cmp = list(rxn_side.keys())
-        if (len(rr_mono_cmp) == len(step_mono_cmp) == 1):
-            # this is purposely overwitten since the main cmp between reactions can change
-            pathway_cmp[step_mono_cmp[0]] = rr_mono_cmp[0]
-        else:
-            logger.warning('There should be only one compound on the left for monocomponent reaction: rr_mono_cmp: '+str(rr_mono_cmp)+' step_mono_cmp: '+str(step_mono_cmp))
-            return False, {}, {}
-
-    ## add the side species
-    smiles_side, side = add_side_species(cache, full_reac, rr_reac, logger=logger)
-
-    ## Update the stochio
-    smiles_side, side_stochio = update_stochio(cache, side, full_reac, reac_smiles_side+smiles_side, pathway_cmp, logger=logger)
-    side.update(side_stochio)
-    return True, smiles_side, side
-
-
-def add_side_species(cache, full_reac, rr_reac, logger=logging.getLogger(__name__)):
-    
-    smiles = ''
-    side = {}
-
-    for toAdd in full_reac.keys()-rr_reac.keys():
-
-        side.update({toAdd: full_reac[toAdd]})
-
-        ### update the reaction rule string
-        try:
-            smi = cache.get('cid_strc')[toAdd]['smiles']
-            if smi is not None:
-                for sto_add in range(int(full_reac[toAdd])):
-                    smiles += '.'+str(smi)
-        except KeyError:
-            logger.debug('Cannot find smiles structure for '+str(toAdd))
-
-    return smiles, side
-
-
-def update_stochio(cache, rxn_side, full_reac, reac_smiles_side, pathway_cmp, logger=logging.getLogger(__name__)):
-    
-    side = deepcopy(rxn_side)
-
-    for step_spe in side:
-
-        if step_spe in full_reac:
-
-            if not side[step_spe] == full_reac[step_spe]:
-                stochio_diff = full_reac[step_spe]-side[step_spe]
-                side[step_spe] = full_reac[step_spe]
-                if stochio_diff<0:
-                    logger.warning('full_reac stochio should never be smaller than step')
-                    continue
-                for i in range(stochio_diff):
-                    ### update the reaction rule string
-                    try:
-                        smi = cache.get('cid_strc')[step_spe]['smiles']
-                        if not smi==None:
-                            reac_smiles_side += '.'+str(smi)
-                    except KeyError:
-                        #@Mel toAdd -> step_spe
-                        logger.warning('Cannot find smiles structure for '+str(step_spe))
-
-        elif step_spe in pathway_cmp:
-            if pathway_cmp[step_spe] in full_reac:
-                if side[step_spe] != full_reac[pathway_cmp[step_spe]]:
-                    side[step_spe] = full_reac[pathway_cmp[step_spe]]
-
-    return reac_smiles_side, side
-
-
-def complete_reaction(cache, rxn, reaction_from_rr,
-                      full_reaction_from_rr_1, full_reaction_from_rr_2,
-                      mono_side, pathway_cmp,
-                      logger=logging.getLogger(__name__)):
-
-    reac_smiles = {}
-    rxn_annot = rxn['brsynth']
-    reac_smiles['left'], reac_smiles['right'] = rxn_annot['smiles'].split('>>')
-
-    try:
-        # LEFT SIDE
-        isSuccess, \
-        reac_smiles['left'], \
-        rxn_right = complete_reac(cache,
-                                  rxn['right'],
-                                  reaction_from_rr['left'],
-                                  full_reaction_from_rr_1,
-                                  True,
-                                  reac_smiles['left'],
-                                  pathway_cmp,
-                                  logger=logger)
-        if not isSuccess:
-            logger.warning('Could not recognise reaction rule for step: '+str(rxn))
-            return {}, {}, reac_smiles['left'], reac_smiles['right']
-
-        # RIGHT SIDE
-        isSuccess, \
-        reac_smiles['right'], \
-        rxn_left = complete_reac(cache,
-                                 rxn['left'],
-                                 reaction_from_rr['right'],
-                                 full_reaction_from_rr_2,
-                                 False,
-                                 reac_smiles['right'],
-                                 pathway_cmp,
-                                 logger=logger)
-        if not isSuccess:
-            logger.warning('Could not recognise reaction rule for step (2): '+str(rxn_annot['rxn_idx']))
-            return {}, rxn_right, reac_smiles['left'], reac_smiles['right']
-
-    except KeyError:
-        logger.warning('Could not find the full reaction for reaction: '+str(rxn))
-        return {}, {}, reac_smiles['left'], reac_smiles['right']
-
-    return rxn_left, rxn_right, reac_smiles['left'], reac_smiles['right']
+from rxn_rebuild import rebuild_rxn
 
 
 ## Get the cofactors to monocomponent reactions
@@ -152,17 +18,6 @@ def get_cofactors_rxn(
     rxn: Dict,
     logger=logging.getLogger(__name__)
 ) -> Dict:
-
-    # rxn_annot = rxn['brsynth']
-
-    # print(dumps(rxn, indent=4))
-    # rule_id = rxn_annot['rule_id']
-    # print(rule_id, cache.get('rr_reactions')[rule_id])
-    # rxn_id = cache._checkRIDdeprecated(rxn_annot['rule_ori_reac'], cache.get('deprecatedRID_rid'))
-    # print(rxn_id, cache.get('template_reactions')[rxn_id])
-    # print(pathway_cmp)
-
-    from rxn_rebuild import rebuild_rxn
 
     rxn_annot = rxn['brsynth']
     rule_id = rxn_annot['rule_id']
@@ -187,45 +42,6 @@ def get_cofactors_rxn(
         tmpl_rxn_id=rxn_id,
         logger=logger
     )
-
-    # exit()
-    reaction_from_rr      = cache.get('rr_reactions')[rule_id][rxn_id]
-    full_reaction_from_rr = cache.get('template_reactions')[rxn_id]
-
-    # Prepare arguments
-    if reaction_from_rr['rel_direction'] == -1:
-        full_reaction_from_rr_1 = full_reaction_from_rr['right']
-        full_reaction_from_rr_2 = full_reaction_from_rr['left']
-
-    elif reaction_from_rr['rel_direction'] == 1:
-        full_reaction_from_rr_1 = full_reaction_from_rr['left']
-        full_reaction_from_rr_2 = full_reaction_from_rr['right']
-
-    else:
-        logger.error('Relative direction can only be 1 or -1: '+str(reaction_from_rr['rel_direction']))
-        return {}, {}, {}
-
-    # Getting elements to complete the reaction
-    rxn_left, rxn_right, \
-    smiles_left, smiles_right = complete_reaction(cache,
-                                                  rxn,
-                                                  reaction_from_rr,
-                                                  full_reaction_from_rr_1,
-                                                  full_reaction_from_rr_2,
-                                                  True,
-                                                  pathway_cmp,
-                                                  logger=logger)
-
-    if 'full_transfo' in completed_transfos[rxn_id]:
-        print(completed_transfos[rxn_id]['full_transfo'])
-    else:
-        print(transfo)
-        print(dumps(completed_transfos[rxn_id], indent=4))
-    print(rxn_left)
-    print(rxn_right)
-    print(smiles_left+'>>'+smiles_right)
-    exit()
-    return rxn_left, rxn_right, smiles_left+'>>'+smiles_right
 
 
 def retrieve_infos(
@@ -314,6 +130,7 @@ def retrieve_infos(
         'chem_name': chem_name
     }
 
+
 ## Function to reconstruct the heterologous pathway
 #
 #  Read each pathway information and RetroRules information to construct heterologous pathways and add the cofactors
@@ -343,8 +160,6 @@ def add_cofactors(
 
         rxn     =     rpsbml_dict['reactions'][rxn_id]
         ori_rxn = ori_rpsbml_dict['reactions'][rxn_id]
-
-        from json import dumps
 
         # print('COFACTORS:', dumps(cofactors, indent=4))
         # print('RXN [LEFT]:', dumps(rxn['left'], indent=4))

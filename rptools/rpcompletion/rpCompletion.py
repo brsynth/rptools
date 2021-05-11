@@ -478,10 +478,10 @@ def build_side_rxn(side, deprecatedCID_cid, logger=logging.getLogger(__name__)):
         try:
             # tmpReac['left'].append({'stoichio': int(tmp_l[0]), 'name': tmp_l[1]})
             cid = '' # TODO: change this
-            if tmp[1] in deprecatedCID_cid:
-                cid = deprecatedCID_cid[tmp[1]]
-            else:
-                cid = tmp[1]
+            # if tmp[1] in deprecatedCID_cid:
+            #     cid = deprecatedCID_cid[tmp[1]]
+            # else:
+            cid = tmp[1]
             rxn_side[cid] = int(tmp[0])
  
         except ValueError:
