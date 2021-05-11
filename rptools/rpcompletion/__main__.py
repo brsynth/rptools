@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-from rr_cache import rrCache
 from rptools.rpcompletion import rp_completion
 from rptools.rpcompletion.Args import add_arguments
 from rptools import build_args_parser
@@ -29,7 +26,6 @@ def _cli():
             rst=attr('reset')
         )
     )
-    cache = rrCache(db='file', logger=logger)
     StreamHandler.terminator = "\n"
     logger.info(
         '{color}{typo} OK{rst}'.format(
@@ -41,7 +37,6 @@ def _cli():
 
     try:
         result = rp_completion(
-            cache,
             args.rp2_pathways,
             args.rp2paths_compounds,
             args.rp2paths_pathways,

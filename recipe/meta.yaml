@@ -37,7 +37,8 @@ requirements:
     - networkx # rplibs
     - cobra # rplibs
     - filetype  # rplibs (conda-forge)
-    - rr_cache
+    - rr_cache # rpcompletion
+    - rxn_rebuild # rpcompletion
 
 test:
   source_files:
