@@ -121,21 +121,39 @@ class Test_rpCompletion(TestCase):
         cid           = 'CMPD_0000000001'
         index         = 1
         deprecatedCID = {}
-        self.assertDictEqual(build_side_rxn(str(index)+'.'+cid, deprecatedCID), {cid: index})
+        self.assertDictEqual(
+            build_side_rxn(
+                str(index)+'.'+cid,
+                deprecatedCID
+            ),
+            {cid: index}
+        )
 
 
-    def test_build_side_rxn_deprecatedCID_NoMatch(self):
-        cid           = 'CMPD_0000000001'
-        index         = 1
-        deprecatedCID = {'CMPD_000000001': 'FOO'}
-        self.assertDictEqual(build_side_rxn(str(index)+'.'+cid, deprecatedCID), {cid: index})
+    # def test_build_side_rxn_deprecatedCID_NoMatch(self):
+    #     cid           = 'CMPD_0000000001'
+    #     index         = 1
+    #     deprecatedCID = {'CMPD_000000001': 'FOO'}
+    #     self.assertDictEqual(
+    #         build_side_rxn(
+    #             str(index)+'.'+cid,
+    #             deprecatedCID
+    #         ),
+    #         {cid: index}
+    #     )
 
 
-    def test_build_side_rxn_deprecatedCID_Match(self):
-        cid           = 'CMPD_0000000001'
-        index         = 1
-        deprecatedCID = {'CMPD_0000000001': 'FOO'}
-        self.assertDictEqual(build_side_rxn(str(index)+'.'+cid, deprecatedCID), {deprecatedCID[cid]: index})
+    # def test_build_side_rxn_deprecatedCID_Match(self):
+    #     cid           = 'CMPD_0000000001'
+    #     index         = 1
+    #     deprecatedCID = {'CMPD_0000000001': 'FOO'}
+    #     self.assertDictEqual(
+    #         build_side_rxn(
+    #             str(index)+'.'+cid,
+    #             deprecatedCID
+    #         ),
+    #         {deprecatedCID[cid]: index}
+    #     )
 
 
     def test_rp2paths_to_dict(self):
