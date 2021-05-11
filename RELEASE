@@ -2,6 +2,7 @@
 
 ## 4.6.0
 - use rxn_rebuild to add cofactors
+- test(rpreport): add tests
 
 ## 4.5.0
 - chore(rplibs): add fields in toDict(): 'central_species', 'rp_sink_species', 'ignored_species_for_FBA', 'rp_target_species'
