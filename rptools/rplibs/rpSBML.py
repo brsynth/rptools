@@ -3538,7 +3538,8 @@ class rpSBML:
 
     def read_global_score(
         self,
-        pathway_id: str = 'rp_pathway'
+        pathway_id: str = 'rp_pathway',
+        logger: Logger = getLogger(__name__)
     ) -> float:
         return self.toDict(
             pathway_id = pathway_id,
@@ -3548,7 +3549,8 @@ class rpSBML:
 
     def read_pathway(
         self,
-        rp_pathway: libsbml.Group
+        pathway_id: str = 'rp_pathway',
+        logger: Logger = getLogger(__name__)
     ) -> Dict:
         """
         Read pathway field in rpSBML file fir rp_pathway.
@@ -3564,13 +3566,17 @@ class rpSBML:
             Read fields
         """
         pathway = {}
-        pathway['brsynth'] = self.readBRSYNTHAnnotation(rp_pathway.getAnnotation(), self.logger)
+        pathway['brsynth'] = self.readBRSYNTHAnnotation(
+            self.getGroup(pathway_id).getAnnotation(),
+            self.logger
+        )
         return pathway
 
 
     def read_reactions(
         self,
-        rp_pathway: libsbml.Group
+        pathway_id: str = 'rp_pathway',
+        logger: Logger = getLogger(__name__)
     ) -> Dict:
         """
         Read reactions field in rpSBML file for rp_pathway.
@@ -3586,7 +3592,7 @@ class rpSBML:
             Read fields
         """
         reactions = {}
-        for member in rp_pathway.getListOfMembers():
+        for member in self.getGroup(pathway_id).getListOfMembers():
             reaction = self.getModel().getReaction(member.getIdRef())
             annot = reaction.getAnnotation()
             reactions[member.getIdRef()] = {}
@@ -3603,7 +3609,8 @@ class rpSBML:
 
     def read_species(
         self,
-        pathway_id: str
+        pathway_id: str = 'rp_pathway',
+        logger: Logger = getLogger(__name__)
     ) -> Dict:
         """
         Read species field in rpSBML file for pathway_id.
@@ -3647,21 +3654,19 @@ class rpSBML:
         :return: Dictionnary of the pathway annotation
         """
 
-        rp_pathway = self.getGroup(pathway_id)
-
         rpsbml_dict = {}
 
         # reactions
         if 'reactions' in keys:
-            rpsbml_dict['reactions'] = self.read_reactions(rp_pathway)
+            rpsbml_dict['reactions'] = self.read_reactions(pathway_id)
 
         # pathway
         if 'pathway' in keys:
-            rpsbml_dict['pathway'] = self.read_pathway(rp_pathway)
+            rpsbml_dict['pathway'] = self.read_pathway(pathway_id)
             try:
                 rpsbml_dict['pathway']['brsynth']['nb_reactions'] = len(rpsbml_dict['reactions'].keys())
             except KeyError:
-                rpsbml_dict['pathway']['brsynth']['nb_reactions'] = len(self.read_reactions(rp_pathway).keys())
+                rpsbml_dict['pathway']['brsynth']['nb_reactions'] = len(self.read_reactions(pathway_id).keys())
 
         # other groups
         groups = ['central_species', 'rp_sink_species', 'ignored_species_for_FBA', 'rp_target_species']
