@@ -2,10 +2,20 @@ from argparse  import ArgumentParser
 
 
 def add_arguments(parser: ArgumentParser) -> ArgumentParser:
-    parser.add_argument('rp2_pathways', type=str)
+    parser.add_argument(
+        'rp2_metnet',
+        type=str,
+        help='Retrosynthesis network provided by RetroPath2.0'
+    )
     parser.add_argument('rp2paths_compounds', type=str)
     parser.add_argument('rp2paths_pathways', type=str)
     parser.add_argument('outdir', type=str)
+    parser.add_argument(
+        '--out_format',
+        type=str,
+        default='RPSBML',
+        choices=['RPSBML', 'JSON', 'rpsbml', 'json']
+    )
     parser.add_argument('--upper_flux_bound', type=int, default=999999)
     parser.add_argument('--lower_flux_bound', type=int, default=0)
     parser.add_argument('--max_subpaths_filter', type=int, default=0)

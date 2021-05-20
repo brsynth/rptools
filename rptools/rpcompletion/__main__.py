@@ -37,10 +37,11 @@ def _cli():
 
     try:
         result = rp_completion(
-            args.rp2_pathways,
+            args.rp2_metnet,
             args.rp2paths_compounds,
             args.rp2paths_pathways,
             args.outdir,
+            args.out_format,
             int(args.upper_flux_bound),
             int(args.lower_flux_bound),
             int(args.max_subpaths_filter),
