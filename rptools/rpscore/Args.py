@@ -6,13 +6,13 @@ def add_arguments(parser):
     parser.add_argument(
         'pathway_file',
         type = str,
-        help = 'Input rpSBML filename with scores (rules, FBA, Thermo...)'
+        help = 'Pathway file (JSON) with scores (rules, FBA, Thermo...)'
     )
     parser.add_argument(
         '--outfile',
         type = str,
         default = '',
-        help = 'Path to write rpSBML with global score'
+        help = 'Path to write pathway file (JSON) with global score'
     )
     parser.add_argument(
         '--weight_rp_steps',

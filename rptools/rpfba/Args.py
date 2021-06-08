@@ -11,11 +11,13 @@ def add_arguments(parser):
     parser.add_argument(
         'model',
         type=str,
-        help='GEM model file')
+        help='GEM model file (SBML)'
+    )
     parser.add_argument(
         'outfile',
         type=str,
-        help='output file')
+        help='output file'
+    )
     parser.add_argument(
         '--pathway_id',
         type=str,
@@ -37,8 +39,8 @@ def add_arguments(parser):
     parser.add_argument(
         '--objective_id',
         type=str,
-        default='obj_fraction',
-        help='overwrite the auto-generated id of the results (default: None)'
+        default='fraction',
+        help='overwrite the auto-generated id of the results (default: fraction)'
     )
     parser.add_argument(
         '--compartment_id',

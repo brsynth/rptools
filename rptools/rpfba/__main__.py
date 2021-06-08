@@ -1,9 +1,20 @@
-from rptools.rpfba import (
-    runFBA,
+from logging import (
+  Logger,
+  getLogger
 )
-from rptools.rpfba.Args import add_arguments
+from typing import(
+  List,
+  Dict,
+  Tuple
+)
+from copy import deepcopy
 from rptools import build_args_parser
-
+from rptools.rpfba.Args import add_arguments
+from rptools.rpfba import runFBA
+from rptools.rplibs import (
+  rpSBML,
+  rpPathway
+)
 
 def entry_point():
     parser = build_args_parser(
@@ -11,13 +22,18 @@ def entry_point():
         description = 'Process to Flux Balance Analysis',
         m_add_args = add_arguments
     )
-    args   = parser.parse_args()
+    args = parser.parse_args()
 
     from rptools.__main__ import init
     logger = init(parser, args)
 
-    rpsbml = runFBA(
-                  rpsbml_path = args.pathway,
+    pathway = rpSBML(
+      inFile=args.pathway,
+      logger=logger
+    ).to_Pathway()
+
+    results = runFBA(
+                      pathway = pathway,
                 gem_sbml_path = args.model,
                      sim_type = args.sim,
                    src_rxn_id = args.source_reaction,
@@ -36,13 +52,49 @@ def entry_point():
                        logger = logger
     )
 
-    if rpsbml is None:
+    # results = {'species': {'MNXM15': {'biomass_shadow_price': {'value': -0.0}, 'fraction_shadow_price': {'value': -0.0}}, 'MNXM4': {'biomass_shadow_price': {'value': -0.0}, 'fraction_shadow_price': {'value': -0.0}}, 'MNXM5': {'biomass_shadow_price': {'value': -0.3745738207611868}, 'fraction_shadow_price': {'value': -2.6225806451612894}}, 'TARGET_0000000001': {'biomass_shadow_price': {'value': 0.0}, 'fraction_shadow_price': {'value': -1.0}}, 'MNXM6': {'biomass_shadow_price': {'value': -0.3838016323334834}, 'fraction_shadow_price': {'value': -2.6870967741935474}}, 'MNXM13': {'biomass_shadow_price': {'value': -0.0}, 'fraction_shadow_price': {'value': -0.0}}, 'MNXM188': {'biomass_shadow_price': {'value': -0.13370910645572764}, 'fraction_shadow_price': {'value': -0.9419354838709677}}, 'MNXM1': {'biomass_shadow_price': {'value': 0.0009416134257445724}, 'fraction_shadow_price': {'value': 0.0064516129032255835}}, 'CMPD_0000000003': {'biomass_shadow_price': {'value': 0.0}, 'fraction_shadow_price': {'value': -0.9870967741935488}}}, 'reactions': {'rxn_1': {'biomass': {'value': 0.7638744755010182, 'units': 'milimole / gDW / hour'}, 'fraction': {'value': 1.3296695186776557, 'units': 'milimole / gDW / hour'}}, 'rxn_2': {'biomass': {'value': 0.7638744755010182, 'units': 'milimole / gDW / hour'}, 'fraction': {'value': 1.3296695186776557, 'units': 'milimole / gDW / hour'}}}, 'pathway': {'biomass': {'value': 0.7638744755010182, 'units': 'milimole / gDW / hour'}, 'fraction': {'value': 1.3296695186776557, 'units': 'milimole / gDW / hour'}}}
+    if pathway is None:
       logger.info('No results written. Exiting...')
     else:
       logger.info('Writing into file...')
-      rpsbml.writeToFile(args.outfile)
+      # Write results into the pathway
+      write_results(
+        pathway,
+        results,
+        args.sim,
+        logger
+      )
+      rpSBML.from_Pathway(pathway).write_to_file(args.outfile)
       logger.info('   |--> written in ' + args.outfile)
 
+
+def write_results(
+  pathway: rpPathway,
+  results: Dict,
+  sim: str,
+  logger: Logger = getLogger(__name__)
+) -> None:
+
+  # Write species results
+  for spe_id, score in results['species'].items():
+    for k, v in score.items():
+      pathway.get_specie(spe_id).add_info(
+        key='fba_'+k,
+        value=v
+      )
+  # Write reactions results
+  for rxn_id, score in results['reactions'].items():
+    for k, v in score.items():
+      pathway.get_reaction(rxn_id).add_info(
+        key='fba_'+k,
+        value=v
+      )
+  # Write pathway result
+  for k, v in results['pathway'].items():
+    pathway.add_info(
+      key='fba_'+k,
+      value=v
+    )
 
 if __name__ == '__main__':
     entry_point()

@@ -1,12 +1,24 @@
 {
     "infos": {
-        "name": "001_0001",
-        "path_base_idx": 1,
+        "name": "030_0001",
+        "path_base_idx": 30,
         "path_variant_idx": 1,
-        "nb_reactions": 2,
-        "nb_species": 9
+        "nb_reactions": 4,
+        "nb_species": 12
     },
     "species": {
+        "CMPD_0000000025": {
+            "smiles": "[H]OC(=O)c1c([H])c([H])c([H])c(O[H])c1[H]",
+            "inchi": "InChI=1S/C7H6O3/c8-6-3-1-2-5(4-6)7(9)10/h1-4,8H,(H,9,10)",
+            "inchikey": "IJFXRHURBJZNAO-UHFFFAOYSA-N",
+            "name": "CMPD_0000000025"
+        },
+        "MNXM2": {
+            "smiles": "[H]O[H]",
+            "inchi": "InChI=1S/H2O/h1H2",
+            "inchikey": "XLYOFNOQVPJJNP-UHFFFAOYSA-N",
+            "name": "MNXM2"
+        },
         "MNXM13": {
             "formula": "CO2",
             "smiles": "O=C=O",
@@ -15,14 +27,6 @@
             "cid": "MNXM13",
             "name": "CO2"
         },
-        "MNXM15": {
-            "formula": "H4N",
-            "smiles": "N",
-            "inchi": "InChI=1S/H3N/h1H3",
-            "inchikey": "QGZKDVFQNNGYKY-UHFFFAOYSA-N",
-            "cid": "MNXM15",
-            "name": "NH4(+)"
-        },
         "MNXM5": {
             "formula": "C21H25N7O17P3",
             "smiles": "N=C(O)c1ccc[n+](C2OC(COP(=O)(O)OP(=O)(O)OCC3OC(n4cnc5c(N)ncnc54)C(OP(=O)(O)O)C3O)C(O)C2O)c1",
@@ -30,12 +34,6 @@
             "inchikey": "XJLXINKUBYWONI-UHFFFAOYSA-O",
             "cid": "MNXM5",
             "name": "NADP(+)"
-        },
-        "MNXM188": {
-            "smiles": "[H]OC(=O)c1c([H])c([H])c([H])c([H])c1N([H])[H]",
-            "inchi": "InChI=1S/C7H7NO2/c8-6-4-2-1-3-5(6)7(9)10/h1-4H,8H2,(H,9,10)",
-            "inchikey": "RWZYAGGXGHYGMB-UHFFFAOYSA-N",
-            "name": "MNXM188"
         },
         "MNXM6": {
             "smiles": "[H]N=C(O[H])C1=C([H])N(C2([H])OC([H])(C([H])([H])OP(=O)(O[H])OP(=O)(O[H])OC([H])([H])C3([H])OC([H])(n4c([H])nc5c(N([H])[H])nc([H])nc54)C([H])(OP(=O)(O[H])O[H])C3([H])O[H])C([H])(O[H])C2([H])O[H])C([H])=C([H])C1([H])[H]",
@@ -55,6 +53,26 @@
             "inchikey": "MYMOFIZGZYHOMD-UHFFFAOYSA-N",
             "name": "MNXM4"
         },
+        "CMPD_0000000010": {
+            "smiles": "[H]OC(=O)c1c([H])c([H])c(O[H])c(O[H])c1[H]",
+            "inchi": "InChI=1S/C7H6O4/c8-5-2-1-4(7(10)11)3-6(5)9/h1-3,8-9H,(H,10,11)",
+            "inchikey": "YQUVCSBJEUQKSH-UHFFFAOYSA-N",
+            "name": "CMPD_0000000010"
+        },
+        "MNXM337": {
+            "smiles": "[H]OC(=O)C(OC1([H])C([H])=C(C(=O)O[H])C([H])=C([H])C1([H])O[H])=C([H])[H]",
+            "inchi": "InChI=1S/C10H10O6/c1-5(9(12)13)16-8-4-6(10(14)15)2-3-7(8)11/h2-4,7-8,11H,1H2,(H,12,13)(H,14,15)",
+            "inchikey": "WTFXTQVDAKGDEY-UHFFFAOYSA-N",
+            "name": "MNXM337"
+        },
+        "MNXM23": {
+            "formula": "C3H3O3",
+            "smiles": "CC(=O)C(=O)O",
+            "inchi": "InChI=1S/C3H4O3/c1-2(4)3(5)6/h1H3,(H,5,6)",
+            "inchikey": "LCTONWCANYUPML-UHFFFAOYSA-N",
+            "cid": "MNXM23",
+            "name": "pyruvate"
+        },
         "MNXM1": {
             "smiles": "[H+]",
             "inchi": "InChI=1S/p+1",
@@ -69,8 +87,8 @@
         }
     },
     "reactions": {
-        "rxn_2": {
-            "idx": 2,
+        "rxn_4": {
+            "idx": 4,
             "transfo_id": "TRS_0_0_0",
             "ec": [
                 "1.13.11.1"
@@ -88,38 +106,77 @@
                 "MNXM1": 2
             }
         },
-        "rxn_1": {
-            "idx": 1,
-            "transfo_id": "TRS_0_1_2",
+        "rxn_3": {
+            "idx": 3,
+            "transfo_id": "TRS_0_1_19",
             "ec": [
-                "1.14.12.1"
+                "4.1.1.63"
             ],
-            "rule_id": "RR-02-9137e79005134eeb-16-F",
-            "rule_score": 0.6461261981425104,
-            "tmpl_rxn_id": "MNXR106708",
-            "full_transfo": "[H]OC(=O)c1c([H])c([H])c([H])c([H])c1N([H])[H].O=O.[H]N=C(O[H])C1=C([H])N(C2([H])OC([H])(C([H])([H])OP(=O)(O[H])OP(=O)(O[H])OC([H])([H])C3([H])OC([H])(n4c([H])nc5c(N([H])[H])nc([H])nc54)C([H])(OP(=O)(O[H])O[H])C3([H])O[H])C([H])(O[H])C2([H])O[H])C([H])=C([H])C1([H])[H].[H+].[H+].[H+]>>[H]Oc1c([H])c([H])c([H])c([H])c1O[H].O=C=O.N.N=C(O)c1ccc[n+](C2OC(COP(=O)(O)OP(=O)(O)OCC3OC(n4cnc5c(N)ncnc54)C(OP(=O)(O)O)C3O)C(O)C2O)c1",
+            "rule_id": "RR-02-9bcd062586f04b0c-16-F",
+            "rule_score": 0.7023718970192103,
+            "tmpl_rxn_id": "MNXR106706",
+            "full_transfo": "[H]OC(=O)c1c([H])c([H])c(O[H])c(O[H])c1[H].[H+]>>[H]Oc1c([H])c([H])c([H])c([H])c1O[H].O=C=O",
             "reactants": {
-                "MNXM188": 1,
-                "MNXM4": 1,
-                "MNXM6": 1,
-                "MNXM1": 3
+                "CMPD_0000000010": 1,
+                "MNXM1": 1
             },
             "products": {
                 "CMPD_0000000003": 1,
-                "MNXM13": 1,
-                "MNXM15": 1,
+                "MNXM13": 1
+            }
+        },
+        "rxn_2": {
+            "idx": 2,
+            "transfo_id": "TRS_0_2_5",
+            "ec": [
+                "1.14.13.23"
+            ],
+            "rule_id": "RR-02-4b759d9ffae4e8ab-16-F",
+            "rule_score": 1.0,
+            "tmpl_rxn_id": "MNXR107096",
+            "full_transfo": "[H]OC(=O)c1c([H])c([H])c([H])c(O[H])c1[H].O=O.[H]N=C(O[H])C1=C([H])N(C2([H])OC([H])(C([H])([H])OP(=O)(O[H])OP(=O)(O[H])OC([H])([H])C3([H])OC([H])(n4c([H])nc5c(N([H])[H])nc([H])nc54)C([H])(OP(=O)(O[H])O[H])C3([H])O[H])C([H])(O[H])C2([H])O[H])C([H])=C([H])C1([H])[H].[H+]>>[H]OC(=O)c1c([H])c([H])c(O[H])c(O[H])c1[H].O.N=C(O)c1ccc[n+](C2OC(COP(=O)(O)OP(=O)(O)OCC3OC(n4cnc5c(N)ncnc54)C(OP(=O)(O)O)C3O)C(O)C2O)c1",
+            "reactants": {
+                "CMPD_0000000025": 1,
+                "MNXM4": 1,
+                "MNXM6": 1,
+                "MNXM1": 1
+            },
+            "products": {
+                "CMPD_0000000010": 1,
+                "MNXM2": 1,
                 "MNXM5": 1
+            }
+        },
+        "rxn_1": {
+            "idx": 1,
+            "transfo_id": "TRS_0_3_65",
+            "ec": [
+                "4.1.3.45"
+            ],
+            "rule_id": "RR-02-b64ad57dc9b584cb-16-F",
+            "rule_score": 1.0,
+            "tmpl_rxn_id": "MNXR113924",
+            "full_transfo": "[H]OC(=O)C(OC1([H])C([H])=C(C(=O)O[H])C([H])=C([H])C1([H])O[H])=C([H])[H]>>[H]OC(=O)c1c([H])c([H])c([H])c(O[H])c1[H].CC(=O)C(=O)O",
+            "reactants": {
+                "MNXM337": 1
+            },
+            "products": {
+                "CMPD_0000000025": 1,
+                "MNXM23": 1
             }
         }
     },
     "pathway": [
         "rxn_1",
-        "rxn_2"
+        "rxn_2",
+        "rxn_3",
+        "rxn_4"
     ],
     "sink": [
+        "MNXM2",
         "MNXM6",
-        "MNXM188",
         "MNXM4",
+        "MNXM337",
         "MNXM1"
     ],
     "compartments": {

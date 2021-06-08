@@ -22,8 +22,10 @@ from typing import (
 )
 from json.decoder import JSONDecodeError
 from time import sleep
-from equilibrator_api import ComponentContribution, Q_
-from rptools.rplibs import rpSBML
+from equilibrator_api import (
+    ComponentContribution,
+    Q_
+)
 from numpy import (
     zeros as np_zeros,
     where as np_where,
@@ -32,7 +34,15 @@ from numpy import (
 )
 from scipy.optimize import linprog
 from colored import fg, bg, attr
-
+from brs_utils import (
+    print_OK_adv as print_OK,
+    print_title_adv as print_title
+)
+from chemlite import(
+    Reaction,
+    Compound
+)
+from rptools.rplibs import rpPathway
 
 # Name of sides with sign
 SIDES = [
@@ -48,8 +58,8 @@ SIDES = [
 
 
 def thermo(
-    pathway: Dict,
-    pathway_id: str = 'rp_pathway',
+    pathway: rpPathway,
+    cc: ComponentContribution = None,
     ph: float = None,
     ionic_strength: float = None,
     pMg: float = None,
@@ -84,26 +94,26 @@ def thermo(
     #     pathway_id='rp_pathway',
     #     logger=logger
     # )
+
+    # Store thermo values for the net reactions
+    # and for each of the reactions within the pathway
+    results = {
+        'net_reaction': {},
+        'reactions': {},
+        'species': {}
+    }
+
     print_title(
         txt='Pathway Reactions',
         logger=logger,
-        waiting=True
+        waiting=False
     )
-    logger.info(
-        '{color}{typo}Pathway Reactions{rst}'.format(
-            color=fg('white'),
-            typo=attr('bold'),
-            rst=attr('reset')
-        )
-    )
-    for rxn_idx in range(len(pathway['reactions'])):
-        rxn = pathway['reactions'][rxn_idx]
+    for rxn in pathway.get_reactions():
         print_reaction(
-            rxn_id='rxn_'+str(rxn_idx),
-            reactants=rxn[SIDES[0]['name']],
-            products=rxn[SIDES[1]['name']],
+            rxn=rxn,
             logger=logger
         )
+    # logger = getLogger(__name__)
 
     ## eQuilibrator
     print_title(
@@ -111,7 +121,14 @@ def thermo(
         logger=logger,
         waiting=True
     )
-    cc = initThermo(ph, ionic_strength, pMg, temp_k)
+    if cc is None:
+        cc = initThermo(
+            ph,
+            ionic_strength,
+            pMg,
+            temp_k,
+            logger
+        )
     print_OK(logger)
 
     # ## COMPOUNDS
@@ -122,24 +139,38 @@ def thermo(
         logger=logger,
         waiting=True
     )
-    species = get_compounds_from_cache(
-        compounds=pathway['species'],
+    species, unk_compounds = get_compounds_from_cache(
+        compounds=pathway.get_species(),
         cc=cc,
         logger=logger
     )
     print_OK(logger)
 
+    # Get the formation energy for each compound
+    for spe_id, spe in species.items():
+        results['species'][spe_id] = {
+            'standard_dg_formation': {
+                'value': cc.standard_dg_formation(cc.get_compound(spe.get_accession()))[0],  # get .mu
+                'units': 'kilojoule / mole'
+            }
+        }
+
+    ## REACTIONS
+    # Compute thermo for each reaction
+    for rxn in pathway.get_reactions():
+        results['reactions'][rxn.get_id()] = eQuilibrator(
+            reaction=rxn,
+            species=species,
+            cc=cc,
+            logger=logger
+        )
+
     ## UNKNOWN COMPOUNDS
     # Remove unknown compounds
     reactions = remove_unknown_compounds(
         compounds=species,
-        reactions=pathway['reactions'],
-        logger=logger
-    )
-
-    ## NET REACTION
-    net_rxn = net_reaction(
-        reactions=reactions,
+        unk_compounds=unk_compounds,
+        reactions=pathway.get_reactions(),
         logger=logger
     )
 
@@ -149,38 +180,54 @@ def thermo(
         logger=logger,
         waiting=True
     )
-    results = eQuilibrator(
-        reaction=net_rxn,
+    results['net_reaction'] = eQuilibrator(
+        reaction=rpPathway.net_reaction(reactions),
         species=species,
         cc=cc,
         logger=logger
     )
     print_OK(logger)
 
-    ## UPDATE PATHWAY
-    if 'measures' not in pathway:
-        pathway['measures'] = {}
-    pathway['measures']['thermo'] = results
-    
-    return pathway
-
+    return results
 
 def eQuilibrator(
-    reaction: Dict,
+    reaction: Reaction,
     species: Dict,
     cc: 'ComponentContribution',
     logger: Logger=getLogger(__name__)
 ) -> Dict:
 
+    measures = {
+        'dG0_prime': 'standard_dg_prime',
+        'dGm_prime': 'physiological_dg_prime',
+        'dG_prime': 'dg_prime',
+        'dG': 'standard_dg',
+    }
+
+    thermo = {}
+    for key in measures.keys():
+        thermo[key] = {
+            'value': 'NA',
+            'error': 'NA',
+            'units': 'kilojoule / mole',
+        }
+
     ## Format reaction to what eQuilibrator expects
-    compounds = {}
-    # For both sides left and right
-    for side in SIDES:
-        compounds[side['name']] = []
-        for cmpd_id, cmpd_sto in reaction[side['name']].items():
-            compounds[side['name']] += [
+    compounds = {SIDES[0]['name']: [], SIDES[1]['name']: []}
+
+    try:
+        # For both sides left and right
+        for cmpd_id, cmpd_sto in reaction.get_left().items():
+            compounds[SIDES[0]['name']] += [
                 f'{cmpd_sto} {species[cmpd_id].inchi_key}'
             ]
+        for cmpd_id, cmpd_sto in reaction.get_right().items():
+            compounds[SIDES[1]['name']] += [
+                f'{cmpd_sto} {species[cmpd_id].inchi_key}'
+            ]
+    except KeyError:  # the compound is unknown
+        return thermo
+
     # Join both sides
     rxn_str = '{left} = {right}'.format(
         left=' + '.join(compounds[SIDES[0]['name']]),
@@ -190,65 +237,86 @@ def eQuilibrator(
     # Parse formula by eQuilibrator
     rxn = cc.parse_reaction_formula(rxn_str)
 
-    dG0_prime = cc.standard_dg_prime(rxn)
-    dGm_prime = cc.physiological_dg_prime(rxn)
-    dG_prime = cc.dg_prime(rxn)
-
-    return {
-        'dG0_prime': {
-            'value': float(str(dG0_prime.value).split()[0]),
-            'error': float(str(dG0_prime.error).split()[0]),
-            'units': str(dG0_prime.units),
-        },
-        'dGm_prime': {
-            'value': float(str(dGm_prime.value).split()[0]),
-            'error': float(str(dGm_prime.error).split()[0]),
-            'units': str(dGm_prime.units),
-        },
-        'dG_prime': {
-            'value': float(str(dG_prime.value).split()[0]),
-            'error': float(str(dG_prime.error).split()[0]),
-            'units': str(dG_prime.units),
+    try:
+        # Apply each CC method to each required measure
+        for key in measures.keys():
+            thermo[key] = getattr(cc, measures[key])(rxn)
+        thermo = {
+            key:{
+                'value': float(str(thermo[key].value).split()[0]),
+                'error': float(str(thermo[key].error).split()[0]),
+                'units': str(thermo[key].units),
+            } for key in thermo.keys()
         }
-    }
+    except Exception as e:
+        logger.error(e)
+
+    return thermo
+    # {
+    #     'dG0_prime': {
+    #         'value': float(str(dG0_prime.value).split()[0]),
+    #         'error': float(str(dG0_prime.error).split()[0]),
+    #         'units': str(dG0_prime.units),
+    #     },
+    #     'dGm_prime': {
+    #         'value': float(str(dGm_prime.value).split()[0]),
+    #         'error': float(str(dGm_prime.error).split()[0]),
+    #         'units': str(dGm_prime.units),
+    #     },
+    #     'dG_prime': {
+    #         'value': float(str(dG_prime.value).split()[0]),
+    #         'error': float(str(dG_prime.error).split()[0]),
+    #         'units': str(dG_prime.units),
+    #     }
+    # }
 
 
-def net_reaction(
-    reactions: List[Dict],
-    logger: Logger=getLogger(__name__)
-) -> List:
-    '''
-    '''
+# def net_reaction(
+#     reactions: List[Reaction],
+#     logger: Logger=getLogger(__name__)
+# ) -> Dict:
+#     '''
+#     '''
 
-    # SUM ALL SPECIES
-    species = {}
-    for rxn_idx in range(len(reactions)):
-        rxn = reactions[rxn_idx]
-        # For both sides left and right
-        for side in SIDES:
-            for spe_id, spe_sto in rxn[side['name']].items():
-                if spe_id in species:
-                    species[spe_id] += side['sign']*spe_sto
-                else:
-                    species[spe_id] = side['sign']*spe_sto
-    # WRITE INTO REACTIONS
-    net_reaction = {
-        SIDES[0]['name']: {},
-        SIDES[1]['name']: {}
-    }
-    for spe_id, spe_sto in species.items():
-        # Ignore compounds with stochio = 0
-        if spe_sto < 0:
-            net_reaction[SIDES[0]['name']][spe_id] = SIDES[0]['sign']*spe_sto
-        elif spe_sto > 0:
-            net_reaction[SIDES[1]['name']][spe_id] = SIDES[1]['sign']*spe_sto
+#     # SUM ALL SPECIES
+#     species = {}
+#     for rxn in reactions:
+#         # For both sides left and right
+#         for spe_id, spe_sto in rxn.get_left().items():
+#             if spe_id in species:
+#                 species[spe_id] -= spe_sto
+#             else:
+#                 species[spe_id] = -spe_sto
+#         for spe_id, spe_sto in rxn.get_right().items():
+#             if spe_id in species:
+#                 species[spe_id] += spe_sto
+#             else:
+#                 species[spe_id] = spe_sto
+#         # for side in SIDES:
+#         #     for spe_id, spe_sto in getattr(rxn, 'get_'+side['name']).items():
+#         #         if spe_id in species:
+#         #             species[spe_id] += side['sign']*spe_sto
+#         #         else:
+#         #             species[spe_id] = side['sign']*spe_sto
+#     # WRITE INTO REACTIONS
+#     net_reaction = {
+#         SIDES[0]['name']: {},
+#         SIDES[1]['name']: {}
+#     }
+#     for spe_id, spe_sto in species.items():
+#         # Ignore compounds with stochio = 0
+#         if spe_sto < 0:
+#             net_reaction[SIDES[0]['name']][spe_id] = SIDES[0]['sign']*spe_sto
+#         elif spe_sto > 0:
+#             net_reaction[SIDES[1]['name']][spe_id] = SIDES[1]['sign']*spe_sto
 
-    return net_reaction
+#     return net_reaction
 
 
 def remove_unknown_compounds(
     compounds: Dict,
     reactions: List[Dict],
+    unk_compounds: List = [],
     logger: Logger=getLogger(__name__)
 ) -> Dict:
     '''Try to remove compounds that are unknown in the eQuilibrator cache from reaction set (pathway).
@@ -256,15 +324,15 @@ def remove_unknown_compounds(
     Then, try to solve as a linear equations system and apply new coeffs to reactions
     '''
 
-    # From compounds from cache, get those which are None (unknown)
-    unk_compounds = list(
-        dict(
-            filter(
-                lambda elem: elem[1] is None,
-                compounds.items()
-            )
-        ).keys()
-    )
+    # # From compounds from cache, get those which are None (unknown)
+    # unk_compounds = list(
+    #     dict(
+    #         filter(
+    #             lambda elem: elem[1] is None,
+    #             compounds.items()
+    #         )
+    #     ).keys()
+    # )
 
     # unk_compounds = ['CMPD_0000000003', 'CMPD_0000000010', 'CMPD_0000000025']
 
@@ -306,17 +374,17 @@ def remove_unknown_compounds(
     return reactions
 
 
-def get_target_rxn_idx(
-    reactions: List[Dict],
-    logger: Logger=getLogger(__name__)
-) -> int:
-    for rxn_idx in range(len(reactions)):
-        rxn = reactions[rxn_idx]
-        rxn_species = list(rxn[SIDES[0]['name']].keys()) + list(rxn[SIDES[1]['name']].keys())
-        for spe in rxn_species:
-            if spe.startswith('TARGET'):
-                return rxn_idx
-    return None
+# def get_target_rxn_idx(
+#     reactions: List[Dict],
+#     logger: Logger=getLogger(__name__)
+# ) -> int:
+#     for rxn_idx in range(len(reactions)):
+#         rxn = reactions[rxn_idx]
+#         rxn_species = list(rxn[SIDES[0]['name']].keys()) + list(rxn[SIDES[1]['name']].keys())
+#         for spe in rxn_species:
+#             if spe.startswith('TARGET'):
+#                 return rxn_idx
+#     return None
 
 
 def minimize(
@@ -365,7 +433,7 @@ def minimize(
 def build_stoichio_matrix(
     reactions: List,
     compounds: List = [],
-    logger: Logger=getLogger(__name__)
+    logger: Logger = getLogger(__name__)
 ) -> 'numpy.ndarray':
     '''Build the stoichiometric matrix of reactions.
        If compounds is not None, then fill the matrix only for these
@@ -412,7 +480,7 @@ def build_stoichio_matrix(
 
 
 def get_compounds_from_cache(
-    compounds: Dict,
+    compounds: List[Compound],
     cc: ComponentContribution,
     logger: Logger=getLogger(__name__)
 ) -> Dict:
@@ -433,19 +501,24 @@ def get_compounds_from_cache(
 
     """
     compounds_dict = {}
-    for cmpd_id, cmpd in compounds.items():
-        compound = cc.get_compound(cmpd_id)
+    unknown_compounds = []
+    for cmpd in compounds:
+        compound = cc.get_compound(cmpd.get_id())
         # If ID not found,
         # then search with inchikey
         if compound is None:
-            compound = cc.search_compound(cmpd['inchikey'])
+            compound = cc.search_compound(cmpd.get_inchikey())
         # If the first level of inchikeys are the same,
         # then substitute
-        if compound.inchi_key.split('-')[0] == cmpd['inchikey'].split('-')[0]:
-            compounds_dict[cmpd_id] = compound
+        if compound.inchi_key.split('-')[0] == cmpd.get_inchikey().split('-')[0]:
+            compounds_dict[cmpd.get_id()] = compound
         else:
-            compounds_dict[cmpd_id] = None
-    return compounds_dict
+            # search by inchikey
+            try:
+                compounds_dict[cmpd.get_id()] = cc.search_compound_by_inchi_key(cmpd.get_inchikey())[0]
+            except IndexError:  # the compound is considered as unknown
+                unknown_compounds += [cmpd.get_id()]
+    return compounds_dict, unknown_compounds
 
 
 # def net_reaction(
@@ -643,9 +716,7 @@ def get_compounds_from_cache(
 
 
 def print_reaction(
-    rxn_id: str,
-    reactants: Dict,
-    products: Dict,
+    rxn: Reaction,
     logger: Logger=getLogger(__name__)
 ) -> None:
     """
@@ -662,32 +733,14 @@ def print_reaction(
     """
     logger.info(
         '{color}{typo}   |- {rxn_id}: {rst}{reactants} --> {products}'.format(
-            rxn_id=rxn_id,
-            reactants=' + '.join([str(sto)+' '+str(spe) for spe,sto in reactants.items()]),
-            products=' + '.join([str(sto)+' '+str(spe) for spe,sto in products.items()]),
+            rxn_id=rxn.get_id(),
+            reactants=' + '.join([str(sto)+' '+str(spe) for spe,sto in rxn.get_reactants_stoichio().items()]),
+            products=' + '.join([str(sto)+' '+str(spe) for spe,sto in rxn.get_products_stoichio().items()]),
             color=fg('white'),
             typo=attr('bold'),
             rst=attr('reset')
         )
     )
-
-
-def print_title(
-    txt: str,
-    logger: Logger=getLogger(__name__),
-    waiting: bool=False
-) -> None:
-    if waiting:
-        StreamHandler.terminator = ""
-    logger.info(
-        '{color}{typo}{txt}{rst}'.format(
-            color=fg('white'),
-            typo=attr('bold'),
-            rst=attr('reset'),
-            txt=txt
-        )
-    )
-    StreamHandler.terminator = "\n"
 
 
 # def build_stoichio_matrix(
@@ -849,14 +902,13 @@ def initThermo(
     logger: Logger=getLogger(__name__)
 ) -> ComponentContribution:
 
-    cc = None
-
-    while cc is None:
-        try:
-            cc = ComponentContribution()
-        except JSONDecodeError:
-            logger.warning('Waiting for zenodo.org... Retrying in 5s')
-            sleep(5)
+    # cc = None
+    # while cc is None:
+        # try:
+    cc = ComponentContribution()
+        # except JSONDecodeError:
+        #     logger.warning('Waiting for zenodo.org... Retrying in 5s')
+        #     sleep(5)
 
     if ph is not None:
         cc.p_h = Q_(ph)
@@ -868,16 +920,6 @@ def initThermo(
         cc.temperature = Q_(str(temp_k)+' K')
 
     return cc
-
-
-def print_OK(logger: Logger=getLogger(__name__)) -> None:
-    logger.info(
-        '{color}{typo} OK{rst}'.format(
-            color=fg('green'),
-            typo=attr('bold'),
-            rst=attr('reset')
-        )
-    )
 
 
 # def runMDF_hdd(inputTar, outputTar, pathway_id='rp_pathway', thermo_id='dfG_prime_o', fba_id='fba_obj_fraction', ph=7.0, ionic_strength=200, pMg=10.0, temp_k=298.15, stdev_factor=1.96):

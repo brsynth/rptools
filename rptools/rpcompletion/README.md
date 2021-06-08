@@ -41,21 +41,18 @@ rpCompletion is part of rpTools suite:
 ### rpCompletion process
 **From Python code**
 ```python
-from rptools.rpcompletion import rpCompletion, build_args_parser
+from rptools.rpcompletion import rp_completion
 
-parser = build_args_parser()
-args  = parser.parse_args()
-
-rpcompletion = rpCompletion(db=args.store_mode)
-rpcompletion.rp2ToSBML(args.rp2_pathways,
-                       args.rp2paths_compounds,
-                       args.rp2paths_pathways,
-                       args.outdir)
+pathways = rp_completion(
+    rp2_metnet_filename,
+    rp2paths_compounds_filename,
+    rp2paths_pathways_filename,
+)
 ```
 **From CLI**
 ```sh
 python -m rptools.rpcompletion \
-  rp2_pathways.csv \
+  rp2_metnet.csv \
   rp2paths_compounds.csv \
   rp2paths_pathways.csv \
   <outdir>

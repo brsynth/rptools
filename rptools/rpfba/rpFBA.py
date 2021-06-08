@@ -2,17 +2,7 @@ from logging import (
     Logger,
     getLogger
 )
-from cobra.flux_analysis import pfba
-from cobra               import io        as cobra_io
-from cobra.io.sbml       import (
-    validate_sbml_model,
-    CobraSBMLError
-)
-from cobra.core.model    import Model     as cobra_model
-from cobra.core.solution import Solution  as cobra_solution
 from pandas.core.series  import Series    as np_series
-from libsbml             import Objective as sbml_objective
-from rptools.rplibs      import rpSBML
 from typing import (
     List,
     Dict,
@@ -22,7 +12,26 @@ from tempfile import (
     NamedTemporaryFile
 )
 from json import dumps as json_dumps
-
+from libsbml             import Objective as sbml_objective
+from cobra.flux_analysis import pfba
+from cobra               import io        as cobra_io
+from cobra.io.sbml       import (
+    validate_sbml_model,
+    CobraSBMLError
+)
+from cobra.core.model    import Model     as cobra_model
+from cobra.core.solution import Solution  as cobra_solution
+from brs_utils import Cache
+from rptools.rplibs import (
+    rpSBML,
+    rpPathway
+)
+from rptools.rpfba.cobra_format import (
+    cobraize,
+    uncobraize,
+    uncobraize_results,
+    cobra_suffix
+)
 
 
 # TODO: add the pareto frontier optimisation as an automatic way to calculate the optimal fluxes
@@ -30,13 +39,13 @@ from json import dumps as json_dumps
 
 # TODO: do not use the species_group_id and the sink_species_group_id. Loop through all the groups (and if the same) and overwrite the annotation instead
 def runFBA(
-              rpsbml_path: str,
+                  pathway: rpPathway,
             gem_sbml_path: str,
-                 sim_type: str,
-               src_rxn_id: str,
-                src_coeff: float,
-               tgt_rxn_id: str,
-                tgt_coeff: float,
+                 sim_type: str = 'fraction',
+               src_rxn_id: str = 'biomass',
+                src_coeff: float = 1.0,
+               tgt_rxn_id: str = 'rxn_target',
+                tgt_coeff: float = 1.0,
                    is_max: bool = True,
               frac_of_src: float = 0.75,
                     merge: bool = False,
@@ -47,11 +56,11 @@ def runFBA(
          species_group_id: str = 'central_species',
     sink_species_group_id: str = 'rp_sink_species',
                    logger: Logger = getLogger(__name__)
-) -> rpSBML:
+) -> Dict:
     """Single rpSBML simulation
 
     :param file_name: The name of the model
-    :param rpsbml_path: Path to the rpSBML file
+    :param pathway_fn: Path to the pathway file (JSON)
     :param gem_sbml: Path to the GEM file
     :param sim_type: The type of simulation to use. Available simulation types include: fraction, fba, rpfba
     :param src_rxn_id: The reaction id of the source reaction.
@@ -92,7 +101,7 @@ def runFBA(
     :rtype: bool
     """
 
-    logger.debug('          rpsbml_path: ' + str(rpsbml_path))
+    logger.debug('           pathway_fn: ' + str(pathway))
     logger.debug('        gem_sbml_path: ' + str(gem_sbml_path))
     logger.debug('             sim_type: ' + str(sim_type))
     logger.debug('           src_rxn_id: ' + src_rxn_id)
@@ -109,15 +118,29 @@ def runFBA(
     logger.debug('     species_group_id: ' + str(species_group_id))
     logger.debug('sink_species_group_id: ' + str(sink_species_group_id))
 
-    rpsbml = rpSBML(rpsbml_path, logger=logger)
-    logger.debug('input_sbml: ' + str(rpsbml))
+
+    # Rename all compounds with Cobra standard ('compound@compartment')
+    cobraize(pathway)
+
+    # rpsbml = rpSBML(inFile=pathway_fn)
+    rpsbml = rpSBML.from_Pathway(
+        pathway=pathway,
+        logger=logger
+    )
+
+    # rpsbml.writeToFile('out.xml')
+    # exit()
+    # from json import dumps
+    # print(dumps(rpsbml.to_dict(), indent=4))
+    # exit()
+    logger.debug('pathway (rpSBML): ' + str(rpsbml))
 
     rpsbml_gem = rpSBML(gem_sbml_path, logger=logger)
     logger.debug('rpsbml_gem: ' + str(rpsbml_gem))
 
     logger.info('Merging rpSBML models: ' + rpsbml.getName() + ' and ' + rpsbml_gem.getName() + '...')
 
-    rpsbml_merged, reactions_in_both = rpSBML.mergeModels(
+    rpsbml_merged, reactions_in_both, missing_species = rpSBML.mergeModels(
         source_rpsbml = rpsbml,
         target_rpsbml = rpsbml_gem,
         logger = logger
@@ -147,8 +170,9 @@ def runFBA(
 
     ######## FBA ########
     if sim_type == 'fraction':
-        cobra_results, rpsbml_merged = rp_fraction(
+        results, rpsbml_merged = rp_fraction(
                   rpsbml = rpsbml_merged,
+         missing_species = missing_species,
               ignore_met = ignore_orphan_species,
               src_rxn_id = src_rxn_id,
                src_coeff = src_coeff,
@@ -161,6 +185,7 @@ def runFBA(
                   logger = logger
         )
     else:
+        results = {}
         objective_id = rpsbml_merged.find_or_create_objective(
             reactions = [tgt_rxn_id],
             coefficients = [tgt_coeff],
@@ -187,11 +212,11 @@ def runFBA(
             logger.error('Cannot recognise sim_type: ' + str(sim_type))
             return None
 
-        if cobra_results is None:
-            return None
+        results[objective_id] = cobra_results
 
         write_results(
             rpsbml = rpsbml_merged,
+            missing_species = missing_species,
             objective_id = objective_id,
             cobra_results = cobra_results,
             pathway_id = pathway_id,
@@ -199,34 +224,107 @@ def runFBA(
         )
         # for group in rpsbml_merged.getModel().getPlugin('groups').getListOfGroups():
         #     print(group)
+    # print(cobra_results.objective_value)
+    # print(cobra_results.status)
+    # print(cobra_results.fluxes)
+    # print(cobra_results.shadow_prices)
 
-    if cobra_results is None:
-        return None
+    _results = {
+        'species': {},
+        'reactions': {},
+        'pathway': {}
+    }
 
-    '''
-    ###### multi objective #####
-    elif sim_type=='multi_fba':
-        rpfba.runMultiObjective(reactions, coefficients, is_max, pathway_id)
-    '''
-    if not merge:
-        complete_heterologous_pathway(
-            rpsbml = rpsbml,
-            rpsbml_merged = rpsbml_merged,
-            species_group_id = species_group_id,
-            sink_species_group_id = sink_species_group_id,
-            pathway_id = pathway_id,
-            reactions_in_both = reactions_in_both,
-            logger = logger
-        )
-        logger.info('Returning model with heterologous pathway only')
-        return rpsbml
-    else:
-        logger.info('Returning the full model')
-        return rpsbml_merged
+    # SPECIES
+    for spe_id in pathway.get_species_ids():
+        _results['species'][spe_id] = {}
+        for obj_id, cobra_r in results.items():
+            _results['species'][spe_id][obj_id+'_shadow_price'] = {
+                'value': results[obj_id].shadow_prices.get(
+                    spe_id.replace('__64__', '@')
+                ),
+                # 'units': 'milimole / gDW / hour',
+            }
+    # REACTIONS
+    for rxn_id in pathway.get_reactions_ids():
+        _results['reactions'][rxn_id] = {}
+        for obj_id, cobra_r in results.items():
+            if obj_id == 'biomass':
+                _results['reactions'][rxn_id][obj_id] = {
+                    'value': results[obj_id].objective_value,
+                    'units': 'milimole / gDW / hour'
+                }
+            else:
+                _results['reactions'][rxn_id][obj_id] = {
+                    'value': results[obj_id].fluxes[rxn_id],
+                    'units': 'milimole / gDW / hour'
+                }
+    # PATHWAY
+    _results['pathway'] = {}
+    for obj_id, cobra_r in results.items():
+        _results['pathway'][obj_id] = {
+            'value': results[obj_id].objective_value,
+            'units': 'milimole / gDW / hour'
+        }
+
+    # results['pathway'] = {
+    #     objective_id: {
+    #         'value': cobra_results.objective_value,
+    #         'units': 'milimole / gDW / hour',
+    #     },
+    #     'biomass': {
+    #             'value': biomass,
+    #             'units': 'milimole / gDW / hour',
+    #     }
+    # }
+
+    # Remove the Cobra standard ('compound@compartment') from all compounds
+    uncobraize(pathway)
+    _results = uncobraize_results(
+        _results,
+        cobra_suffix(pathway)
+    )
+
+    return _results
+
+    # if cobra_results is None:
+    #     return None
+
+    # '''
+    # ###### multi objective #####
+    # elif sim_type=='multi_fba':
+    #     rpfba.runMultiObjective(reactions, coefficients, is_max, pathway_id)
+    # '''
+    # if not merge:
+    #     complete_heterologous_pathway(
+    #         rpsbml = rpsbml,
+    #         missing_species = missing_species,
+    #         rpsbml_merged = rpsbml_merged,
+    #         species_group_id = species_group_id,
+    #         sink_species_group_id = sink_species_group_id,
+    #         pathway_id = pathway_id,
+    #         reactions_in_both = reactions_in_both,
+    #         logger = logger
+    #     )
+    #     logger.info('Returning model with heterologous pathway only')
+    #     pathway_fba = rpsbml.to_dict()
+    # else:
+    #     logger.info('Returning the full model')
+    #     pathway_fba = rpsbml_merged.to_dict()
+
+    # pathway_fba = rename_species(
+    #     pathway_fba,
+    #     logger
+    # )
+
+    # from json import dumps
+    # print(dumps(pathway_fba, indent=4))
+    # exit()
 
 
 def complete_heterologous_pathway(
     rpsbml: rpSBML,
+    missing_species: List[str],
     rpsbml_merged: rpSBML,
     species_group_id: str,
     sink_species_group_id: str,
@@ -316,7 +414,11 @@ def complete_heterologous_pathway(
         '''
     # add ignored_species group
     rpsbml.set_isolated_species(rpsbml_merged.get_isolated_species())
-    create_ignored_species_group(rpsbml, logger)
+    create_ignored_species_group(
+        rpsbml,
+        missing_species,
+        logger
+    )
     #### add objectives ####
     source_fbc = rpsbml_merged.getPlugin('fbc')
     target_fbc = rpsbml.getPlugin('fbc')
@@ -430,6 +532,7 @@ def rp_pfba(
 
 def rp_fraction(
           rpsbml: rpSBML,
+ missing_species:   List,
       src_rxn_id:    str,
        src_coeff:  float,
       tgt_rxn_id:    str,
@@ -440,7 +543,7 @@ def rp_fraction(
     objective_id:    str = None,
       ignore_met:   bool = True,
           logger: Logger = getLogger(__name__)
-) -> Tuple[cobra_solution, rpSBML]:
+) -> Tuple[cobra_solution, float, rpSBML]:
     """Optimise for a target reaction while fixing a source reaction to the fraction of its optimum
 
     :param source_reaction: The id of the source reaction
@@ -510,7 +613,7 @@ def rp_fraction(
     #     'Getting objective '+str(objective_id)
     # )
 
-
+    results = {}
 
     # fbc_plugin = rpsbml.getPlugin('fbc')
     # TODO: use the rpSBML BRSynth annotation parser
@@ -531,18 +634,22 @@ def rp_fraction(
             ignore_met = ignore_met,
             logger = logger
         )
+        # rxn>scores>fba>biomass = cobra_results.fluxes('rxn_X')
+        # scores>fba>biomass = cobra_results.objective_value
         if cobra_results is None:
             return None, rpsbml
 
+        results['biomass'] = cobra_results
+
         write_results(
             rpsbml = rpsbml,
+            missing_species = missing_species,
             objective_id = src_obj_id,
             cobra_results = cobra_results,
             pathway_id = pathway_id,
             logger = logger
         )
 
-        # cobra_results.objective_value
         fbc_obj_annot = get_annot_objective(rpsbml, src_obj_id)
         if fbc_obj_annot is None:
             logger.error('No annotation available for: '+str(src_obj_id))
@@ -593,8 +700,13 @@ def rp_fraction(
     if cobra_results is None:
         return None, rpsbml
 
+    # rxn>scores>fba>fraction = cobra_results.fluxes('rxn_X')
+    # scores>fba>fraction = cobra_results.objective_value
+    results['fraction'] = cobra_results
+
     write_results(
         rpsbml = rpsbml,
+        missing_species = missing_species,
         objective_id = objective_id,
         cobra_results = cobra_results,
         pathway_id = pathway_id,
@@ -614,7 +726,7 @@ def rp_fraction(
 
     logger.debug('The objective '+str(objective_id)+' results '+str(cobra_results.objective_value))
 
-    return cobra_results, rpsbml
+    return results, rpsbml
 
 
 def runCobra(
@@ -681,6 +793,9 @@ def runCobra(
         raise_error=True
     )
 
+    # print(cobraModel.summary())
+    # exit()
+
     logger.debug(cobra_results)
 
     return cobra_results
@@ -699,7 +814,7 @@ def cobra_model(
     rpsbml.logger.info('Creating Cobra object from rpSBML...')
 
     with NamedTemporaryFile() as temp_f:
-        rpsbml.writeToFile(temp_f.name)
+        rpsbml.write_to_file(temp_f.name)
         try:
             cobraModel = cobra_io.read_sbml_model(temp_f.name, use_fbc_package=True)
         except CobraSBMLError:
@@ -715,6 +830,7 @@ def cobra_model(
 
 def write_results(
     rpsbml: rpSBML,
+    missing_species: List[str],
     objective_id: str,
     cobra_results: cobra_solution,
     pathway_id: str = 'rp_pathway',
@@ -733,7 +849,6 @@ def write_results(
     :return: None
     :rtype: None
     """
-
     rpsbml.logger.debug('----- Setting the results for '+str(objective_id)+ ' -----')
     rpsbml.logger.debug('rpsbml: ' + str(rpsbml))
     rpsbml.logger.debug('objective_id: ' + str(objective_id))
@@ -751,6 +866,7 @@ def write_results(
 
     create_ignored_species_group(
         rpsbml,
+        missing_species,
         logger
     )
 
@@ -931,6 +1047,7 @@ def write_objective_to_pathway(
 
 def create_ignored_species_group(
     rpsbml: rpSBML,
+    missing_species: List[str],
     logger: Logger = getLogger(__name__)
 ) -> None:
     """
@@ -951,7 +1068,7 @@ def create_ignored_species_group(
         brs_annot = False
     )
 
-    for spe in rpsbml.get_isolated_species():
+    for spe in missing_species:
         rpsbml.addMember(
             group_id = group_id,
             idRef = spe
@@ -965,7 +1082,7 @@ def create_ignored_species_group(
 
     logger.debug(
         'Create ' + str(group_id) + ' group with ' \
-      + str(rpsbml.get_isolated_species())
+      + str(missing_species)
     )
 
     # ignored_spe = rpsbml.getGroup(
@@ -978,6 +1095,7 @@ def create_ignored_species_group(
     #     annot_header = 'ignored_species',
     #     value = str(rpsbml.get_isolated_species())
     # )
+
 
 
 
@@ -1047,5 +1165,4 @@ def create_ignored_species_group(
 #     cobra_results = cobraModel.optimize()
 #     rpsbml.writeFBAResults(objective_id, cobra_results, pathway_id)
 #     return rpsbml
-
 

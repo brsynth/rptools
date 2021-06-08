@@ -1,9 +1,12 @@
+from json import (
+  load as json_load,
+  dump as json_dump
+)
 from rptools.rpscore import (
     compute_globalscore,
 )
 from rptools.rpscore.Args import add_arguments
 from rptools import build_args_parser
-from rptools.rplibs import rpSBML
 
 
 def entry_point():
@@ -23,8 +26,11 @@ def entry_point():
         logger = logger
     )
 
-    rpsbml_dict = compute_globalscore(
-                   rpsbml = rpsbml,
+    with open(args.pathway, 'r') as fp:
+      pathway = json_load(fp)
+
+    global_score = compute_globalscore(
+                  pathway = pathway,
           weight_rp_steps = args.weight_rp_steps,
         weight_rule_score = args.weight_rule_score,
                weight_fba = args.weight_fba,
@@ -40,12 +46,20 @@ def entry_point():
                    logger = logger
     )
 
-    score = rpsbml_dict['pathway']['brsynth']['global_score']
-
-    if args.outfile != '':
-        logger.info('Writing into file...')
-        rpsbml.updateBRSynthPathway(rpsbml_dict, args.pathway_id)
-        rpsbml.writeToFile(args.outfile)
+    if pathway is None:
+      logger.info('No results written. Exiting...')
+    else:
+      logger.info('Writing into file...')
+      # Write results into the pathway
+      write_results(
+        pathway,
+        global_score,
+        logger
+      )
+      # Write pathway into file
+      if args.outfile is not None or args.outfile != '':
+        with open(args.outfile, 'w') as fp:
+            pathway = json_dump(pathway, fp, indent=4)
         logger.info('   |--> written in ' + args.outfile)
 
     if not args.silent:
@@ -53,6 +67,17 @@ def entry_point():
             print(score)
         else:
             logger.info('\nGlobal Score = ' + str(score))
+
+
+def write_results(
+  pathway: Dict,
+  score: float,
+  logger: Logger = getLogger(__name__)
+) -> None:
+  # Write pathway result
+  if 'scores' not in pathway:
+    pathway['scores'] = {}
+  pathway['scores']['global'] = score
 
 
 if __name__ == '__main__':

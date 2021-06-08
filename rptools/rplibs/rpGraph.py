@@ -68,12 +68,13 @@ class rpGraph:
         :return: None
         :rtype: None
         """
+
         rpsbml_model = self.rpsbml.getModel()
-        #rp_species = [rpsbml_model.getSpecies(i) for i in self.rpsbml.readUniqueRPspecies(pathway_id)]
+        # rp_species = [rpsbml_model.getSpecies(i) for i in self.rpsbml.readUniqueRPspecies(pathway_id)]
         groups = rpsbml_model.getPlugin('groups')
-        c_s = self.rpsbml.getGroup(central_species_group_id)
+        # c_s = self.rpsbml.getGroup(central_species_group_id)
         s_s = self.rpsbml.getGroup(sink_species_group_id)
-        rp_central_species_id = [i.getIdRef() for i in c_s.getListOfMembers()]
+        # rp_central_species_id = [i.getIdRef() for i in c_s.getListOfMembers()]
         rp_sink_species_id = [i.getIdRef() for i in s_s.getListOfMembers()]
         rp_pathway = self.rpsbml.getGroup(pathway_id)
         rp_species_id = self.rpsbml.readUniqueRPspecies(pathway_id)
@@ -85,19 +86,20 @@ class rpGraph:
                 logger = self.logger
             )
         )
+
         #### add ALL the species and reactions ####
-        #nodes
+        # nodes
         for species in rpsbml_model.getListOfSpecies():
             is_central = False
             is_sink = False
             is_rp_pathway = False
             if species.getId() in rp_species_id:
                 is_rp_pathway = True
-            if species.getId() in rp_central_species_id:
-                is_central = True
+            # if species.getId() in rp_central_species_id:
+            #     is_central = True
             if species.getId() in rp_sink_species_id:
                 is_sink = True
-            #add it if GEM then all, or if rp_pathway
+            # add it if GEM then all, or if rp_pathway
             if is_rp_pathway or is_gem_sbml:
                 self.num_species += 1
                 self.G.add_node(
@@ -115,6 +117,7 @@ class rpGraph:
                     sink_species = is_sink,
                     rp_pathway = is_rp_pathway
                 )
+
         for reaction in rpsbml_model.getListOfReactions():
             is_rp_pathway = False
             if reaction.getId() in rp_reactions_id:
@@ -133,11 +136,14 @@ class rpGraph:
                     ),
                     rp_pathway = is_rp_pathway
                 )
-        #edges
+
+        # edges
         for reaction in rpsbml_model.getListOfReactions():
             self.logger.debug('Adding edges for the reaction: '+str(reaction.getId()))
             if reaction.getId() in rp_reactions_id or is_gem_sbml:
                 for reac in reaction.getListOfReactants():
+                    if reac.species == 'TARGET_0000000001':
+                        self.logger.info('\taAdding edge '+str(reac.species)+' --> '+str(reaction.getId()))
                     self.logger.debug('\taAdding edge '+str(reac.species)+' --> '+str(reaction.getId()))
                     self.G.add_edge(
                         reac.species,
@@ -166,9 +172,9 @@ class rpGraph:
         only_consumed_species = []
         for node_name in self.G.nodes():
             node = self.G.nodes.get(node_name)
-            if node['type']=='species':
-                #NOTE: if central species then must also be rp_pathway species
-                if (only_central and node['central_species']==True) or (only_rp_pathway and node['rp_pathway']==True) or (not only_central and not only_rp_pathway):
+            if node['type'] == 'species':
+                # NOTE: if central species then must also be rp_pathway species
+                if (only_central and node['central_species']) or (only_rp_pathway and node['rp_pathway']) or (not only_central and not only_rp_pathway):
                     if not len(list(self.G.successors(node_name)))==0 and len(list(self.G.predecessors(node_name)))==0:
                         only_consumed_species.append(node_name)
         return only_consumed_species

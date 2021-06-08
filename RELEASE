@@ -1,5 +1,16 @@
 # Release history
 
+## 5.0.0
+- chore(rpthermo):
+    - switch functions I/O from rpSBML to rpPathway
+    - remove intermediate components and compute thermo for the pathway net reaction
+- chore(rpfba):
+    - switch functions I/O from rpSBML to rpPathway
+
+## 4.7.0
+- chore(rpcompletion): re-write almost all code
+- feat(rpcompletion): ability to write out pathways as JSON files
+
 ## 4.6.0
 - use rxn_rebuild to add cofactors
 - test(rpreport): add tests

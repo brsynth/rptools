@@ -7,4 +7,4 @@ package-lock.json
 node_modules
 *.code-workspace
 .coverage*
-out
+out*
