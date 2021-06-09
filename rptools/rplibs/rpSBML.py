@@ -1601,70 +1601,66 @@ class rpSBML:
 
         self.isolated_species = rpgraph.onlyConsumedSpecies() + rpgraph.onlyProducedSpecies()
 
-        return self.get_isolated_species()
+        # return self.get_isolated_species()
 
-        print(consumed_species_nid)
-        print(produced_species_nid)
-        exit()
+        # for pro in produced_species_nid:
 
-        for pro in produced_species_nid:
+        #     step = {
+        #         'rule_id': None,
+        #         'left': {pro.split('__')[0]: 1},
+        #         'right': {},
+        #         'transformation_id': None,
+        #         'rule_score': None,
+        #         'tmpl_rxn_id': None
+        #     }
+        #     # note that here the pathways are passed as NOT being part of the heterologous pathways and
+        #     # thus will be ignored when/if we extract the rp_pathway from the full GEM model
+        #     self.createReaction(
+        #         pro+'__consumption',
+        #         upper_flux_bound,
+        #         lower_flux_bound,
+        #         step,
+        #         compartment_id
+        #     )
+        #     # print(pro)
+        #     # self.writeToFile(merged_rpsbml_path)
+        #     # (model, errors) = validate_sbml_model(merged_rpsbml_path)
+        #     # if model is None:
+        #     #     frameinfo = getframeinfo(currentframe())
+        #     #     print(frameinfo.filename, frameinfo.lineno)
+        #     #     self.logger.error('Something went wrong reading the SBML model')
+        #     #     self.logger.error(str(json_dumps(errors, indent=4)))
+        #     #     exit()
 
-            step = {
-                'rule_id': None,
-                'left': {pro.split('__')[0]: 1},
-                'right': {},
-                'transformation_id': None,
-                'rule_score': None,
-                'tmpl_rxn_id': None
-            }
-            # note that here the pathways are passed as NOT being part of the heterologous pathways and
-            # thus will be ignored when/if we extract the rp_pathway from the full GEM model
-            self.createReaction(
-                pro+'__consumption',
-                upper_flux_bound,
-                lower_flux_bound,
-                step,
-                compartment_id
-            )
-            # print(pro)
-            # self.writeToFile(merged_rpsbml_path)
-            # (model, errors) = validate_sbml_model(merged_rpsbml_path)
-            # if model is None:
-            #     frameinfo = getframeinfo(currentframe())
-            #     print(frameinfo.filename, frameinfo.lineno)
-            #     self.logger.error('Something went wrong reading the SBML model')
-            #     self.logger.error(str(json_dumps(errors, indent=4)))
-            #     exit()
+        # for react in consumed_species_nid:
 
-        for react in consumed_species_nid:
+        #     step = {
+        #         'rule_id': None,
+        #         'left': {},
+        #         'right': {react.split('__')[0]: 1},
+        #         'transformation_id': None,
+        #         'rule_score': None,
+        #         'tmpl_rxn_id': None}
+        #     #note that here the pathwats are passed as NOT being part of the heterologous pathways and
+        #     #thus will be ignored when/if we extract the rp_pathway from the full GEM model
+        #     self.createReaction(
+        #         react+'__production',
+        #         upper_flux_bound,
+        #         lower_flux_bound,
+        #         step,
+        #         compartment_id
+        #     )
 
-            step = {
-                'rule_id': None,
-                'left': {},
-                'right': {react.split('__')[0]: 1},
-                'transformation_id': None,
-                'rule_score': None,
-                'tmpl_rxn_id': None}
-            #note that here the pathwats are passed as NOT being part of the heterologous pathways and
-            #thus will be ignored when/if we extract the rp_pathway from the full GEM model
-            self.createReaction(
-                react+'__production',
-                upper_flux_bound,
-                lower_flux_bound,
-                step,
-                compartment_id
-            )
+        # # self.writeToFile(merged_rpsbml_path)
+        # # (model, errors) = validate_sbml_model(merged_rpsbml_path)
+        # # if model is None:
+        # #     frameinfo = getframeinfo(currentframe())
+        # #     print(frameinfo.filename, frameinfo.lineno)
+        # #     self.logger.error('Something went wrong reading the SBML model')
+        # #     self.logger.error(str(json_dumps(errors, indent=4)))
+        # #     return None
 
-        # self.writeToFile(merged_rpsbml_path)
-        # (model, errors) = validate_sbml_model(merged_rpsbml_path)
-        # if model is None:
-        #     frameinfo = getframeinfo(currentframe())
-        #     print(frameinfo.filename, frameinfo.lineno)
-        #     self.logger.error('Something went wrong reading the SBML model')
-        #     self.logger.error(str(json_dumps(errors, indent=4)))
-        #     return None
-
-        return True
+        # return True
 
 
     @staticmethod

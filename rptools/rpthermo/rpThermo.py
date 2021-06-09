@@ -31,6 +31,7 @@ from numpy import (
     where as np_where,
     add as np_add,
     arange as np_arange,
+    ndarray as np_ndarray
 )
 from scipy.optimize import linprog
 from colored import fg, bg, attr
@@ -374,24 +375,24 @@ def remove_unknown_compounds(
     return reactions
 
 
-# def get_target_rxn_idx(
-#     reactions: List[Dict],
-#     logger: Logger=getLogger(__name__)
-# ) -> int:
-#     for rxn_idx in range(len(reactions)):
-#         rxn = reactions[rxn_idx]
-#         rxn_species = list(rxn[SIDES[0]['name']].keys()) + list(rxn[SIDES[1]['name']].keys())
-#         for spe in rxn_species:
-#             if spe.startswith('TARGET'):
-#                 return rxn_idx
-#     return None
+def get_target_rxn_idx(
+    reactions: List[Dict],
+    logger: Logger=getLogger(__name__)
+) -> int:
+    for rxn_idx in range(len(reactions)):
+        rxn = reactions[rxn_idx]
+        rxn_species = list(rxn[SIDES[0]['name']].keys()) + list(rxn[SIDES[1]['name']].keys())
+        for spe in rxn_species:
+            if spe.startswith('TARGET'):
+                return rxn_idx
+    return None
 
 
 def minimize(
-    S: 'numpy.ndarray',
+    S: 'np_ndarray',
     rxn_target_idx: int,
     logger: Logger=getLogger(__name__)
-) -> 'numpy.ndarray':
+) -> 'np_ndarray':
 
     nb_compounds, nb_reactions = S.shape
 
@@ -434,7 +435,7 @@ def build_stoichio_matrix(
     reactions: List,
     compounds: List = [],
     logger: Logger = getLogger(__name__)
-) -> 'numpy.ndarray':
+) -> 'np_ndarray':
     '''Build the stoichiometric matrix of reactions.
        If compounds is not None, then fill the matrix only for these
     '''

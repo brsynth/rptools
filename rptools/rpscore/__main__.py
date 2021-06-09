@@ -2,10 +2,19 @@ from json import (
   load as json_load,
   dump as json_dump
 )
+from typing import (
+  Dict,
+  List
+)
+from logging import (
+  Logger,
+  getLogger
+)
 from rptools.rpscore import (
     compute_globalscore,
 )
 from rptools.rpscore.Args import add_arguments
+from rptools.rplibs import rpSBML
 from rptools import build_args_parser
 
 
@@ -64,9 +73,9 @@ def entry_point():
 
     if not args.silent:
         if args.log.lower() in ['critical', 'error', 'warning']:
-            print(score)
+            print(global_score)
         else:
-            logger.info('\nGlobal Score = ' + str(score))
+            logger.info('\nGlobal Score = ' + str(global_score))
 
 
 def write_results(
