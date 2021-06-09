@@ -7,6 +7,8 @@ import fnmatch
 import tempfile
 import filecmp
 
+__test__ = False
+
 data_path = os.path.join(
         os.path.dirname(__file__),
         'data'

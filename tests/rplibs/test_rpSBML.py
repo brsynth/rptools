@@ -19,6 +19,7 @@ from brs_utils         import extract_gz
 
 class Test_rpSBML(Main_rplibs):
 
+    __test__ = False
 
     # To avoid limit in dictionaries comparison
     maxDiff = None

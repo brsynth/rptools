@@ -9,10 +9,10 @@ from tempfile             import TemporaryDirectory
 from rr_cache import rrCache
 from rptools.rplibs       import rpSBML
 from rptools.rpcompletion import rp_completion
-from rptools.rpcompletion.rpCompletion import (
-    build_side_rxn,
-    # rp2paths_to_dict
-)
+# from rptools.rpcompletion.rpCompletion import (
+#     # build_side_rxn,
+#     # rp2paths_to_dict
+# )
 from os                   import path  as os_path
 from os                   import (
     stat as os_stat,
@@ -30,6 +30,7 @@ from brs_utils import (
 
 class Test_rpCompletion(TestCase):
 
+    __test__ = False
 
     def setUp(self):
         self.logger = create_logger(__name__, 'ERROR')

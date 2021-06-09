@@ -164,6 +164,13 @@ class rpPathway(Pathway):
     def get_rpSBML_infos(self) -> Dict[str, Dict]:
         return self.__get_infos('rpSBML')
 
+    def get_rpSBML_info(self, key: str) -> Dict[str, Dict]:
+        try:
+            return self.__get_infos('rpSBML')[key]
+        except KeyError:
+            self.__logger(f'There is no field {key} within rpSBML infos.')
+            return {}
+
 
     ## WRITE METHODS
     def add_reaction(

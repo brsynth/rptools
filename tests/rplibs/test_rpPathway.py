@@ -5,14 +5,13 @@ Created on May 28 2021
 """
 
 from unittest import TestCase
-from rptools.rplibs import (
+from copy import deepcopy
+from chemlite import (
     Pathway,
     Reaction,
     Compound
 )
-from copy import deepcopy
-from rptools.rplibs.CompoundCache import CompoundCache
-
+from rptools.rplibs import rpPathway
 
 species = {
     "TARGET_0000000001": Compound(
@@ -96,7 +95,7 @@ species = {
 }
 reactions = [
     Reaction(
-        name="rxn_4",
+        id="rxn_4",
         infos={
             'transfo_id': "TRS_0_0_0",
             'rule_id': "RR-02-a0cc0be463ff412f-16-F",
@@ -106,24 +105,24 @@ reactions = [
         ec_numbers=[
             "1.13.11.1"
         ],
-        fba=1.3648925522849815,
-        thermo={
-            "dG0_prime": {
-                "value": -324.1942486194258,
-                "error": 5.946918851751192,
-                "units": "kilojoule / mole"
-            },
-            "dGm_prime": {
-                "value": -307.0794110847048,
-                "error": 5.946918851751192,
-                "units": "kilojoule / mole"
-            },
-            "dG_prime": {
-                "value": -324.1942486194258,
-                "error": 5.946918851751192,
-                "units": "kilojoule / mole"
-            }
-        },
+        # fba=1.3648925522849815,
+        # thermo={
+        #     "dG0_prime": {
+        #         "value": -324.1942486194258,
+        #         "error": 5.946918851751192,
+        #         "units": "kilojoule / mole"
+        #     },
+        #     "dGm_prime": {
+        #         "value": -307.0794110847048,
+        #         "error": 5.946918851751192,
+        #         "units": "kilojoule / mole"
+        #     },
+        #     "dG_prime": {
+        #         "value": -324.1942486194258,
+        #         "error": 5.946918851751192,
+        #         "units": "kilojoule / mole"
+        #     }
+        # },
         # smiles="[H]Oc1c([H])c([H])c([H])c([H])c1O[H].O=O>>[H]OC(=O)C([H])=C([H])C([H])=C([H])C(=O)O[H].[H+].[H+]",
         reactants={
             "CMPD_0000000003": 1,
@@ -135,7 +134,7 @@ reactions = [
         }
     ),
     Reaction(
-        name="rxn_3",
+        id="rxn_3",
         infos={
             'transfo_id': "TRS_0_1_19",
             'rule_id': "RR-02-9bcd062586f04b0c-16-F",
@@ -145,24 +144,24 @@ reactions = [
         ec_numbers=[
             "4.1.1.63"
         ],
-        fba=1.3648925522849815,
-        thermo={
-            "dG0_prime": {
-                "value": -7.741996690048865,
-                "error": 3.31976861655151,
-                "units": "kilojoule / mole"
-            },
-            "dGm_prime": {
-                "value": -24.856834224769898,
-                "error": 3.31976861655151,
-                "units": "kilojoule / mole"
-            },
-            "dG_prime": {
-                "value": -7.741996690048865,
-                "error": 3.31976861655151,
-                "units": "kilojoule / mole"
-            }
-        },
+        # fba=1.3648925522849815,
+        # thermo={
+        #     "dG0_prime": {
+        #         "value": -7.741996690048865,
+        #         "error": 3.31976861655151,
+        #         "units": "kilojoule / mole"
+        #     },
+        #     "dGm_prime": {
+        #         "value": -24.856834224769898,
+        #         "error": 3.31976861655151,
+        #         "units": "kilojoule / mole"
+        #     },
+        #     "dG_prime": {
+        #         "value": -7.741996690048865,
+        #         "error": 3.31976861655151,
+        #         "units": "kilojoule / mole"
+        #     }
+        # },
         # smiles="[H]OC(=O)c1c([H])c([H])c(O[H])c(O[H])c1[H].[H+]>>[H]Oc1c([H])c([H])c([H])c([H])c1O[H].O=C=O",
         reactants={
             "CMPD_0000000010": 1,
@@ -174,7 +173,7 @@ reactions = [
         }
     ),
     Reaction(
-        name="rxn_2",
+        id="rxn_2",
         infos={
             'transfo_id': "TRS_0_2_5",
             'rule_id': "RR-02-4b759d9ffae4e8ab-16-F",
@@ -184,24 +183,24 @@ reactions = [
         ec_numbers=[
             "1.14.13.23"
         ],
-        fba=1.3648925522849815,
-        thermo={
-            "dG0_prime": {
-                "value": -439.72331555029746,
-                "error": 3.7590254041440385,
-                "units": "kilojoule / mole"
-            },
-            "dGm_prime": {
-                "value": -422.60847801557645,
-                "error": 3.7590254041440385,
-                "units": "kilojoule / mole"
-            },
-            "dG_prime": {
-                "value": -439.72331555029746,
-                "error": 3.7590254041440385,
-                "units": "kilojoule / mole"
-            }
-        },
+        # fba=1.3648925522849815,
+        # thermo={
+        #     "dG0_prime": {
+        #         "value": -439.72331555029746,
+        #         "error": 3.7590254041440385,
+        #         "units": "kilojoule / mole"
+        #     },
+        #     "dGm_prime": {
+        #         "value": -422.60847801557645,
+        #         "error": 3.7590254041440385,
+        #         "units": "kilojoule / mole"
+        #     },
+        #     "dG_prime": {
+        #         "value": -439.72331555029746,
+        #         "error": 3.7590254041440385,
+        #         "units": "kilojoule / mole"
+        #     }
+        # },
         # smiles="[H]OC(=O)c1c([H])c([H])c([H])c(O[H])c1[H].O=O.[H]N=C(O[H])C1=C([H])N(C2([H])OC([H])(C([H])([H])OP(=O)(O[H])OP(=O)(O[H])OC([H])([H])C3([H])OC([H])(n4c([H])nc5c(N([H])[H])nc([H])nc54)C([H])(OP(=O)(O[H])O[H])C3([H])O[H])C([H])(O[H])C2([H])O[H])C([H])=C([H])C1([H])[H].[H+]>>[H]OC(=O)c1c([H])c([H])c(O[H])c(O[H])c1[H].O.N=C(O)c1ccc[n+](C2OC(COP(=O)(O)OP(=O)(O)OCC3OC(n4cnc5c(N)ncnc54)C(OP(=O)(O)O)C3O)C(O)C2O)c1",
         reactants={
             "CMPD_0000000025": 1,
@@ -216,7 +215,7 @@ reactions = [
         }
     ),
     Reaction(
-        name="rxn_1",
+        id="rxn_1",
         infos={
             'transfo_id': "TRS_0_3_65",
             'rule_id': "RR-02-b64ad57dc9b584cb-16-F",
@@ -226,24 +225,24 @@ reactions = [
         ec_numbers=[
             "4.1.3.45"
         ],
-        fba=1.3648925522849815,
-        thermo={
-            "dG0_prime": {
-                "value": -112.97007627560498,
-                "error": 7.376345269431926,
-                "units": "kilojoule / mole"
-            },
-            "dGm_prime": {
-                "value": -130.08491381032601,
-                "error": 7.376345269431926,
-                "units": "kilojoule / mole"
-            },
-            "dG_prime": {
-                "value": -112.97007627560498,
-                "error": 7.376345269431926,
-                "units": "kilojoule / mole"
-            }
-        },
+        # fba=1.3648925522849815,
+        # thermo={
+        #     "dG0_prime": {
+        #         "value": -112.97007627560498,
+        #         "error": 7.376345269431926,
+        #         "units": "kilojoule / mole"
+        #     },
+        #     "dGm_prime": {
+        #         "value": -130.08491381032601,
+        #         "error": 7.376345269431926,
+        #         "units": "kilojoule / mole"
+        #     },
+        #     "dG_prime": {
+        #         "value": -112.97007627560498,
+        #         "error": 7.376345269431926,
+        #         "units": "kilojoule / mole"
+        #     }
+        # },
         # smiles="[H]OC(=O)C(OC1([H])C([H])=C(C(=O)O[H])C([H])=C([H])C1([H])O[H])=C([H])[H]>>[H]OC(=O)c1c([H])c([H])c([H])c(O[H])c1[H].CC(=O)C(=O)O",
         reactants={
             "MNXM337": 1
@@ -255,229 +254,9 @@ reactions = [
     )
 ]
 
+class Test_rpPathway(TestCase):
 
-class Test_CompoundCache(TestCase):
-
-    cc = CompoundCache(
-        compounds_l=[
-            species['CMPD_0000000010']
-        ],
-        compounds_d={
-            'TARGET_0000000001': species['TARGET_0000000001']
-        }
-    )
-
-    def test_get_compounds(self):
-        self.assertDictEqual(
-            self.cc.get_compounds(),
-            {
-                'CMPD_0000000010': species['CMPD_0000000010'],
-                'TARGET_0000000001': species['TARGET_0000000001']
-            }
-        )
-
-    def test_eq_wrong_type(self):
-        self.assertNotEqual(
-            species['CMPD_0000000010'],
-            0
-        )
-
-    def test_del_compound(self):
-        spe_id = 'TARGET_0000000001'
-        CompoundCache.add_compound(species[spe_id])
-        # Remove added compounds from the cache
-        CompoundCache.del_compound(CompoundCache.get_compound(spe_id))
-        self.assertEqual(
-            CompoundCache.get_compound(spe_id),
-            None
-        )
-
-    def test_del_compound_by_id(self):
-        spe_id = 'TARGET_0000000001'
-        CompoundCache.add_compound(species[spe_id])
-        # Remove added compounds from the cache
-        CompoundCache.del_compound_by_id('WRONG_ID')
-        self.assertEqual(
-            CompoundCache.get_compound(spe_id),
-            species[spe_id]
-        )
-
-    def test_del_compound_none_id(self):
-        spe_id = 'TARGET_0000000001'
-        CompoundCache.add_compound(species[spe_id])
-        # Remove added compounds from the cache
-        CompoundCache.del_compound(Compound(id='WRONG_ID'))
-        self.assertEqual(
-            CompoundCache.get_compound(spe_id),
-            species[spe_id]
-        )
-
-    def test_del_compound_wrong_id(self):
-        spe_id = 'TARGET_0000000001'
-        CompoundCache.add_compound(species[spe_id])
-        # Remove added compounds from the cache
-        CompoundCache.del_compound(CompoundCache.get_compound('WRONG_ID'))
-        self.assertEqual(
-            CompoundCache.get_compound(spe_id),
-            species[spe_id]
-        )
-
-
-class Test_Compound(TestCase):
-
-    def test_str(self):
-        self.assertEqual(
-            species['TARGET_0000000001'].__str__(),
-            'Compound(TARGET_0000000001)'
-        )
-
-    def test_eq_wrong_type(self):
-        self.assertNotEqual(
-            species['TARGET_0000000001'],
-            0
-        )
-
-
-class Test_Reaction(TestCase):
-
-    def test_str(self):
-        name = 'Test'
-        rxn = Reaction(name)
-        self.assertEqual(
-            rxn.__str__(),
-            f'Reaction {name}'
-        )
-
-    def test_eq_wrong_type(self):
-        self.assertNotEqual(
-            reactions[0],
-            0
-        )
-
-    def test_get_reactant_ids(self):
-        self.assertListEqual(
-            reactions[0].get_reactant_ids(),
-            ['CMPD_0000000003', 'MNXM4']
-        )
-
-    def test_get_product_ids(self):
-        self.assertListEqual(
-            reactions[0].get_product_ids(),
-            ['TARGET_0000000001', 'MNXM1']
-        )
-
-    def test_get_list_of_reactants(self):
-        for compound_id in reactions[0].get_reactant_ids():
-            CompoundCache.add_compound(species[compound_id])
-        self.assertListEqual(
-            reactions[0].get_list_of_reactants(),
-            [CompoundCache.get_compound(spe_id) for spe_id in reactions[0].get_reactant_ids()]
-        )
-        # Remove added compounds from the cache
-        for compound_id in reactions[0].get_reactant_ids():
-            CompoundCache.del_compound_by_id(compound_id)
-
-    def test_get_list_of_reactants_wo_cache(self):
-        self.assertListEqual(
-            reactions[0].get_list_of_reactants(),
-            [None, None]
-        )
-
-    def test_get_list_of_products(self):
-        for compound_id in reactions[0].get_product_ids():
-            CompoundCache.add_compound(species[compound_id])
-        self.assertListEqual(
-            reactions[0].get_list_of_products(),
-            [CompoundCache.get_compound(spe_id) for spe_id in reactions[0].get_product_ids()]
-        )
-        # Remove added compounds from the cache
-        for compound_id in reactions[0].get_product_ids():
-            CompoundCache.del_compound_by_id(compound_id)
-
-    def test_get_list_of_products_wo_cache(self):
-        self.assertListEqual(
-            reactions[0].get_list_of_products(),
-            [None, None]
-        )
-    
-    def test_get_left(self):
-        self.assertDictEqual(
-            reactions[0].get_left(),
-            {
-                'CMPD_0000000003': 1,
-                'MNXM4': 1
-            }
-        )
-
-    def test_get_right(self):
-        self.assertDictEqual(
-            reactions[0].get_right(),
-            {
-                'TARGET_0000000001': 1,
-                'MNXM1': 2
-            }
-        )
-
-    def test_add_info(self):
-        rxn = Reaction('rxn_test')
-        rxn.add_info(
-            key='test_key',
-            value='test_value'
-        )
-        self.assertDictEqual(
-            rxn.get_infos(),
-            {'test_key': 'test_value'}
-        )
-
-    def test_add_ec_number(self):
-        ec_numbers = ['1.1']
-        rxn = Reaction(
-            name='rxn_test',
-            ec_numbers=ec_numbers
-        )
-        ec_number = '1.2'
-        rxn.add_ec_number(ec_number)
-        self.assertListEqual(
-            rxn.get_ec_numbers(),
-            ec_numbers + [ec_number]
-        )
-    
-    def test_add_reactant(self):
-        spe_id = 'CMPD_0000000010'
-        _species = deepcopy(reactions[0].get_reactants())
-        spe_sto = 3
-        for spe_sto in [3, -3]:
-            with self.subTest(spe_sto=spe_sto):
-                rxn = deepcopy(reactions[0])
-                rxn.add_reactant(
-                    compound_id=spe_id,
-                    compound=species[spe_id],
-                    stoichio=spe_sto
-                )
-                self.assertDictEqual(
-                    rxn.get_reactants(),
-                    {**_species, **{spe_id: abs(spe_sto)}}
-                )
-
-    def test_add_product(self):
-        spe_id = 'CMPD_0000000010'
-        _species = deepcopy(reactions[0].get_products())
-        spe_sto = 3
-        for spe_sto in [3, -3]:
-            with self.subTest(spe_sto=spe_sto):
-                rxn = deepcopy(reactions[0])
-                rxn.add_product(
-                    compound_id=spe_id,
-                    compound=species[spe_id],
-                    stoichio=spe_sto
-                )
-                self.assertDictEqual(
-                    rxn.get_products(),
-                    {**_species, **{spe_id: abs(spe_sto)}}
-                )
-
-
-class Test_Pathway(TestCase):
+    __test__ = False
 
     id = 'test_pathway'
     species = {
@@ -645,11 +424,10 @@ class Test_Pathway(TestCase):
     }
 
     def setUp(self):
-        self.test_pathway = Pathway(
+        self.test_pathway = rpPathway(
             id=self.id,
             species=species.values(),
             reactions=reactions,
-            # pathway=self.pathway,
             sink=self.sink,
             fba=self.fba,
             thermo=self.thermo,
@@ -659,101 +437,23 @@ class Test_Pathway(TestCase):
         )
 
     ## READ METHODS
-    def test_get_id(self):
+    def test_get_reaction_rule_score(self):
         self.assertEqual(
-            self.test_pathway.get_id(),
-            self.id
+            self.test_pathway.get_reaction_rule_score('rxn_4'),
+            reactions['rxn_4']['scores']['rule']
         )
 
-    def test_get_nb_reactions(self):
-        self.assertEqual(
-            self.test_pathway.get_nb_reactions(),
-            len(reactions)
+    def test_get_reaction_fba_score(self):
+        self.assertDictEqual(
+            self.test_pathway.get_reaction_fba_score('rxn_4'),
+            reactions['rxn_4']['scores']['fba']
         )
 
-    def test_get_nb_species(self):
-        self.assertEqual(
-            self.test_pathway.get_nb_species(),
-            len(species)
+    def test_get_reaction_thermo_scores(self):
+        self.assertDictEqual(
+            self.test_pathway.get_reaction_thermo_scores('rxn_4'),
+            reactions['rxn_4']['scores']['thermo']
         )
-
-    def test_get_species(self):
-        self.assertListEqual(
-            self.test_pathway.get_species(),
-            list(species.values())
-        )
-
-    def test_get_species_ids(self):
-        self.assertListEqual(
-            self.test_pathway.get_species_ids(),
-            list(species.keys())
-        )
-
-    def test_get_species_from_id(self):
-        self.assertEqual(
-            self.test_pathway.get_species_from_id('MNXM23'),
-            species['MNXM23']
-        )
-
-    def test_get_species_from_id_wrong_key(self):
-        self.assertEqual(
-            self.test_pathway.get_species_from_id('WRONG_KEY'),
-            None
-        )
-
-    def test_get_compounds_ids(self):
-        self.assertListEqual(
-            self.test_pathway.get_compounds_ids(),
-            list(species.keys())
-        )
-
-    def test_get_compound(self):
-        self.assertEqual(
-            self.test_pathway.get_compound('MNXM23'),
-            species['MNXM23']
-        )
-
-    def test_get_reactions(self):
-        self.assertListEqual(
-            self.test_pathway.get_reactions(),
-            reactions
-        )
-
-    # def test_get_reaction(self):
-    #     self.assertEqual(
-    #         self.test_pathway.get_reaction('rxn_4'),
-    #         reactions['rxn_4']
-    #     )
-
-    # def test_get_reaction_scores(self):
-    #     self.assertDictEqual(
-    #         self.test_pathway.get_reaction_scores('rxn_4'),
-    #         reactions['rxn_4']['scores']
-    #     )
-
-    # def test_get_reaction_rule_score(self):
-    #     self.assertEqual(
-    #         self.test_pathway.get_reaction_rule_score('rxn_4'),
-    #         reactions['rxn_4']['scores']['rule']
-    #     )
-
-    # def test_get_reaction_fba_score(self):
-    #     self.assertDictEqual(
-    #         self.test_pathway.get_reaction_fba_score('rxn_4'),
-    #         reactions['rxn_4']['scores']['fba']
-    #     )
-
-    # def test_get_reaction_thermo_scores(self):
-    #     self.assertDictEqual(
-    #         self.test_pathway.get_reaction_thermo_scores('rxn_4'),
-    #         reactions['rxn_4']['scores']['thermo']
-    #     )
-
-    # def test_get_pathway(self):
-    #     self.assertListEqual(
-    #         self.test_pathway.get_pathway(),
-    #         self.pathway
-    #     )
 
     def test_get_sink(self):
         self.assertListEqual(

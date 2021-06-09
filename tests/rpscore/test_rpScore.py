@@ -21,6 +21,7 @@ from brs_utils import (
 
 class Test_rpScore(TestCase):
 
+    __test__ = False
 
     data_path = os_path.join(
         os_path.dirname(__file__),

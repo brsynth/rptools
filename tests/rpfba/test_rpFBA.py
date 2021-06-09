@@ -19,6 +19,7 @@ from rptools.rplibs import rpSBML
 
 class Test_rpFBA(TestCase):
 
+    __test__ = False
 
     data_path = os_path.join(
         os_path.dirname(__file__),
