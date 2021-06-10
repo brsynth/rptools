@@ -108,7 +108,7 @@ def print_results(
 ) -> None:
     logger.info(
         "{color}{typo}Results {net_rxn}{rst}".format(
-            net_rxn=rpPathway.net_reaction(pathway.get_reactions()),
+            net_rxn=pathway.net_reaction(),
             color=fg('white'),
             typo=attr('bold'),
             rst=attr('reset')

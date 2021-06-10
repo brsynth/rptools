@@ -78,27 +78,21 @@ class rpPathway(Pathway):
     # def __repr__(self):
     #     return dumps(self.to_dict(), indent=4)
 
-    def to_string(self):
-        return '----------------\n' \
-             + f'Pathway {self.get_id()}\n' \
-             + '----------------\n' \
-             + '\n'.join([rxn.__str__() for rxn in self.get_reactions()])
-
-    def to_dict(self) -> Dict:
+    def _to_dict(self) -> Dict:
         return {
-            **super().to_dict(),
+            **super()._to_dict(),
             **{
                 'sink': deepcopy(self.get_sink()),
                 'target': {
                     'compd_id': deepcopy(self.get_target_id()),
-                    'rxn_id': deepcopy(self.get_rxn_target_id())
+                    'rxn_id': deepcopy(self.get_target_rxn_id())
                 }
             }
         }
 
     def __eq__(self, other) -> bool:
         if isinstance(self, other.__class__):
-            return self.to_dict() == other.to_dict()
+            return self._to_dict() == other._to_dict()
         return False
 
     ## READ METHODS
@@ -118,7 +112,9 @@ class rpPathway(Pathway):
         return self.__sink
 
     def get_reactions_ids(self) -> List[str]:
-        '''Returns the list of reaction IDs sorted by index within the pathway'''
+        '''Returns the list of reaction IDs sorted by index within the pathway
+        (forward direction).
+        '''
         return [
             rxn_id for rxn_id in sorted(
                 super().get_reactions_ids(),

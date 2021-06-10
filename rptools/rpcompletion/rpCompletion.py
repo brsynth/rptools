@@ -523,7 +523,7 @@ def build_all_pathways(
                     target_id = target_id[0]
                 else:
                     target_id = None
-                logger.debug(rxn.to_dict())
+                logger.debug(rxn._to_dict())
                 pathway.add_reaction(
                     rxn=rxn,
                     target_id=target_id

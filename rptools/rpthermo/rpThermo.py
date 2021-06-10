@@ -182,7 +182,7 @@ def thermo(
         waiting=True
     )
     results['net_reaction'] = eQuilibrator(
-        reaction=rpPathway.net_reaction(reactions),
+        reaction=pathway.net_reaction(),
         species=species,
         cc=cc,
         logger=logger
