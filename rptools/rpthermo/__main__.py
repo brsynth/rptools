@@ -44,7 +44,6 @@ def _cli():
         logger=logger
     ).to_Pathway()
 
-
     # RUN THERMO
     results = thermo(
         pathway,
@@ -150,36 +149,6 @@ def print_thermo_results(
                 units=results[key]['units']
             )
         )
-    # logger.info(
-    #     "   {color}{typo}|- ΔG'° = {value} {rst}+/- {error} {units}".format(
-    #         color=fg('white'),
-    #         typo=attr('bold'),
-    #         rst=attr('reset'),
-    #         value=results['dG0_prime']['value'],
-    #         error=results['dG0_prime']['error'],
-    #         units=results['dG0_prime']['units']
-    #     )
-    # )
-    # logger.info(
-    #     "   {color}{typo}|- ΔG'm = {value} {rst}+/- {error} {units}".format(
-    #         color=fg('white'),
-    #         typo=attr('bold'),
-    #         rst=attr('reset'),
-    #         value=results['dGm_prime']['value'],
-    #         error=results['dGm_prime']['error'],
-    #         units=results['dGm_prime']['units']
-    #     )
-    # )
-    # logger.info(
-    #     "   {color}{typo}|- ΔG' = {value} {rst}+/- {error} {units}".format(
-    #         color=fg('white'),
-    #         typo=attr('bold'),
-    #         rst=attr('reset'),
-    #         value=results['dG_prime']['value'],
-    #         error=results['dG_prime']['error'],
-    #         units=results['dG_prime']['units']
-    #     )
-    # )
 
 
 if __name__ == '__main__':

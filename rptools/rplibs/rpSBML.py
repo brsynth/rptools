@@ -3487,7 +3487,8 @@ class rpSBML:
                 'tmpl_rxn_id',
                 'inchi',
                 'smiles',
-                'inchikey'
+                'inchikey',
+                'rp2_transfo_id'
             ]:
                 rpSBML._readBRSYNTHAnnotationToValue(
                     annot = ann,

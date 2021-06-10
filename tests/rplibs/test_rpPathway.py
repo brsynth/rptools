@@ -97,7 +97,7 @@ reactions = [
     Reaction(
         id="rxn_4",
         infos={
-            'transfo_id': "TRS_0_0_0",
+            'rp2_transfo_id': "TRS_0_0_0",
             'rule_id': "RR-02-a0cc0be463ff412f-16-F",
             'rule_score': 0.5982208769718989,
             'tmpl_rxn_id': "MNXR96458",
@@ -136,7 +136,7 @@ reactions = [
     Reaction(
         id="rxn_3",
         infos={
-            'transfo_id': "TRS_0_1_19",
+            'rp2_transfo_id': "TRS_0_1_19",
             'rule_id': "RR-02-9bcd062586f04b0c-16-F",
             'rule_score': 0.7023718970192103,
             'tmpl_rxn_id': "MNXR106706",
@@ -175,7 +175,7 @@ reactions = [
     Reaction(
         id="rxn_2",
         infos={
-            'transfo_id': "TRS_0_2_5",
+            'rp2_transfo_id': "TRS_0_2_5",
             'rule_id': "RR-02-4b759d9ffae4e8ab-16-F",
             'rule_score': 1.0,
             'tmpl_rxn_id': "MNXR107096",
@@ -217,7 +217,7 @@ reactions = [
     Reaction(
         id="rxn_1",
         infos={
-            'transfo_id': "TRS_0_3_65",
+            'rp2_transfo_id': "TRS_0_3_65",
             'rule_id': "RR-02-b64ad57dc9b584cb-16-F",
             'rule_score': 1.0,
             'tmpl_rxn_id': "MNXR113924",
