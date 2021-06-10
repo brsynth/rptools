@@ -6,6 +6,8 @@
     - remove intermediate components and compute thermo for the pathway net reaction
 - chore(rpfba):
     - switch functions I/O from rpSBML to rpPathway
+- chore(rpPathway):
+    - add access functions
 
 ## 4.7.0
 - chore(rpcompletion): re-write almost all code
