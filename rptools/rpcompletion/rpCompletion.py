@@ -558,12 +558,11 @@ def build_compound(
         compound = Cache.get(spe_id)
         # Add infos from global cache
         for key in ['name', 'formula']:
-            if spe_id in compounds_cache:
-                setattr(
-                    compound,
-                    'set_'+key,
-                    compounds_cache[spe_id][key]
-                )
+            try:
+                if getattr(compound, 'get_'+key)() != compounds_cache[spe_id][key]:
+                    getattr(compound, 'set_'+key)(compounds_cache[spe_id][key])
+            except KeyError:
+                pass
     # Else get it from the cache
     else:
         compound = Compound(
