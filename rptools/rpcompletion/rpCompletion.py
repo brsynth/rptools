@@ -481,8 +481,8 @@ def build_all_pathways(
                 rxn = Reaction(
                     id='rxn_'+str(rxn_idx_forward),
                     ec_numbers=transfo['ec'],
-                    # reactants=dict(compounds['left']),
-                    # products=dict(compounds['right'])
+                    reactants=dict(compounds['left']),
+                    products=dict(compounds['right'])
                 )
                 rxn.set_infos(
                     {
@@ -497,24 +497,22 @@ def build_all_pathways(
                 for spe_id, spe_sto in compounds['left'].items():
                     compound = build_compound(
                         spe_id,
-                        spe_sto,
                         compounds_cache
                     )
-                    rxn.add_reactant(
-                        compound=compound,
-                        stoichio=spe_sto
-                    )
+                    # rxn.add_reactant(
+                    #     compound=compound,
+                    #     stoichio=spe_sto
+                    # )
                 # Products
                 for spe_id, spe_sto in compounds['right'].items():
                     compound = build_compound(
                         spe_id,
-                        spe_sto,
                         compounds_cache
                     )
-                    rxn.add_product(
-                        compound=compound,
-                        stoichio=spe_sto
-                    )
+                    # rxn.add_product(
+                    #     compound=compound,
+                    #     stoichio=spe_sto
+                    # )
                 # Add at the beginning of the pathway
                 # to have the pathway in forward direction
                 # Search for the target in the current reaction
@@ -552,7 +550,6 @@ def build_all_pathways(
 
 def build_compound(
     spe_id: str,
-    spe_sto: int,
     compounds_cache: Dict,
     logger=getLogger(__name__)
 ) -> Compound:
@@ -578,7 +575,6 @@ def build_compound(
             name=compounds_cache[spe_id]['name']
         )
     return compound
-
 
 def add_compounds(
     compounds: Dict,
