@@ -4036,12 +4036,18 @@ class rpSBML:
         if 'species' in keys:
             compounds = {}
             for spe_id, spe in self.read_species(pathway_id).items():
+                infos = {}
+                for key in ['smiles', 'inchi', 'inchikey']:
+                    try:
+                        infos[key] = spe['brsynth'][key]
+                    except KeyError:
+                        infos[key] = ''
                 # Create compound to add it in the cache
                 compound = Compound(
                     id=spe_id,
-                    smiles=spe['brsynth']['smiles'],
-                    inchi=spe['brsynth']['inchi'],
-                    inchikey=spe['brsynth']['inchikey']
+                    smiles=infos['smiles'],
+                    inchi=infos['inchi'],
+                    inchikey=infos['inchikey']
                 )
                 # Detect fba and thermo infos
                 for measure in [key for key in spe['brsynth'] if
