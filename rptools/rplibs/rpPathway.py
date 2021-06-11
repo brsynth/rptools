@@ -176,53 +176,53 @@ class rpPathway(Pathway):
             self.get_logger().warning(f'There is no {key} key in data')
             return None
 
-    def get_thermo_dG0_prime(self) -> Dict:
+    def _get_thermo_dG0_prime(self) -> Dict:
         return self.__get_thermo_info('thermo_dG0_prime')
 
     def get_thermo_dG0_prime_value(self) -> float:
-        return self.__get_dict_key(self.get_thermo_dG0_prime(), 'value')
+        return self.__get_dict_key(self._get_thermo_dG0_prime(), 'value')
 
     def get_thermo_dG0_prime_error(self) -> float:
-        return self.__get_dict_key(self.get_thermo_dG0_prime(), 'error')
+        return self.__get_dict_key(self._get_thermo_dG0_prime(), 'error')
 
     def get_thermo_dG0_prime_units(self) -> str:
-        return self.__get_dict_key(self.get_thermo_dG0_prime(), 'units')
+        return self.__get_dict_key(self._get_thermo_dG0_prime(), 'units')
 
-    def get_thermo_dGm_prime(self) -> Dict:
+    def _get_thermo_dGm_prime(self) -> Dict:
         return self.__get_thermo_info('thermo_dGm_prime')
 
     def get_thermo_dGm_prime_value(self) -> float:
-        return self.__get_dict_key(self.get_thermo_dGm_prime(), 'value')
+        return self.__get_dict_key(self._get_thermo_dGm_prime(), 'value')
 
     def get_thermo_dGm_prime_error(self) -> float:
-        return self.__get_dict_key(self.get_thermo_dGm_prime(), 'error')
+        return self.__get_dict_key(self._get_thermo_dGm_prime(), 'error')
 
     def get_thermo_dGm_prime_units(self) -> str:
-        return self.__get_dict_key(self.get_thermo_dGm_prime(), 'units')
+        return self.__get_dict_key(self._get_thermo_dGm_prime(), 'units')
 
-    def get_thermo_dG_prime(self) -> Dict:
+    def _get_thermo_dG_prime(self) -> Dict:
         return self.__get_thermo_info('thermo_dG_prime')
 
     def get_thermo_dG_prime_value(self) -> float:
-        return self.__get_dict_key(self.get_thermo_dG_prime(), 'value')
+        return self.__get_dict_key(self._get_thermo_dG_prime(), 'value')
 
     def get_thermo_dG_prime_error(self) -> float:
-        return self.__get_dict_key(self.get_thermo_dG_prime(), 'error')
+        return self.__get_dict_key(self._get_thermo_dG_prime(), 'error')
 
     def get_thermo_dG_prime_units(self) -> str:
-        return self.__get_dict_key(self.get_thermo_dG_prime(), 'units')
+        return self.__get_dict_key(self._get_thermo_dG_prime(), 'units')
 
-    def get_thermo_dG(self) -> Dict:
-        return self.__get_dict_key(self.get_thermo_dG(), 'value')
+    def _get_thermo_dG(self) -> Dict:
+        return self.__get_dict_key(self._get_thermo_dG(), 'value')
 
     def get_thermo_dG_value(self) -> float:
-        return self.__get_dict_key(self.get_thermo_dG(), 'error')
+        return self.__get_dict_key(self._get_thermo_dG(), 'error')
 
     def get_thermo_dG_error(self) -> float:
-        return self.__get_dict_key(self.get_thermo_dG(), 'units')
+        return self.__get_dict_key(self._get_thermo_dG(), 'units')
 
     def get_thermo_dG_units(self) -> str:
-        return self.get_thermo_dG()['units']
+        return self._get_thermo_dG()['units']
 
     ## THERMO - COMPOUND
     def __get_thermo_species(self) -> Dict[str, Dict]:

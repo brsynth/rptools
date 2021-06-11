@@ -73,6 +73,10 @@ def _cli():
         # logger=logger
     )
 
+    # print(cache.get('cid_name')['MNXM725856'])
+    # exit()
+
+
     pathways = rp_completion(
         rp2_metnet=args.rp2_metnet,
         rp2paths_compounds=args.rp2paths_compounds,

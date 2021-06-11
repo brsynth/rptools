@@ -88,7 +88,7 @@ def rp_completion(
         )
 
     ## READ
-    read_compounds(
+    rp2paths_compounds_in_cache(
         rp2paths_compounds,
         cache,
         logger=logger
@@ -195,7 +195,7 @@ def build_smiles(
 #
 #  @param path The compounds.txt file path
 #  @return rp_compounds Dictionnary of smile and structure for each compound
-def read_compounds(path, cache, logger=getLogger(__name__)):
+def rp2paths_compounds_in_cache(path, cache, logger=getLogger(__name__)):
 
     try:
         if isinstance(path, bytes):
@@ -204,33 +204,44 @@ def read_compounds(path, cache, logger=getLogger(__name__)):
             reader = csv_reader(open(path, 'r', encoding='utf-8'), delimiter='\t')
         next(reader)
         for row in reader:
+            spe_id = row[0]
             smiles = row[1]  #, 'structure':row[1].replace('[','').replace(']','')
             try:
-                inchi = cache.get('cid_strc')[row[0]]['inchi']
+                inchi = cache.get('cid_strc')[spe_id]['inchi']
             except KeyError:
                 # try to generate them yourself by converting them directly
                 try:
-                    resConv = cache._convert_depiction(idepic=row[1], itype='smiles', otype={'inchi'})
+                    resConv = cache._convert_depiction(idepic=smiles, itype='smiles', otype={'inchi'})
                     inchi = resConv['inchi']
                 except NotImplementedError as e:
-                    logger.warning('Could not convert the following SMILES to InChI: '+str(row[1]))
+                    logger.warning('Could not convert the following SMILES to InChI: '+str(smiles))
             try:
-                inchikey = cache.get('cid_strc')[row[0]]['inchikey']
+                inchikey = cache.get('cid_strc')[spe_id]['inchikey']
                 # try to generate them yourself by converting them directly
                 # TODO: consider using the inchi writing instead of the SMILES notation to find the inchikey
             except KeyError:
                 try:
-                    resConv = cache._convert_depiction(idepic=row[1], itype='smiles', otype={'inchikey'})
+                    resConv = cache._convert_depiction(idepic=smiles, itype='smiles', otype={'inchikey'})
                     inchikey = resConv['inchikey']
                 except NotImplementedError as e:
-                    logger.warning('Could not convert the following SMILES to InChI key: '+str(row[1]))
+                    logger.warning('Could not convert the following SMILES to InChI key: '+str(smiles))
+            try:
+                name = cache.get('cid_strc')[spe_id]['name']
+            except KeyError:
+                name = ''
+            try:
+                formula = cache.get('cid_strc')[spe_id]['formula']
+            except KeyError:
+                formula = ''
             compound = Compound(
-                id=row[0],
+                id=spe_id,
                 smiles=smiles,
                 inchi=inchi,
-                inchikey=inchikey
+                inchikey=inchikey,
+                name=name,
+                formula=formula
             )
-            Cache.add(compound)
+            # Cache.add(compound)
 
     except (TypeError, FileNotFoundError) as e:
         logger.error('Could not read the compounds file ('+str(path)+')')
@@ -470,10 +481,20 @@ def build_all_pathways(
                     'left': deepcopy(transfo['left'])
                 }
                 # Add template reaction compounds
-                compounds = add_compounds(
-                    compounds,
-                    transfo['complement'][rule_id][tmpl_rxn_id]['added_cmpds']
-                )
+                added_cmpds = transfo['complement'][rule_id][tmpl_rxn_id]['added_cmpds']
+                compounds = add_compounds(compounds, added_cmpds)
+                # Add missing compounds to the cache
+                for side in added_cmpds.keys():
+                    for spe_id in added_cmpds[side].keys():
+                        if spe_id not in Cache.get_objects():
+                            Compound(
+                                id=spe_id,
+                                smiles=compounds_cache[spe_id]['smiles'],
+                                inchi=compounds_cache[spe_id]['inchi'],
+                                inchikey=compounds_cache[spe_id]['inchikey'],
+                                formula=compounds_cache[spe_id]['formula'],
+                                name=compounds_cache[spe_id]['name']
+                            )
 
                 ## REACTION
                 # revert reaction index (forward)
@@ -494,21 +515,21 @@ def build_all_pathways(
                     }
                 )
                 # Reactants
-                for spe_id, spe_sto in compounds['left'].items():
-                    compound = build_compound(
-                        spe_id,
-                        compounds_cache
-                    )
+                # for spe_id, spe_sto in compounds['left'].items():
+                #     compound = build_compound(
+                #         spe_id,
+                #         compounds_cache
+                #     )
                     # rxn.add_reactant(
                     #     compound=compound,
                     #     stoichio=spe_sto
                     # )
                 # Products
-                for spe_id, spe_sto in compounds['right'].items():
-                    compound = build_compound(
-                        spe_id,
-                        compounds_cache
-                    )
+                # for spe_id, spe_sto in compounds['right'].items():
+                #     compound = build_compound(
+                #         spe_id,
+                #         compounds_cache
+                #     )
                     # rxn.add_product(
                     #     compound=compound,
                     #     stoichio=spe_sto
