@@ -129,7 +129,7 @@ class rpPathway(Pathway):
             self.get_logger().warning(f'There is no \'idx_in_path\' value in one of the reactions of pathway {self.get_id()}')
 
     def get_reaction_idx_in_path(self, rxn_id: str) -> int:
-        return self.get_reactions_ids().index(rxn_id) + 1
+        return self.get_reaction(x).get_info('idx_in_path')
 
     def __get_infos(self, key: str) -> Dict[str, Dict]:
         species = {}
@@ -433,6 +433,9 @@ class rpPathway(Pathway):
     
     def set_target_id(self, id: str) -> None:
         self.__target_id = id
+
+    def set_reaction_idx_in_path(self, rxn_id: str, idx: int) -> None:
+        self.get_reaction(rxn_id).set_info('idx_in_path', idx)
 
     def rename_compound(self, id: str, new_id: str) -> None:
         # target
