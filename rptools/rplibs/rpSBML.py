@@ -3768,6 +3768,7 @@ class rpSBML:
             ]
         }
 
+        # print(parameters)
         # Try to get from pathway
         # print(pathway.get_infos())
         # exit()
@@ -3948,24 +3949,9 @@ class rpSBML:
             member = libsbml.Member()
             member.setIdRef(member_id)
             group.addMember(member)
-
         # Add extras infos for 'rp_pathway'
         for key, value in pathway.get_infos().items():
             if key != 'rpSBML':
-                # if key.startswith('thermo'):
-                #     print('3973', key, value)
-                #     # for k, v in value.items():
-                #     if isinstance(value, dict):
-                #         isList = True
-                #     else:
-                #         isList = False
-                #     self.updateBRSynth(
-                #         sbase_obj=self.getGroup('rp_pathway'),
-                #         annot_header=key,
-                #         value=value,
-                #         isList=isList
-                #     )
-                # else:
                 if isinstance(value, dict):
                     isList = True
                 else:

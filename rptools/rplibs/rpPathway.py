@@ -97,7 +97,7 @@ class rpPathway(Pathway):
     ## READ METHODS
     def get_target_rxn_id(self) -> str:
         for rxn in self.get_reactions():
-            if self.get_target_id() in rxn.get_products().keys():
+            if self.get_target_id() in rxn.get_products_ids():
                 return rxn.get_id()
 
     def get_rxn_target(self) -> Reaction:
@@ -116,12 +116,16 @@ class rpPathway(Pathway):
         '''Returns the list of reaction IDs sorted by index within the pathway
         (forward direction).
         '''
-        return [
-            rxn_id for rxn_id in sorted(
-                super().get_reactions_ids(),
-                key=lambda x: self.get_reaction(x).get_info('idx_in_path')
-            )
-        ]
+        try:
+            return [
+                rxn_id for rxn_id in sorted(
+                    super().get_reactions_ids(),
+                    key=lambda x: self.get_reaction(x).get_info('idx_in_path')
+                )
+            ]
+        except TypeError:
+            return super().get_reactions_ids()
+            self.get_logger().warning(f'There is no \'idx_in_path\' value in one of the reactions of pathway {self.get_id()}')
 
     def get_reaction_idx_in_path(self, rxn_id: str) -> int:
         return self.get_reactions_ids().index(rxn_id) + 1
