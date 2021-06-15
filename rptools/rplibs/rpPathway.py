@@ -39,9 +39,10 @@ from copy import deepcopy
 from brs_utils import Cache
 from chemlite import (
     Pathway,
-    Reaction,
     Compound
 )
+from rptools.rplibs.rpReaction import rpReaction
+
 
 def gen_dict_extract(key, var):
     if hasattr(var,'items'):
@@ -100,7 +101,7 @@ class rpPathway(Pathway):
             if self.get_target_id() in rxn.get_products_ids():
                 return rxn.get_id()
 
-    def get_rxn_target(self) -> Reaction:
+    def get_rxn_target(self) -> rpReaction:
         return self.get_reaction(self.get_target_rxn_id())
 
     def get_target_id(self) -> str:
@@ -416,7 +417,7 @@ class rpPathway(Pathway):
     ## WRITE METHODS
     def add_reaction(
         self,
-        rxn: Reaction,
+        rxn: rpReaction,
         rxn_id: str = None,
         target_id: str = None
     ) -> None:

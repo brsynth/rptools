@@ -33,7 +33,6 @@ class Test_rpReaction(TestCase):
         self.rp2_transfo_id = 'TRS_0_0_0'
         self.rule_id = 'RR-02-a0cc0be463ff412f-16-F'
         self.tmpl_rxn_id = 'MNXR96458'
-        self.idx_in_path = 1
         self.rule_score = 0.5982208769718989
 
     ## READ METHODS
@@ -65,19 +64,11 @@ class Test_rpReaction(TestCase):
             self.rule_score
         )
 
-    def test_get_idx_in_path(self):
-        self.rxn.set_idx_in_path(self.idx_in_path)
-        self.assertEqual(
-            self.rxn.get_idx_in_path(),
-            self.idx_in_path
-        )
-
     def test_infos_to_dict(self):
         self.rxn.set_rp2_transfo_id(self.rp2_transfo_id)
         self.rxn.set_rule_id(self.rule_id)
         self.rxn.set_tmpl_rxn_id(self.tmpl_rxn_id)
         self.rxn.set_rule_score(self.rule_score)
-        self.rxn.set_idx_in_path(self.idx_in_path)
         print(self.rxn._to_dict())
         self.assertDictEqual(
             self.rxn._to_dict(),
@@ -93,8 +84,7 @@ class Test_rpReaction(TestCase):
                     'rp2_transfo_id': self.rp2_transfo_id,
                     'rule_id': self.rule_id,
                     'tmpl_rxn_id': self.tmpl_rxn_id,
-                    'rule_score': self.rule_score,
-                    'idx_in_path': self.idx_in_path
+                    'rule_score': self.rule_score
                 }
             }
         )
