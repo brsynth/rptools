@@ -79,26 +79,26 @@ def write_results(
   results: Dict,
   logger: Logger = getLogger(__name__)
 ) -> None:
-  # Write species results
-  for spe_id, score in results['species'].items():
-    for k, v in score.items():
-      pathway.get_specie(spe_id).add_info(
-        key='thermo_'+k,
+    # Write species results
+    for spe_id, score in results['species'].items():
+        for k, v in score.items():
+            pathway.get_specie(spe_id).set_thermo_info(
+                key=k,
+                value=v
+            )
+    # Write reactions results
+    for rxn_id, score in results['reactions'].items():
+        for k, v in score.items():
+            pathway.get_reaction(rxn_id).set_thermo_info(
+                key=k,
+                value=v
+            )
+    # Write pathway result
+    for k, v in results['net_reaction'].items():
+        pathway.set_thermo_info(
+        key=k,
         value=v
-      )
-  # Write reactions results
-  for rxn_id, score in results['reactions'].items():
-    for k, v in score.items():
-      pathway.get_reaction(rxn_id).add_info(
-        key='thermo_'+k,
-        value=v
-      )
-  # Write pathway result
-  for k, v in results['net_reaction'].items():
-    pathway.add_info(
-      key='thermo_'+k,
-      value=v
-    )
+        )
 
 def print_results(
     pathway: rpPathway,

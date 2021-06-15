@@ -78,21 +78,21 @@ def write_results(
   # Write species results
   for spe_id, score in results['species'].items():
     for k, v in score.items():
-      pathway.get_specie(spe_id).add_info(
-        key='fba_'+k,
+      pathway.get_specie(spe_id).set_fba_info(
+        key=k,
         value=v
       )
   # Write reactions results
   for rxn_id, score in results['reactions'].items():
     for k, v in score.items():
-      pathway.get_reaction(rxn_id).add_info(
-        key='fba_'+k,
+      pathway.get_reaction(rxn_id).set_fba_info(
+        key=k,
         value=v
       )
   # Write pathway result
   for k, v in results['pathway'].items():
-    pathway.add_info(
-      key='fba_'+k,
+    pathway.set_fba_info(
+      key=k,
       value=v
     )
 

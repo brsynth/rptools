@@ -42,37 +42,42 @@ from chemlite import (
     Compound
 )
 from rptools.rplibs.rpReaction import rpReaction
+from rptools.rplibs.rpObject import rpObject
 
 
-def gen_dict_extract(key, var):
-    if hasattr(var,'items'):
-        for k, v in var.items():
-            print(k, v)
-            if k == key:
-                yield v
-            if isinstance(v, dict):
-                for result in gen_dict_extract(key, v):
-                    yield result
-            elif isinstance(v, list):
-                for d in v:
-                    for result in gen_dict_extract(key, d):
-                        yield result
+# def gen_dict_extract(key, var):
+#     if hasattr(var,'items'):
+#         for k, v in var.items():
+#             print(k, v)
+#             if k == key:
+#                 yield v
+#             if isinstance(v, dict):
+#                 for result in gen_dict_extract(key, v):
+#                     yield result
+#             elif isinstance(v, list):
+#                 for d in v:
+#                     for result in gen_dict_extract(key, d):
+#                         yield result
 
-class rpPathway(Pathway):
+class rpPathway(Pathway, rpObject):
 
     def __init__(
         self,
         id: str,
         cache: Cache = None,
+        rpsbml_infos: Dict = {},
         logger: Logger = getLogger(__name__)
     ):
-        super().__init__(
+        Pathway.__init__(
+            self,
             id=id,
             cache=cache,
             logger=logger
         )
+        rpObject.__init__(self)
         self.set_target_id(None)
         self.set_sink(None)
+        self.__set_rpsbml_infos(rpsbml_infos)
 
     ## OUT METHODS
     # def __repr__(self):
@@ -81,14 +86,24 @@ class rpPathway(Pathway):
     def _to_dict(self) -> Dict:
         return {
             **super()._to_dict(),
-            **self.__to_dict()
+            **self._infos_to_dict()
         }
 
-    def __to_dict(self) -> Dict:
+    def _infos_to_dict(self) -> Dict:
         return {
-            'sink': deepcopy(self.get_sink()),
-            'target': self.get_target_id()
+            **{
+                'sink': deepcopy(self.get_sink()),
+                'target': self.get_target_id(),
+                'rpsbml_infos': deepcopy(self.get_rpsbml_infos())
+            },
+            **super()._infos_to_dict()
         }
+
+    # def __to_dict(self) -> Dict:
+    #     return {
+    #         'sink': deepcopy(self.get_sink()),
+    #         'target': self.get_target_id()
+    #     }
 
     def __eq__(self, other) -> bool:
         if isinstance(self, other.__class__):
@@ -117,33 +132,40 @@ class rpPathway(Pathway):
         '''Returns the list of reaction IDs sorted by index within the pathway
         (forward direction).
         '''
-        try:
-            return [
-                rxn_id for rxn_id in sorted(
-                    super().get_reactions_ids(),
-                    key=lambda x: self.get_reaction(x).get_info('idx_in_path')
-                )
-            ]
-        except TypeError:
-            return super().get_reactions_ids()
-            self.get_logger().warning(f'There is no \'idx_in_path\' value in one of the reactions of pathway {self.get_id()}')
+        # try:
+        return [
+            rxn_id for rxn_id in sorted(
+                super().get_reactions_ids(),
+                key=lambda x: self.get_reaction(x).get_idx_in_path()
+            )
+        ]
+        # except TypeError:
+        #     return super().get_reactions_ids()
+        #     self.get_logger().warning(f'There is no \'idx_in_path\' value in one of the reactions of pathway {self.get_id()}')
 
-    def get_reaction_idx_in_path(self, rxn_id: str) -> int:
-        return self.get_reaction(x).get_info('idx_in_path')
+    # def __get_infos(self, key: str) -> Dict[str, Dict]:
+    #     species = {}
+    #     for spe_id in self.get_species_ids():
+    #         species[spe_id] = {k: v for k, v in self.get_specie(spe_id).get_infos().items() if k.startswith(key)}
+    #     reactions = {}
+    #     for rxn_id in self.get_reactions_ids():
+    #         reactions[rxn_id] = {k: v for k, v in self.get_reaction(rxn_id).get_infos().items() if k.startswith(key)}
+    #     pathway = {k: v for k, v in self.get_infos().items() if k.startswith(key)}
+    #     return {
+    #         'species': species,
+    #         'reactions': reactions,
+    #         'pathway': pathway
+    #     }
 
-    def __get_infos(self, key: str) -> Dict[str, Dict]:
-        species = {}
-        for spe_id in self.get_species_ids():
-            species[spe_id] = {k: v for k, v in self.get_specie(spe_id).get_infos().items() if k.startswith(key)}
-        reactions = {}
-        for rxn_id in self.get_reactions_ids():
-            reactions[rxn_id] = {k: v for k, v in self.get_reaction(rxn_id).get_infos().items() if k.startswith(key)}
-        pathway = {k: v for k, v in self.get_infos().items() if k.startswith(key)}
-        return {
-            'species': species,
-            'reactions': reactions,
-            'pathway': pathway
-        }
+    def get_rpsbml_infos(self) -> Dict:
+        return self.__rpsbml_infos
+
+    # def get_info(self, key: str) -> TypeVar:
+    #     try:
+    #         return self.get_rpsbml_infos()[key]
+    #     except KeyError:
+    #         self.__logger.debug(f'There is no key \'{key}\' in rpsbml infos')
+    #         return None
 
     # def __getattr__(self, name):
     #     '''Catch get_<key>_infos() call an returns the corresponding infos'''
@@ -160,258 +182,250 @@ class rpPathway(Pathway):
     #         return gen_dict_extract(pattern, self.__get_infos(key))
     #     return method
 
-    ## THERMO - GLOBAL
-    def __get_thermo_infos(self) -> Dict[str, Dict]:
-        return self.__get_infos('thermo')
+    # def __get_thermo_infos(self) -> Dict[str, Dict]:
+    #     return self.__get_infos('thermo')
 
-    def __get_thermo(self) -> Dict[str, Dict]:
-        return self.__get_thermo_infos()['pathway']
+    # def __get_thermo(self) -> Dict[str, Dict]:
+    #     return self.__get_thermo_infos()['pathway']
 
-    def __get_thermo_info(self, key: str) -> Dict:
-        try:
-            return self.__get_thermo()[key]
-        except KeyError:
-            self.get_logger().warning(f'There is no {key} value for this pathway')
-            return {}
+    # def __get_thermo_info(self, key: str) -> Dict:
+    #     try:
+    #         return self.__get_thermo()[key]
+    #     except KeyError:
+    #         self.get_logger().warning(f'There is no {key} value for this pathway')
+    #         return {}
 
-    def __get_dict_key(self, dict: Dict, key: str) -> TypeVar:
-        try:
-            return dict[key]
-        except KeyError:
-            self.get_logger().warning(f'There is no {key} key in data')
-            return None
+    # def __get_dict_key(self, dict: Dict, key: str) -> TypeVar:
+    #     try:
+    #         return dict[key]
+    #     except KeyError:
+    #         self.get_logger().warning(f'There is no {key} key in data')
+    #         return None
 
-    def _get_thermo_dG0_prime(self) -> Dict:
-        return self.__get_thermo_info('thermo_dG0_prime')
+    # def _get_thermo_dG0_prime(self) -> Dict:
+    #     return self.__get_thermo_info('thermo_dG0_prime')
 
-    def get_thermo_dG0_prime_value(self) -> float:
-        return self.__get_dict_key(self._get_thermo_dG0_prime(), 'value')
+    # def get_thermo_dG0_prime_value(self) -> float:
+    #     return self.__get_dict_key(self._get_thermo_dG0_prime(), 'value')
 
-    def get_thermo_dG0_prime_error(self) -> float:
-        return self.__get_dict_key(self._get_thermo_dG0_prime(), 'error')
+    # def get_thermo_dG0_prime_error(self) -> float:
+    #     return self.__get_dict_key(self._get_thermo_dG0_prime(), 'error')
 
-    def get_thermo_dG0_prime_units(self) -> str:
-        return self.__get_dict_key(self._get_thermo_dG0_prime(), 'units')
+    # def get_thermo_dG0_prime_units(self) -> str:
+    #     return self.__get_dict_key(self._get_thermo_dG0_prime(), 'units')
 
-    def _get_thermo_dGm_prime(self) -> Dict:
-        return self.__get_thermo_info('thermo_dGm_prime')
+    # def _get_thermo_dGm_prime(self) -> Dict:
+    #     return self.__get_thermo_info('thermo_dGm_prime')
 
-    def get_thermo_dGm_prime_value(self) -> float:
-        return self.__get_dict_key(self._get_thermo_dGm_prime(), 'value')
+    # def get_thermo_dGm_prime_value(self) -> float:
+    #     return self.__get_dict_key(self._get_thermo_dGm_prime(), 'value')
 
-    def get_thermo_dGm_prime_error(self) -> float:
-        return self.__get_dict_key(self._get_thermo_dGm_prime(), 'error')
+    # def get_thermo_dGm_prime_error(self) -> float:
+    #     return self.__get_dict_key(self._get_thermo_dGm_prime(), 'error')
 
-    def get_thermo_dGm_prime_units(self) -> str:
-        return self.__get_dict_key(self._get_thermo_dGm_prime(), 'units')
+    # def get_thermo_dGm_prime_units(self) -> str:
+    #     return self.__get_dict_key(self._get_thermo_dGm_prime(), 'units')
 
-    def _get_thermo_dG_prime(self) -> Dict:
-        return self.__get_thermo_info('thermo_dG_prime')
+    # def _get_thermo_dG_prime(self) -> Dict:
+    #     return self.__get_thermo_info('thermo_dG_prime')
 
-    def get_thermo_dG_prime_value(self) -> float:
-        return self.__get_dict_key(self._get_thermo_dG_prime(), 'value')
+    # def get_thermo_dG_prime_value(self) -> float:
+    #     return self.__get_dict_key(self._get_thermo_dG_prime(), 'value')
 
-    def get_thermo_dG_prime_error(self) -> float:
-        return self.__get_dict_key(self._get_thermo_dG_prime(), 'error')
+    # def get_thermo_dG_prime_error(self) -> float:
+    #     return self.__get_dict_key(self._get_thermo_dG_prime(), 'error')
 
-    def get_thermo_dG_prime_units(self) -> str:
-        return self.__get_dict_key(self._get_thermo_dG_prime(), 'units')
+    # def get_thermo_dG_prime_units(self) -> str:
+    #     return self.__get_dict_key(self._get_thermo_dG_prime(), 'units')
 
-    def _get_thermo_dG(self) -> Dict:
-        return self.__get_dict_key(self._get_thermo_dG(), 'value')
+    # def _get_thermo_dG(self) -> Dict:
+    #     return self.__get_dict_key(self._get_thermo_dG(), 'value')
 
-    def get_thermo_dG_value(self) -> float:
-        return self.__get_dict_key(self._get_thermo_dG(), 'error')
+    # def get_thermo_dG_value(self) -> float:
+    #     return self.__get_dict_key(self._get_thermo_dG(), 'error')
 
-    def get_thermo_dG_error(self) -> float:
-        return self.__get_dict_key(self._get_thermo_dG(), 'units')
+    # def get_thermo_dG_error(self) -> float:
+    #     return self.__get_dict_key(self._get_thermo_dG(), 'units')
 
-    def get_thermo_dG_units(self) -> str:
-        return self._get_thermo_dG()['units']
+    # def get_thermo_dG_units(self) -> str:
+    #     return self._get_thermo_dG()['units']
 
     ## THERMO - COMPOUND
-    def __get_thermo_species(self) -> Dict[str, Dict]:
-        return self.get_thermo_infos()['species']
+    # def __get_thermo_species(self) -> Dict[str, Dict]:
+    #     return self.get_thermo_infos()['species']
 
-    def __get_thermo_compounds(self) -> Dict[str, Dict]:
-        return self.__get_thermo_species()
+    # def __get_thermo_compounds(self) -> Dict[str, Dict]:
+    #     return self.__get_thermo_species()
 
-    def __get_thermo_compound(self, cmpd_id: str) -> Dict:
-        try:
-            return self.__get_thermo_compounds()[cmpd_id]
-        except KeyError:
-            self.get_logger().warning(f'There is no compound {cmpd_id} in this pathway')
-            return {}
+    # def __get_thermo_compound(self, cmpd_id: str) -> Dict:
+    #     try:
+    #         return self.__get_thermo_compounds()[cmpd_id]
+    #     except KeyError:
+    #         self.get_logger().warning(f'There is no compound {cmpd_id} in this pathway')
+    #         return {}
 
-    def __get_thermo_compound_info(self, cmpd_id: str, key: str) -> Dict:
-        try:
-            return self.__get_thermo_compound(cmpd_id)[key]
-        except KeyError:
-            self.get_logger().warning(f'There is no {key} value for the compound {cmpd_id}')
-            return {}
+    # def __get_thermo_compound_info(self, cmpd_id: str, key: str) -> Dict:
+    #     try:
+    #         return self.__get_thermo_compound(cmpd_id)[key]
+    #     except KeyError:
+    #         self.get_logger().warning(f'There is no {key} value for the compound {cmpd_id}')
+    #         return {}
 
-    def get_thermo_compound_std_dg_form(self, cmpd_id: str) -> Dict:
-        return self.__get_thermo_compound_info(cmpd_id, 'thermo_standard_dg_formation')
+    # def get_thermo_compound_std_dg_form(self, cmpd_id: str) -> Dict:
+    #     return self.__get_thermo_compound_info(cmpd_id, 'thermo_standard_dg_formation')
 
-    def get_thermo_compound_std_dg_form_value(self, cmpd_id: str) -> float:
-        return self.__get_dict_key(self._get_thermo_compound_std_dg_form(cmpd_id), 'value')
+    # def get_thermo_compound_std_dg_form_value(self, cmpd_id: str) -> float:
+    #     return self.__get_dict_key(self._get_thermo_compound_std_dg_form(cmpd_id), 'value')
 
-    def get_thermo_compound_std_dg_form_units(self, cmpd_id: str) -> float:
-        return self.__get_dict_key(self._get_thermo_compound_std_dg_form(cmpd_id), 'units')
+    # def get_thermo_compound_std_dg_form_units(self, cmpd_id: str) -> float:
+    #     return self.__get_dict_key(self._get_thermo_compound_std_dg_form(cmpd_id), 'units')
 
     ## THERMO - REACTION
-    def __get_thermo_reactions(self) -> Dict[str, Dict]:
-        return self.get_thermo_infos()['reactions']
+    # def __get_thermo_reactions(self) -> Dict[str, Dict]:
+    #     return self.get_thermo_infos()['reactions']
 
-    def __get_thermo_reaction(self, rxn_id: str) -> Dict:
-        try:
-            return self.__get_thermo_reactions()[rxn_id]
-        except KeyError:
-            self.get_logger().warning(f'There is no reaction {rxn_id} in this pathway')
-            return {}
+    # def __get_thermo_reaction_info(self, rxn_id: str, key: str) -> Dict:
+    #     try:
+    #         return self.__get_thermo_reaction(rxn_id)[key]
+    #     except KeyError:
+    #         self.get_logger().warning(f'There is no {key} value for the reaction {rxn_id}')
+    #         return {}
 
-    def __get_thermo_reaction_info(self, rxn_id: str, key: str) -> Dict:
-        try:
-            return self.__get_thermo_reaction(rxn_id)[key]
-        except KeyError:
-            self.get_logger().warning(f'There is no {key} value for the reaction {rxn_id}')
-            return {}
+    # def get_thermo_reaction_dG0_prime(self, rxn_id: str) -> Dict:
+    #     return self.__get_thermo_reaction_info(rxn_id, 'thermo_dG0_prime')
 
-    def get_thermo_reaction_dG0_prime(self, rxn_id: str) -> Dict:
-        return self.__get_thermo_reaction_info(rxn_id, 'thermo_dG0_prime')
+    # def get_thermo_reaction_dG0_prime_value(self, rxn_id: str) -> float:
+    #     return self.__get_dict_key(self.get_thermo_reaction_dG0_prime(rxn_id), 'value')
 
-    def get_thermo_reaction_dG0_prime_value(self, rxn_id: str) -> float:
-        return self.__get_dict_key(self.get_thermo_reaction_dG0_prime(rxn_id), 'value')
+    # def get_thermo_reaction_dG0_prime_error(self, rxn_id: str) -> float:
+    #     return self.__get_dict_key(self.get_thermo_reaction_dG0_prime(rxn_id), 'error')
 
-    def get_thermo_reaction_dG0_prime_error(self, rxn_id: str) -> float:
-        return self.__get_dict_key(self.get_thermo_reaction_dG0_prime(rxn_id), 'error')
+    # def get_thermo_reaction_dG0_prime_units(self, rxn_id: str) -> str:
+    #     return self.__get_dict_key(self.get_thermo_reaction_dG0_prime(rxn_id), 'units')
 
-    def get_thermo_reaction_dG0_prime_units(self, rxn_id: str) -> str:
-        return self.__get_dict_key(self.get_thermo_reaction_dG0_prime(rxn_id), 'units')
+    # def get_thermo_reaction_dGm_prime(self, rxn_id: str) -> Dict:
+    #     return self.__get_thermo_reaction_info(rxn_id, 'thermo_dGm_prime')
 
-    def get_thermo_reaction_dGm_prime(self, rxn_id: str) -> Dict:
-        return self.__get_thermo_reaction_info(rxn_id, 'thermo_dGm_prime')
+    # def get_thermo_reaction_dGm_prime_value(self, rxn_id: str) -> float:
+    #     return self.__get_dict_key(self.get_thermo_reaction_dGm_prime(rxn_id), 'value')
 
-    def get_thermo_reaction_dGm_prime_value(self, rxn_id: str) -> float:
-        return self.__get_dict_key(self.get_thermo_reaction_dGm_prime(rxn_id), 'value')
+    # def get_thermo_reaction_dGm_prime_error(self, rxn_id: str) -> float:
+    #     return self.__get_dict_key(self.get_thermo_reaction_dGm_prime(rxn_id), 'error')
 
-    def get_thermo_reaction_dGm_prime_error(self, rxn_id: str) -> float:
-        return self.__get_dict_key(self.get_thermo_reaction_dGm_prime(rxn_id), 'error')
+    # def get_thermo_reaction_dGm_prime_units(self, rxn_id: str) -> str:
+    #     return self.__get_dict_key(self.get_thermo_reaction_dGm_prime(rxn_id), 'units')
 
-    def get_thermo_reaction_dGm_prime_units(self, rxn_id: str) -> str:
-        return self.__get_dict_key(self.get_thermo_reaction_dGm_prime(rxn_id), 'units')
+    # def get_thermo_reaction_dG_prime(self, rxn_id: str) -> Dict:
+    #     return self.__get_thermo_reaction_info(rxn_id, 'thermo_dG_prime')
 
-    def get_thermo_reaction_dG_prime(self, rxn_id: str) -> Dict:
-        return self.__get_thermo_reaction_info(rxn_id, 'thermo_dG_prime')
+    # def get_thermo_reaction_dG_prime_value(self, rxn_id: str) -> float:
+    #     return self.__get_dict_key(self.get_thermo_reaction_dG_prime(rxn_id), 'value')
 
-    def get_thermo_reaction_dG_prime_value(self, rxn_id: str) -> float:
-        return self.__get_dict_key(self.get_thermo_reaction_dG_prime(rxn_id), 'value')
+    # def get_thermo_reaction_dG_prime_error(self, rxn_id: str) -> float:
+    #     return self.__get_dict_key(self.get_thermo_reaction_dG_prime(rxn_id), 'error')
 
-    def get_thermo_reaction_dG_prime_error(self, rxn_id: str) -> float:
-        return self.__get_dict_key(self.get_thermo_reaction_dG_prime(rxn_id), 'error')
+    # def get_thermo_reaction_dG_prime_units(self, rxn_id: str) -> str:
+    #     return self.__get_dict_key(self.get_thermo_reaction_dG_prime(rxn_id), 'units')
 
-    def get_thermo_reaction_dG_prime_units(self, rxn_id: str) -> str:
-        return self.__get_dict_key(self.get_thermo_reaction_dG_prime(rxn_id), 'units')
+    # def get_thermo_reaction_dG(self, rxn_id: str) -> Dict:
+    #     return self.__get_thermo_reaction_info(rxn_id, 'thermo_dG')
 
-    def get_thermo_reaction_dG(self, rxn_id: str) -> Dict:
-        return self.__get_thermo_reaction_info(rxn_id, 'thermo_dG')
+    # def get_thermo_reaction_dG_value(self, rxn_id: str) -> float:
+    #     return self.__get_dict_key(self.get_thermo_reaction_dG(rxn_id), 'value')
 
-    def get_thermo_reaction_dG_value(self, rxn_id: str) -> float:
-        return self.__get_dict_key(self.get_thermo_reaction_dG(rxn_id), 'value')
+    # def get_thermo_reaction_dG_error(self, rxn_id: str) -> float:
+    #     return self.__get_dict_key(self.get_thermo_reaction_dG(rxn_id), 'error')
 
-    def get_thermo_reaction_dG_error(self, rxn_id: str) -> float:
-        return self.__get_dict_key(self.get_thermo_reaction_dG(rxn_id), 'error')
+    # def get_thermo_reaction_dG_units(self, rxn_id: str) -> str:
+    #     return self.__get_dict_key(self.get_thermo_reaction_dG(rxn_id), 'units')
 
-    def get_thermo_reaction_dG_units(self, rxn_id: str) -> str:
-        return self.__get_dict_key(self.get_thermo_reaction_dG(rxn_id), 'units')
+    # ## FBA - GLOBAL
+    # def get_fba(self) -> Dict[str, Dict]:
+    #     return self.__fba
 
-    ## FBA - GLOBAL
-    def __get_fba(self) -> Dict[str, Dict]:
-        return self.__get_infos('fba')
+    # def __get_fba_biomass(self) -> Dict[str, Dict]:
+    #     return self.__get_infos('fba_biomass')
 
-    def __get_fba_biomass(self) -> Dict[str, Dict]:
-        return self.__get_infos('fba_biomass')
+    # def __get_fba_fraction(self) -> Dict[str, Dict]:
+    #     return self.__get_infos('fba_fraction')
 
-    def __get_fba_fraction(self) -> Dict[str, Dict]:
-        return self.__get_infos('fba_fraction')
+    # def get_fba_biomass(self) -> Dict[str, Dict]:
+    #     return self.__get_dict_key(
+    #         self.__fba,
+    #         'biomass'
+    #     )
 
-    def get_fba_biomass(self) -> Dict[str, Dict]:
-        return self.__get_dict_key(
-            self.__get_fba_biomass(),
-            'pathway'
-        )
-
-    def get_fba_fraction(self) -> Dict[str, Dict]:
-        return self.__get_dict_key(
-            self.__get_fba_fraction(),
-            'pathway'
-        )
+    # def get_fba_fraction(self) -> Dict[str, Dict]:
+    #     return self.__get_dict_key(
+    #         self.__fba,
+    #         'fraction'
+    #     )
 
     ## FBA - REACTIONS
-    def __get_fba_reactions(self) -> Dict[str, Dict]:
-        return self.__get_dict_key(
-            self.__get_infos('fba'),
-            'reactions'
-        )
+    # def __get_fba_reactions(self) -> Dict[str, Dict]:
+    #     return self.__get_dict_key(
+    #         self.__get_infos('fba'),
+    #         'reactions'
+    #     )
 
-    def __get_fba_reactions_biomass(self) -> Dict[str, Dict]:
-        return self.__get_infos('fba_biomass')
+    # def __get_fba_reactions_biomass(self) -> Dict[str, Dict]:
+    #     return self.__get_infos('fba_biomass')
 
-    def __get_fba_reactions_fraction(self) -> Dict[str, Dict]:
-        return self.__get_infos('fba_fraction')
+    # def __get_fba_reactions_fraction(self) -> Dict[str, Dict]:
+    #     return self.__get_infos('fba_fraction')
 
-    def get_fba_reaction_biomass(self, rxn_id: str) -> Dict[str, Dict]:
-        return self.__get_dict_key(
-            self.__get_fba_reactions_biomass(),
-            'reactions'
-        )
+    # def get_fba_reaction_biomass(self, rxn_id: str) -> Dict[str, Dict]:
+    #     return self.__get_dict_key(
+    #         self.__get_fba_reactions_biomass(),
+    #         'reactions'
+    #     )
 
-    def get_fba_reaction_fraction(self, rxn_id: str) -> Dict[str, Dict]:
-        return self.__get_dict_key(
-            self.__get_fba_reactions_fraction(),
-            'reactions'
-        )
+    # def get_fba_reaction_fraction(self, rxn_id: str) -> Dict[str, Dict]:
+    #     return self.__get_dict_key(
+    #         self.__get_fba_reactions_fraction(),
+    #         'reactions'
+    #     )
 
     ## FBA - COMPOUNDS
-    def __get_fba_compounds(self) -> Dict[str, Dict]:
-        return self.__get_dict_key(
-            self.__get_infos('fba'),
-            'species'
-        )
+    # def __get_fba_compounds(self) -> Dict[str, Dict]:
+    #     return self.__get_dict_key(
+    #         self.__get_infos('fba'),
+    #         'species'
+    #     )
 
-    def __get_fba_compounds_biomass_shadow_prices(self) -> Dict[str, Dict]:
-        return self.__get_dict_key(
-            self.__get_infos('fba_biomass_shadow_price'),
-            'species'
-        )
+    # def __get_fba_compounds_biomass_shadow_prices(self) -> Dict[str, Dict]:
+    #     return self.__get_dict_key(
+    #         self.__get_infos('fba_biomass_shadow_price'),
+    #         'species'
+    #     )
 
-    def get_fba_compound_biomass_shadow_price(self, cmpd_id) -> float:
-        return self.__get_dict_key(
-            self.__get_fba_compounds_biomass_shadow_prices(),
-            cmpd_id
-        )
+    # def get_fba_compound_biomass_shadow_price(self, cmpd_id) -> float:
+    #     return self.__get_dict_key(
+    #         self.__get_fba_compounds_biomass_shadow_prices(),
+    #         cmpd_id
+    #     )
 
-    def __get_fba_compounds_fraction_shadow_prices(self) -> Dict[str, Dict]:
-        return self.__get_dict_key(
-            self.__get_infos('fba_fraction_shadow_price'),
-            'species'
-        )
+    # def __get_fba_compounds_fraction_shadow_prices(self) -> Dict[str, Dict]:
+    #     return self.__get_dict_key(
+    #         self.__get_infos('fba_fraction_shadow_price'),
+    #         'species'
+    #     )
 
-    def get_fba_compound_fraction_shadow_price(self, cmpd_id) -> float:
-        return self.__get_dict_key(
-            self.__get_fba_compounds_fraction_shadow_prices(),
-            cmpd_id
-        )
+    # def get_fba_compound_fraction_shadow_price(self, cmpd_id) -> float:
+    #     return self.__get_dict_key(
+    #         self.__get_fba_compounds_fraction_shadow_prices(),
+    #         cmpd_id
+    #     )
 
-    def __get_rpSBML_infos(self) -> Dict[str, Dict]:
-        return self.__get_infos('rpSBML')
+    # def __get_rpSBML_infos(self) -> Dict[str, Dict]:
+    #     return self.__get_infos('rpSBML')
 
-    def __get_rpSBML_info(self, key: str) -> Dict[str, Dict]:
-        try:
-            return self.__get_infos('rpSBML')[key]
-        except KeyError:
-            self.__logger(f'There is no field {key} within rpSBML infos.')
-            return {}
+    # def __get_rpSBML_info(self, key: str) -> Dict[str, Dict]:
+    #     try:
+    #         return self.__get_infos('rpSBML')[key]
+    #     except KeyError:
+    #         self.__logger(f'There is no field {key} within rpSBML infos.')
+    #         return {}
 
 
     ## WRITE METHODS
@@ -434,9 +448,6 @@ class rpPathway(Pathway):
     def set_target_id(self, id: str) -> None:
         self.__target_id = id
 
-    def set_reaction_idx_in_path(self, rxn_id: str, idx: int) -> None:
-        self.get_reaction(rxn_id).set_info('idx_in_path', idx)
-
     def rename_compound(self, id: str, new_id: str) -> None:
         # target
         if id == self.get_target_id():
@@ -450,5 +461,16 @@ class rpPathway(Pathway):
         except ValueError:
             pass
 
+    ### RPSBML INFOS ###
+    def __set_rpsbml_infos(self, infos: Dict) -> None:
+        self.__rpsbml_infos = deepcopy(infos)
 
+    def add_rpsbml_info(self, key: str, value: TypeVar) -> None:
+        self.__rpsbml_infos[key] = deepcopy(value)
+
+    def del_rpsbml_info(self, key: str) -> None:
+        try:
+            del self.__rpsbml_infos[key]
+        except KeyError:
+            self.__logger.warning(f'No such key {key} found in infos, nothing deleted.')
     ## MISC

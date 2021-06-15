@@ -26,7 +26,8 @@
 from typing import (
     Dict,
     List,
-    Union
+    Union,
+    TypeVar
 )
 from logging import (
     Logger,
@@ -34,9 +35,10 @@ from logging import (
 )
 from copy import deepcopy
 from chemlite import Reaction
+from rptools.rplibs.rpObject import rpObject
 
 
-class rpReaction(Reaction):
+class rpReaction(Reaction, rpObject):
 
     def __init__(
         self,
@@ -44,19 +46,23 @@ class rpReaction(Reaction):
         ec_numbers: Union[List[str], str] = [],
         reactants: Dict[str, int] = {},
         products: Dict[str, int] = {},
+        idx_in_path: int = -1,
         logger: Logger = getLogger(__name__)
     ):
-        super().__init__(
+        Reaction.__init__(
+            self,
             id=id,
             ec_numbers=ec_numbers,
             reactants=reactants,
             products=products,
             logger=logger
         )
+        rpObject.__init__(self)
         self.set_rp2_transfo_id(None)
         self.set_rule_id(None)
         self.set_tmpl_rxn_id(None)
         self.set_rule_score(float('nan'))
+        self.set_idx_in_path(idx_in_path)
 
     ## OUT METHODS
     # def __repr__(self):
@@ -70,10 +76,14 @@ class rpReaction(Reaction):
 
     def _infos_to_dict(self) -> Dict:
         return {
-            'rp2_transfo_id': self.get_rp2_transfo_id(),
-            'rule_id': self.get_rule_id(),
-            'tmpl_rxn_id': self.get_tmpl_rxn_id(),
-            'rule_score': self.get_rule_score()
+            **{
+                'rp2_transfo_id': self.get_rp2_transfo_id(),
+                'rule_id': self.get_rule_id(),
+                'tmpl_rxn_id': self.get_tmpl_rxn_id(),
+                'rule_score': self.get_rule_score(),
+                'idx_in_path': self.get_idx_in_path()
+            },
+            **super()._infos_to_dict()
         }
 
     def __eq__(self, other) -> bool:
@@ -94,6 +104,9 @@ class rpReaction(Reaction):
     def get_rule_score(self) -> float:
         return self.__rule_score
 
+    def get_idx_in_path(self) -> int:
+        return self.__idx_in_path
+
     ## WRITE METHODS
     def set_rp2_transfo_id(self, transfo_id: str) -> None:
         self.__rp2_transfo_id = transfo_id
@@ -106,3 +119,6 @@ class rpReaction(Reaction):
 
     def set_rule_score(self, rule_score: str) -> None:
         self.__rule_score = rule_score
+
+    def set_idx_in_path(self, idx_in_path: str) -> None:
+        self.__idx_in_path = idx_in_path

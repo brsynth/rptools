@@ -33,11 +33,11 @@ from brs_utils import (
 )
 from rr_cache import rrCache
 from rxn_rebuild import rebuild_rxn
-from chemlite import (
-    Reaction,
-    Compound
+from rptools.rplibs import (
+    rpPathway,
+    rpReaction,
+    rpCompound
 )
-from rptools.rplibs import rpPathway
 
 ## Function to group all the functions for parsing RP2 output to rpSBML files
 #
@@ -233,7 +233,7 @@ def rp2paths_compounds_in_cache(path, cache, logger=getLogger(__name__)):
                 formula = cache.get('cid_strc')[spe_id]['formula']
             except KeyError:
                 formula = ''
-            compound = Compound(
+            compound = rpCompound(
                 id=spe_id,
                 smiles=smiles,
                 inchi=inchi,
@@ -487,7 +487,7 @@ def build_all_pathways(
                 for side in added_cmpds.keys():
                     for spe_id in added_cmpds[side].keys():
                         if spe_id not in Cache.get_objects():
-                            Compound(
+                            rpCompound(
                                 id=spe_id,
                                 smiles=compounds_cache[spe_id]['smiles'],
                                 inchi=compounds_cache[spe_id]['inchi'],
@@ -499,21 +499,26 @@ def build_all_pathways(
                 ## REACTION
                 # revert reaction index (forward)
                 rxn_idx_forward = nb_reactions - rxn_idx
-                rxn = Reaction(
+                rxn = rpReaction(
                     id='rxn_'+str(rxn_idx_forward),
                     ec_numbers=transfo['ec'],
                     reactants=dict(compounds['left']),
                     products=dict(compounds['right'])
                 )
-                rxn.set_infos(
-                    {
-                        **sub_pathways[sub_path_idx][rxn_idx],
-                        **{
-                            'rule_score': rr_reactions[rule_id][tmpl_rxn_id]['rule_score'],
-                            'idx_in_path': rxn_idx_forward
-                        }
-                    }
-                )
+                # write infos
+                for info_id, info in sub_pathways[sub_path_idx][rxn_idx].items():
+                    getattr(rxn, 'set_'+info_id)(info)
+                rxn.set_rule_score(rr_reactions[rule_id][tmpl_rxn_id]['rule_score'])
+                rxn.set_idx_in_path(rxn_idx_forward)
+                # rxn.set_infos(
+                #     {
+                #         **sub_pathways[sub_path_idx][rxn_idx],
+                #         **{
+                #             'rule_score': rr_reactions[rule_id][tmpl_rxn_id]['rule_score'],
+                #             'idx_in_path': rxn_idx_forward
+                #         }
+                #     }
+                # )
                 # Reactants
                 # for spe_id, spe_sto in compounds['left'].items():
                 #     compound = build_compound(
@@ -573,7 +578,7 @@ def build_compound(
     spe_id: str,
     compounds_cache: Dict,
     logger=getLogger(__name__)
-) -> Compound:
+) -> rpCompound:
     # Look if compound has been read from rp2paths compounds
     if spe_id in Cache.get_objects():
         compound = Cache.get(spe_id)
@@ -586,7 +591,7 @@ def build_compound(
                 pass
     # Else get it from the cache
     else:
-        compound = Compound(
+        compound = rpCompound(
             id=spe_id,
             smiles=compounds_cache[spe_id]['smiles'],
             inchi=compounds_cache[spe_id]['inchi'],
@@ -652,7 +657,7 @@ def apply_to_best_pathways(
 
     # Compute the score of applicant pathway
     # sum of rule_scores over reactions
-    score = sum(rxn.get_info('rule_score') for rxn in pathway.get_reactions())
+    score = sum(rxn.get_rule_score() for rxn in pathway.get_reactions())
     # normalize
     score /= pathway.get_nb_reactions()
 

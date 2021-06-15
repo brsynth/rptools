@@ -33,11 +33,9 @@ from brs_utils import(
 )
 from rr_cache import rrCache
 from rptools.rplibs.rpGraph import rpGraph
-from chemlite import (
-    Reaction,
-    Compound
-)
 from rptools.rplibs.rpPathway import rpPathway
+from rptools.rplibs.rpReaction import rpReaction
+from rptools.rplibs.rpCompound import rpCompound
 
 ## @package RetroPath SBML writer
 # Documentation for SBML representation of the different model
@@ -3772,14 +3770,14 @@ class rpSBML:
         # Try to get from pathway
         # print(pathway.get_infos())
         # exit()
-        if pathway.get_info('rpSBML') is not None:
-            if 'compartments' in pathway.get_info('rpSBML'):
+        if pathway.get_rpsbml_infos() is not None:
+            if 'compartments' in pathway.get_rpsbml_infos():
                 # _compartments = pathway.get_info('rpSBML')['compartments']
                 compartment = {}
                 idx = 0
-                for idx in range(len(pathway.get_info('rpSBML')['compartments'])):
+                for idx in range(len(pathway.get_rpsbml_info('compartments'))):
                     for key in ['id', 'name']:
-                        compartment[key] = deepcopy(pathway.get_info('rpSBML')['compartments'][idx][key])
+                        compartment[key] = deepcopy(pathway.get_rpsbml_info('compartments')[idx][key])
                     if 'annot' not in compartment or compartment['annot'] == '':
                         # # find the index of right compartment ID
                         # idx = list(filter(lambda d: d['id'] == compartment[id], compartments))
@@ -3789,10 +3787,10 @@ class rpSBML:
                             ]
                         ]
                     idx += 1
-            if 'parameters' in pathway.get_info('rpSBML'):
-                parameters = deepcopy(pathway.get_info('rpSBML')['parameters'])
-            if 'unit_def' in pathway.get_info('rpSBML'):
-                unit_def = deepcopy(pathway.get_info('rpSBML')['unit_def'])
+            if 'parameters' in pathway.get_rpsbml_infos():
+                parameters = deepcopy(pathway.get_rpsbml_info('parameters'))
+            if 'unit_def' in pathway.get_rpsbml_infos():
+                unit_def = deepcopy(pathway.get_rpsbml_info('unit_def'))
 
         try:
             upper_flux_bound = parameters['upper_flux_bound']
@@ -3881,7 +3879,7 @@ class rpSBML:
             )
 
         # Add the consumption of the target
-        rxn = Reaction(
+        rxn = rpReaction(
             id='rxn_target'
         )
         rxn.add_reactant(
@@ -3921,7 +3919,7 @@ class rpSBML:
                 smiles=specie.get_smiles(),
                 species_group_id='central_species',
                 in_sink_group_id=sink_species_group_id,
-                infos=pathway.get_specie(specie.get_id()).get_infos()
+                infos=pathway.get_specie(specie.get_id())._infos_to_dict()
             )
 
 
@@ -3950,18 +3948,32 @@ class rpSBML:
             member.setIdRef(member_id)
             group.addMember(member)
         # Add extras infos for 'rp_pathway'
-        for key, value in pathway.get_infos().items():
-            if key != 'rpSBML':
-                if isinstance(value, dict):
-                    isList = True
-                else:
-                    isList = False
-                self.updateBRSynth(
-                    sbase_obj=self.getGroup('rp_pathway'),
-                    annot_header=key,
-                    value=value,
-                    isList=isList
-                )
+        # for key, value in pathway.get_infos().items():
+        #     if key != 'rpSBML':
+        #         if isinstance(value, dict):
+        #             isList = True
+        #         else:
+        #             isList = False
+        #         self.updateBRSynth(
+        #             sbase_obj=self.getGroup('rp_pathway'),
+        #             annot_header=key,
+        #             value=value,
+        #             isList=isList
+        #         )
+        for key, value in {
+            **pathway.get_fba(),
+            **pathway.get_thermo()
+        }.items():
+            if isinstance(value, dict):
+                isList = True
+            else:
+                isList = False
+            self.updateBRSynth(
+                sbase_obj=self.getGroup('rp_pathway'),
+                annot_header=key,
+                value=value,
+                isList=isList
+            )
 
         ## RP_SINK_SPECIES
         group = self.createGroup('rp_sink_species')
@@ -4020,7 +4032,6 @@ class rpSBML:
 
         # SPECIES
         if 'species' in keys:
-            compounds = {}
             for spe_id, spe in self.read_species(pathway_id).items():
                 infos = {}
                 for key in ['smiles', 'inchi', 'inchikey']:
@@ -4029,27 +4040,36 @@ class rpSBML:
                     except KeyError:
                         infos[key] = ''
                 # Create compound to add it in the cache
-                compound = Compound(
+                compound = rpCompound(
                     id=spe_id,
                     smiles=infos['smiles'],
                     inchi=infos['inchi'],
                     inchikey=infos['inchikey']
                 )
                 # Detect fba and thermo infos
-                for measure in [key for key in spe['brsynth'] if
-                                key.startswith('thermo') or key.startswith('fba')]:
-                    compound.add_info(
-                        key=measure,
-                        value=spe['brsynth'][measure]
-                    )
-                compounds[spe_id] = compound
+                # for measure in [key for key in spe['brsynth'] if
+                #                 key.startswith('thermo') or key.startswith('fba')]:
+                #     compound.add_info(
+                #         key=measure,
+                #         value=spe['brsynth'][measure]
+                #     )
+                for key, value in spe['brsynth'].items():
+                    if key.startswith('thermo_'):
+                        compound.set_thermo_info(key, value)
+                    elif key.startswith('fba_'):
+                        compound.set_fba_info(key, value)
+                    else:
+                        try:
+                            getattr(compound, 'set_'+key)(value)
+                        except AttributeError:
+                            pass
 
         ## REACTIONS
         reactions = {}
         if 'reactions' in keys:
             for rxn_id, rxn in self.read_reactions(pathway_id).items():
 
-                reaction = Reaction(
+                reaction = rpReaction(
                     id=rxn_id,
                     ec_numbers=rxn['miriam']['ec-code'],
                     reactants=rxn['left'],
@@ -4069,23 +4089,44 @@ class rpSBML:
                     target_id=target_id
                 )
                 # Detect fba and thermo infos
-                for measure in [key for key in rxn['brsynth'] if
-                                key.startswith('thermo') or key.startswith('fba')]:
-                    pathway.get_reaction(rxn_id).add_info(
-                        key=measure,
-                        value=rxn['brsynth'][measure]
-                    )
+                # for measure in [key for key in rxn['brsynth'] if
+                #                 key.startswith('thermo') or key.startswith('fba')]:
+                #     pathway.get_reaction(rxn_id).add_info(
+                #         key=measure,
+                #         value=rxn['brsynth'][measure]
+                #     )
+                for key, value in rxn['brsynth'].items():
+                    if key.startswith('thermo_'):
+                        pathway.get_reaction(rxn_id).set_thermo_info(key, value)
+                    elif key.startswith('fba_'):
+                        pathway.get_reaction(rxn_id).set_fba_info(key, value)
+                    else:
+                        try:
+                            getattr(pathway.get_reaction(rxn_id), 'set_'+key)(value)
+                        except AttributeError:
+                            pass
 
         ## PATHWAY
         if 'pathway' in keys:
             pathway_sbml = self.read_pathway(pathway_id)
             # Detect fba and thermo infos
-            for measure in [key for key in rxn['brsynth'] if
-                            key.startswith('thermo') or key.startswith('fba')]:
-                pathway.add_info(
-                    key=measure,
-                    value=pathway_sbml[measure]
-                )
+            for key, value in pathway_sbml.items():
+                if key.startswith('thermo_'):
+                    pathway.set_thermo_info(key, value)
+                elif key.startswith('fba_'):
+                    pathway.set_fba_info(key, value)
+                else:
+                    try:
+                        getattr(pathway, 'set_'+key)(value)
+                    except AttributeError:
+                        pass
+            # for measure in [key for key in pathway_sbml if
+            #                 key.startswith('thermo') or key.startswith('fba')]:
+            #     getattr(pathway, 'set_'+measure+'_info')(pathway_sbml[measure])
+                # pathway.add_info(
+                #     key=measure,
+                #     value=pathway_sbml[measure]
+                # )
 
         ## RPSBML
         # Unit Definitions
@@ -4667,7 +4708,7 @@ class rpSBML:
     # TODO as of now not generic, works when creating a new SBML file, but no checks if modifying existing SBML file
     def createReaction(
         self,
-        rxn: Reaction,
+        rxn: rpReaction,
         fluxUpperBound: Dict,
         fluxLowerBound: Dict,
         compartment_id: str,
@@ -4857,7 +4898,7 @@ class rpSBML:
         # if 'rxn_idx' in rxn:
         #     if rxn['rxn_idx']:
         #         self.updateBRSynth(reac, 'rxn_idx', rxn['rxn_idx'], None, False, False, False, meta_id)
-        for key, value in rxn.get_infos().items():
+        for key, value in rxn._infos_to_dict().items():
             # if key.startswith('fba') or key.startswith('thermo'):
             # for k, v in value.items():
             if isinstance(value, dict):
