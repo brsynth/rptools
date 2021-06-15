@@ -169,9 +169,9 @@ def thermo(
     ## UNKNOWN COMPOUNDS
     # Remove unknown compounds
     reactions = remove_unknown_compounds(
-        compounds=species,
         unk_compounds=unk_compounds,
         reactions=pathway.get_reactions(),
+        rxn_target_id=pathway.get_target_rxn_id(),
         logger=logger
     )
 
@@ -315,8 +315,8 @@ def eQuilibrator(
 
 
 def remove_unknown_compounds(
-    compounds: Dict,
-    reactions: List[Dict],
+    reactions: List[Reaction],
+    rxn_target_id: str,
     unk_compounds: List = [],
     logger: Logger=getLogger(__name__)
 ) -> Dict:
@@ -352,10 +352,12 @@ def remove_unknown_compounds(
         compounds=unk_compounds,
         logger=logger
     )
+    print(sto_mat)
 
     # Get the target reaction to maximize
     rxn_target_idx = get_target_rxn_idx(
         reactions,
+        rxn_target_id,
         logger
     )
 
@@ -365,26 +367,25 @@ def remove_unknown_compounds(
         logger
     )
 
+    print(coeffs)
+
     ## Impact coeff to reactions
     for rxn_idx in range(len(reactions)):
-        rxn = reactions[rxn_idx]
-        for side in SIDES:
-            for spe_id in rxn[side['name']].keys():
-                rxn[side['name']][spe_id] *= coeffs[rxn_idx]
+        if coeffs[rxn_idx] != 0:
+            reactions[rxn_idx].mult_stoichio_coeff(coeffs[rxn_idx])
 
     return reactions
 
 
 def get_target_rxn_idx(
-    reactions: List[Dict],
+    reactions: List[Reaction],
+    rxn_target_id: str,
     logger: Logger=getLogger(__name__)
 ) -> int:
     for rxn_idx in range(len(reactions)):
         rxn = reactions[rxn_idx]
-        rxn_species = list(rxn[SIDES[0]['name']].keys()) + list(rxn[SIDES[1]['name']].keys())
-        for spe in rxn_species:
-            if spe.startswith('TARGET'):
-                return rxn_idx
+        if rxn_target_id == rxn.get_id():
+            return rxn_idx
     return None
 
 
@@ -408,7 +409,6 @@ def minimize(
     # the same
     # lower bound (lb) and upper bound (ub) will be applied
     # to all variables.
-    from numpy import inf as np_inf
     bounds = (0, 1)
 
     ## Max rxn_x
@@ -432,22 +432,25 @@ def minimize(
 
 
 def build_stoichio_matrix(
-    reactions: List,
-    compounds: List = [],
+    reactions: List[Reaction],
+    compounds: List[str] = [],
     logger: Logger = getLogger(__name__)
 ) -> 'np_ndarray':
     '''Build the stoichiometric matrix of reactions.
        If compounds is not None, then fill the matrix only for these
     '''
+
     ## Build list of compounds to put in the matrix
     # If compounds not passed in arg,
     # then detect them from reactions
     # else only put in the matrix compounds contained in 'compounds'
     if compounds == []:
+        species = [rxn.get_species_ids() for rxn in reactions]
         _compounds = list(
             set(
                 [
-                    spe_id for rxn in reactions for side in SIDES for spe_id in list(rxn[side['name']].keys()) 
+                    # spe_id for rxn in reactions for side in SIDES for spe_id in list(rxn[side['name']].keys()) 
+                    spe_id for sub_species in species for spe_id in sub_species
                 ]
             )
         )
@@ -470,12 +473,12 @@ def build_stoichio_matrix(
         # For each reaction
         for rxn_idx in range(len(reactions)):
             rxn = reactions[rxn_idx]
-            if cmpd_id in rxn['reactants']:
+            if cmpd_id in rxn.get_reactants_ids():
                 # Put the stochio value in the stochio matrix
-                sto_mat[cmpd_idx][rxn_idx] = -rxn['reactants'][cmpd_id]
-            elif cmpd_id in rxn['products']:
+                sto_mat[cmpd_idx][rxn_idx] = -rxn.get_reactants_stoichio()[cmpd_id]
+            elif cmpd_id in rxn.get_products_ids():
                 # Put the stochio value in the stochio matrix
-                sto_mat[cmpd_idx][rxn_idx] = rxn['products'][cmpd_id]
+                sto_mat[cmpd_idx][rxn_idx] = rxn.get_products_stoichio()[cmpd_id]
 
     return sto_mat
 
@@ -503,22 +506,33 @@ def get_compounds_from_cache(
     """
     compounds_dict = {}
     unknown_compounds = []
+
     for cmpd in compounds:
         compound = cc.get_compound(cmpd.get_id())
         # If ID not found,
         # then search with inchikey
-        if compound is None:
-            compound = cc.search_compound(cmpd.get_inchikey())
-        # If the first level of inchikeys are the same,
-        # then substitute
-        if compound.inchi_key.split('-')[0] == cmpd.get_inchikey().split('-')[0]:
-            compounds_dict[cmpd.get_id()] = compound
-        else:
-            # search by inchikey
+        try:
+            if compound is None:
+                compound = cc.search_compound(cmpd.get_inchikey())
+            # If the first level of inchikeys are the same,
+            # then substitute
+            if compound.inchi_key.split('-')[0] == cmpd.get_inchikey().split('-')[0]:
+                compounds_dict[cmpd.get_id()] = compound
+            else:
+                # search by inchikey
+                try:
+                    compounds_dict[cmpd.get_id()] = cc.search_compound_by_inchi_key(cmpd.get_inchikey())[0]
+                except IndexError:  # the compound is considered as unknown
+                    unknown_compounds += [cmpd.get_id()]
+        except ValueError:
             try:
-                compounds_dict[cmpd.get_id()] = cc.search_compound_by_inchi_key(cmpd.get_inchikey())[0]
-            except IndexError:  # the compound is considered as unknown
+                compound = cc.get_compound_by_inchi(cmpd.get_inchi())
+            except ValueError:
                 unknown_compounds += [cmpd.get_id()]
+
+        if compound is None:
+            unknown_compounds += [cmpd.get_id()]
+
     return compounds_dict, unknown_compounds
 
 

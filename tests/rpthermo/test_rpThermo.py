@@ -1,23 +1,50 @@
 from unittest import TestCase
 from numpy import array as np_array
-# from os import path as os_path
 from rptools.rpthermo.rpThermo import (
     minimize,
+    build_stoichio_matrix,
+    remove_unknown_compounds,
+    get_target_rxn_idx,
+    minimize
 )
-# from tempfile import (
-#     TemporaryDirectory,
-#     mkdtemp
-# )
-# from shutil    import rmtree
 from brs_utils import (
     create_logger,
 )
+from chemlite import Reaction
 
 
 class Test_rpThermo(TestCase):
 
     def setUp(self):
         self.logger = create_logger(__name__, 'ERROR')
+        self.rxn_1 = Reaction(
+            id='rxn_1',
+            reactants={'MNXM188': 1, 'MNXM4': 1, 'MNXM6': 1, 'MNXM1': 3},
+            products={'CMPD_0000000004': 1, 'CMPD_0000000003': 1, 'MNXM13': 1, 'MNXM15': 3, 'MNXM5': 1},
+        )
+        self.rxn_2 = Reaction(
+            id='rxn_2',
+            reactants={'MNXM4': 1, 'CMPD_0000000003': 2},
+            products={'MNXM1': 1, 'TARGET_0000000001': 1},
+        )
+        self.rxn_3 = Reaction(
+            id='rxn_3',
+            reactants={'CMPD_0000000004': 3, 'MNXM4': 1, 'MNXM6': 1},
+            products={'MNXM13': 1, 'MNXM5': 1},
+        )
+        self.reactions = [self.rxn_1, self.rxn_2, self.rxn_3]
+        self.sto_mat_1 = [
+            [-3.0, 1.0, 0.0],
+            [-1.0, -1.0, -1.0],
+            [1.0, 0.0, 1.0],
+            [3.0, 0.0, 0.0],
+            [1.0, 0.0, -3.0],
+            [1.0, 0.0, 1.0],
+            [0.0, 1.0, 0.0],
+            [1.0, -2.0, 0.0],
+            [-1.0, 0.0, 0.0],
+            [-1.0, 0.0, -1.0]
+        ]
 
     # Reactions
     # |- rxn_1: 1.0 MNXM188 + 1.0 MNXM4 + 1.0 MNXM6 + 3.0 MNXM1 --> 1.0 CMPD_0000000004 + 1.0 CMPD_0000000003 + 1.0 MNXM13 + 1.0 MNXM15 + 1.0 MNXM5
@@ -89,3 +116,46 @@ class Test_rpThermo(TestCase):
             coeffs.tolist(),
             [1, 1, 1, 1]
         )
+
+    def test_build_stoichio_matrix(self):
+        # Ignore the order of matrix lines because
+        # it is not relevant for our resolution system
+        self.assertCountEqual(
+            build_stoichio_matrix(self.reactions).tolist(),
+            self.sto_mat_1
+        )
+
+    def test_build_stoichio_matrix_w_sel_cmpds(self):
+        # Ignore the order of matrix lines because
+        # it is not relevant for our resolution system
+        self.assertCountEqual(
+            build_stoichio_matrix(
+                reactions=self.reactions,
+                compounds=['CMPD_0000000003']
+            ).tolist(),
+            [self.sto_mat_1[7]]
+        )
+
+    def test_get_target_rxn_idx(self):
+        self.assertEqual(
+            get_target_rxn_idx(
+                reactions=self.reactions,
+                rxn_target_id=self.rxn_2.get_id(),
+            ),
+            self.reactions.index(self.rxn_2)
+        )
+
+    def test_remove_unknown_compounds(self):
+        compd_id = 'UNK_CMPD_FOOBAR'
+        self.rxn_1.add_product(stoichio=1, compound_id=compd_id)
+        self.rxn_3.add_reactant(stoichio=1, compound_id=compd_id)
+        sto_mat = build_stoichio_matrix(self.reactions)
+        print(sto_mat)
+        reactions = remove_unknown_compounds(
+            unk_compounds=[compd_id],
+            reactions=self.reactions,
+            rxn_target_id=self.rxn_2.get_id(),
+        )
+        for rxn in reactions:
+            print(rxn)
+        exit()
