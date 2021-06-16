@@ -10,7 +10,7 @@ from rptools.rplibs import rpPathway
 from brs_utils import Cache
 
 def cobra_suffix(pathway: rpPathway) -> str:
-    return f'__64__{pathway.get_info("rpSBML")["compartments"][0]["id"]}'
+    return f'__64__{pathway.get_rpsbml_info("compartments")[0]["id"]}'
 
 def cobraize_string(
     string: str,
