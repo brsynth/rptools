@@ -36,7 +36,9 @@ from logging import (
     ERROR
 )
 from copy import deepcopy
+import libsbml
 from brs_utils import Cache
+from rr_cache import rrCache
 from chemlite import (
     Pathway,
     Compound
@@ -77,7 +79,83 @@ class rpPathway(Pathway, rpObject):
         rpObject.__init__(self)
         self.set_target_id(None)
         self.set_sink(None)
+        # Set default rpSBML infos
+        if cache is None:
+            cache = rrCache(
+                db='file',
+                attrs=[
+                    'comp_xref',
+                    'deprecatedCompID_compid',
+                ]
+            )
         self.__set_rpsbml_infos(rpsbml_infos)
+        if self.get_rpsbml_infos() == {}:
+            self.add_rpsbml_info(
+                'compartments',
+                [
+                    {
+                        'id': 'MNXC3',
+                        'name': 'cytosol',
+                        'annot': cache.get('comp_xref')[
+                            cache.get('deprecatedCompID_compid')[
+                                'MNXC3'
+                            ]
+                        ]
+                    }
+                ]
+            )
+            self.add_rpsbml_info(
+                'parameters',
+                {
+                    'upper_flux_bound': {
+                        'value': 999999.0,
+                        'units': 'mmol_per_gDW_per_hr'
+                    },
+                    'lower_flux_bound': {
+                        'value': 0.0,
+                        'units': 'mmol_per_gDW_per_hr'
+                    }
+                }
+            )
+            self.add_rpsbml_info(
+                'unit_def',
+                {
+                    'mmol_per_gDW_per_hr': [
+                        {
+                            'kind': libsbml.UNIT_KIND_MOLE,
+                            'exponent': 1,
+                            'scale': -3,
+                            'multiplier': 1.0
+                        },
+                        {
+                            'kind': libsbml.UNIT_KIND_GRAM,
+                            'exponent': 1,
+                            'scale': 0,
+                            'multiplier': 1.0
+                        },
+                        {
+                            'kind': libsbml.UNIT_KIND_SECOND,
+                            'exponent': 1,
+                            'scale': 0,
+                            'multiplier': 3600.0
+                        }
+                    ],
+                    'kj_per_mol': [
+                        {
+                            'kind': libsbml.UNIT_KIND_JOULE,
+                            'exponent': 1,
+                            'scale': 3,
+                            'multiplier': 1.0
+                        },
+                        {
+                            'kind': libsbml.UNIT_KIND_JOULE,
+                            'exponent': -1,
+                            'scale': 1,
+                            'multiplier': 1.0
+                        }
+                    ]
+                }
+            )
 
     ## OUT METHODS
     # def __repr__(self):
@@ -466,7 +544,15 @@ class rpPathway(Pathway, rpObject):
         self.__rpsbml_infos = deepcopy(infos)
 
     def add_rpsbml_info(self, key: str, value: TypeVar) -> None:
-        self.__rpsbml_infos[key] = deepcopy(value)
+        if self.get_rpsbml_info(key) is not None:
+            if isinstance(self.__rpsbml_infos[key], list):
+                self.__rpsbml_infos[key] += [deepcopy(value)]
+            elif isinstance(self.__rpsbml_infos[key], dict):
+                self.__rpsbml_infos[key].update(value)
+            else:
+                self.__rpsbml_infos[key] = deepcopy(value)
+        else:
+            self.__rpsbml_infos[key] = deepcopy(value)
 
     def del_rpsbml_info(self, key: str) -> None:
         try:

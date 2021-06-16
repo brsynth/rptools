@@ -3709,89 +3709,92 @@ class rpSBML:
             )
 
         # Set default rpSBML infos
-        compartments = [
-            {
-                'id': 'MNXC3',
-                'name': 'cytosol',
-                'annot': cache.get('comp_xref')[
-                    cache.get('deprecatedCompID_compid')[
-                        'MNXC3'
-                    ]
-                ]
-            }
-        ]
-        parameters = {
-            'upper_flux_bound': {
-                'value': 999999.0,
-                'units': 'mmol_per_gDW_per_hr'
-            },
-            'lower_flux_bound': {
-                'value': 0.0,
-                'units': 'mmol_per_gDW_per_hr'
-            }
-        }
-        unit_def = {
-            'mmol_per_gDW_per_hr': [
-                {
-                    'kind': libsbml.UNIT_KIND_MOLE,
-                    'exponent': 1,
-                    'scale': -3,
-                    'multiplier': 1.0
-                },
-                {
-                    'kind': libsbml.UNIT_KIND_GRAM,
-                    'exponent': 1,
-                    'scale': 0,
-                    'multiplier': 1.0
-                },
-                {
-                    'kind': libsbml.UNIT_KIND_SECOND,
-                    'exponent': 1,
-                    'scale': 0,
-                    'multiplier': 3600.0
-                }
-            ],
-            'kj_per_mol': [
-                {
-                    'kind': libsbml.UNIT_KIND_JOULE,
-                    'exponent': 1,
-                    'scale': 3,
-                    'multiplier': 1.0
-                },
-                {
-                    'kind': libsbml.UNIT_KIND_JOULE,
-                    'exponent': -1,
-                    'scale': 1,
-                    'multiplier': 1.0
-                }
-            ]
-        }
+        compartments = pathway.get_rpsbml_info('compartments')
+        # [
+        #     {
+        #         'id': 'MNXC3',
+        #         'name': 'cytosol',
+        #         'annot': cache.get('comp_xref')[
+        #             cache.get('deprecatedCompID_compid')[
+        #                 'MNXC3'
+        #             ]
+        #         ]
+        #     }
+        # ]
+        parameters = pathway.get_rpsbml_info('parameters')
+        # parameters = {
+        #     'upper_flux_bound': {
+        #         'value': 999999.0,
+        #         'units': 'mmol_per_gDW_per_hr'
+        #     },
+        #     'lower_flux_bound': {
+        #         'value': 0.0,
+        #         'units': 'mmol_per_gDW_per_hr'
+        #     }
+        # }
+        unit_def = pathway.get_rpsbml_info('unit_def')
+        # unit_def = {
+        #     'mmol_per_gDW_per_hr': [
+        #         {
+        #             'kind': libsbml.UNIT_KIND_MOLE,
+        #             'exponent': 1,
+        #             'scale': -3,
+        #             'multiplier': 1.0
+        #         },
+        #         {
+        #             'kind': libsbml.UNIT_KIND_GRAM,
+        #             'exponent': 1,
+        #             'scale': 0,
+        #             'multiplier': 1.0
+        #         },
+        #         {
+        #             'kind': libsbml.UNIT_KIND_SECOND,
+        #             'exponent': 1,
+        #             'scale': 0,
+        #             'multiplier': 3600.0
+        #         }
+        #     ],
+        #     'kj_per_mol': [
+        #         {
+        #             'kind': libsbml.UNIT_KIND_JOULE,
+        #             'exponent': 1,
+        #             'scale': 3,
+        #             'multiplier': 1.0
+        #         },
+        #         {
+        #             'kind': libsbml.UNIT_KIND_JOULE,
+        #             'exponent': -1,
+        #             'scale': 1,
+        #             'multiplier': 1.0
+        #         }
+        #     ]
+        # }
 
         # print(parameters)
         # Try to get from pathway
         # print(pathway.get_infos())
         # exit()
-        if pathway.get_rpsbml_infos() is not None:
-            if 'compartments' in pathway.get_rpsbml_infos():
-                # _compartments = pathway.get_info('rpSBML')['compartments']
-                compartment = {}
-                idx = 0
-                for idx in range(len(pathway.get_rpsbml_info('compartments'))):
-                    for key in ['id', 'name']:
-                        compartment[key] = deepcopy(pathway.get_rpsbml_info('compartments')[idx][key])
-                    if 'annot' not in compartment or compartment['annot'] == '':
-                        # # find the index of right compartment ID
-                        # idx = list(filter(lambda d: d['id'] == compartment[id], compartments))
-                        compartment['annot'] = cache.get('comp_xref')[
-                            cache.get('deprecatedCompID_compid')[
-                                compartment['name']
-                            ]
-                        ]
-                    idx += 1
-            if 'parameters' in pathway.get_rpsbml_infos():
-                parameters = deepcopy(pathway.get_rpsbml_info('parameters'))
-            if 'unit_def' in pathway.get_rpsbml_infos():
-                unit_def = deepcopy(pathway.get_rpsbml_info('unit_def'))
+        # if pathway.get_rpsbml_infos() is not None:
+        #     if 'compartments' in pathway.get_rpsbml_infos():
+        #         # _compartments = pathway.get_info('rpSBML')['compartments']
+        #         compartment = {}
+        #         idx = 0
+        #         for idx in range(len(pathway.get_rpsbml_info('compartments'))):
+        #             for key in ['id', 'name']:
+        #                 compartment[key] = deepcopy(pathway.get_rpsbml_info('compartments')[idx][key])
+        #             if 'annot' not in compartment or compartment['annot'] == '':
+        #                 # # find the index of right compartment ID
+        #                 # idx = list(filter(lambda d: d['id'] == compartment[id], compartments))
+        #                 compartment['annot'] = cache.get('comp_xref')[
+        #                     cache.get('deprecatedCompID_compid')[
+        #                         compartment['name']
+        #                     ]
+        #                 ]
+        #             idx += 1
+        #     if 'parameters' in pathway.get_rpsbml_infos():
+        #         parameters = deepcopy(pathway.get_rpsbml_info('parameters'))
+        #     if 'unit_def' in pathway.get_rpsbml_infos():
+        #         unit_def = deepcopy(pathway.get_rpsbml_info('unit_def'))
 
         try:
             upper_flux_bound = parameters['upper_flux_bound']
