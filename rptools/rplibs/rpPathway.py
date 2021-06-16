@@ -164,7 +164,7 @@ class rpPathway(Pathway, rpObject):
         try:
             return self.get_rpsbml_infos()[key]
         except KeyError:
-            self.__logger.debug(f'There is no key \'{key}\' in rpsbml infos')
+            self.get_logger().debug(f'There is no key \'{key}\' in rpsbml infos')
             return None
 
     # def __getattr__(self, name):
@@ -472,5 +472,5 @@ class rpPathway(Pathway, rpObject):
         try:
             del self.__rpsbml_infos[key]
         except KeyError:
-            self.__logger.warning(f'No such key {key} found in infos, nothing deleted.')
+            self.get_logger().warning(f'No such key {key} found in infos, nothing deleted.')
     ## MISC
