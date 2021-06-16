@@ -4064,7 +4064,7 @@ class rpSBML:
                 {
                     'id': compartment.getId(),
                     'name': compartment.getName(),
-                    'annot': '',
+                    'annot': rpSBML.readMIRIAMAnnotation(compartment.getAnnotation()),
                 }
             ]
 
