@@ -475,14 +475,8 @@ def build_all_pathways(
                 tmpl_rxn_id = rxn['tmpl_rxn_id']
 
                 ## COMPOUNDS
-                # Compounds from original transformation
-                compounds = {
-                    'right': deepcopy(transfo['right']),
-                    'left': deepcopy(transfo['left'])
-                }
-                # Add template reaction compounds
+                # Template reaction compounds
                 added_cmpds = transfo['complement'][rule_id][tmpl_rxn_id]['added_cmpds']
-                compounds = add_compounds(compounds, added_cmpds)
                 # Add missing compounds to the cache
                 for side in added_cmpds.keys():
                     for spe_id in added_cmpds[side].keys():
@@ -497,6 +491,15 @@ def build_all_pathways(
                             )
 
                 ## REACTION
+                compounds = add_compounds(
+                    # Compounds from original transformation
+                    {
+                        'right': deepcopy(transfo['right']),
+                        'left': deepcopy(transfo['left'])
+                    },
+                    # Add template reaction compounds
+                    added_cmpds
+                )
                 # revert reaction index (forward)
                 rxn_idx_forward = nb_reactions - rxn_idx
                 rxn = rpReaction(
