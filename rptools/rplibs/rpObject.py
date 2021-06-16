@@ -78,21 +78,21 @@ class rpObject():
 
     ## READ METHODS
     ### THERMO ###
-    def get_thermo(self) -> Dict:
+    def get_thermo(self) -> TypeVar:
         return self.__thermo
 
-    def get_thermo_info(self, key: str) -> Dict:
+    def get_thermo_info(self, key: str) -> TypeVar:
         return __get_dict_key(self.__thermo, 'thermo_'+key)
 
-    def get_fba_info(self, key: str) -> Dict:
+    def get_fba_info(self, key: str) -> TypeVar:
         return __get_dict_key(self.__fba, 'fba_'+key)
 
-    def get_fba(self) -> Dict:
+    def get_fba(self) -> TypeVar:
         return self.__fba
 
     ## WRITE METHODS
     ### THERMO ###
-    def __set_thermo(self, thermo: Dict) -> None:
+    def __set_thermo(self, thermo: TypeVar) -> None:
         self.__thermo = deepcopy(thermo)
 
     def set_thermo_info(self, key: str, value: TypeVar) -> None:
@@ -102,7 +102,7 @@ class rpObject():
         self.__thermo[prefix+key] = deepcopy(value)
 
     ### FBA ###
-    def __set_fba(self, fba: Dict) -> None:
+    def __set_fba(self, fba: TypeVar) -> None:
         self.__fba = deepcopy(fba)
 
     def set_fba_info(self, key: str, value: TypeVar) -> None:

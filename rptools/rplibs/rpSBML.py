@@ -18,6 +18,7 @@ from typing import (
     List,
     Dict,
     Tuple,
+    TypeVar,
     Generic
 )
 from json import (
@@ -3406,7 +3407,7 @@ class rpSBML:
     def _readBRSYNTHAnnotationToValue(
         annot: libsbml.XMLNode,
         values: Dict,
-        type: Generic,
+        type: TypeVar,
         logger: Logger = getLogger(__name__)
     ) -> None:
         try:
@@ -4016,6 +4017,21 @@ class rpSBML:
         :return: Dictionnary of the pathway annotation
         """
 
+        def write_to_Pathway(data: Dict, object: TypeVar) -> None:
+            # Detect fba and thermo infos
+            thermo_pre = 'thermo_'
+            fba_pre = 'fba_'
+            for key, value in data.items():
+                if key.startswith(thermo_pre):
+                    object.set_thermo_info(key[len(thermo_pre):], value)
+                elif key.startswith(fba_pre):
+                    object.set_fba_info(key[len(fba_pre):], value)
+                else:
+                    try:
+                        getattr(object, 'set_'+key)(value)
+                    except AttributeError:
+                        pass
+
         if cache is None:
             cache = rrCache(
                 db='file',
@@ -4053,16 +4069,17 @@ class rpSBML:
                 #         key=measure,
                 #         value=spe['brsynth'][measure]
                 #     )
-                for key, value in spe['brsynth'].items():
-                    if key.startswith('thermo_'):
-                        compound.set_thermo_info(key, value)
-                    elif key.startswith('fba_'):
-                        compound.set_fba_info(key, value)
-                    else:
-                        try:
-                            getattr(compound, 'set_'+key)(value)
-                        except AttributeError:
-                            pass
+                write_to_Pathway(spe['brsynth'], compound)
+                # for key, value in spe['brsynth'].items():
+                #     if key.startswith('thermo_'):
+                #         compound.set_thermo_info(key, value)
+                #     elif key.startswith('fba_'):
+                #         compound.set_fba_info(key, value)
+                #     else:
+                #         try:
+                #             getattr(compound, 'set_'+key)(value)
+                #         except AttributeError:
+                #             pass
 
         ## REACTIONS
         reactions = {}
@@ -4076,7 +4093,7 @@ class rpSBML:
                     products=rxn['right']
                 )
                 # Add additional infos
-                reaction.set_infos(rxn['brsynth'])
+                write_to_Pathway(rxn['brsynth'], reaction)
                 # Detects if the current reaction produces the target
                 target_id = [spe_id for spe_id in reaction.get_products_ids() if 'TARGET' in spe_id]
                 if target_id != []:
@@ -4095,31 +4112,21 @@ class rpSBML:
                 #         key=measure,
                 #         value=rxn['brsynth'][measure]
                 #     )
-                for key, value in rxn['brsynth'].items():
-                    if key.startswith('thermo_'):
-                        pathway.get_reaction(rxn_id).set_thermo_info(key, value)
-                    elif key.startswith('fba_'):
-                        pathway.get_reaction(rxn_id).set_fba_info(key, value)
-                    else:
-                        try:
-                            getattr(pathway.get_reaction(rxn_id), 'set_'+key)(value)
-                        except AttributeError:
-                            pass
+                # for key, value in rxn['brsynth'].items():
+                #     if key.startswith('thermo_'):
+                #         pathway.get_reaction(rxn_id).set_thermo_info(key, value)
+                #     elif key.startswith('fba_'):
+                #         pathway.get_reaction(rxn_id).set_fba_info(key, value)
+                #     else:
+                #         try:
+                #             getattr(pathway.get_reaction(rxn_id), 'set_'+key)(value)
+                #         except AttributeError:
+                #             pass
 
         ## PATHWAY
         if 'pathway' in keys:
             pathway_sbml = self.read_pathway(pathway_id)
-            # Detect fba and thermo infos
-            for key, value in pathway_sbml.items():
-                if key.startswith('thermo_'):
-                    pathway.set_thermo_info(key, value)
-                elif key.startswith('fba_'):
-                    pathway.set_fba_info(key, value)
-                else:
-                    try:
-                        getattr(pathway, 'set_'+key)(value)
-                    except AttributeError:
-                        pass
+            write_to_Pathway(pathway_sbml, pathway)
             # for measure in [key for key in pathway_sbml if
             #                 key.startswith('thermo') or key.startswith('fba')]:
             #     getattr(pathway, 'set_'+measure+'_info')(pathway_sbml[measure])
@@ -4140,6 +4147,7 @@ class rpSBML:
                     'scale': unit.getScale(),
                     'multiplier': unit.getMultiplier()
                 }]
+        pathway.add_rpsbml_info('unit_def', unit_defs)
 
         # Compartments
         compartments = []
@@ -4151,6 +4159,7 @@ class rpSBML:
                     'annot': '',
                 }
             ]
+        pathway.add_rpsbml_info('compartments', compartments)
 
         # Parameters
         parameters = {}
@@ -4159,15 +4168,7 @@ class rpSBML:
                 'value': param.getValue(),
                 'units': param.getUnits()
             }
-
-        pathway.add_info(
-            'rpSBML',
-            {
-                'unit_def': unit_defs,
-                'compartments': compartments,
-                'parameters': parameters
-            }
-        )
+        pathway.add_rpsbml_info('parameters', parameters)
 
         # Groups
         groups = [group.getId() for group in self.getPlugin('groups').getListOfGroups()]

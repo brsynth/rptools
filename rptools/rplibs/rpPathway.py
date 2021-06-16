@@ -85,7 +85,7 @@ class rpPathway(Pathway, rpObject):
 
     def _to_dict(self) -> Dict:
         return {
-            **super()._to_dict(),
+            **Pathway._to_dict(self),
             **self._infos_to_dict()
         }
 
@@ -96,7 +96,7 @@ class rpPathway(Pathway, rpObject):
                 'target': self.get_target_id(),
                 'rpsbml_infos': deepcopy(self.get_rpsbml_infos())
             },
-            **super()._infos_to_dict()
+            **rpObject._infos_to_dict(self)
         }
 
     # def __to_dict(self) -> Dict:
@@ -160,12 +160,12 @@ class rpPathway(Pathway, rpObject):
     def get_rpsbml_infos(self) -> Dict:
         return self.__rpsbml_infos
 
-    # def get_info(self, key: str) -> TypeVar:
-    #     try:
-    #         return self.get_rpsbml_infos()[key]
-    #     except KeyError:
-    #         self.__logger.debug(f'There is no key \'{key}\' in rpsbml infos')
-    #         return None
+    def get_rpsbml_info(self, key: str) -> TypeVar:
+        try:
+            return self.get_rpsbml_infos()[key]
+        except KeyError:
+            self.__logger.debug(f'There is no key \'{key}\' in rpsbml infos')
+            return None
 
     # def __getattr__(self, name):
     #     '''Catch get_<key>_infos() call an returns the corresponding infos'''
