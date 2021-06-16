@@ -4044,8 +4044,45 @@ class rpSBML:
                 ]
             )
 
+        ## RPSBML
+        # Unit Definitions
+        unit_defs = {}
+        for unit_def in self.getModel().getListOfUnitDefinitions():
+            unit_defs[unit_def.getId()] = []
+            for unit in unit_def.getListOfUnits():
+                unit_defs[unit_def.getId()] +=  [{
+                    'kind': unit.getKind(),
+                    'exponent': unit.getExponent(),
+                    'scale': unit.getScale(),
+                    'multiplier': unit.getMultiplier()
+                }]
+
+        # Compartments
+        compartments = []
+        for compartment in self.getModel().getListOfCompartments():
+            compartments += [
+                {
+                    'id': compartment.getId(),
+                    'name': compartment.getName(),
+                    'annot': '',
+                }
+            ]
+
+        # Parameters
+        parameters = {}
+        for param in self.getModel().getListOfParameters():
+            parameters[param.getId()] =  {
+                'value': param.getValue(),
+                'units': param.getUnits()
+            }
+
         pathway = rpPathway(
             id=self.getName(),
+            rpsbml_infos={
+                'compartments': compartments,
+                'unit_def': unit_defs,
+                'parameters': parameters,
+            },
             logger=self.logger
         )
 
@@ -4137,41 +4174,6 @@ class rpSBML:
                 #     key=measure,
                 #     value=pathway_sbml[measure]
                 # )
-
-        ## RPSBML
-        # Unit Definitions
-        unit_defs = {}
-        for unit_def in self.getModel().getListOfUnitDefinitions():
-            unit_defs[unit_def.getId()] = []
-            for unit in unit_def.getListOfUnits():
-                unit_defs[unit_def.getId()] +=  [{
-                    'kind': unit.getKind(),
-                    'exponent': unit.getExponent(),
-                    'scale': unit.getScale(),
-                    'multiplier': unit.getMultiplier()
-                }]
-        pathway.add_rpsbml_info('unit_def', unit_defs)
-
-        # Compartments
-        compartments = []
-        for compartment in self.getModel().getListOfCompartments():
-            compartments += [
-                {
-                    'id': compartment.getId(),
-                    'name': compartment.getName(),
-                    'annot': '',
-                }
-            ]
-        pathway.add_rpsbml_info('compartments', compartments)
-
-        # Parameters
-        parameters = {}
-        for param in self.getModel().getListOfParameters():
-            parameters[param.getId()] =  {
-                'value': param.getValue(),
-                'units': param.getUnits()
-            }
-        pathway.add_rpsbml_info('parameters', parameters)
 
         # Groups
         groups = [group.getId() for group in self.getPlugin('groups').getListOfGroups()]
