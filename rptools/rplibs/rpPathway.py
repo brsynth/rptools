@@ -190,7 +190,7 @@ class rpPathway(Pathway, rpObject):
 
     ## READ METHODS
     def get_target_rxn_id(self) -> str:
-        for rxn in self.get_reactions():
+        for rxn in self.get_list_of_reactions():
             if self.get_target_id() in rxn.get_products_ids():
                 return rxn.get_id()
 

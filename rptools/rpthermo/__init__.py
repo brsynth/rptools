@@ -6,6 +6,9 @@ Created on Jan 21 2021
 """
 
 
-from rptools.rpthermo.rpThermo import thermo
+from rptools.rpthermo.rpThermo import (
+    runThermo,
+    initThermo
+)
 
 __all__ = ['thermo']

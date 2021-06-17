@@ -3871,7 +3871,7 @@ class rpSBML:
         except:
             lower_flux_bound = parameters['B_0_0']
 
-        for rxn in pathway.get_reactions():
+        for rxn in pathway.get_list_of_reactions():
             # Add the reaction in the model
             self.createReaction(
                 rxn=rxn,

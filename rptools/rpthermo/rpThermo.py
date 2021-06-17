@@ -58,7 +58,7 @@ SIDES = [
 ]
 
 
-def thermo(
+def runThermo(
     pathway: rpPathway,
     cc: ComponentContribution = None,
     ph: float = None,
@@ -109,7 +109,7 @@ def thermo(
         logger=logger,
         waiting=False
     )
-    for rxn in pathway.get_reactions():
+    for rxn in pathway.get_list_of_reactions():
         print_reaction(
             rxn=rxn,
             logger=logger
@@ -158,9 +158,9 @@ def thermo(
 
     ## REACTIONS
     # Compute thermo for each reaction
-    for rxn in pathway.get_reactions():
+    for rxn in pathway.get_list_of_reactions():
         results['reactions'][rxn.get_id()] = eQuilibrator(
-            reaction=rxn,
+            species_stoichio=rxn.get_species(),
             species=species,
             cc=cc,
             logger=logger
@@ -170,7 +170,7 @@ def thermo(
     # Remove unknown compounds
     reactions = remove_unknown_compounds(
         unk_compounds=unk_compounds,
-        reactions=pathway.get_reactions(),
+        reactions=pathway.get_list_of_reactions(),
         rxn_target_id=pathway.get_target_rxn_id(),
         logger=logger
     )
@@ -182,7 +182,7 @@ def thermo(
         waiting=True
     )
     results['net_reaction'] = eQuilibrator(
-        reaction=pathway.net_reaction(),
+        species_stoichio=pathway.net_reaction(),
         species=species,
         cc=cc,
         logger=logger
@@ -192,7 +192,7 @@ def thermo(
     return results
 
 def eQuilibrator(
-    reaction: Reaction,
+    species_stoichio: Dict[str, float],
     species: Dict,
     cc: 'ComponentContribution',
     logger: Logger=getLogger(__name__)
@@ -215,14 +215,16 @@ def eQuilibrator(
 
     ## Format reaction to what eQuilibrator expects
     compounds = {SIDES[0]['name']: [], SIDES[1]['name']: []}
+    reactants = {spe_id: -spe_sto for (spe_id, spe_sto) in species_stoichio.items() if spe_sto < 0}
+    products = {spe_id: spe_sto for (spe_id, spe_sto) in species_stoichio.items() if spe_sto > 0}
 
     try:
         # For both sides left and right
-        for cmpd_id, cmpd_sto in reaction.get_left().items():
+        for cmpd_id, cmpd_sto in reactants.items():
             compounds[SIDES[0]['name']] += [
                 f'{cmpd_sto} {species[cmpd_id].inchi_key}'
             ]
-        for cmpd_id, cmpd_sto in reaction.get_right().items():
+        for cmpd_id, cmpd_sto in products.items():
             compounds[SIDES[1]['name']] += [
                 f'{cmpd_sto} {species[cmpd_id].inchi_key}'
             ]
@@ -352,7 +354,6 @@ def remove_unknown_compounds(
         compounds=unk_compounds,
         logger=logger
     )
-    print(sto_mat)
 
     # Get the target reaction to maximize
     rxn_target_idx = get_target_rxn_idx(
@@ -360,15 +361,12 @@ def remove_unknown_compounds(
         rxn_target_id,
         logger
     )
-    print(f'rxn_target_idx: {rxn_target_idx}')
 
     coeffs = minimize(
         sto_mat,
         rxn_target_idx,
         logger
     )
-
-    print(coeffs)
 
     ## Impact coeff to reactions
     for rxn_idx in range(len(reactions)):
@@ -509,226 +507,39 @@ def get_compounds_from_cache(
     unknown_compounds = []
 
     for cmpd in compounds:
+
+        logger.debug(f'Searching {cmpd.to_string()}...')
         compound = cc.get_compound(cmpd.get_id())
+        logger.debug(f'Found {compound.__repr__()}')
+
+        if compound is not None:
+            compounds_dict[cmpd.get_id()] = compound
         # If ID not found,
         # then search with inchikey
-        try:
-            if compound is None:
-                compound = cc.search_compound(cmpd.get_inchikey())
-            # If the first level of inchikeys are the same,
-            # then substitute
-            if compound.inchi_key.split('-')[0] == cmpd.get_inchikey().split('-')[0]:
-                compounds_dict[cmpd.get_id()] = compound
-            else:
-                # search by inchikey
-                try:
-                    compounds_dict[cmpd.get_id()] = cc.search_compound_by_inchi_key(cmpd.get_inchikey())[0]
-                except IndexError:  # the compound is considered as unknown
-                    unknown_compounds += [cmpd.get_id()]
-        except (AttributeError, ValueError):
+        else:
             try:
-                compound = cc.get_compound_by_inchi(cmpd.get_inchi())
-            except ValueError:
-                unknown_compounds += [cmpd.get_id()]
-
-        if compound is None:
-            unknown_compounds += [cmpd.get_id()]
+                logger.debug(f'Searching {cmpd.get_inchikey()}...')
+                compound = cc.search_compound(cmpd.get_inchikey())
+                logger.debug(f'Found {compound.__repr__()}')
+                # If the first level of inchikeys are the same,
+                # then substitute
+                if compound.inchi_key.split('-')[0] == cmpd.get_inchikey().split('-')[0]:
+                    compounds_dict[cmpd.get_id()] = compound
+                else:
+                    # search by inchikey
+                    try:
+                        compounds_dict[cmpd.get_id()] = cc.search_compound_by_inchi_key(cmpd.get_inchikey())[0]
+                    except IndexError:  # the compound is considered as unknown
+                        unknown_compounds += [cmpd.get_id()]
+            except (AttributeError, ValueError):
+                try:
+                    logger.debug(f'Searching {cmpd.get_inchi()}...')
+                    compounds_dict[cmpd.get_id()] = cc.get_compound_by_inchi(cmpd.get_inchi())
+                    logger.debug(f'Found {compound.__repr__()}')
+                except ValueError:
+                    unknown_compounds += [cmpd.get_id()]
 
     return compounds_dict, unknown_compounds
-
-
-# def net_reaction(
-#     rpsbml: "rpSBML",
-#     pathway_id: str='rp_pathway',
-#     logger: Logger=getLogger(__name__)
-# ):
-
-#     rp_pathway = rpsbml.getModel().getPlugin('groups').getGroup(pathway_id)
-
-#     reactions = list(
-#         reversed(
-#             [rpsbml.getModel().getReaction(i.getIdRef()) for i in rpsbml.getModel().getPlugin('groups').getGroup(pathway_id).getListOfMembers()]
-#         )
-#     )
-
-#     # Build the stoichiometric matrix
-#     stoichio_matrix, species_table = build_stoichio_matrix(
-#         reactions,
-#         logger
-#     )
-
-#     # print(stoichio_matrix)
-#     # print(species_table)
-#     # exit()
-
-#     # Print out reactions
-#     print_reactions(
-#         reactions,
-#         stoichio_matrix,
-#         species_table,
-#         logger
-#     )
-
-#     # Scan all species to find those that we want to remove from left part,
-#     # i.e. start with 'CMPD_'
-#     species_to_rm = []
-#     for spe in species_table.keys():
-#         if spe.startswith('CMPD_'):
-#             species_to_rm += [species_table[spe]]
-#         #     prio_rm_spe.insert(0, species_table[spe])
-#         # else:
-#         #     prio_rm_spe.append(species_table[spe])
-#     # print(species_table)
-#     # # prio_rm_spe = []
-#     # stoichio_matrix[5][1] = -2
-#     # stoichio_matrix[4][1] = -0.5
-#     # from numpy import array
-#     # stoichio_matrix = array([
-#     #     [-2., 1., 2.],
-#     #     [0., -1., 1.],
-#     # ])
-#     # # CONFLICT!
-#     # stoichio_matrix = array([
-#     #     [0., 1., -2.],
-#     #     [0., -1., 1.],
-#     # ])
-#     # stoichio_matrix = array([
-#     #     [2., -1., -2.],
-#     #     [0., -1., 1.],
-#     # ])
-#     # prio_rm_spe = [1, 0]
-#     # # stoichio_matrix[4][0] = -2
-#     # # Print out reactions
-#     # for i_rxn in range(len(reactions)):
-#     #     rxn_id = reactions[i_rxn].getIdAttribute()
-#     #     reactants, products = build_reaction(
-#     #         rxn_id = rxn_id,
-#     #         sto_mat = stoichio_matrix.transpose()[i_rxn],
-#     #         spe_tbl = species_table,
-#     #         logger = logger
-#     #     )
-#     #     print_reaction(
-#     #         rxn_id = rxn_id,
-#     #         reactants = reactants,
-#     #         products = products,
-#     #         logger = logger
-#     #     )
-#     # Remove intermediate species
-#     stoichio_matrix = remove_species(
-#         sto_mat = stoichio_matrix,
-#         species = species_to_rm,
-#         logger = logger
-#     )
-
-#     # Print out the net reaction
-#     # For each species:
-#     #   sum neg coeff between them (reactants)
-#     #   sum pos coeff between them (products)
-#     sto_rxn = np_add(
-#         [coeff[coeff<0].sum() for coeff in stoichio_matrix],
-#         [coeff[coeff>0].sum() for coeff in stoichio_matrix]
-#     )
-#     rxn_id = 'rxn_net'
-#     reactants, products = build_reaction(
-#         rxn_id = rxn_id,
-#         sto_mat = sto_rxn,
-#         spe_tbl = species_table,
-#         logger = logger
-#     )
-#     logger.info(
-#         '{color}{typo}Net Reaction{rst}'.format(
-#             color=c_fg('white'),
-#             typo=c_attr('bold'),
-#             rst=c_attr('reset')
-#         )
-#     )
-#     print_reaction(
-#         rxn_id = rxn_id,
-#         reactants = reactants,
-#         products = products,
-#         logger = logger
-#     )
-
-
-#     exit()
-
-#     # Detect intermediate species
-#     intermediate_species = detect_intermediate_species(pathway_reactions, logger)
-
-#     # Adjust stoichiometric coeff of intermediate species so that we can remove them
-#     pathway_reactions = adjust_stoichio(pathway_reactions)
-
-#     logger.info('intermediate_species = ' + str(intermediate_species))
-
-
-# def print_reactions(
-#     reactions: List,
-#     sto_mat: 'numpy.ndarray',
-#     spe_tbl = Dict,
-#     logger: Logger=getLogger(__name__)
-# ) -> None:
-#     logger.info(
-#         '{color}{typo}Reactions{rst}'.format(
-#             color=c_fg('white'),
-#             typo=c_attr('bold'),
-#             rst=c_attr('reset')
-#         )
-#     )
-#     for i_rxn in range(len(reactions)):
-#         rxn_id = reactions[i_rxn].getIdAttribute()
-#         reactants, products = build_reaction(
-#             rxn_id = rxn_id,
-#             sto_mat = sto_mat.transpose()[i_rxn],
-#             spe_tbl = spe_tbl,
-#             logger = logger
-#         )
-#         print_reaction(
-#             rxn_id = rxn_id,
-#             reactants = reactants,
-#             products = products,
-#             logger = logger
-#         )
-
-
-# def build_reaction(
-#     rxn_id = str,
-#     sto_mat = 'numpy.ndarray',
-#     spe_tbl = Dict,
-#     logger: Logger=getLogger(__name__)
-# ) -> Tuple[Dict, Dict]:
-#     """
-#     Returns reactants and products ids.
-
-#     Parameters
-#     ----------
-#     rxn_id: str
-#         Id of the reaction
-#     sto_mat: 'numpy.ndarray'
-#         Stoichiometrix matrix of the reaction
-#     spe_tbl: Dict
-#         Correspondance between species id and and its index within sto_mat
-
-#     Returns
-#     -------
-#     reactants: Dict
-#         Dictionary of reactants: {spe_id: sto_coeff}
-#     products: Dict
-#         Dictionary of products: {spe_id: sto_coeff}
-#     """
-
-#     reactants = {}
-#     products = {}
-
-#     for i_sto_coeff in range(len(sto_mat)):
-#         sto_coeff = sto_mat[i_sto_coeff]
-#         # Retieve the species id corresponding to the current coeff index
-#         spe_id = list(spe_tbl.keys())[list(spe_tbl.values()).index(i_sto_coeff)]
-#         if sto_coeff < 0: # reactants
-#             reactants[spe_id] = sto_coeff
-#         elif sto_coeff > 0: # products
-#             products[spe_id] = sto_coeff
-
-#     return reactants, products
 
 
 def print_reaction(
@@ -759,162 +570,12 @@ def print_reaction(
     )
 
 
-# def build_stoichio_matrix(
-#     reactions: List,
-#     logger: Logger=getLogger(__name__)
-# ) -> Tuple['numpy.ndarray', Dict]:
-#     """
-#     Returns the stoichiometric matrix of the equations system.
-
-#     Parameters
-#     ----------
-#     reactions: List
-#         List of reactions (SBML Reaction)
-
-#     Returns
-#     -------
-#     sto_mat: 'numpy.ndarray'
-#         Stoichiometrix matrix
-#     species_table: Dict
-#         Correspondance between species ids and row number in sto_mat
-#     """
-
-#     # Put in a dictionary all species of the system to have:
-#     #   1. the dimension of stoichiometrix matrix
-#     #   2. the correspondance between species ids and their indices in the stoichiometrix matrix
-#     species_table = {}
-#     for react in reactions:
-#         for spe in list(react.getListOfReactants()) + list(react.getListOfProducts()):
-#             if spe.getSpecies() not in species_table.keys():
-#                 species_table[spe.getSpecies()] = len(species_table.keys())
-
-#     # Init the stoichio matrix
-#     sto_mat = np_zeros(
-#         (
-#             len(species_table), # rows
-#             len(reactions) # columns
-#         )
-#     )
-
-#     for i_react in range(len(reactions)):
-
-#         rxn = reactions[i_react]
-
-#         # Add stoichio coeff for reactants
-#         for spe in rxn.getListOfReactants():
-#             sto_mat[species_table[spe.getSpecies()]][i_react] = -spe.getStoichiometry()
-
-#         # Add stoichio coeff for products
-#         for spe in rxn.getListOfProducts():
-#             sto_mat[species_table[spe.getSpecies()]][i_react] = spe.getStoichiometry()
-    
-#     logger.debug(sto_mat)
-
-#     return sto_mat, species_table
-
-
-# def remove_species(
-#     sto_mat: 'numpy.ndarray',
-#     species: List,
-#     logger: Logger=getLogger(__name__)
-# ) -> 'numpy.ndarray':
-#     """
-#     Returns stoichio matrix after having removed species.
-
-#     Parameters
-#     ----------
-#     sto_mat: 'numpy.ndarray'
-#         Stoichiometrix matrix
-#     prio_rm_spe: List
-#         Species to remove in priority
-
-#     Returns
-#     -------
-#     sto_mat: 'numpy.ndarray'
-#         Reduced stoichiometrix matrix
-#     """
-
-#     # if prio_rm_spe == []:
-#     #     prio_rm_spe = range(sto_mat.shape[0])
-#     # else:
-#     #     # Species to be removed in priority have to be processed last
-#     #     # so that coeff mult will not be changed thereafter
-#     #     prio_rm_spe.reverse()
-
-#     # Try to balance species that appears both in left and right sides of the equations system
-#     print(sto_mat)
-#     for i_spe in species:
-#         spe = sto_mat[i_spe]
-#         # Check if there are + and - coeff, otherwise it is not possible to balance
-#         pos_coeff = spe[spe > 0]
-#         neg_coeff = spe[spe < 0]
-#         if len(pos_coeff) > 0 and len(neg_coeff) > 0:
-#             sum_pos_coeff = pos_coeff.sum()
-#             sum_neg_coeff = abs(neg_coeff.sum())
-#             # Choose to multiply all neg coeffs by the following ratio
-#             # (we could do the inverse, i.e. mult all pos coeff by sum_neg / sum_pos)
-#             mult = sum_pos_coeff / sum_neg_coeff
-#             # Try to reduce reactants coeff
-#             if mult < 1: # more neg coeff (reactants) than pos (products)
-#                 # then reduce neg coeff
-#                 rxn_ids = np_where(spe > 0)
-#                 mult = 1. / mult
-#             else: # more or equal pos coeff (products) than neg (reactants)
-#                 # then reduce pos coeff
-#                 rxn_ids = np_where(spe < 0)
-#             # Multiply coeffs of all species in the reaction where the species to balanced has a negative coeff
-#             for rxn_id in rxn_ids:
-#                 sto_mat.transpose()[rxn_id] *= mult
-#         print(species)
-#         print(sto_mat)
-
-#     # Remove species that are overall balanced
-#     # Has to be done after the balancing because balancing has to be done on all species
-#     for i_spe in range(sto_mat.shape[0]):
-#         spe = sto_mat[i_spe]
-#         # If sum of coeffs is 0
-#         if spe.sum() == 0:
-#             # then remove species from overall equation by setting coeffs to 0
-#             spe.fill(0)
-
-#     return sto_mat
-
-
-# def detect_intermediate_species(
-#     reactions: Dict,
-#     logger: Logger=getLogger(__name__)
-# ) -> List:
-#     """
-#     Returns list of species that appear both in left (reactants) and right (products) sides.
-
-#     Parameters
-#     ----------
-#     reactions: Dict
-#         Dictionary of reactions
-
-#     Returns
-#     -------
-#     intermediate_species: List[str]
-#         List of intermediate species names
-#     """
-
-#     logger.debug('reactions: ' + str(reactions))
-
-#     reactants = products = set()
-
-#     for rxn in reactions.keys():
-#         reactants = reactants.union(set(reactions[rxn]['reactants']))
-#         products = products.union(set(reactions[rxn]['products']))
-    
-#     return list(reactants & products)
-
-
 # used to initialise and download the data for equilibrator
 def initThermo(
-    ph: float,
-    ionic_strength: float,
-    pMg: float,
-    temp_k: float,
+    ph: float = None,
+    ionic_strength: float = None,
+    pMg: float = None,
+    temp_k: float = None,
     logger: Logger=getLogger(__name__)
 ) -> ComponentContribution:
 

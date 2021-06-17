@@ -18,7 +18,7 @@ from brs_utils import (
     print_OK_adv as print_OK,
     print_title_adv as print_title
 )
-from rptools.rpthermo import thermo
+from rptools.rpthermo import runThermo
 from rptools.rpthermo.Args import add_arguments
 from rptools import build_args_parser
 from rptools.rplibs import (
@@ -45,7 +45,7 @@ def _cli():
     ).to_Pathway()
 
     # RUN THERMO
-    results = thermo(
+    results = runThermo(
         pathway,
         args.ph,
         args.ionic_strength,

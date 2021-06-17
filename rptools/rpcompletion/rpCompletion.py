@@ -660,7 +660,7 @@ def apply_to_best_pathways(
 
     # Compute the score of applicant pathway
     # sum of rule_scores over reactions
-    score = sum(rxn.get_rule_score() for rxn in pathway.get_reactions())
+    score = sum(rxn.get_rule_score() for rxn in pathway.get_list_of_reactions())
     # normalize
     score /= pathway.get_nb_reactions()
 
