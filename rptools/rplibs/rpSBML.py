@@ -4789,7 +4789,7 @@ class rpSBML:
         # reactants_dict
         # print(reaction_smiles)
 
-        for spe_id, spe_sto in rxn.get_reactants_stoichio().items():
+        for spe_id, spe_sto in rxn.get_reactants().items():
             # print(str(reactant))
             # print(str(reactant))
             # print(str(reactant)+'__64__'+str(compartment_id))
@@ -4857,7 +4857,7 @@ class rpSBML:
         #     self.logger.error(str(json_dumps(errors, indent=4)))
         #     return None
 
-        for spe_id, spe_sto in rxn.get_products_stoichio().items():
+        for spe_id, spe_sto in rxn.get_products().items():
             pro = reac.createProduct()
             rpSBML.checklibSBML(pro, 'create product')
             # rpSBML.checklibSBML(pro.setSpecies(str(product)+'__64__'+str(compartment_id)), 'assign product species')

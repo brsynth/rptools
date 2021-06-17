@@ -360,6 +360,7 @@ def remove_unknown_compounds(
         rxn_target_id,
         logger
     )
+    print(f'rxn_target_idx: {rxn_target_idx}')
 
     coeffs = minimize(
         sto_mat,
@@ -475,10 +476,10 @@ def build_stoichio_matrix(
             rxn = reactions[rxn_idx]
             if cmpd_id in rxn.get_reactants_ids():
                 # Put the stochio value in the stochio matrix
-                sto_mat[cmpd_idx][rxn_idx] = -rxn.get_reactants_stoichio()[cmpd_id]
+                sto_mat[cmpd_idx][rxn_idx] = -rxn.get_reactants()[cmpd_id]
             elif cmpd_id in rxn.get_products_ids():
                 # Put the stochio value in the stochio matrix
-                sto_mat[cmpd_idx][rxn_idx] = rxn.get_products_stoichio()[cmpd_id]
+                sto_mat[cmpd_idx][rxn_idx] = rxn.get_products()[cmpd_id]
 
     return sto_mat
 
@@ -749,8 +750,8 @@ def print_reaction(
     logger.info(
         '{color}{typo}   |- {rxn_id}: {rst}{reactants} --> {products}'.format(
             rxn_id=rxn.get_id(),
-            reactants=' + '.join([str(sto)+' '+str(spe) for spe,sto in rxn.get_reactants_stoichio().items()]),
-            products=' + '.join([str(sto)+' '+str(spe) for spe,sto in rxn.get_products_stoichio().items()]),
+            reactants=' + '.join([str(sto)+' '+str(spe) for spe,sto in rxn.get_reactants().items()]),
+            products=' + '.join([str(sto)+' '+str(spe) for spe,sto in rxn.get_products().items()]),
             color=fg('white'),
             typo=attr('bold'),
             rst=attr('reset')
