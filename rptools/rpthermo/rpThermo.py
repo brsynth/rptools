@@ -524,7 +524,7 @@ def get_compounds_from_cache(
                     compounds_dict[cmpd.get_id()] = cc.search_compound_by_inchi_key(cmpd.get_inchikey())[0]
                 except IndexError:  # the compound is considered as unknown
                     unknown_compounds += [cmpd.get_id()]
-        except ValueError:
+        except (AttributeError, ValueError):
             try:
                 compound = cc.get_compound_by_inchi(cmpd.get_inchi())
             except ValueError:
