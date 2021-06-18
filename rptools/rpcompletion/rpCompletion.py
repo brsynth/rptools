@@ -66,6 +66,7 @@ def rp_completion(
     compartment_id='MNXC3',
     species_group_id='central_species',
     sink_species_group_id='sink',
+    max_subpaths_filter: int = 10,
     # pubchem_search=False,
     logger: Logger = getLogger(__name__)
 ):
@@ -128,6 +129,7 @@ def rp_completion(
         sink_molecules=sink_molecules,
         rr_reactions=cache.get('rr_reactions'),
         compounds_cache=cache.get('cid_strc'),
+        max_subpaths_filter=max_subpaths_filter,
         logger=logger
     )
 
@@ -442,6 +444,7 @@ def build_all_pathways(
     sink_molecules: List,
     rr_reactions: Dict,
     compounds_cache: Dict,
+    max_subpaths_filter: int,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
 
@@ -464,6 +467,8 @@ def build_all_pathways(
                 logger=logger
             )
 
+            logger.debug(pathway.get_id())
+
             ## ITERATE OVER REACTIONS
             nb_reactions = len(sub_pathways[sub_path_idx])
             for rxn_idx in range(nb_reactions):
@@ -480,15 +485,19 @@ def build_all_pathways(
                 # Add missing compounds to the cache
                 for side in added_cmpds.keys():
                     for spe_id in added_cmpds[side].keys():
+                        logger.debug(f'Add missing compound {spe_id}')
                         if spe_id not in Cache.get_objects():
-                            rpCompound(
-                                id=spe_id,
-                                smiles=compounds_cache[spe_id]['smiles'],
-                                inchi=compounds_cache[spe_id]['inchi'],
-                                inchikey=compounds_cache[spe_id]['inchikey'],
-                                formula=compounds_cache[spe_id]['formula'],
-                                name=compounds_cache[spe_id]['name']
-                            )
+                            try:
+                                rpCompound(
+                                    id=spe_id,
+                                    smiles=compounds_cache[spe_id]['smiles'],
+                                    inchi=compounds_cache[spe_id]['inchi'],
+                                    inchikey=compounds_cache[spe_id]['inchikey'],
+                                    formula=compounds_cache[spe_id]['formula'],
+                                    name=compounds_cache[spe_id]['name']
+                                )
+                            except KeyError:
+                                rpCompound(id=spe_id)
 
                 ## REACTION
                 compounds = add_compounds(
@@ -513,35 +522,7 @@ def build_all_pathways(
                     getattr(rxn, 'set_'+info_id)(info)
                 rxn.set_rule_score(rr_reactions[rule_id][tmpl_rxn_id]['rule_score'])
                 rxn.set_idx_in_path(rxn_idx_forward)
-                # rxn.set_infos(
-                #     {
-                #         **sub_pathways[sub_path_idx][rxn_idx],
-                #         **{
-                #             'rule_score': rr_reactions[rule_id][tmpl_rxn_id]['rule_score'],
-                #             'idx_in_path': rxn_idx_forward
-                #         }
-                #     }
-                # )
-                # Reactants
-                # for spe_id, spe_sto in compounds['left'].items():
-                #     compound = build_compound(
-                #         spe_id,
-                #         compounds_cache
-                #     )
-                    # rxn.add_reactant(
-                    #     compound=compound,
-                    #     stoichio=spe_sto
-                    # )
-                # Products
-                # for spe_id, spe_sto in compounds['right'].items():
-                #     compound = build_compound(
-                #         spe_id,
-                #         compounds_cache
-                #     )
-                    # rxn.add_product(
-                    #     compound=compound,
-                    #     stoichio=spe_sto
-                    # )
+
                 # Add at the beginning of the pathway
                 # to have the pathway in forward direction
                 # Search for the target in the current reaction
@@ -567,6 +548,7 @@ def build_all_pathways(
             res_pathways[path_idx] = apply_to_best_pathways(
                 res_pathways[path_idx],
                 pathway,
+                max_subpaths_filter,
                 logger
             )
 
@@ -628,8 +610,8 @@ def add_compounds(
 
 def apply_to_best_pathways(
     pathways: List[Dict],
-    # max_subpaths_filter: int,
     pathway: rpPathway,
+    max_subpaths_filter: int,
     logger=getLogger(__name__)
 ) -> List[Dict]:
     '''
@@ -654,9 +636,9 @@ def apply_to_best_pathways(
         List of pathways with highest scores
     '''
 
-    logger.debug('Best pathways:       ' + str([item for item in pathways]))
+    # logger.debug('Best pathways:       ' + str([item for item in pathways]))
     # logger.debug('max_subpaths_filter: ' + str(max_subpaths_filter))
-    logger.debug('pathway:             ' + str(pathway))
+    # logger.debug('pathway:             ' + str(pathway))
 
     # Compute the score of applicant pathway
     # sum of rule_scores over reactions
@@ -680,5 +662,5 @@ def apply_to_best_pathways(
     # Keep only topX
     # best_rpsbml = best_rpsbml[-max_subpaths_filter:]
 
-    return pathways
+    return pathways[-max_subpaths_filter:]
 

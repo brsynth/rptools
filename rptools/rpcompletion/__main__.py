@@ -88,6 +88,7 @@ def _cli():
         compartment_id=args.compartment_id,
         species_group_id=args.species_group_id,
         sink_species_group_id=args.sink_species_group_id,
+        max_subpaths_filter=args.max_subpaths_filter,
         # args.pubchem_search,
         logger=logger
     )
