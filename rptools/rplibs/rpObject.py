@@ -34,18 +34,6 @@ from logging import (
 from copy import deepcopy
 
 
-def __get_dict_key(
-    dict: Dict,
-    key: str,
-    logger: Logger = getLogger(__name__)
-) -> TypeVar:
-    try:
-        return dict[key]
-    except KeyError:
-        logger.warning(f'There is no {key} key in data')
-        return None
-
-
 class rpObject():
 
     def __init__(
