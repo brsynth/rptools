@@ -60,4 +60,11 @@ class rpCompound(Compound, rpObject):
         )
         rpObject.__init__(self)
 
+    def get_thermo_standard_dg_formation(self) -> TypeVar:
+        return self.get_thermo_info('standard_dg_formation')
 
+    def get_fba_biomass_shadow_price(self) -> TypeVar:
+        return self.get_fba_info('biomass_shadow_price')
+
+    def get_fba_fraction_shadow_price(self) -> TypeVar:
+        return self.get_fba_info('fraction_shadow_price')

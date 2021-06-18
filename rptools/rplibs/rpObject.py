@@ -82,13 +82,42 @@ class rpObject():
         return self.__thermo
 
     def get_thermo_info(self, key: str) -> TypeVar:
-        return __get_dict_key(self.__thermo, 'thermo_'+key)
+        return self.__thermo.get('thermo_'+key, None)
+
+    def get_thermo_dG0_prime(self) -> TypeVar:
+        return self.__thermo.get('thermo_dG0_prime', None)
+
+    def get_thermo_dGm_prime(self) -> TypeVar:
+        return self.__thermo.get('thermo_dGm_prime', None)
+
+    def get_thermo_dG_prime(self) -> TypeVar:
+        return self.__thermo.get('thermo_dG_prime', None)
+
+    def get_thermo_dG(self) -> TypeVar:
+        return self.__thermo.get('thermo_dG', None)
 
     def get_fba_info(self, key: str) -> TypeVar:
-        return __get_dict_key(self.__fba, 'fba_'+key)
+        return self.__fba.get('fba_'+key, None)
 
     def get_fba(self) -> TypeVar:
         return self.__fba
+
+    def __get_fba_(self, key: str) -> TypeVar:
+        try:  # Returns exact key
+            return self.__fba[key]
+        except:  # Look for key starts with
+            try:
+                # Returns the value for key starts with {key}
+                fba = [v for k,v in self.__fba.items() if k.startswith(key)]
+                return fba[0] if len(fba) == 1 else fba
+            except StopIteration:
+                return None
+
+    def get_fba_biomass(self) -> TypeVar:
+        return self.__get_fba_('fba_biomass')
+
+    def get_fba_fraction(self) -> TypeVar:
+        return self.__get_fba_('fba_fraction')
 
     ## WRITE METHODS
     ### THERMO ###
