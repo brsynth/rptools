@@ -3806,7 +3806,7 @@ class rpSBML:
             lower_flux_bound = parameters['B_0_0']
         ## Create a generic Model, ie the structure and unit definitions that we will use the most
         rpsbml.genericModel(
-            'RetroPath_Pathway_'+pathway.get_id(),
+            pathway.get_id(),
             'RP_model_'+pathway.get_id(),
             compartments[0],
             unit_def,
