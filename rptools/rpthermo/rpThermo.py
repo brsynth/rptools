@@ -28,9 +28,7 @@ from equilibrator_api import (
 )
 from numpy import (
     zeros as np_zeros,
-    where as np_where,
-    add as np_add,
-    arange as np_arange,
+    array as np_array,
     ndarray as np_ndarray
 )
 from scipy.optimize import linprog
@@ -221,12 +219,22 @@ def eQuilibrator(
     try:
         # For both sides left and right
         for cmpd_id, cmpd_sto in reactants.items():
+            # if inchi_key from equilibrator is None
+            spe_str = species[cmpd_id].inchi_key
+            # then, take the compound ID
+            if spe_str is None:
+                spe_str = cmpd_id
             compounds[SIDES[0]['name']] += [
-                f'{cmpd_sto} {species[cmpd_id].inchi_key}'
+                f'{cmpd_sto} {spe_str}'
             ]
         for cmpd_id, cmpd_sto in products.items():
+            # if inchi_key from equilibrator is None
+            spe_str = species[cmpd_id].inchi_key
+            # then, take the compound ID
+            if spe_str is None:
+                spe_str = cmpd_id
             compounds[SIDES[1]['name']] += [
-                f'{cmpd_sto} {species[cmpd_id].inchi_key}'
+                f'{cmpd_sto} {spe_str}'
             ]
     except KeyError:  # the compound is unknown
         return thermo
@@ -236,6 +244,8 @@ def eQuilibrator(
         left=' + '.join(compounds[SIDES[0]['name']]),
         right=' + '.join(compounds[SIDES[1]['name']])
     )
+
+    print(rxn_str)
 
     # Parse formula by eQuilibrator
     rxn = cc.parse_reaction_formula(rxn_str)
@@ -367,7 +377,7 @@ def remove_unknown_compounds(
         rxn_target_idx,
         logger
     )
-
+    print(coeffs)
     ## Impact coeff to reactions
     for rxn_idx in range(len(reactions)):
         if coeffs[rxn_idx] != 0:
@@ -396,7 +406,20 @@ def minimize(
 
     nb_compounds, nb_reactions = S.shape
 
-    # S[0][2] = 2
+    # Remove unsolvable lines (i.e. with )
+    _S = []
+    for row_idx in range(nb_compounds):
+        nb_in_left = nb_in_right = 0
+        for col_idx in range(nb_reactions):
+            if S[row_idx][col_idx] < 0:
+                nb_in_left += 1
+            elif S[row_idx][col_idx] > 0:
+                nb_in_right += 1
+        if nb_in_left > 0 and nb_in_right > 0:
+            _S += [S[row_idx]]
+    _S = np_array(_S)
+
+    nb_compounds, nb_reactions = _S.shape
 
     ## S.x = 0
     # Init with zeros
@@ -421,7 +444,7 @@ def minimize(
     ## Solve
     res = linprog(
         c,
-        A_eq=S, 
+        A_eq=_S, 
         b_eq=b_eq, 
         bounds=bounds, 
         method='simplex'
@@ -508,16 +531,21 @@ def get_compounds_from_cache(
 
     for cmpd in compounds:
 
-        logger.debug(f'Searching {cmpd.to_string()}...')
-        compound = cc.get_compound(cmpd.get_id())
-        logger.debug(f'Found {compound.__repr__()}')
+        # logger.debug(f'Searching {cmpd.to_string()}...')
+        # compound = cc.get_compound(cmpd.get_id())
+        # logger.debug(f'Found {compound.__repr__()}')
 
-        if compound is not None:
-            compounds_dict[cmpd.get_id()] = compound
-        # If ID not found,
-        # then search with inchikey
-        else:
-            try:
+        # print(cmpd.get_id())
+        # if cmpd.get_id() == 'MNXM722800':
+        #     print(cmpd.get_inchikey())
+        # if compound is not None:
+        #     compounds_dict[cmpd.get_id()] = compound
+        # # If ID not found,
+        # # then search with inchikey
+        # else:
+        try:
+            logger.debug(f'id: {cmpd.get_id()} ; inchi: {cmpd.get_inchi()} ; inchikey: {cmpd.get_inchikey()}')
+            if cmpd.get_inchikey() is not None:
                 logger.debug(f'Searching {cmpd.get_inchikey()}...')
                 compound = cc.search_compound(cmpd.get_inchikey())
                 logger.debug(f'Found {compound.__repr__()}')
@@ -531,13 +559,19 @@ def get_compounds_from_cache(
                         compounds_dict[cmpd.get_id()] = cc.search_compound_by_inchi_key(cmpd.get_inchikey())[0]
                     except IndexError:  # the compound is considered as unknown
                         unknown_compounds += [cmpd.get_id()]
-            except (AttributeError, ValueError):
-                try:
-                    logger.debug(f'Searching {cmpd.get_inchi()}...')
-                    compounds_dict[cmpd.get_id()] = cc.get_compound_by_inchi(cmpd.get_inchi())
-                    logger.debug(f'Found {compound.__repr__()}')
-                except ValueError:
-                    unknown_compounds += [cmpd.get_id()]
+            else:
+                logger.debug(f'Searching {cmpd.to_string()}...')
+                compound = cc.get_compound(cmpd.get_id())
+                logger.debug(f'Found {compound.__repr__()}')
+                if compound is not None:
+                    compounds_dict[cmpd.get_id()] = compound
+        except (AttributeError, ValueError):
+            try:
+                logger.debug(f'Searching {cmpd.get_inchi()}...')
+                compounds_dict[cmpd.get_id()] = cc.get_compound_by_inchi(cmpd.get_inchi())
+                logger.debug(f'Found {compound.__repr__()}')
+            except ValueError:
+                unknown_compounds += [cmpd.get_id()]
 
     return compounds_dict, unknown_compounds
 
