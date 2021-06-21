@@ -57,6 +57,7 @@ from rptools.rplibs import (
 # @return Boolean The success or failure of the function
 def rp_completion(
     rp2_metnet,
+    rp2_sink,
     rp2paths_compounds,
     rp2paths_pathways,
     cache: rrCache = None,
@@ -99,8 +100,12 @@ def rp_completion(
         cache.get('rr_reactions'),
         logger=logger
     )
-    ec_numbers, sink_molecules = read_rp2_metnet(
+    ec_numbers = read_rp2_metnet(
         rp2_metnet,
+        logger=logger
+    )
+    sink_molecules = read_rp2_sink(
+        rp2_sink,
         logger=logger
     )
 
@@ -259,7 +264,7 @@ def rp2paths_compounds_in_cache(path, cache, logger=getLogger(__name__)):
 def read_rp2_metnet(path, logger=getLogger(__name__)):
 
     ec_numbers = {}
-    sink_molecules = set()
+    # sink_molecules = set()
     #### we might pass binary in the REST version
     reader = None
     if isinstance(path, bytes):
@@ -268,7 +273,7 @@ def read_rp2_metnet(path, logger=getLogger(__name__)):
         try:
             reader = csv_reader(open(path, 'r'), delimiter=',')
         except FileNotFoundError:
-            logger.error('Could not read the compounds file: '+str(path))
+            logger.error('Could not read file: '+str(path))
             return {}
     next(reader)
     for row in reader:
@@ -293,15 +298,34 @@ def read_rp2_metnet(path, logger=getLogger(__name__)):
                 # 'start_src_smiles': row[13],
                 # 'iteration': row[14]
             }
-        if row[7]=='1':
-            for i in row[8].replace(']', '').replace('[', '').replace(' ', '').split(','):
-                sink_molecules.add(i)
+        # if row[7]=='1':
+        #     for i in row[8].replace(']', '').replace('[', '').replace(' ', '').split(','):
+        #         sink_molecules.add(i)
 
     logger.debug(ec_numbers)
-    logger.debug(list(sink_molecules))
-    return ec_numbers, list(set(sink_molecules))
+    # logger.debug(list(sink_molecules))
+    return ec_numbers
     # return list(sink_molecules)
 
+def read_rp2_sink(path, logger=getLogger(__name__)):
+
+    sink_molecules = set()
+    #### we might pass binary in the REST version
+    reader = None
+    if isinstance(path, bytes):
+        reader = csv_reader(StringIO(path.decode('utf-8')), delimiter=',')
+    else:
+        try:
+            reader = csv_reader(open(path, 'r'), delimiter=',')
+        except FileNotFoundError:
+            logger.error('Could not read file: '+str(path))
+            return {}
+    next(reader)
+    for row in reader:
+        sink_molecules.add(row[0])
+
+    logger.debug(list(sink_molecules))
+    return list(sink_molecules)
 
 # @param infile rp2_pathways file
 # @param rr_reactions RetroRules reactions
@@ -500,15 +524,12 @@ def build_all_pathways(
                                 rpCompound(id=spe_id)
 
                 ## REACTION
-                compounds = add_compounds(
-                    # Compounds from original transformation
-                    {
-                        'right': deepcopy(transfo['right']),
-                        'left': deepcopy(transfo['left'])
-                    },
-                    # Add template reaction compounds
-                    added_cmpds
-                )
+                # Compounds from original transformation
+                core_species = {
+                    'right': deepcopy(transfo['right']),
+                    'left': deepcopy(transfo['left'])
+                }
+                compounds = add_compounds(core_species, added_cmpds)
                 # revert reaction index (forward)
                 rxn_idx_forward = nb_reactions - rxn_idx
                 rxn = rpReaction(
@@ -537,6 +558,12 @@ def build_all_pathways(
                     target_id=target_id
                 )
 
+                ## TRUNK SPECIES
+                pathway.add_trunk_species([spe_id for value in core_species.values() for spe_id in value.keys()])
+
+                ## COMPLETED SPECIES
+                pathway.add_completed_species([spe_id for value in added_cmpds.values() for spe_id in value.keys()])
+
             ## SINK
             pathway.set_sink(
                 list(
@@ -544,7 +571,7 @@ def build_all_pathways(
                 )
             )
 
-            # RANK AMONG ALL SUB-PATHWAYS OF THE CURRENT MASTER PATHWAY
+            ## RANK AMONG ALL SUB-PATHWAYS OF THE CURRENT MASTER PATHWAY
             res_pathways[path_idx] = apply_to_best_pathways(
                 res_pathways[path_idx],
                 pathway,
@@ -591,7 +618,7 @@ def add_compounds(
     compounds_to_add: Dict,
     logger=getLogger(__name__)
 ) -> Dict:
-    _compounds = dict(compounds)
+    _compounds = deepcopy(compounds)
     for side in ['right', 'left']:
         # added compounds with struct
         for cmpd_id, cmpd in compounds_to_add[side].items():

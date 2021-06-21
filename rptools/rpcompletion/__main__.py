@@ -79,6 +79,7 @@ def _cli():
 
     pathways = rp_completion(
         rp2_metnet=args.rp2_metnet,
+        rp2_sink=args.rp2_sink,
         rp2paths_compounds=args.rp2paths_compounds,
         rp2paths_pathways=args.rp2paths_pathways,
         cache=cache,

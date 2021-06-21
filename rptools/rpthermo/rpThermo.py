@@ -114,6 +114,30 @@ def runThermo(
         )
     # logger = getLogger(__name__)
 
+    # ## COMPOUNDS
+    # # Get Compounds objects from eQuilibrator cache
+    # # compound = None if ID does not exist in the cache
+    # print_title(
+    #     txt='Identifying compounds with cache (eQuilibrator)...',
+    #     logger=logger,
+    #     waiting=True
+    # )
+    # species, unk_compounds = get_compounds_from_cache(
+    #     compounds=pathway.get_species(),
+    #     cc=cc,
+    #     logger=logger
+    # )
+    # print_OK(logger)
+
+    ## INTERMEDIATE COMPOUNDS
+    # Remove intermediate compounds
+    reactions = remove_compounds(
+        compounds=pathway.get_intermediate_species(),
+        reactions=pathway.get_list_of_reactions(),
+        rxn_target_id=pathway.get_target_rxn_id(),
+        logger=logger
+    )
+
     ## eQuilibrator
     print_title(
         txt='Initialising eQuilibrator...',
@@ -130,26 +154,31 @@ def runThermo(
         )
     print_OK(logger)
 
-    # ## COMPOUNDS
-    # Get Compounds objects from eQuilibrator cache
-    # compound = None if ID does not exist in the cache
-    print_title(
-        txt='Identifying compounds with cache (eQuilibrator)...',
-        logger=logger,
-        waiting=True
-    )
-    species, unk_compounds = get_compounds_from_cache(
-        compounds=pathway.get_species(),
-        cc=cc,
-        logger=logger
-    )
-    print_OK(logger)
+    species_ids = {}
+    for spe in pathway.get_species():
+        spe_id = cc.get_compound(spe.get_id())
+        if spe_id is None:
+            spe_id = spe.get_inchikey()
+            if spe_id == '':
+                spe_id = spe.get_inchi()
+        else:
+            spe_id = spe.get_id()
+        species_ids[spe.get_id()] = spe_id
 
     # Get the formation energy for each compound
-    for spe_id, spe in species.items():
+    for spe_id in species_ids:
+        try:
+            value = cc.standard_dg_formation(cc.get_compound(spe_id))[0]  # get .mu
+        except Exception as e:
+            value = float('nan')
+            logger.debug(e)
+        if value is None:
+            value = float('nan')
+        else:
+            value = value
         results['species'][spe_id] = {
             'standard_dg_formation': {
-                'value': cc.standard_dg_formation(cc.get_compound(spe.get_accession()))[0],  # get .mu
+                'value': value,
                 'units': 'kilojoule / mole'
             }
         }
@@ -159,19 +188,10 @@ def runThermo(
     for rxn in pathway.get_list_of_reactions():
         results['reactions'][rxn.get_id()] = eQuilibrator(
             species_stoichio=rxn.get_species(),
-            species=species,
+            species_ids=species_ids,
             cc=cc,
             logger=logger
         )
-
-    ## UNKNOWN COMPOUNDS
-    # Remove unknown compounds
-    reactions = remove_unknown_compounds(
-        unk_compounds=unk_compounds,
-        reactions=pathway.get_list_of_reactions(),
-        rxn_target_id=pathway.get_target_rxn_id(),
-        logger=logger
-    )
 
     ## THERMO
     print_title(
@@ -180,8 +200,8 @@ def runThermo(
         waiting=True
     )
     results['net_reaction'] = eQuilibrator(
-        species_stoichio=pathway.net_reaction(),
-        species=species,
+        species_stoichio=Reaction.sum_stoichio(reactions),
+        species_ids=species_ids,
         cc=cc,
         logger=logger
     )
@@ -191,7 +211,7 @@ def runThermo(
 
 def eQuilibrator(
     species_stoichio: Dict[str, float],
-    species: Dict,
+    species_ids: Dict,
     cc: 'ComponentContribution',
     logger: Logger=getLogger(__name__)
 ) -> Dict:
@@ -203,41 +223,33 @@ def eQuilibrator(
         'dG': 'standard_dg',
     }
 
-    thermo = {}
-    for key in measures.keys():
-        thermo[key] = {
-            'value': 'NA',
-            'error': 'NA',
-            'units': 'kilojoule / mole',
-        }
-
     ## Format reaction to what eQuilibrator expects
     compounds = {SIDES[0]['name']: [], SIDES[1]['name']: []}
     reactants = {spe_id: -spe_sto for (spe_id, spe_sto) in species_stoichio.items() if spe_sto < 0}
     products = {spe_id: spe_sto for (spe_id, spe_sto) in species_stoichio.items() if spe_sto > 0}
 
-    try:
-        # For both sides left and right
-        for cmpd_id, cmpd_sto in reactants.items():
-            # if inchi_key from equilibrator is None
-            spe_str = species[cmpd_id].inchi_key
-            # then, take the compound ID
-            if spe_str is None:
-                spe_str = cmpd_id
-            compounds[SIDES[0]['name']] += [
-                f'{cmpd_sto} {spe_str}'
-            ]
-        for cmpd_id, cmpd_sto in products.items():
-            # if inchi_key from equilibrator is None
-            spe_str = species[cmpd_id].inchi_key
-            # then, take the compound ID
-            if spe_str is None:
-                spe_str = cmpd_id
-            compounds[SIDES[1]['name']] += [
-                f'{cmpd_sto} {spe_str}'
-            ]
-    except KeyError:  # the compound is unknown
-        return thermo
+    # try:
+    # For both sides left and right
+    for cmpd_id, cmpd_sto in reactants.items():
+        # if inchi_key from equilibrator is None
+        spe_str = species_ids[cmpd_id]
+        # then, take the compound ID
+        if spe_str is None or spe_str == '':
+            spe_str = cmpd_id
+        compounds[SIDES[0]['name']] += [
+            f'{cmpd_sto} {spe_str}'
+        ]
+    for cmpd_id, cmpd_sto in products.items():
+        # if inchi_key from equilibrator is None
+        spe_str = species_ids[cmpd_id]
+        # then, take the compound ID
+        if spe_str is None or spe_str == '':
+            spe_str = cmpd_id
+        compounds[SIDES[1]['name']] += [
+            f'{cmpd_sto} {spe_str}'
+        ]
+    # except KeyError:  # the compound is unknown
+    #     return thermo
 
     # Join both sides
     rxn_str = '{left} = {right}'.format(
@@ -245,26 +257,34 @@ def eQuilibrator(
         right=' + '.join(compounds[SIDES[1]['name']])
     )
 
-    print(rxn_str)
+    logger.debug(rxn_str)
 
-    # Parse formula by eQuilibrator
-    rxn = cc.parse_reaction_formula(rxn_str)
-
+    results = {}
     try:
+        # Parse formula by eQuilibrator
+        rxn = cc.parse_reaction_formula(rxn_str)
         # Apply each CC method to each required measure
+        thermo = {}
         for key in measures.keys():
             thermo[key] = getattr(cc, measures[key])(rxn)
-        thermo = {
+        results = {
             key:{
                 'value': float(str(thermo[key].value).split()[0]),
                 'error': float(str(thermo[key].error).split()[0]),
                 'units': str(thermo[key].units),
             } for key in thermo.keys()
         }
-    except Exception as e:
-        logger.error(e)
 
-    return thermo
+    except Exception as e:
+        for key in measures.keys():
+            results[key] = {
+                'value': float('nan'),
+                'error': float('nan'),
+                'units': 'kilojoule / mole',
+            }
+        logger.debug(e)
+
+    return results
     # {
     #     'dG0_prime': {
     #         'value': float(str(dG0_prime.value).split()[0]),
@@ -326,10 +346,10 @@ def eQuilibrator(
 #     return net_reaction
 
 
-def remove_unknown_compounds(
+def remove_compounds(
     reactions: List[Reaction],
     rxn_target_id: str,
-    unk_compounds: List = [],
+    compounds: List = [],
     logger: Logger=getLogger(__name__)
 ) -> Dict:
     '''Try to remove compounds that are unknown in the eQuilibrator cache from reaction set (pathway).
@@ -349,19 +369,19 @@ def remove_unknown_compounds(
 
     # unk_compounds = ['CMPD_0000000003', 'CMPD_0000000010', 'CMPD_0000000025']
 
-    if unk_compounds == []:
+    if compounds == []:
         return reactions
 
     # # If the target is unknown in eQuilibrator cache,
     # # then stop the thermo
     # result = filter(lambda x: x.startswith('TARGET'), unk_compounds)
     # print(list(result))
-
+    logger.debug(compounds)
     # Build the stoichio matrix for unknown compounds
     ## S
     sto_mat = build_stoichio_matrix(
         reactions=reactions,
-        compounds=unk_compounds,
+        compounds=compounds,
         logger=logger
     )
 
@@ -377,13 +397,20 @@ def remove_unknown_compounds(
         rxn_target_idx,
         logger
     )
-    print(coeffs)
+    # print(sto_mat)
+    # print(f'rxn_target_idx: {rxn_target_idx}')
+    # print(unk_compounds)
+    # print(coeffs)
+    # exit()
+    _reactions = []
+    from copy import deepcopy
     ## Impact coeff to reactions
     for rxn_idx in range(len(reactions)):
+        _reactions += [deepcopy(reactions[rxn_idx])]
         if coeffs[rxn_idx] != 0:
-            reactions[rxn_idx].mult_stoichio_coeff(coeffs[rxn_idx])
+            _reactions[rxn_idx].mult_stoichio_coeff(coeffs[rxn_idx])
 
-    return reactions
+    return _reactions
 
 
 def get_target_rxn_idx(
@@ -404,22 +431,63 @@ def minimize(
     logger: Logger=getLogger(__name__)
 ) -> 'np_ndarray':
 
+#     S = np_array([
+#         [1, -2,
+# 0],
+
+# [1, 
+# 0, -3],
+#     ])
+#     S = np_array([
+#         [-1, 0, 0],
+#         [-1, -1, -1],
+#         [-1, 0, -1],
+#         [-1, 1, 0],
+#         [-3, 2, 0],
+#         [0, 1, 0],
+#         [1, 0, -3],
+#         [1, -2, 0],
+#         [1, 0, 1],
+#         [1, 0, 0],
+#         [1, 0, 1],
+#     ])
+#     S = np_array([
+
+# [1, -2, 0],
+
+# [1, 2, 0],
+
+# [1, 0, -3],
+
+
+
+# ])
+
+# |- rxn_1: 1.0 MNXM188 + 1.0 MNXM4 + 1.0 MNXM6 + 3.0 MNXM1 --> 1.0 CMPD_0000000004 + 1.0 CMPD_0000000003 + 1.0 MNXM13 + 1.0 MNXM15 + 1.0 MNXM5
+
+# |- rxn_2: 1.0 MNXM4 + 2.0 CMPD_0000000003 --> 2.0 MNXM1 + 1.0 TARGET_0000000001
+
+# |- rxn_3: 1.0 MNXM4 + 1.0 MNXM6 + 3.0 CMPD_0000000004 --> 1.0 MNXM13 + 1.0 MNXM5
+
     nb_compounds, nb_reactions = S.shape
 
-    # Remove unsolvable lines (i.e. with )
-    _S = []
-    for row_idx in range(nb_compounds):
-        nb_in_left = nb_in_right = 0
-        for col_idx in range(nb_reactions):
-            if S[row_idx][col_idx] < 0:
-                nb_in_left += 1
-            elif S[row_idx][col_idx] > 0:
-                nb_in_right += 1
-        if nb_in_left > 0 and nb_in_right > 0:
-            _S += [S[row_idx]]
-    _S = np_array(_S)
-
-    nb_compounds, nb_reactions = _S.shape
+    # # Remove unsolvable lines (i.e. with )
+    # _S = []
+    # for row_idx in range(nb_compounds):
+    #     nb_in_left = nb_in_right = 0
+    #     for col_idx in range(nb_reactions):
+    #         if S[row_idx][col_idx] < 0:
+    #             nb_in_left += 1
+    #         elif S[row_idx][col_idx] > 0:
+    #             nb_in_right += 1
+    #     if nb_in_left > 0 and nb_in_right > 0:
+    #         _S += [S[row_idx]]
+    #     print(_S)
+    # _S = np_array(_S)
+    # print(type(S), S)
+    # print(S[0], [S[0]])
+    # print(type(_S), _S)
+    # nb_compounds, nb_reactions = _S.shape
 
     ## S.x = 0
     # Init with zeros
@@ -431,7 +499,8 @@ def minimize(
     # the same
     # lower bound (lb) and upper bound (ub) will be applied
     # to all variables.
-    bounds = (0, 1)
+    # bounds = (0, 1)
+    bounds = (1, None)
 
     ## Max rxn_x
     c = np_zeros(nb_reactions)
@@ -439,16 +508,23 @@ def minimize(
     # maximizes the production of the target
 
     # translate it in the stoichio matrix index
-    c[rxn_target_idx] = 0
+    c[rxn_target_idx] = -1
+    # c[1] = -1
+    # c = [col[1] for col in S]
+    # A_ub = np_array()
+    # print(c)
 
     ## Solve
     res = linprog(
         c,
-        A_eq=_S, 
-        b_eq=b_eq, 
-        bounds=bounds, 
-        method='simplex'
+        A_eq=S,
+        b_eq=b_eq,
+        bounds=bounds,
+        method='revised simplex'
     )
+    logger.debug(f'rxn_target_idx: {rxn_target_idx}')
+    logger.debug(S)
+    logger.debug(res)
 
     return res.x
 
@@ -531,48 +607,48 @@ def get_compounds_from_cache(
 
     for cmpd in compounds:
 
-        # logger.debug(f'Searching {cmpd.to_string()}...')
-        # compound = cc.get_compound(cmpd.get_id())
-        # logger.debug(f'Found {compound.__repr__()}')
+        # print(cmpd._to_dict())
 
-        # print(cmpd.get_id())
-        # if cmpd.get_id() == 'MNXM722800':
-        #     print(cmpd.get_inchikey())
-        # if compound is not None:
-        #     compounds_dict[cmpd.get_id()] = compound
-        # # If ID not found,
-        # # then search with inchikey
-        # else:
-        try:
-            logger.debug(f'id: {cmpd.get_id()} ; inchi: {cmpd.get_inchi()} ; inchikey: {cmpd.get_inchikey()}')
-            if cmpd.get_inchikey() is not None:
-                logger.debug(f'Searching {cmpd.get_inchikey()}...')
-                compound = cc.search_compound(cmpd.get_inchikey())
-                logger.debug(f'Found {compound.__repr__()}')
-                # If the first level of inchikeys are the same,
-                # then substitute
-                if compound.inchi_key.split('-')[0] == cmpd.get_inchikey().split('-')[0]:
-                    compounds_dict[cmpd.get_id()] = compound
-                else:
-                    # search by inchikey
-                    try:
-                        compounds_dict[cmpd.get_id()] = cc.search_compound_by_inchi_key(cmpd.get_inchikey())[0]
-                    except IndexError:  # the compound is considered as unknown
-                        unknown_compounds += [cmpd.get_id()]
-            else:
-                logger.debug(f'Searching {cmpd.to_string()}...')
-                compound = cc.get_compound(cmpd.get_id())
-                logger.debug(f'Found {compound.__repr__()}')
-                if compound is not None:
-                    compounds_dict[cmpd.get_id()] = compound
-        except (AttributeError, ValueError):
+        logger.debug(f'Searching {cmpd.to_string()}...')
+        compound = cc.get_compound(cmpd.get_id())
+        logger.debug(f'Found {compound.__repr__()}')
+
+        if compound is not None:
+            compounds_dict[cmpd.get_id()] = compound
+        # If ID not found,
+        # then search with inchikey
+        else:
             try:
-                logger.debug(f'Searching {cmpd.get_inchi()}...')
-                compounds_dict[cmpd.get_id()] = cc.get_compound_by_inchi(cmpd.get_inchi())
-                logger.debug(f'Found {compound.__repr__()}')
-            except ValueError:
-                unknown_compounds += [cmpd.get_id()]
+                logger.debug(f'id: {cmpd.get_id()} ; inchi: {cmpd.get_inchi()} ; inchikey: {cmpd.get_inchikey()}')
+                if cmpd.get_inchikey() is not None:
+                    logger.debug(f'Searching {cmpd.get_inchikey()}...')
+                    compound = cc.search_compound(cmpd.get_inchikey())
+                    logger.debug(f'Found {compound.__repr__()}')
+                    # If the first level of inchikeys are the same,
+                    # then substitute
+                    if compound.inchi_key.split('-')[0] == cmpd.get_inchikey().split('-')[0]:
+                        compounds_dict[cmpd.get_id()] = compound
+                    else:
+                        # search by inchikey
+                        try:
+                            compounds_dict[cmpd.get_id()] = cc.search_compound_by_inchi_key(cmpd.get_inchikey())[0]
+                        except IndexError:  # the compound is considered as unknown
+                            unknown_compounds += [cmpd.get_id()]
+                # else:
+                #     logger.debug(f'Searching {cmpd.to_string()}...')
+                #     compound = cc.get_compound(cmpd.get_id())
+                #     logger.debug(f'Found {compound.__repr__()}')
+                #     if compound is not None:
+                #         compounds_dict[cmpd.get_id()] = compound
+            except (AttributeError, ValueError):
+                try:
+                    logger.debug(f'Searching {cmpd.get_inchi()}...')
+                    compounds_dict[cmpd.get_id()] = cc.get_compound_by_inchi(cmpd.get_inchi())
+                    logger.debug(f'Found {compound.__repr__()}')
+                except ValueError:
+                    unknown_compounds += [cmpd.get_id()]
 
+    exit()
     return compounds_dict, unknown_compounds
 
 

@@ -7,6 +7,11 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
         type=str,
         help='Retrosynthesis network provided by RetroPath2.0'
     )
+    parser.add_argument(
+        'rp2_sink',
+        type=str,
+        help='List of compounds in the sink'
+    )
     parser.add_argument('rp2paths_compounds', type=str)
     parser.add_argument('rp2paths_pathways', type=str)
     parser.add_argument('outdir', type=str)

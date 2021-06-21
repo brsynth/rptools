@@ -78,7 +78,9 @@ class rpPathway(Pathway, rpObject):
         )
         rpObject.__init__(self)
         self.set_target_id(None)
-        self.set_sink(None)
+        self.set_sink([])
+        self.set_trunk_species([])
+        self.set_completed_species([])
         # Set default rpSBML infos
         if cache is None:
             cache = rrCache(
@@ -189,6 +191,19 @@ class rpPathway(Pathway, rpObject):
         return False
 
     ## READ METHODS
+    def get_completed_species(self) -> List[str]:
+        return self.__completed_species
+
+    def get_trunk_species(self) -> List[str]:
+        return self.__trunk_species
+
+    def get_intermediate_species(self) -> List[str]:
+        return list(
+            set(self.get_trunk_species())
+            - set(self.get_sink())
+            - set([self.get_target_id()])
+        )
+
     def get_target_rxn_id(self) -> str:
         for rxn in self.get_list_of_reactions():
             if self.get_target_id() in rxn.get_products_ids():
@@ -507,6 +522,32 @@ class rpPathway(Pathway, rpObject):
 
 
     ## WRITE METHODS
+    def add_trunk_species(self, species: List[str]) -> None:
+        self.set_trunk_species(
+            list(
+                set(
+                    self.get_trunk_species()
+                    + species
+                )
+            )
+        )
+
+    def add_completed_species(self, species: List[str]) -> None:
+        self.set_completed_species(
+            list(
+                set(
+                    self.get_completed_species()
+                    + species
+                )
+            )
+        )
+
+    def set_completed_species(self, species: List[str]) -> None:
+        self.__completed_species = deepcopy(species)
+
+    def set_trunk_species(self, species: List[str]) -> None:
+        self.__trunk_species = deepcopy(species)
+
     def add_reaction(
         self,
         rxn: rpReaction,
@@ -520,7 +561,7 @@ class rpPathway(Pathway, rpObject):
         if target_id is not None:
             self.set_target_id(target_id)
 
-    def set_sink(self, sink: List) -> None:
+    def set_sink(self, sink: List[str]) -> None:
         self.__sink = deepcopy(sink)
     
     def set_target_id(self, id: str) -> None:
@@ -535,7 +576,19 @@ class rpPathway(Pathway, rpObject):
 
         # sink
         try:
-            self.__sink[self.__sink.index(id)] = new_id
+            self.__sink[self.get_sink().index(id)] = new_id
+        except ValueError:
+            pass
+
+        # trunk species
+        try:
+            self.__trunk_species[self.get_trunk_species().index(id)] = new_id
+        except ValueError:
+            pass
+
+        # completed species
+        try:
+            self.__completed_species[self.get_completed_species().index(id)] = new_id
         except ValueError:
             pass
 

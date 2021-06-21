@@ -3986,6 +3986,27 @@ class rpSBML:
             member.setIdRef(member_id)
             group.addMember(member)
 
+        ## CENTRAL SPECIES
+        group = self.createGroup('rp_trunk_species')
+        for member_id in pathway.get_trunk_species():
+            member = libsbml.Member()
+            member.setIdRef(member_id)
+            group.addMember(member)
+
+        ## INTERMEDIATE SPECIES
+        group = self.createGroup('rp_intermediate_species')
+        for member_id in pathway.get_intermediate_species():
+            member = libsbml.Member()
+            member.setIdRef(member_id)
+            group.addMember(member)
+
+        ## COMPLETED COMPOUNDS
+        group = self.createGroup('rp_completed_species')
+        for member_id in pathway.get_completed_species():
+            member = libsbml.Member()
+            member.setIdRef(member_id)
+            group.addMember(member)
+
         # ## CENTRAL_SPECIES
         # # Species that are not produced by the pathway (?)
         # group = self.createGroup('central_species')
@@ -4126,9 +4147,13 @@ class rpSBML:
         if 'reactions' in keys:
             for rxn_id, rxn in self.read_reactions(pathway_id).items():
 
+                try:
+                    ec_numbers = rxn['miriam']['ec-code']
+                except KeyError:
+                    ec_numbers = []
                 reaction = rpReaction(
                     id=rxn_id,
-                    ec_numbers=rxn['miriam']['ec-code'],
+                    ec_numbers=ec_numbers,
                     reactants=rxn['left'],
                     products=rxn['right']
                 )
@@ -4176,8 +4201,10 @@ class rpSBML:
                 # )
 
         # Groups
-        groups = [group.getId() for group in self.getPlugin('groups').getListOfGroups()]
+        # groups = [group.getId() for group in self.getPlugin('groups').getListOfGroups()]
         pathway.set_sink(self.readGroupMembers('rp_sink_species'))
+        pathway.set_completed_species(self.readGroupMembers('rp_completed_species'))
+        pathway.set_trunk_species(self.readGroupMembers('rp_trunk_species'))
 
         return pathway
 

@@ -36,29 +36,29 @@ def cobraize(pathway: rpPathway) -> None:
     # REACTIONS
     # cobraize_reactions(pathway)
 
-def cobraize_reactions(pathway: rpPathway) -> None:
-    '''Make the Pathway compliant with what Cobra expects
-    Remove <@compartmentID> from all compounds in reactions
-    '''
-    for rxn_id in pathway.get_reactions_ids():
-        rxn = pathway.get_reaction(rxn_id)
-        reactants = deepcopy(rxn.get_reactants())
-        rxn.set_reactants({})
-        for spe_id, spe_sto in reactants.items():
-            rxn.add_reactant(
-                compound_id=cobraize_string(spe_id, pathway),
-                stoichio=spe_sto
-            )
-        products = deepcopy(rxn.get_products())
-        rxn.set_products({})
-        for spe_id, spe_sto in products.items():
-            rxn.add_product(
-                compound_id=cobraize_string(spe_id, pathway),
-                stoichio=spe_sto
-            )
-    print(Cache.get('RetroPath_Pathway_030_0001_rxn_1').to_dict())
-    print(Cache.get('CMPD_0000000025__64__MNXC3').to_dict())
-    print(Cache.get_list_of_objects())
+# def cobraize_reactions(pathway: rpPathway) -> None:
+#     '''Make the Pathway compliant with what Cobra expects
+#     Remove <@compartmentID> from all compounds in reactions
+#     '''
+#     for rxn_id in pathway.get_reactions_ids():
+#         rxn = pathway.get_reaction(rxn_id)
+#         reactants = deepcopy(rxn.get_reactants())
+#         rxn.set_reactants({})
+#         for spe_id, spe_sto in reactants.items():
+#             rxn.add_reactant(
+#                 compound_id=cobraize_string(spe_id, pathway),
+#                 stoichio=spe_sto
+#             )
+#         products = deepcopy(rxn.get_products())
+#         rxn.set_products({})
+#         for spe_id, spe_sto in products.items():
+#             rxn.add_product(
+#                 compound_id=cobraize_string(spe_id, pathway),
+#                 stoichio=spe_sto
+#             )
+#     print(Cache.get('RetroPath_Pathway_030_0001_rxn_1').to_dict())
+#     print(Cache.get('CMPD_0000000025__64__MNXC3').to_dict())
+#     print(Cache.get_list_of_objects())
 
 def uncobraize(pathway: rpPathway) -> None:
     '''Make the Pathway compliant with what Cobra expects

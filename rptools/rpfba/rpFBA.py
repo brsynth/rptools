@@ -53,7 +53,7 @@ def runFBA(
              objective_id: str = None,
            compartment_id: str = 'MNXC3',
     ignore_orphan_species: bool = True,
-         species_group_id: str = 'central_species',
+         species_group_id: str = 'rp_core_species',
     sink_species_group_id: str = 'rp_sink_species',
                    logger: Logger = getLogger(__name__)
 ) -> Dict:
@@ -167,7 +167,6 @@ def runFBA(
         return None
 
     ## Check COBRA
-
     ######## FBA ########
     if sim_type == 'fraction':
         results, rpsbml_merged = rp_fraction(
@@ -376,7 +375,7 @@ def complete_heterologous_pathway(
             target_group = rpsbml.getGroup(source_group.getId())
             # TODO: #### replace the new potentially incorect central species with the normal ones #####
             # delete all the previous members
-            logger.debug('Removing central_species')
+            logger.debug('Removing rp_core_species')
             for i in range(target_group.getNumMembers()):
                 logger.debug('Deleting group member: '+str(target_group.getMember(0).getIdRef()))
                 target_group.removeMember(0)
