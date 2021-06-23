@@ -153,15 +153,20 @@ def runFBA(
         logger = logger
     )
 
-    # remove the target form missing species
-    hidden_species = [
-        spe_id
-        for spe_id in missing_species
-        if uncobraize_string(spe_id) != pathway.get_target_id()
-    ]
-    # print(missing_species)
-    # print(hidden_species)
-    # exit()
+    hidden_species = []
+    # If the specie does not match with any of species in the model...
+    for spe_id in missing_species:
+        if (
+            # ... and is not the target...
+            spe_id != pathway.get_target_id()
+            # ... and is isolated in the predicted pathway
+            # (i.e. not present in both reactants and products of the pathway)
+            and not (
+                spe_id in pathway.get_reactants_ids()
+                and spe_id in pathway.get_products_ids()
+            )
+        ):  # then hide it
+            hidden_species += [spe_id]
 
     if rpsbml_merged is None:
         return None
@@ -185,7 +190,7 @@ def runFBA(
     if sim_type == 'fraction':
         results, rpsbml_merged = rp_fraction(
                   rpsbml = rpsbml_merged,
-         missing_species = missing_species,
+          hidden_species = hidden_species,
               ignore_met = ignore_orphan_species,
               src_rxn_id = src_rxn_id,
                src_coeff = src_coeff,
@@ -230,7 +235,7 @@ def runFBA(
         # Write results for merged model
         write_results(
             rpsbml = rpsbml_merged,
-            missing_species = missing_species,
+            hidden_species = hidden_species,
             objective_id = objective_id,
             cobra_results = cobra_results,
             pathway_id = pathway_id,
@@ -246,7 +251,7 @@ def runFBA(
         'species': {},
         'reactions': {},
         'pathway': {},
-        'rpfba_ignored_species': missing_species
+        'rpfba_ignored_species': hidden_species
     }
 
     # SPECIES
@@ -340,7 +345,7 @@ def runFBA(
 
 def complete_heterologous_pathway(
     rpsbml: rpSBML,
-    missing_species: List[str],
+    hidden_species: List[str],
     rpsbml_merged: rpSBML,
     species_group_id: str,
     sink_species_group_id: str,
@@ -432,7 +437,7 @@ def complete_heterologous_pathway(
     rpsbml.set_isolated_species(rpsbml_merged.get_isolated_species())
     create_ignored_species_group(
         rpsbml,
-        missing_species,
+        hidden_species,
         logger
     )
     #### add objectives ####
@@ -548,7 +553,7 @@ def rp_pfba(
 
 def rp_fraction(
           rpsbml: rpSBML,
- missing_species:   List,
+ hidden_species:   List,
       src_rxn_id:    str,
        src_coeff:  float,
       tgt_rxn_id:    str,
@@ -659,7 +664,7 @@ def rp_fraction(
 
         write_results(
             rpsbml = rpsbml,
-            missing_species = missing_species,
+            hidden_species = hidden_species,
             objective_id = src_obj_id,
             cobra_results = cobra_results,
             pathway_id = pathway_id,
@@ -709,7 +714,7 @@ def rp_fraction(
 
     cobra_results = runCobra(
         rpsbml = rpsbml,
-        hide_species = missing_species,
+        hide_species = hidden_species,
         objective_id = objective_id,
         ignore_met = ignore_met,
         logger = logger
@@ -724,7 +729,7 @@ def rp_fraction(
     # Write results for merged model
     write_results(
         rpsbml = rpsbml,
-        missing_species = missing_species,
+        hidden_species = hidden_species,
         objective_id = objective_id,
         cobra_results = cobra_results,
         pathway_id = pathway_id,
@@ -887,7 +892,7 @@ def cobra_model(
 
 def write_results(
     rpsbml: rpSBML,
-    missing_species: List[str],
+    hidden_species: List[str],
     objective_id: str,
     cobra_results: cobra_solution,
     pathway_id: str = 'rp_pathway',
@@ -1102,7 +1107,7 @@ def write_objective_to_pathway(
 
 def create_ignored_species_group(
     rpsbml: rpSBML,
-    missing_species: List[str],
+    hidden_species: List[str],
     logger: Logger = getLogger(__name__)
 ) -> None:
     """
@@ -1122,7 +1127,7 @@ def create_ignored_species_group(
         id=group_id,
         brs_annot=False
     )
-    for spe in missing_species:
+    for spe in hidden_species:
         rpsbml.addMember(
             group_id=group_id,
             idRef=spe
@@ -1130,7 +1135,7 @@ def create_ignored_species_group(
     
     logger.debug(
         'Create ' + str(group_id) + ' group with ' \
-      + str(missing_species)
+      + str(hidden_species)
     )
 
     # rpsbml.updateBRSynth(
