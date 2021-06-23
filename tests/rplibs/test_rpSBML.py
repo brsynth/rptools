@@ -325,7 +325,7 @@ class Test_rpSBML(Main_rplibs):
             0
         )
         rpsbml.createGroup('rp_pathway')
-        rpsbml.createGroup('central_species')
+        rpsbml.createGroup('rp_trunk_species')
         with NamedTemporaryFile() as tempf:
             rpsbml.writeToFile(tempf.name)
             self.assertListEqual(
