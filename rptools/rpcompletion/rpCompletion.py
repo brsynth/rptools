@@ -65,7 +65,7 @@ def rp_completion(
     lower_flux_bound=0,
     pathway_id='rp_pathway',
     compartment_id='MNXC3',
-    species_group_id='central_species',
+    species_group_id='rp_trunk_species',
     sink_species_group_id='sink',
     max_subpaths_filter: int = 10,
     # pubchem_search=False,

@@ -174,8 +174,6 @@ def runThermo(
             logger.debug(e)
         if value is None:
             value = float('nan')
-        else:
-            value = value
         results['species'][spe_id] = {
             'standard_dg_formation': {
                 'value': value,
@@ -522,9 +520,9 @@ def minimize(
         bounds=bounds,
         method='revised simplex'
     )
-    logger.debug(f'rxn_target_idx: {rxn_target_idx}')
-    logger.debug(S)
-    logger.debug(res)
+    print(f'rxn_target_idx: {rxn_target_idx}')
+    print(S)
+    print(res)
 
     return res.x
 
