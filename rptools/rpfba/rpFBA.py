@@ -30,7 +30,9 @@ from rptools.rpfba.cobra_format import (
     cobraize,
     uncobraize,
     uncobraize_results,
-    cobra_suffix
+    cobra_suffix,
+    to_cobra,
+    uncobraize_string
 )
 
 
@@ -53,7 +55,7 @@ def runFBA(
              objective_id: str = None,
            compartment_id: str = 'MNXC3',
     ignore_orphan_species: bool = True,
-         species_group_id: str = 'rp_core_species',
+         species_group_id: str = 'rp_trunk_species',
     sink_species_group_id: str = 'rp_sink_species',
                    logger: Logger = getLogger(__name__)
 ) -> Dict:
@@ -127,6 +129,9 @@ def runFBA(
         pathway=pathway,
         logger=logger
     )
+    if ignore_orphan_species:
+        rpsbml.search_isolated_species()
+        logger.debug(f'isolated species: {rpsbml.get_isolated_species()}')
 
     # rpsbml.writeToFile('out.xml')
     # exit()
@@ -140,18 +145,27 @@ def runFBA(
 
     logger.info('Merging rpSBML models: ' + rpsbml.getName() + ' and ' + rpsbml_gem.getName() + '...')
 
+    # Merge predicted pathway with the full model
+    # missing_species are species that are not detected in the model
     rpsbml_merged, reactions_in_both, missing_species = rpSBML.mergeModels(
         source_rpsbml = rpsbml,
         target_rpsbml = rpsbml_gem,
         logger = logger
     )
 
+    # remove the target form missing species
+    hidden_species = [
+        spe_id
+        for spe_id in missing_species
+        if uncobraize_string(spe_id) != pathway.get_target_id()
+    ]
+    # print(missing_species)
+    # print(hidden_species)
+    # exit()
+
     if rpsbml_merged is None:
         return None
     
-    if ignore_orphan_species:
-        rpsbml_merged.search_isolated_species()
-
     logger.debug('rpsbml_merged: ' + str(rpsbml_merged))
     logger.debug('reactions_in_both: ' + str(reactions_in_both))
 
@@ -213,6 +227,7 @@ def runFBA(
 
         results[objective_id] = cobra_results
 
+        # Write results for merged model
         write_results(
             rpsbml = rpsbml_merged,
             missing_species = missing_species,
@@ -221,8 +236,7 @@ def runFBA(
             pathway_id = pathway_id,
             logger = logger
         )
-        # for group in rpsbml_merged.getModel().getPlugin('groups').getListOfGroups():
-        #     print(group)
+
     # print(cobra_results.objective_value)
     # print(cobra_results.status)
     # print(cobra_results.fluxes)
@@ -231,38 +245,41 @@ def runFBA(
     _results = {
         'species': {},
         'reactions': {},
-        'pathway': {}
+        'pathway': {},
+        'rpfba_ignored_species': missing_species
     }
 
     # SPECIES
+    # species to hide to Cobra model to have FBA values
     for spe_id in pathway.get_species_ids():
         _results['species'][spe_id] = {}
         for obj_id, cobra_r in results.items():
+            _spe_id = to_cobra(spe_id)
+            value = cobra_r.shadow_prices.get(_spe_id)
             _results['species'][spe_id][obj_id+'_shadow_price'] = {
-                'value': results[obj_id].shadow_prices.get(
-                    spe_id.replace('__64__', '@')
-                ),
+                'value': value,
                 # 'units': 'milimole / gDW / hour',
             }
+
     # REACTIONS
     for rxn_id in pathway.get_reactions_ids():
         _results['reactions'][rxn_id] = {}
         for obj_id, cobra_r in results.items():
             if obj_id == 'biomass':
                 _results['reactions'][rxn_id][obj_id] = {
-                    'value': results[obj_id].objective_value,
+                    'value': cobra_r.objective_value,
                     'units': 'milimole / gDW / hour'
                 }
             else:
                 _results['reactions'][rxn_id][obj_id] = {
-                    'value': results[obj_id].fluxes[rxn_id],
+                    'value': cobra_r.fluxes[rxn_id],
                     'units': 'milimole / gDW / hour'
                 }
     # PATHWAY
     _results['pathway'] = {}
     for obj_id, cobra_r in results.items():
         _results['pathway'][obj_id] = {
-            'value': results[obj_id].objective_value,
+            'value': cobra_r.objective_value,
             'units': 'milimole / gDW / hour'
         }
 
@@ -566,7 +583,7 @@ def rp_fraction(
     :return: Tuple with the results of the FBA and boolean indicating the success or failure of the function
     :rtype: tuple
     """
-    
+
     logger.info('Processing FBA (fraction of reaction)...')
     logger.debug('rpsbml:       ' + str(rpsbml))
     logger.debug('ignore_met:   ' + str(ignore_met))
@@ -692,6 +709,7 @@ def rp_fraction(
 
     cobra_results = runCobra(
         rpsbml = rpsbml,
+        hide_species = missing_species,
         objective_id = objective_id,
         ignore_met = ignore_met,
         logger = logger
@@ -703,6 +721,7 @@ def rp_fraction(
     # scores>fba>fraction = cobra_results.objective_value
     results['fraction'] = cobra_results
 
+    # Write results for merged model
     write_results(
         rpsbml = rpsbml,
         missing_species = missing_species,
@@ -731,6 +750,7 @@ def rp_fraction(
 def runCobra(
     rpsbml: rpSBML,
     objective_id: str,
+    hide_species: List[str] = [],
     ignore_met: bool = True,
     logger: Logger = getLogger(__name__)
 ) -> cobra_solution:
@@ -777,27 +797,65 @@ def runCobra(
     # print("%s : %s" % (x.id, x.reaction))
 
     # remove isolated species from the model
-    if ignore_met:
-        isolated_species = [cmp.replace('__64__', '@') for cmp in rpsbml.get_isolated_species()]
-        # print("")
-        # print("Metabolites")
-        # print("-----------")
-        # for x in cobraModel.metabolites:
-        #     if x.id in isolated_species:
-        #         print('%9s : %s' % (x.id, x.formula))
-        cobraModel.remove_metabolites([cobraModel.metabolites.get_by_id(met) for met in isolated_species])
+    # if ignore_met:
+    #     # isolated_species = [to_cobra(cmp) for cmp in hide_species]
+    #     # print(isolated_species)
+    #     # isolated_species = ['MNXM473@MNXC3']
+    #     # print("")
+    #     # print("Metabolites")
+    #     # print("-----------")
+    #     # for x in cobraModel.metabolites:
+    #     #     if x.id in isolated_species:
+    #     #         print('%9s : %s' % (x.id, x.formula))
+    # hide_species = [
+    #     spe_id+'__64__MNXC3'
+    #     for spe_id
+    #     in ['CMPD_0000000001', 'MNXM8975', 'TARGET_0000000001']
+    # ]
+    cobraModel.remove_metabolites(
+        [
+            cobraModel.metabolites.get_by_id(
+                to_cobra(met)
+            ) for met in hide_species
+        ]
+    )
 
     cobra_results = cobraModel.optimize(
         objective_sense='maximize',
         raise_error=True
     )
 
+    # # Detect species with shadow price to 0 to hide them
+    # hidden_species = []
+    # for spe_id in rpsbml.to_Pathway().get_species_ids():
+    #     spe_shad_pri = cobra_results.shadow_prices.get(
+    #         to_cobra(spe_id)
+    #     )
+    #     print(spe_id, spe_shad_pri)
+    #     if spe_shad_pri == 0:
+    #         # to report in rpSBML file
+    #         hidden_species += [spe_id]
+    #         cobraModel.remove_metabolites(
+    #             cobraModel.metabolites.get_by_id(
+    #                 to_cobra(spe_id)
+    #             )
+    #         )
+
+    # cobra_results = cobraModel.optimize(
+    #     objective_sense='maximize',
+    #     raise_error=True
+    # )
+
+    # print(cobra_results.shadow_prices)
+
+    # .shadow_prices.get(_spe_id)
+
     # print(cobraModel.summary())
     # exit()
 
     logger.debug(cobra_results)
 
-    return cobra_results
+    return cobra_results#, hidden_species
 
 
 def cobra_model(
@@ -863,11 +921,11 @@ def write_results(
         logger
     )
 
-    create_ignored_species_group(
-        rpsbml,
-        missing_species,
-        logger
-    )
+    # create_ignored_species_group(
+    #     rpsbml,
+    #     missing_species,
+    #     logger
+    # )
 
     write_fluxes_to_objectives(
         cobra_results.fluxes,
@@ -1027,8 +1085,6 @@ def write_objective_to_pathway(
         The id of the objective to optimise
     """
 
-    rp_pathway = rpsbml.getGroup(pathway_id)
-
     logger.debug(
         'Set ' + str(pathway_id) + ' with ' \
       + str('fba_'+str(objective_id)) + ' to ' \
@@ -1036,7 +1092,7 @@ def write_objective_to_pathway(
     )
 
     rpsbml.updateBRSynth(
-        rp_pathway,
+        rpsbml.getGroup(pathway_id),
         'fba_'+str(objective_id),
         str(objective_value),
         'mmol_per_gDW_per_hr',
@@ -1060,39 +1116,28 @@ def create_ignored_species_group(
         The id of the pathway within reactions will be updated
     """
 
-    group_id = 'ignored_species_for_FBA'
+    group_id = 'rpfba_ignored_species'
 
     rpsbml.createGroup(
-        id = group_id,
-        brs_annot = False
+        id=group_id,
+        brs_annot=False
     )
-
     for spe in missing_species:
         rpsbml.addMember(
-            group_id = group_id,
-            idRef = spe
+            group_id=group_id,
+            idRef=spe
         )
-
-    # for group in rpsbml.getModel().getPlugin('groups').getListOfGroups():
-    #     print(group)
-
-    # exit()
-
-
+    
     logger.debug(
         'Create ' + str(group_id) + ' group with ' \
       + str(missing_species)
     )
 
-    # ignored_spe = rpsbml.getGroup(
-    #     rpsbml.getPlugin('groups'),
-    #     group_id
-    # )
-
     # rpsbml.updateBRSynth(
-    #     sbase_obj = ignored_spe,
-    #     annot_header = 'ignored_species',
-    #     value = str(rpsbml.get_isolated_species())
+    #     sbase_obj=rpsbml.getGroup(group_id),
+    #     annot_header='ignored_species',
+    #     value=str(missing_species),
+    #     isList=True
     # )
 
 

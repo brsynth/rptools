@@ -28,13 +28,13 @@ def add_arguments(parser):
         '--sink_species_group_id',
         type=str,
         default='rp_sink_species',
-        help='id of the central species (default: central_species)'
+        help='id of the central species (default: rp_sink_species)'
     )
     parser.add_argument(
         '--species_group_id',
         type=str,
-        default='central_species',
-        help='id of the sink species (default: rp_sink_species)'
+        default='rp_trunk_species',
+        help='id of the sink species (default: rp_trunk_species)'
     )
     parser.add_argument(
         '--objective_id',

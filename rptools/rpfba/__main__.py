@@ -95,6 +95,10 @@ def write_results(
       key=k,
       value=v
     )
+  # Write ignored species
+  pathway.set_fba_ignored_species(
+    results['rpfba_ignored_species']
+  )
 
 if __name__ == '__main__':
     entry_point()

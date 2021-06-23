@@ -9,6 +9,9 @@ from copy import deepcopy
 from rptools.rplibs import rpPathway
 from brs_utils import Cache
 
+def to_cobra(string: str) -> str:
+    return string.replace('__64__', '@')
+
 def cobra_suffix(pathway: rpPathway) -> str:
     return f'__64__{pathway.get_rpsbml_info("compartments")[0]["id"]}'
 
@@ -113,24 +116,28 @@ def uncobraize_reactions(pathway: rpPathway) -> None:
             target_id = None
 
 def uncobraize_results(
-  results: Dict,
-  cobra_suffix: str,
-  logger: Logger = getLogger(__name__)
+    results: Dict,
+    cobra_suffix: str,
+    logger: Logger = getLogger(__name__)
 ) -> None:
+
   res = {
     'species': {},
     'reactions': {},
-    'pathway': {}
+    'pathway': {},
+    'rpfba_ignored_species': []
   }
   logger.debug(cobra_suffix)
   logger.debug(results)
   # Uncobraize species results
   for spe_id, score in results['species'].items():
     res['species'][spe_id.replace(cobra_suffix, '')] = score
-  # Write reactions results
-  res['reactions'] = deepcopy(results['reactions'])
-  # Write pathway result
-  res['pathway'] = deepcopy(results['pathway'])
+  # Uncobraize rpfba_ignored_species results
+  for spe_id in results['rpfba_ignored_species']:
+    res['rpfba_ignored_species'] += [spe_id.replace(cobra_suffix, '')]
+  # Copy other results
+  for key in ['reactions', 'pathway']:
+      res[key] = deepcopy(results[key])
   return res
 
 
