@@ -435,11 +435,11 @@ def build_pathway_combinatorics(
             if pathway not in pathways_all_reactions:
                 pathways_all_reactions[pathway] = []
 
+            pathways_all_reactions[pathway].append([])
             ## ITERATE OVER REACTION RULES
             # Multiple reaction rules for the current transformation?
             for rule_id, tmpl_rxns in full_transfos[transfo_id]['complement'].items():
 
-                pathways_all_reactions[pathway].append([])
                 ## ITERATE OVER TEMPLATE REACTIONS
                 # Current reaction rule generated from multiple template reactions?
                 for tmpl_rxn_id, tmpl_rxn in tmpl_rxns.items():
@@ -490,7 +490,6 @@ def build_all_pathways(
                 id=str(path_idx).zfill(3)+'_'+str(sub_path_idx+1).zfill(4),
                 logger=logger
             )
-
             logger.debug(pathway.get_id())
 
             ## ITERATE OVER REACTIONS
