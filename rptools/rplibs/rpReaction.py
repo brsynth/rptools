@@ -68,28 +68,35 @@ class rpReaction(Reaction, rpObject):
     # def __repr__(self):
     #     return f'Reaction {self.get_name()}'
 
-    def _to_dict(self) -> Dict:
+    def _to_dict(
+        self,
+        specific: bool = False
+    ) -> Dict:
+        if specific:
+            return {
+                **self.__to_dict(),
+                **rpObject._to_dict(self)
+            }
+        else:
+            return {
+                **Reaction._to_dict(self),
+                **rpObject._to_dict(self),
+                **self.__to_dict()
+            }
+
+    def __to_dict(self) -> Dict:
         return {
-            **super()._to_dict(),
-            **self._infos_to_dict()
+            'rp2_transfo_id': self.get_rp2_transfo_id(),
+            'rule_id': self.get_rule_id(),
+            'tmpl_rxn_id': self.get_tmpl_rxn_id(),
+            'rule_score': self.get_rule_score(),
+            'idx_in_path': self.get_idx_in_path()
         }
 
-    def _infos_to_dict(self) -> Dict:
-        return {
-            **{
-                'rp2_transfo_id': self.get_rp2_transfo_id(),
-                'rule_id': self.get_rule_id(),
-                'tmpl_rxn_id': self.get_tmpl_rxn_id(),
-                'rule_score': self.get_rule_score(),
-                'idx_in_path': self.get_idx_in_path()
-            },
-            **super()._infos_to_dict()
-        }
-
-    def __eq__(self, other) -> bool:
-        if isinstance(self, other.__class__):
-            return self._to_dict() == other._to_dict()
-        return False
+    # def __eq__(self, other) -> bool:
+    #     if isinstance(self, other.__class__):
+    #         return self._to_dict() == other._to_dict()
+    #     return False
 
     ## READ METHODS
     def get_rp2_transfo_id(self) -> str:

@@ -5,18 +5,21 @@ import os
 import itertools
 import numpy as np
 import random
-
+from typing import(
+    List,
+    Callable
+)
 
 
 class rpGraph:
     """The class that hosts the networkx related functions
     """
     def __init__(self,
-                 rpsbml=None,
-                 is_gem_sbml=False,
-                 pathway_id='rp_pathway',
-                 central_species_group_id='central_species',
-                 sink_species_group_id='rp_sink_species',
+                 rpsbml,
+                 is_gem_sbml,
+                 pathway_id,
+                 central_species_group_id,
+                 sink_species_group_id,
                  logger=logging.getLogger(__name__)):
         """Constructor of the class
 
@@ -43,7 +46,7 @@ class rpGraph:
         self.num_reactions = 0
         self.num_species = 0
         if rpsbml:
-            self._makeGraph(is_gem_sbml, pathway_id, central_species_group_id, sink_species_group_id)
+            self.__makeGraph(is_gem_sbml, pathway_id, central_species_group_id, sink_species_group_id)
 
 
     ######################################################################################################
@@ -55,7 +58,13 @@ class rpGraph:
 
 
     #TODO: add the compartments to the species and reactions node descriptions
-    def _makeGraph(self, is_gem_sbml=False, pathway_id='rp_pathway', central_species_group_id='central_species', sink_species_group_id='rp_sink_species'):
+    def __makeGraph(
+        self,
+        is_gem_sbml,
+        pathway_id,
+        central_species_group_id,
+        sink_species_group_id
+    ):
         """Private function that constructs the networkx graph
 
         :param is_gem_sbml: Determine what type of graph to build. If True then all the species and reactions will be added and not just the heterologous pathway.
@@ -113,8 +122,8 @@ class rpGraph:
                         annot = species.getAnnotation(),
                         logger = self.logger
                     ),
-                    central_species = is_central,
-                    sink_species = is_sink,
+                    rp_trunk_species = is_central,
+                    rp_sink_species = is_sink,
                     rp_pathway = is_rp_pathway
                 )
 
@@ -142,8 +151,8 @@ class rpGraph:
             self.logger.debug('Adding edges for the reaction: '+str(reaction.getId()))
             if reaction.getId() in rp_reactions_id or is_gem_sbml:
                 for reac in reaction.getListOfReactants():
-                    if reac.species == 'TARGET_0000000001':
-                        self.logger.info('\taAdding edge '+str(reac.species)+' --> '+str(reaction.getId()))
+                    # if reac.species == 'TARGET_0000000001':
+                    #     self.logger.info('\taAdding edge '+str(reac.species)+' --> '+str(reaction.getId()))
                     self.logger.debug('\taAdding edge '+str(reac.species)+' --> '+str(reaction.getId()))
                     self.G.add_edge(
                         reac.species,
@@ -159,6 +168,54 @@ class rpGraph:
                     )
 
 
+    def __isolatedSpecies(
+        self,
+        func_eq_0: Callable,
+        func_gt_0: Callable,
+        only_central: bool = False,
+        only_rp_pathway: bool = True
+    ) -> List[str]:
+        """Private function that returns the single parent species that are consumed only
+
+        :param only_central: Focus on the central species only
+
+        :type only_central: bool
+
+        :return: List of node ids
+        :rtype: list
+        """
+        species = []
+        for node_name in self.G.nodes():
+            node = self.G.nodes.get(node_name)
+            if node['type'] == 'species':
+                if node['rp_pathway']:
+                    # NOTE: if central species then must also be rp_pathway species
+                    if (
+                        (
+                            only_central
+                            and node['rp_trunk_species']
+                        )
+                        or (
+                            only_rp_pathway
+                            and node['rp_pathway']
+                        )
+                        or (
+                            not only_central
+                            and not only_rp_pathway
+                        )
+                    ):
+                        self.logger.debug(node_name)
+                        self.logger.debug(f'succ: {list(func_gt_0(node_name))}')
+                        self.logger.debug(f'pred: {list(func_eq_0(node_name))}')
+                        if (
+                            len(list(func_gt_0(node_name))) > 0
+                            and len(list(func_eq_0(node_name))) == 0
+                        ):
+                            species.append(node_name)
+
+        return species
+
+
     def onlyConsumedSpecies(self, only_central=False, only_rp_pathway=True):
         """Private function that returns the single parent species that are consumed only
 
@@ -169,15 +226,12 @@ class rpGraph:
         :return: List of node ids
         :rtype: list
         """
-        only_consumed_species = []
-        for node_name in self.G.nodes():
-            node = self.G.nodes.get(node_name)
-            if node['type'] == 'species':
-                # NOTE: if central species then must also be rp_pathway species
-                if (only_central and node['central_species']) or (only_rp_pathway and node['rp_pathway']) or (not only_central and not only_rp_pathway):
-                    if not len(list(self.G.successors(node_name)))==0 and len(list(self.G.predecessors(node_name)))==0:
-                        only_consumed_species.append(node_name)
-        return only_consumed_species
+        return self.__isolatedSpecies(
+            only_central=only_central,
+            only_rp_pathway=only_rp_pathway,
+            func_eq_0=self.G.predecessors,
+            func_gt_0=self.G.successors
+        )
 
 
     def onlyProducedSpecies(self, only_central=False, only_rp_pathway=True):
@@ -190,17 +244,12 @@ class rpGraph:
         :return: List of node ids
         :rtype: list
         """
-        only_produced_species = []
-        for node_name in self.G.nodes():
-            node = self.G.nodes.get(node_name)
-            # self.logger.debug('node_name: '+str(node_name))
-            # self.logger.debug('node: '+str(node))
-            if node['type']=='species':
-                # NOTE: if central species then must also be rp_pathway species
-                if (only_central and node['central_species']==True) or (only_rp_pathway and node['rp_pathway']==True) or (not only_central and not only_rp_pathway):
-                    if len(list(self.G.successors(node_name)))==0 and len(list(self.G.predecessors(node_name)))>0:
-                        only_produced_species.append(node_name)
-        return only_produced_species
+        return self.__isolatedSpecies(
+            only_central=only_central,
+            only_rp_pathway=only_rp_pathway,
+            func_eq_0=self.G.successors,
+            func_gt_0=self.G.predecessors
+        )
 
 
     ## Recursive function that finds the order of the reactions in the graph
@@ -242,7 +291,7 @@ class rpGraph:
                     if n_n in multi_reac:
                         self._recursiveReacSuccessors(n_n, current_reac_list, all_res, num_reactions)
                 elif n['type']=='species':
-                    if n['central_species']==True:
+                    if n['rp_trunk_species']==True:
                         self._recursiveReacSuccessors(n_n, current_reac_list, all_res, num_reactions)
         return all_res
 
@@ -285,7 +334,7 @@ class rpGraph:
                     if n_n in multi_reac:
                         self._recursiveReacPredecessors(n_n, current_reac_list, all_res, num_reactions)
                 elif n['type']=='species':
-                    if n['central_species']==True:
+                    if n['rp_trunk_species']==True:
                         self._recursiveReacPredecessors(n_n, current_reac_list, all_res, num_reactions)
         return all_res
 
@@ -329,7 +378,7 @@ class rpGraph:
                     reac_list.append(n_n)
                     self._recursiveReacPredecessors(n_n, reac_list)
             elif n['type']=='species':
-                if n['central_species']==True:
+                if n['rp_trunk_species']==True:
                     self._recursiveReacPredecessors(n_n, reac_list)
                 else:
                     return reac_list

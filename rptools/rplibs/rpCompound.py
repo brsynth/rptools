@@ -60,6 +60,26 @@ class rpCompound(Compound, rpObject):
         )
         rpObject.__init__(self)
 
+    def _to_dict(
+        self,
+        specific: bool = False
+    ) -> Dict:
+        if specific:
+            return {
+                **self.__to_dict(),
+                **rpObject._to_dict(self)
+            }
+        else:
+            return {
+                **Compound._to_dict(self),
+                **rpObject._to_dict(self),
+                **self.__to_dict()
+            }
+
+    def __to_dict(self) -> Dict:
+        return {
+        }
+
     def get_thermo_standard_dg_formation(self) -> TypeVar:
         return self.get_thermo_info('standard_dg_formation')
 

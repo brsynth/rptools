@@ -81,6 +81,7 @@ class rpPathway(Pathway, rpObject):
         self.set_sink([])
         self.set_trunk_species([])
         self.set_completed_species([])
+        self.set_fba_ignored_species([])
         # Set default rpSBML infos
         if cache is None:
             cache = rrCache(
@@ -163,20 +164,27 @@ class rpPathway(Pathway, rpObject):
     # def __repr__(self):
     #     return dumps(self.to_dict(), indent=4)
 
-    def _to_dict(self) -> Dict:
-        return {
-            **Pathway._to_dict(self),
-            **self._infos_to_dict()
-        }
+    def _to_dict(
+        self,
+        specific: bool = False
+    ) -> Dict:
+        if specific:
+            return {
+                **self.__to_dict(),
+                **rpObject._to_dict(self)
+            }
+        else:
+            return {
+                **Pathway._to_dict(self),
+                **rpObject._to_dict(self),
+                **self.__to_dict()
+            }
 
-    def _infos_to_dict(self) -> Dict:
+    def __to_dict(self) -> Dict:
         return {
-            **{
-                'sink': deepcopy(self.get_sink()),
-                'target': self.get_target_id(),
-                'rpsbml_infos': deepcopy(self.get_rpsbml_infos())
-            },
-            **rpObject._infos_to_dict(self)
+            'sink': deepcopy(self.get_sink()),
+            'target': self.get_target_id(),
+            'rpsbml_infos': deepcopy(self.get_rpsbml_infos())
         }
 
     # def __to_dict(self) -> Dict:
@@ -185,14 +193,17 @@ class rpPathway(Pathway, rpObject):
     #         'target': self.get_target_id()
     #     }
 
-    def __eq__(self, other) -> bool:
-        if isinstance(self, other.__class__):
-            return self._to_dict() == other._to_dict()
-        return False
+    # def __eq__(self, other) -> bool:
+    #     if isinstance(self, other.__class__):
+    #         return self._to_dict() == other._to_dict()
+    #     return False
 
     ## READ METHODS
     def get_completed_species(self) -> List[str]:
         return self.__completed_species
+
+    def get_fba_ignored_species(self) -> List[str]:
+        return self.__fba_ignored_species
 
     def get_trunk_species(self) -> List[str]:
         return self.__trunk_species
@@ -544,6 +555,9 @@ class rpPathway(Pathway, rpObject):
 
     def set_completed_species(self, species: List[str]) -> None:
         self.__completed_species = deepcopy(species)
+
+    def set_fba_ignored_species(self, species: List[str]) -> None:
+        self.__fba_ignored_species = deepcopy(species)
 
     def set_trunk_species(self, species: List[str]) -> None:
         self.__trunk_species = deepcopy(species)

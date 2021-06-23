@@ -1121,6 +1121,21 @@ class rpSBML:
             logger.debug('species: ' + str(species))
 
             for source_reaction_reactantID in [i.species for i in source_reaction.getListOfReactants()]:
+                # print(source_reaction_reactantID, source_sbml.get_isolated_species())
+                # if source_reaction_reactantID in source_sbml.get_isolated_species():
+                #     continue
+                # GO = True
+                # isolated_species = [
+                #     element.getSpecies()
+                #     for element
+                #     in list(target_reaction.getListOfReactants())
+                #         + list(target_reaction.getListOfProducts())
+                # ]
+                # print(list(
+                #     set(isolated_species)
+                #     & set(source_sbml.get_isolated_species())
+                # ))
+
                 # self.logger.debug('\tAdding '+str(source_reaction_reactantID))
                 target_reactant = target_reaction.createReactant()
                 rpSBML.checklibSBML(
@@ -1256,7 +1271,7 @@ class rpSBML:
                     # self.logger.debug('Source reaction '+str(source_reaction)+' matches with target reaction '+str(target_reaction))
                     # source_reaction[source_reaction.getId()] = target_reaction.getId()
                     reactions_in_both[source_reaction.getId()] = target_reaction.getId()
-                    is_found = True
+                    GO = True
                     break
 
             if not is_found:
@@ -1551,7 +1566,7 @@ class rpSBML:
         lower_flux_bound: float = 0.0,
         compartment_id: str = 'MNXM3',
         pathway_id: str = 'rp_pathway',
-        central_species_group_id: str = 'central_species',
+        central_species_group_id: str = 'rp_trunk_species',
         sink_species_group_id: str = 'rp_sink_species'
     ) -> bool:
         """Check if there are any single parent species in a heterologous pathways and if there are, either delete them or add reaction to complete the heterologous pathway
@@ -1598,7 +1613,12 @@ class rpSBML:
             logger = self.logger
         )
 
-        self.isolated_species = rpgraph.onlyConsumedSpecies() + rpgraph.onlyProducedSpecies()
+        self.isolated_species = list(
+            set(
+                rpgraph.onlyConsumedSpecies() +
+                rpgraph.onlyProducedSpecies()
+            )
+        )
 
         # return self.get_isolated_species()
 
@@ -2071,7 +2091,8 @@ class rpSBML:
     ##########################################################################################
 
 
-    # TODO: for all the measured species compare with the simualted one. Then find the measured and simulated species that match the best and exclude the
+    # TODO: for all the measured species compare with the simualted one. Then find the measured
+    # and simulated species that match the best and exclude the
     # simulated species from potentially matching with another
     @staticmethod
     def speciesMatchWith(
@@ -3921,9 +3942,9 @@ class rpSBML:
                 inchi=specie.get_inchi(),
                 inchikey=specie.get_inchikey(),
                 smiles=specie.get_smiles(),
-                species_group_id='central_species',
+                species_group_id='rp_trunk_species',
                 in_sink_group_id=sink_species_group_id,
-                infos=pathway.get_specie(specie.get_id())._infos_to_dict()
+                infos=pathway.get_specie(specie.get_id())._to_dict(specific=True)
             )
 
 
@@ -3951,19 +3972,7 @@ class rpSBML:
             member = libsbml.Member()
             member.setIdRef(member_id)
             group.addMember(member)
-        # Add extras infos for 'rp_pathway'
-        # for key, value in pathway.get_infos().items():
-        #     if key != 'rpSBML':
-        #         if isinstance(value, dict):
-        #             isList = True
-        #         else:
-        #             isList = False
-        #         self.updateBRSynth(
-        #             sbase_obj=self.getGroup('rp_pathway'),
-        #             annot_header=key,
-        #             value=value,
-        #             isList=isList
-        #         )
+
         for key, value in {
             **pathway.get_fba(),
             **pathway.get_thermo()
@@ -4007,22 +4016,13 @@ class rpSBML:
             member.setIdRef(member_id)
             group.addMember(member)
 
-        # ## CENTRAL_SPECIES
-        # # Species that are not produced by the pathway (?)
-        # group = self.createGroup('central_species')
-        # species = {}
-        # for key in ['reactants', 'products']:
-        #     species[key] = []
-        #     for rxn in pathway['reactions'].values():
-        #         species[key] += list(rxn[key].keys())
-        # central_species = list(
-        #     set(species['reactants'])
-        #   - set(species['products'])
-        # )
-        # for member_id in central_species:
-        #     member = libsbml.Member()
-        #     member.setIdRef(member_id+'__64__'+compartment_id)
-        #     group.addMember(member)
+        ## FBA IGNORED SPECIES
+        group = self.createGroup('rpfba_ignored_species')
+        for member_id in pathway.get_fba_ignored_species():
+            member = libsbml.Member()
+            member.setIdRef(member_id)
+            group.addMember(member)
+
 
     def to_Pathway(
         self,
@@ -4931,7 +4931,7 @@ class rpSBML:
         # if 'rxn_idx' in rxn:
         #     if rxn['rxn_idx']:
         #         self.updateBRSynth(reac, 'rxn_idx', rxn['rxn_idx'], None, False, False, False, meta_id)
-        for key, value in rxn._infos_to_dict().items():
+        for key, value in rxn._to_dict(specific=True).items():
             # if key.startswith('fba') or key.startswith('thermo'):
             # for k, v in value.items():
             if isinstance(value, dict):
@@ -5168,7 +5168,9 @@ class rpSBML:
         idRef: str
     ) -> None:
         group = self.getGroup(group_id)
-        member = group.createMember()
+        member = libsbml.Member()
+        member.setIdRef(idRef)
+        group.addMember(member)
         rpSBML.checklibSBML(member, 'Creating a new groups member')
         rpSBML.checklibSBML(member.setIdRef(idRef), 'Setting name to the groups member')
 

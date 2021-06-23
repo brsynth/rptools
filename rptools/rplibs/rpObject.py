@@ -49,11 +49,11 @@ class rpObject():
 
     def _to_dict(self) -> Dict:
         return {
-            **super()._to_dict(),
-            **self._infos_to_dict()
+            # **super()._to_dict(),
+            **self.__to_dict()
         }
 
-    def _infos_to_dict(self) -> Dict:
+    def __to_dict(self) -> Dict:
         return {
             **self.get_fba(),
             **self.get_thermo()
@@ -61,7 +61,7 @@ class rpObject():
 
     def __eq__(self, other) -> bool:
         if isinstance(self, other.__class__):
-            return self.__to_dict() == other.__to_dict()
+            return self._to_dict() == other._to_dict()
         return False
 
     ## READ METHODS
