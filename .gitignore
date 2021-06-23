@@ -10,4 +10,4 @@ node_modules
 out*
 *.sbml
 .vscode
-joan
+exclude

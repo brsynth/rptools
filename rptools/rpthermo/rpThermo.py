@@ -520,9 +520,9 @@ def minimize(
         bounds=bounds,
         method='revised simplex'
     )
-    print(f'rxn_target_idx: {rxn_target_idx}')
-    print(S)
-    print(res)
+    # print(f'rxn_target_idx: {rxn_target_idx}')
+    # print(S)
+    # print(res)
 
     return res.x
 

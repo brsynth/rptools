@@ -435,8 +435,10 @@ def build_pathway_combinatorics(
             if pathway not in pathways_all_reactions:
                 pathways_all_reactions[pathway] = []
 
-            pathways_all_reactions[pathway].append([])
             ## ITERATE OVER REACTION RULES
+            # Append a list to add steps later on
+            # ('pathways_all_reactions[pathway][-1].append(...')
+            pathways_all_reactions[pathway].append([])
             # Multiple reaction rules for the current transformation?
             for rule_id, tmpl_rxns in full_transfos[transfo_id]['complement'].items():
 
