@@ -233,7 +233,7 @@ def runFBA(
         results[objective_id] = cobra_results
 
         # Write results for merged model
-        write_results(
+        write_results_to_rpsbml(
             rpsbml = rpsbml_merged,
             hidden_species = hidden_species,
             objective_id = objective_id,
@@ -280,6 +280,7 @@ def runFBA(
                     'value': cobra_r.fluxes[rxn_id],
                     'units': 'milimole / gDW / hour'
                 }
+
     # PATHWAY
     _results['pathway'] = {}
     for obj_id, cobra_r in results.items():
@@ -304,6 +305,14 @@ def runFBA(
     _results = uncobraize_results(
         _results,
         cobra_suffix(pathway)
+    )
+
+    # Write results into the pathway
+    write_results_to_pathway(
+        pathway,
+        _results,
+        sim_type,
+        logger
     )
 
     return _results
@@ -341,6 +350,38 @@ def runFBA(
     # from json import dumps
     # print(dumps(pathway_fba, indent=4))
     # exit()
+
+def write_results_to_pathway(
+  pathway: rpPathway,
+  results: Dict,
+  sim: str,
+  logger: Logger = getLogger(__name__)
+) -> None:
+
+  # Write species results
+  for spe_id, score in results['species'].items():
+    for k, v in score.items():
+      pathway.get_specie(spe_id).set_fba_info(
+        key=k,
+        value=v
+      )
+  # Write reactions results
+  for rxn_id, score in results['reactions'].items():
+    for k, v in score.items():
+      pathway.get_reaction(rxn_id).set_fba_info(
+        key=k,
+        value=v
+      )
+  # Write pathway result
+  for k, v in results['pathway'].items():
+    pathway.set_fba_info(
+      key=k,
+      value=v
+    )
+  # Write ignored species
+  pathway.set_fba_ignored_species(
+    results['rpfba_ignored_species']
+  )
 
 
 def complete_heterologous_pathway(
@@ -662,7 +703,7 @@ def rp_fraction(
 
         results['biomass'] = cobra_results
 
-        write_results(
+        write_results_to_rpsbml(
             rpsbml = rpsbml,
             hidden_species = hidden_species,
             objective_id = src_obj_id,
@@ -727,7 +768,7 @@ def rp_fraction(
     results['fraction'] = cobra_results
 
     # Write results for merged model
-    write_results(
+    write_results_to_rpsbml(
         rpsbml = rpsbml,
         hidden_species = hidden_species,
         objective_id = objective_id,
@@ -890,7 +931,7 @@ def cobra_model(
     return cobraModel
 
 
-def write_results(
+def write_results_to_rpsbml(
     rpsbml: rpSBML,
     hidden_species: List[str],
     objective_id: str,
