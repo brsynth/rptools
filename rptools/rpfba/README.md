@@ -39,28 +39,17 @@ rpFBA is part of rpTools suite:
 ### rpFBA process
 **From Python code**
 ```python
-from rptools.rpfba import runFBA, build_args_parser
+from rptools.rplibs import rpSBML
+from rptools.rpfba import runFBA
 
-parser = build_args_parser()
-args  = parser.parse_args()
+pathway = rpSBML(inFile='lycopene/rp_003_0382.sbml').to_Pathway()
 
-logger = logging.getLogger(__name__)
-logger.setLevel(getattr(logging, args.log.upper()))
-logger.formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
+runFBA(pathway, 'e_coli_model.sbml.gz')
 
-result = runFBA(args.input_sbml, args.gem_sbml, args.outfile,
-                args.sim_type,
-                args.source_reaction, args.target_reaction,
-                args.source_coefficient, args.target_coefficient,
-                args.is_max,
-                args.fraction_of,
-                args.merge,
-                args.pathway_id,
-                args.objective_id,
-                args.compartment_id,
-                args.species_group_id,
-                args.sink_species_group_id,
-                logger)
+pathway.get_fba_biomass().get('value')
+0.7638744755010194
+pathway.get_fba_biomass()
+{'value': 0.7638744755010194, 'units': 'milimole / gDW / hour'}
 ```
 **From CLI**
 ```sh
