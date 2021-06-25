@@ -33,7 +33,7 @@ from logging import (
     Logger,
     getLogger
 )
-from copy import deepcopy
+from math import isnan
 from chemlite import Reaction
 from rptools.rplibs.rpObject import rpObject
 
@@ -93,10 +93,18 @@ class rpReaction(Reaction, rpObject):
             'idx_in_path': self.get_idx_in_path()
         }
 
-    # def __eq__(self, other) -> bool:
-    #     if isinstance(self, other.__class__):
-    #         return self._to_dict() == other._to_dict()
-    #     return False
+    def __eq__(self, other) -> bool:
+        if not isinstance(self, other.__class__):
+            return False
+        # Compare with some specific keys
+        return all(
+            self._to_dict().get(key) == other._to_dict().get(key)
+            for key in [
+                'ec_numbers',
+                'reactants',
+                'products'
+            ]
+        )
 
     ## READ METHODS
     def get_rp2_transfo_id(self) -> str:
