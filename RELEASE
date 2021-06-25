@@ -6,8 +6,12 @@
     - remove intermediate components and compute thermo for the pathway net reaction
 - chore(rpfba):
     - switch functions I/O from rpSBML to rpPathway
-- chore(rpPathway):
-    - add access functions
+    - hide metabolites not compliant with Cobra
+- chore(rpObject, rpCompound, rpReaction, rpPathway):
+    - add access methods
+    - rewrite to_dict() methods
+- fix(rpcompletion):
+    - merge sublists of transfos with same ID (multiple identical reactions in a pathway)
 
 ## 4.7.0
 - chore(rpcompletion): re-write almost all code
