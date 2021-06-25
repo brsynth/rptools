@@ -69,7 +69,6 @@ class Test_rpReaction(TestCase):
         self.rxn.set_rule_id(self.rule_id)
         self.rxn.set_tmpl_rxn_id(self.tmpl_rxn_id)
         self.rxn.set_rule_score(self.rule_score)
-        print(self.rxn._to_dict())
         self.assertDictEqual(
             self.rxn._to_dict(),
             {
@@ -78,7 +77,7 @@ class Test_rpReaction(TestCase):
                     'reactants': self.reactants,
                     'products': self.products,
                     'ec_numbers': self.ec_numbers,
-                    'infos': {}
+                    'idx_in_path': -1
                 },
                 **{
                     'rp2_transfo_id': self.rp2_transfo_id,
@@ -95,11 +94,18 @@ class Test_rpReaction(TestCase):
             self.rxn,
             rxn
         )
-        rxn.add_info('test_info', 'test_data')
+        rxn.set_idx_in_path(2)
+        self.assertEqual(
+            self.rxn,
+            rxn
+        )
+        rxn.add_reactant('reac', 2)
+        # objects are not equal
         self.assertNotEqual(
             self.rxn,
             rxn
         )
+        # objects are not the same type
         self.assertNotEqual(
             self.rxn,
             'rxn'

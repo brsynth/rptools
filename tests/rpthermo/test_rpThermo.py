@@ -3,7 +3,6 @@ from numpy import array as np_array
 from rptools.rpthermo.rpThermo import (
     minimize,
     build_stoichio_matrix,
-    remove_unknown_compounds,
     get_target_rxn_idx,
     minimize,
     runThermo,
@@ -120,6 +119,8 @@ species = {
 }
 
 class Test_rpThermo(TestCase):
+
+    __test__ = False
 
     def setUp(self):
         self.logger = create_logger(__name__, 'ERROR')
