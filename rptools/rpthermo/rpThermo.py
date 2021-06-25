@@ -174,7 +174,7 @@ def runThermo(
             logger.debug(e)
         if value is None:
             value = float('nan')
-        print(spe_id, value)
+        # print(spe_id, value)
         results['species'][spe_id] = {
             'standard_dg_formation': {
                 'value': value,
