@@ -438,7 +438,10 @@ def remove_compounds(
     ## Impact coeff to reactions
     for rxn_idx in range(len(reactions)):
         _reactions += [deepcopy(reactions[rxn_idx])]
-        if coeffs[rxn_idx] != 0:
+        if (
+            coeffs[rxn_idx] != 0
+            and coeffs[rxn_idx] != abs(float("inf"))
+        ):
             _reactions[rxn_idx].mult_stoichio_coeff(coeffs[rxn_idx])
 
     return _reactions
@@ -553,10 +556,11 @@ def minimize(
         bounds=bounds,
         method='revised simplex'
     )
+    # print(b_eq)
     # print(f'rxn_target_idx: {rxn_target_idx}')
     # print(S)
     # print(res)
-
+    # exit()
     return res.x
 
 
