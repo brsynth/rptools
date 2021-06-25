@@ -150,7 +150,7 @@ class rpObject():
         self.set_thermo_info(rpObject.dG_str, value)
 
     def set_fba_biomass(self, value: float) -> None:
-        self.set_fba_info(rpObject.fba_biomass, value)
+        self.set_fba_info(rpObject.fba_biomass_str, value)
 
     def set_fba_fraction(self, value: float) -> None:
-        self.set_fba_info(rpObject.fba_fraction, value)
+        self.set_fba_info(rpObject.fba_fraction_str, value)
