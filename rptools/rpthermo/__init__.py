@@ -11,4 +11,4 @@ from rptools.rpthermo.rpThermo import (
     initThermo
 )
 
-__all__ = ['thermo']
+__all__ = ['runThermo', 'initThermo']
