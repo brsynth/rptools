@@ -71,8 +71,8 @@ For further tests and development tools, a CI toolkit is provided in `ci` folder
 
 ## Authors
 
-* **Melchior du Lac**
 * **Joan Hérisson**
+* **Melchior du Lac**
 
 ## Acknowledgments
 

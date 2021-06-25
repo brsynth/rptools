@@ -15,39 +15,56 @@ Advanced Options:
 
 * **-output**: (string) Path to the output file 
 
-## Dependencies
-
-* [Marvin:](https://chemaxon.com/products/marvin)
-
-## Building the docker
-
-NOTE: you need to have a valid [Marvin](https://chemaxon.com/products/marvin/download) account and Marvin licence (named license.cxl) in the root directory. Furthermore, the Dockerfile needs to be modified to have the addition of the source.list as per the deb instructions in the official Marvin website.
-
-```
-docker build -t brsynth/rpthermo-standalone -f Dockerfile .
+## Install
+rpThermo is part of rpTools suite:
+```sh
+[sudo] conda install -c brsynth -c conda-forge -c bioconda rptools
 ```
 
-## Contributing
+## Run
 
-TODO
+### rpThermo process
+**From Python code**
+```python
+from rptools.rplibs import rpSBML
+from rptools.rpthermo import rpThermo
 
-## Versioning
+pathway = rpSBML(inFile='lycopene/rp_003_0382.sbml').to_Pathway()
 
-v0.1
+runThermo(pathway)
+
+pathway.get_thermo_dGm_prime().get('value')
+-3079.477259696032
+pathway.get_fba_dGm_prime()
+{'value': -3079.477259696032, 'error': 7.250256007547839, 'units': 'kilojoule / mole'}
+```
+**From CLI**
+```sh
+python -m rptools.rpthermo <input_sbml> <outfile>
+```
+
+## Tests
+Test can be run with the following commands:
+
+### Natively
+```bash
+cd tests
+pytest -v
+```
+
+# CI/CD
+For further tests and development tools, a CI toolkit is provided in `ci` folder (see [ci/README.md](ci/README.md)).
+
 
 ## Authors
 
-* **Melchior du Lac** 
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+* **Joan Hérisson**
+* **Melchior du Lac**
 
 ## Acknowledgments
 
 * Thomas Duigou
-* Joan Hérisson
 
-### How to cite rpThermodynamics?
 
-TODO
+## Licence
+rpThermo is released under the MIT licence. See the LICENCE file for details.
