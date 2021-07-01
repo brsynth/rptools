@@ -20,7 +20,6 @@ from rptools.rplibs import (
     rpPathway,
     rpReaction
 )
-#from rptools.rpreport.dictor.dictor import dictor
 
 from typing import(
     Dict,
