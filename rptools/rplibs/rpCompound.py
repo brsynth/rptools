@@ -38,6 +38,10 @@ from rptools.rplibs.rpObject import rpObject
 
 class rpCompound(Compound, rpObject):
 
+    thermo_str = 'thermo_standard_dg_formation'
+    fba_biomass_str = rpObject.fba_biomass_str+'_shadow_price'
+    fba_fraction_str = rpObject.fba_fraction_str+'_shadow_price'
+
     def __init__(
         self,
         id: str,
@@ -81,10 +85,19 @@ class rpCompound(Compound, rpObject):
         }
 
     def get_thermo_standard_dg_formation(self) -> TypeVar:
-        return self.get_thermo_info('standard_dg_formation')
+        return self.get_thermo_info(rpCompound.thermo_str)
 
     def get_fba_biomass_shadow_price(self) -> TypeVar:
-        return self.get_fba_info('biomass_shadow_price')
+        return self.get_fba_info(rpCompound.fba_biomass_str)
 
     def get_fba_fraction_shadow_price(self) -> TypeVar:
-        return self.get_fba_info('fraction_shadow_price')
+        return self.get_fba_info(rpCompound.fba_fraction_str)
+
+    def set_thermo_standard_dg_formation(self, value: float) -> None:
+        self.set_thermo_info(rpCompound.thermo_str, value)
+
+    def set_fba_biomass_shadow_price(self, value: float) -> None:
+        self.set_fba_info(rpCompound.fba_biomass_shadow_price, value)
+
+    def set_fba_fraction_shadow_price(self, value: float) -> None:
+        self.set_fba_info(rpCompound.fba_fraction_shadow_price, value)

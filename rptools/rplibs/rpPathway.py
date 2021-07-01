@@ -76,7 +76,7 @@ class rpPathway(Pathway, rpObject):
             cache=cache,
             logger=logger
         )
-        rpObject.__init__(self)
+        rpObject.__init__(self, logger)
         self.set_target_id(None)
         self.set_sink([])
         self.set_trunk_species([])
@@ -187,16 +187,17 @@ class rpPathway(Pathway, rpObject):
             'rpsbml_infos': deepcopy(self.get_rpsbml_infos())
         }
 
-    # def __to_dict(self) -> Dict:
-    #     return {
-    #         'sink': deepcopy(self.get_sink()),
-    #         'target': self.get_target_id()
-    #     }
-
-    # def __eq__(self, other) -> bool:
-    #     if isinstance(self, other.__class__):
-    #         return self._to_dict() == other._to_dict()
-    #     return False
+    def __eq__(self, other) -> bool:
+        if not isinstance(self, other.__class__):
+            return False
+        # Compare with specific keys
+        return all(
+            self._to_dict().get(key) == other._to_dict().get(key)
+            for key in [
+                'reactions',
+                'target',
+            ]
+        )
 
     ## READ METHODS
     def get_completed_species(self) -> List[str]:

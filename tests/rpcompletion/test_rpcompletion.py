@@ -118,17 +118,17 @@ class Test_rpCompletion(TestCase):
     #                                 })
 
 
-    def test_build_side_rxn(self):
-        cid           = 'CMPD_0000000001'
-        index         = 1
-        deprecatedCID = {}
-        self.assertDictEqual(
-            build_side_rxn(
-                str(index)+'.'+cid,
-                deprecatedCID
-            ),
-            {cid: index}
-        )
+    # def test_build_side_rxn(self):
+    #     cid           = 'CMPD_0000000001'
+    #     index         = 1
+    #     deprecatedCID = {}
+    #     self.assertDictEqual(
+    #         build_side_rxn(
+    #             str(index)+'.'+cid,
+    #             deprecatedCID
+    #         ),
+    #         {cid: index}
+    #     )
 
 
     # def test_build_side_rxn_deprecatedCID_NoMatch(self):

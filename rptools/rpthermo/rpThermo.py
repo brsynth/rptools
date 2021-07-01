@@ -174,6 +174,7 @@ def runThermo(
             logger.debug(e)
         if value is None:
             value = float('nan')
+        # print(spe_id, value)
         results['species'][spe_id] = {
             'standard_dg_formation': {
                 'value': value,
@@ -197,6 +198,7 @@ def runThermo(
         logger=logger,
         waiting=True
     )
+
     results['net_reaction'] = eQuilibrator(
         species_stoichio=Reaction.sum_stoichio(reactions),
         species_ids=species_ids,
@@ -205,7 +207,37 @@ def runThermo(
     )
     print_OK(logger)
 
+    # Write results into the pathway
+    write_results_to_pathway(pathway, results, logger)
+
     return results
+
+
+def write_results_to_pathway(
+  pathway: rpPathway,
+  results: Dict,
+  logger: Logger = getLogger(__name__)
+) -> None:
+    # Write species results
+    for spe_id, score in results['species'].items():
+        for k, v in score.items():
+            pathway.get_specie(spe_id).set_thermo_info(
+                key=k,
+                value=v
+            )
+    # Write reactions results
+    for rxn_id, score in results['reactions'].items():
+        for k, v in score.items():
+            pathway.get_reaction(rxn_id).set_thermo_info(
+                key=k,
+                value=v
+            )
+    # Write pathway result
+    for k, v in results['net_reaction'].items():
+        pathway.set_thermo_info(
+        key=k,
+        value=v
+        )
 
 def eQuilibrator(
     species_stoichio: Dict[str, float],
@@ -229,22 +261,22 @@ def eQuilibrator(
     # try:
     # For both sides left and right
     for cmpd_id, cmpd_sto in reactants.items():
-        # if inchi_key from equilibrator is None
-        spe_str = species_ids[cmpd_id]
-        # then, take the compound ID
-        if spe_str is None or spe_str == '':
-            spe_str = cmpd_id
+        # # if inchi_key from equilibrator is None
+        # spe_str = species_ids[cmpd_id]
+        # # then, take the compound ID
+        # if spe_str is None or spe_str == '':
+        #     spe_str = cmpd_id
         compounds[SIDES[0]['name']] += [
-            f'{cmpd_sto} {spe_str}'
+            f'{cmpd_sto} {species_ids[cmpd_id]}'
         ]
     for cmpd_id, cmpd_sto in products.items():
-        # if inchi_key from equilibrator is None
-        spe_str = species_ids[cmpd_id]
-        # then, take the compound ID
-        if spe_str is None or spe_str == '':
-            spe_str = cmpd_id
+        # # if inchi_key from equilibrator is None
+        # spe_str = species_ids[cmpd_id]
+        # # then, take the compound ID
+        # if spe_str is None or spe_str == '':
+        #     spe_str = cmpd_id
         compounds[SIDES[1]['name']] += [
-            f'{cmpd_sto} {spe_str}'
+            f'{cmpd_sto} {species_ids[cmpd_id]}'
         ]
     # except KeyError:  # the compound is unknown
     #     return thermo
@@ -255,6 +287,7 @@ def eQuilibrator(
         right=' + '.join(compounds[SIDES[1]['name']])
     )
 
+    print(rxn_str)
     logger.debug(rxn_str)
 
     results = {}
@@ -405,7 +438,10 @@ def remove_compounds(
     ## Impact coeff to reactions
     for rxn_idx in range(len(reactions)):
         _reactions += [deepcopy(reactions[rxn_idx])]
-        if coeffs[rxn_idx] != 0:
+        if (
+            coeffs[rxn_idx] != 0
+            and coeffs[rxn_idx] != abs(float("inf"))
+        ):
             _reactions[rxn_idx].mult_stoichio_coeff(coeffs[rxn_idx])
 
     return _reactions
@@ -520,10 +556,11 @@ def minimize(
         bounds=bounds,
         method='revised simplex'
     )
-    print(f'rxn_target_idx: {rxn_target_idx}')
-    print(S)
-    print(res)
-
+    # print(b_eq)
+    # print(f'rxn_target_idx: {rxn_target_idx}')
+    # print(S)
+    # print(res)
+    # exit()
     return res.x
 
 
