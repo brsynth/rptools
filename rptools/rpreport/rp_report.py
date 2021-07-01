@@ -15,46 +15,55 @@ import tempfile
 import fnmatch
 from shutil import copyfile
 from pathlib import Path
-from rptools.rplibs import rpSBML
-from rptools.rpreport.dictor.dictor import dictor
+from rptools.rplibs import (
+    rpSBML,
+    rpPathway,
+    rpReaction
+)
+#from rptools.rpreport.dictor.dictor import dictor
+
+from typing import(
+    Dict,
+    List
+)
+from copy import deepcopy
 
 
-def get_reactions_data(rxn_dict):
+def get_reactions_data(reactions: Dict[str, rpReaction]):
     """Extract, sort and return a dictionary of reactions data
 
-    :param rxn_dict: data of 'reactions' element of a pathway dictionary
-    :type rxn_dict: dict
+    :param rxn_list: list of reactions from a specific pathway
+    :type rxn_list: list
     :return: return relevant and sorted reactions data
     :rtype: dict
     """
 
-    if not isinstance(rxn_dict, dict):
-        raise AttributeError('get_reactions_data() expects dict as argument.')
-
     # init
-    reaction_dict = {}
-    reaction = {}
+    _reactions = {}
 
-    for rxn_name in rxn_dict.keys():
+    for rxn_id, rxn in reactions.items():
+
+        _reactions[rxn_id] = {}
+
         # We store step number of the reaction
-        reaction_dict['rxn_idx'] = dictor(rxn_dict, f"{rxn_name}.brsynth.rxn_idx")
+        _reactions[rxn_id]['rxn_idx'] = int(rxn.get_idx_in_path())
 
         # We store all the ec-codes
-        reaction_dict['ec_code'] = dictor(rxn_dict, f"{rxn_name}.miriam.ec-code")
+        _reactions[rxn_id]['ec_code'] = deepcopy(rxn.get_ec_numbers())
 
         # We store the dfg_prime
-        reaction_dict['dfG_prime_m'] = dictor(rxn_dict, f"{rxn_name}.brsynth.dfG_prime_m.value")
+        dfG_prime_m = rxn.get_thermo_dGm_prime()
+
+        # print(dfG_prime_m)
+        _reactions[rxn_id]['dfG_prime_m'] = float(dfG_prime_m.get('value'))
 
         # We store the rule_score
-        reaction_dict['rule_score'] = dictor(rxn_dict, f"{rxn_name}.brsynth.rule_score")
-
-        reaction[rxn_name] = reaction_dict
-        reaction_dict = {}  # emptying is useless?
+        _reactions[rxn_id]['rule_score'] = float(rxn.get_rule_score())
 
     # sorting dict by rxn_idx by reinserting values
-    reaction = dict(sorted(reaction.items(), key=lambda item: item[1]['rxn_idx']))
+    __reactions = dict(sorted(_reactions.items(), key=lambda item: item[1]['rxn_idx']))
 
-    return reaction
+    return __reactions
 
 def to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose=False, dev=False):
     """
@@ -68,36 +77,29 @@ def to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose=F
         if verbose:
             print("Parsing", name)
 
-        rpsbml = rpSBML(inFile=os.path.join(source_path, name))
+        pathway = rpSBML(inFile=os.path.join(source_path, name)).to_Pathway()
+        
+        rp_name = pathway.get_id()
+        if verbose:
+            print("Path_id found:", rp_name)
+        dfG_prime_m = pathway.get_thermo_dGm_prime()
+        fba_obj_fraction = pathway.get_fba_fraction()
+        nb_reactions = pathway.get_nb_reactions()
+        reactions = pathway.get_reactions()
 
-        pathway_dict = rpsbml.toDict()
+        # adding necessary values to the list
+        rp_list.append({
+            'pathway_name': rp_name,
+            'dfG_prime_m': dfG_prime_m.get('value'),
+            # 'global_score': dictor(pathway_dict, "pathway.brsynth.global_score"),
+            'fba_obj_fraction': fba_obj_fraction.get('value'),
+            # 'norm_rule_score': dictor(pathway_dict, "pathway.brsynth.norm_rule_score"),
+            'nb_reactions': nb_reactions,
+            'reactions': get_reactions_data(reactions)
+        })
 
-        # if pathway name is found
-        if dictor(pathway_dict, 'pathway.brsynth.path_id', default=False):
-            rp_name = dictor(pathway_dict, "pathway.brsynth.path_id")
-            if verbose:
-                print("Path_id found:", rp_name)
-
-            # adding necessary values to the list
-            rp_list.append({
-                'pathway_name': rp_name,
-                'dfG_prime_m': dictor(pathway_dict, "pathway.brsynth.dfG_prime_m.value"),
-                'global_score': dictor(pathway_dict, "pathway.brsynth.global_score"),
-                'fba_obj_fraction': dictor(pathway_dict, "pathway.brsynth.fba_obj_fraction.value"),
-                'norm_rule_score': dictor(pathway_dict, "pathway.brsynth.norm_rule_score"),
-                'nb_reactions': dictor(pathway_dict, "pathway.brsynth.nb_reactions"),
-                'reactions': get_reactions_data(pathway_dict['reactions'])
-            })
-
-            # sorting list by pathway_name (the 1st element)
-            rp_list = sorted(rp_list, key=lambda k: k['pathway_name'])
-
-            if dev:
-                #  Saving pathway_dict into separate json file
-                with open(output_folder + '/dev/' + rp_name + '.json', "w") as f:
-                    json.dump(pathway_dict, f, indent=4)
-        elif verbose:
-            print("No path_id found, file ignored!")
+        # sorting list by pathway_name
+        rp_list = sorted(rp_list, key=lambda k: k['pathway_name']) 
 
     return rp_list
 
@@ -186,6 +188,7 @@ def run_report(input_dir:bool, source_path:str, output_folder:str, dev:bool, ver
     # if -d option exists then parse files in the directory
     if input_dir:
         files = fnmatch.filter(os.listdir(source_path), "*.xml")
+        files.sort()
         rp_list = to_data_js(files, source_path, output_folder, verbose, dev)
     else:
         if not os.path.isfile(source_path):
@@ -197,7 +200,7 @@ def run_report(input_dir:bool, source_path:str, output_folder:str, dev:bool, ver
                 tar.extractall(path=tmp_folder)
                 tar.close()
                 files = os.listdir(tmp_folder)
-
+                files.sort()
                 rp_list = to_data_js(files, tmp_folder, output_folder, verbose, dev)
         else:
             rp_list = ''
