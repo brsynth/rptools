@@ -50,6 +50,7 @@ class rpCompound(Compound, rpObject):
         inchikey: str = '',
         formula: str = '',
         name: str = '',
+        compartment: str = '',
         logger: Logger = getLogger(__name__)
     ):
         Compound.__init__(
@@ -63,6 +64,7 @@ class rpCompound(Compound, rpObject):
             logger=logger
         )
         rpObject.__init__(self)
+        self.set_compartment(compartment)
 
     def _to_dict(
         self,
@@ -93,6 +95,9 @@ class rpCompound(Compound, rpObject):
     def get_fba_fraction_shadow_price(self) -> TypeVar:
         return self.get_fba_info(rpCompound.fba_fraction_str)
 
+    def get_compartment(self) -> str:
+        return self.__compartment
+
     def set_thermo_standard_dg_formation(self, value: float) -> None:
         self.set_thermo_info(rpCompound.thermo_str, value)
 
@@ -101,3 +106,6 @@ class rpCompound(Compound, rpObject):
 
     def set_fba_fraction_shadow_price(self, value: float) -> None:
         self.set_fba_info(rpCompound.fba_fraction_shadow_price, value)
+
+    def set_compartment(self, compartment: str) -> None:
+        self.__compartment = compartment
