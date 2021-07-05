@@ -93,6 +93,7 @@ def rp_completion(
     rp2paths_compounds_in_cache(
         rp2paths_compounds,
         cache,
+        compartment_id=compartment_id,
         logger=logger
     )
     pathways, transfos = read_pathways(
@@ -135,6 +136,7 @@ def rp_completion(
         rr_reactions=cache.get('rr_reactions'),
         compounds_cache=cache.get('cid_strc'),
         max_subpaths_filter=max_subpaths_filter,
+        compartment_id=compartment_id,
         logger=logger
     )
 
@@ -195,6 +197,29 @@ def build_smiles(
 ) -> str:
     return '.'.join([Cache.get(spe_id).get_smiles() for spe_id in side.keys()])
 
+def build_reader(
+    path: str,
+    delimiter: str = ',',
+    logger: Logger=getLogger(__name__)
+) -> '_csv.reader':
+    if isinstance(path, bytes):
+        reader = csv_reader(
+            StringIO(path.decode('utf-8')),
+            delimiter=delimiter
+        )
+    else:
+        try:
+            reader = csv_reader(
+                open(path, 'r'),
+                delimiter=delimiter
+            )
+        except FileNotFoundError:
+            logger.error('Could not read file: '+str(path))
+            return None
+    next(reader)
+    return reader
+
+
 ## Function to parse the compounds.txt file
 #
 #  Extract the smile and the structure of each compounds of RP2Path output
@@ -202,23 +227,35 @@ def build_smiles(
 #
 #  @param path The compounds.txt file path
 #  @return rp_compounds Dictionnary of smile and structure for each compound
-def rp2paths_compounds_in_cache(path, cache, logger=getLogger(__name__)):
+def rp2paths_compounds_in_cache(
+    path: str,
+    cache: rrCache,
+    compartment_id: str,
+    logger: Logger = getLogger(__name__)
+) -> None:
 
     try:
-        if isinstance(path, bytes):
-            reader = csv_reader(StringIO(path.decode('utf-8')), delimiter='\t')
-        else:
-            reader = csv_reader(open(path, 'r', encoding='utf-8'), delimiter='\t')
-        next(reader)
+        reader = build_reader(
+            path=path,
+            delimiter='\t',
+            logger=logger
+        )
+        if reader is None:
+            logger.error(f'File not found: {path}')
+            return None
         for row in reader:
             spe_id = row[0]
-            smiles = row[1]  #, 'structure':row[1].replace('[','').replace(']','')
+            smiles = row[1]
             try:
                 inchi = cache.get('cid_strc')[spe_id]['inchi']
             except KeyError:
                 # try to generate them yourself by converting them directly
                 try:
-                    resConv = cache._convert_depiction(idepic=smiles, itype='smiles', otype={'inchi'})
+                    resConv = cache._convert_depiction(
+                        idepic=smiles,
+                        itype='smiles',
+                        otype={'inchi'}
+                    )
                     inchi = resConv['inchi']
                 except NotImplementedError as e:
                     logger.warning('Could not convert the following SMILES to InChI: '+str(smiles))
@@ -228,7 +265,11 @@ def rp2paths_compounds_in_cache(path, cache, logger=getLogger(__name__)):
                 # TODO: consider using the inchi writing instead of the SMILES notation to find the inchikey
             except KeyError:
                 try:
-                    resConv = cache._convert_depiction(idepic=smiles, itype='smiles', otype={'inchikey'})
+                    resConv = cache._convert_depiction(
+                        idepic=smiles,
+                        itype='smiles',
+                        otype={'inchikey'}
+                    )
                     inchikey = resConv['inchikey']
                 except NotImplementedError as e:
                     logger.warning('Could not convert the following SMILES to InChI key: '+str(smiles))
@@ -247,10 +288,11 @@ def rp2paths_compounds_in_cache(path, cache, logger=getLogger(__name__)):
                 inchi=inchi,
                 inchikey=inchikey,
                 name=name,
-                formula=formula
+                formula=formula,
+                compartment_id=compartment_id
             )
 
-    except (TypeError, FileNotFoundError) as e:
+    except TypeError as e:
         logger.error('Could not read the compounds file ('+str(path)+')')
         raise RuntimeError
 
@@ -261,71 +303,44 @@ def rp2paths_compounds_in_cache(path, cache, logger=getLogger(__name__)):
 #
 # @param path The scope.csv file path
 # @return tuple with dictionnary of all the reactions rules and the list unique molecules that these apply them to
-def read_rp2_metnet(path, logger=getLogger(__name__)):
+def read_rp2_metnet(
+    path: str,
+    logger: Logger = getLogger(__name__)
+) -> Dict:
 
     ec_numbers = {}
-    # sink_molecules = set()
-    #### we might pass binary in the REST version
-    reader = None
-    if isinstance(path, bytes):
-        reader = csv_reader(StringIO(path.decode('utf-8')), delimiter=',')
-    else:
-        try:
-            reader = csv_reader(open(path, 'r'), delimiter=',')
-        except FileNotFoundError:
-            logger.error('Could not read file: '+str(path))
-            return {}
-    next(reader)
+    reader = build_reader(path=path, logger=logger)
+    if reader is None:
+        logger.error(f'File not found: {path}')
+        return {}
     for row in reader:
         if row[1] not in ec_numbers:
             ec_numbers[row[1]] = {
-                # 'source': row[0],
-                # 'transfo_smiles': row[2],
-                # 'substrates': {
-                #     'smiles': row[3],
-                #     'inchi': row[4],
-                # },
-                # 'products': {
-                #     'smiles': row[5],
-                #     'inchi': row[6],
-                # },
-                # 'in_sink': row[7],
-                # 'sink_name': [i.replace(' ', '') for i in row[8][1:-1].split(',')],
-                # 'diameter': row[9],
-                # 'rule_ids': [i.replace(' ', '') for i in row[10][1:-1].split(',')],
                 'ec': [i.replace(' ', '') for i in row[11][1:-1].split(',') if i.replace(' ', '')!='NOEC'],
-                # 'score': row[12],
-                # 'start_src_smiles': row[13],
-                # 'iteration': row[14]
             }
-        # if row[7]=='1':
-        #     for i in row[8].replace(']', '').replace('[', '').replace(' ', '').split(','):
-        #         sink_molecules.add(i)
 
     logger.debug(ec_numbers)
-    # logger.debug(list(sink_molecules))
-    return ec_numbers
-    # return list(sink_molecules)
 
-def read_rp2_sink(path, logger=getLogger(__name__)):
+    return ec_numbers
+
+
+def read_rp2_sink(
+    path: str,
+    logger: Logger = getLogger(__name__)
+) -> List[str]:
 
     sink_molecules = set()
-    #### we might pass binary in the REST version
-    reader = None
-    if isinstance(path, bytes):
-        reader = csv_reader(StringIO(path.decode('utf-8')), delimiter=',')
-    else:
-        try:
-            reader = csv_reader(open(path, 'r'), delimiter=',')
-        except FileNotFoundError:
-            logger.error('Could not read file: '+str(path))
-            return {}
-    next(reader)
+    reader = build_reader(path=path, logger=logger)
+    if reader is None:
+        logger.error(f'File not found: {path}')
+        return []
     for row in reader:
         sink_molecules.add(row[0])
 
     logger.debug(list(sink_molecules))
+
     return list(sink_molecules)
+
 
 # @param infile rp2_pathways file
 # @param rr_reactions RetroRules reactions
@@ -471,6 +486,7 @@ def build_all_pathways(
     rr_reactions: Dict,
     compounds_cache: Dict,
     max_subpaths_filter: int,
+    compartment_id: str,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
 
@@ -519,10 +535,14 @@ def build_all_pathways(
                                     inchi=compounds_cache[spe_id]['inchi'],
                                     inchikey=compounds_cache[spe_id]['inchikey'],
                                     formula=compounds_cache[spe_id]['formula'],
-                                    name=compounds_cache[spe_id]['name']
+                                    name=compounds_cache[spe_id]['name'],
+                                    compartment_id=compartment_id
                                 )
                             except KeyError:
-                                rpCompound(id=spe_id)
+                                rpCompound(
+                                    id=spe_id,
+                                    compartment_id=compartment_id
+                                )
 
                 ## REACTION
                 # Compounds from original transformation
