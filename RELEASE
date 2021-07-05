@@ -1,5 +1,16 @@
 # Release history
 
+## 5.1.0
+- chore(rpfba): re-write cobra functions
+- chore(rpSBML): re-write merging and add cobra methods
+- chore(rpReaction): add constraints as attributes
+- chore(rpPathway): create attributes for each rpSBML info
+- chore(rpGraph): pass a list of species when searching isolated species
+- feat(rpCompound): add compartment
+- chore(rpfba): re-organize steps
+- doc(README): add ignored species infos
+- style(rpcompletion): do not assign rpCompound creation
+
 ## 5.0.0
 - chore(rpthermo):
     - switch functions I/O from rpSBML to rpPathway
