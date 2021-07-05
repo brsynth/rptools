@@ -624,7 +624,7 @@ def rp_fraction(
     objective_id:    str = None,
       ignore_met:   bool = True,
           logger: Logger = getLogger(__name__)
-) -> Tuple[cobra_solution, float, rpSBML]:
+) -> Tuple[cobra_solution, 'rpSBML']:
     """Optimise for a target reaction while fixing a source reaction to the fraction of its optimum
 
     :param source_reaction: The id of the source reaction
