@@ -9,35 +9,31 @@ from copy import deepcopy
 from rptools.rplibs import rpPathway
 from brs_utils import Cache
 
+at_pattern = '__64__'
+bigg_prefix = 'M_'
+
 def to_cobra(string: str) -> str:
-    return string.replace('__64__', '@')
+    if string.startswith(bigg_prefix):
+        string = string[len(bigg_prefix):]
+    return string.replace(at_pattern, '@')
 
-def cobra_suffix(pathway: rpPathway) -> str:
-    return f'__64__{pathway.get_rpsbml_info("compartments")[0]["id"]}'
+def cobra_suffix(comp_id: str) -> str:
+    return at_pattern+comp_id
 
-def cobraize_string(
+def cobraize(
     string: str,
-    pathway: rpPathway,
+    comp_id: str
 ) -> str:
-    return string+cobra_suffix(pathway)
+    suffix = cobra_suffix(comp_id)
+    if string.endswith(suffix):
+        return string
+    else:
+        return string+cobra_suffix(comp_id)
 
-def uncobraize_string(
-    string: str,
-    pathway: rpPathway,
+def uncobraize(
+    string: str
 ) -> str:
-    return string.replace(cobra_suffix(pathway), '')
-
-def cobraize(pathway: rpPathway) -> None:
-    '''Make the Pathway compliant with what Cobra expects
-    Add <@compartmentID> to all compounds in species and reactions
-    '''
-    # SPECIES
-    for spe_id in pathway.get_species_ids():
-        pathway.rename_compound(spe_id, cobraize_string(spe_id, pathway))
-        # pathway.get_specie(spe_id).set_id(cobraize_string(spe_id, pathway))
-
-    # REACTIONS
-    # cobraize_reactions(pathway)
+    return string.split(at_pattern)[0]
 
 # def cobraize_reactions(pathway: rpPathway) -> None:
 #     '''Make the Pathway compliant with what Cobra expects
@@ -63,57 +59,50 @@ def cobraize(pathway: rpPathway) -> None:
 #     print(Cache.get('CMPD_0000000025__64__MNXC3').to_dict())
 #     print(Cache.get_list_of_objects())
 
-def uncobraize(pathway: rpPathway) -> None:
-    '''Make the Pathway compliant with what Cobra expects
-    Remove <@compartmentID> from all compounds in species, reactions and scores
-    '''
-    for spe_id in pathway.get_species_ids():
-        pathway.rename_compound(spe_id, uncobraize_string(spe_id, pathway))
+# def uncobraize_reactions(pathway: rpPathway) -> None:
+#     '''Make the Pathway compliant with what Cobra expects
+#     Remove <@compartmentID> from all compounds in reactions
+#     '''
+#     reactions = pathway.get_reactions()
 
-def uncobraize_reactions(pathway: rpPathway) -> None:
-    '''Make the Pathway compliant with what Cobra expects
-    Remove <@compartmentID> from all compounds in reactions
-    '''
-    reactions = pathway.get_reactions()
+#     target_id = None
+#     for rxn in reactions:
 
-    target_id = None
-    for rxn in reactions:
+#         # REACTANTS
+#         reactants = rxn.get_reactants()
+#         rxn.set_reactants({})
+#         for spe_id, spe_sto in reactants:
+#             compound = pathway.get_specie(spe_id)
+#             compound.set_id(
+#                 uncobraize_string(spe_id, pathway)
+#             )
+#             rxn.add_reactant(
+#                 compound=compound,
+#                 stoichio=spe_sto
+#             )
 
-        # REACTANTS
-        reactants = rxn.get_reactants()
-        rxn.set_reactants({})
-        for spe_id, spe_sto in reactants:
-            compound = pathway.get_specie(spe_id)
-            compound.set_id(
-                uncobraize_string(spe_id, pathway)
-            )
-            rxn.add_reactant(
-                compound=compound,
-                stoichio=spe_sto
-            )
+#         # PRODUCTS
+#         products = rxn.get_products()
+#         rxn.set_products({})
+#         for spe_id, spe_sto in products:
+#             compound = pathway.get_specie(spe_id)
+#             compound.set_id(
+#                 uncobraize_string(spe_id, pathway)
+#             )
+#             if spe_id == pathway.get_target_id():
+#                 target_id = compound.get_id()
+#             rxn.add_product(
+#                 compound=compound,
+#                 stoichio=spe_sto
+#             )
 
-        # PRODUCTS
-        products = rxn.get_products()
-        rxn.set_products({})
-        for spe_id, spe_sto in products:
-            compound = pathway.get_specie(spe_id)
-            compound.set_id(
-                uncobraize_string(spe_id, pathway)
-            )
-            if spe_id == pathway.get_target_id():
-                target_id = compound.get_id()
-            rxn.add_product(
-                compound=compound,
-                stoichio=spe_sto
-            )
-
-        pathway.add_reaction(
-            reaction=rxn,
-            replace=True,
-            target_id=target_id
-        )
-        if target_id is not None:
-            target_id = None
+#         pathway.add_reaction(
+#             reaction=rxn,
+#             replace=True,
+#             target_id=target_id
+#         )
+#         if target_id is not None:
+#             target_id = None
 
 def uncobraize_results(
     results: Dict,
