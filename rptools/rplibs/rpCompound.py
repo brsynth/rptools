@@ -50,7 +50,7 @@ class rpCompound(Compound, rpObject):
         inchikey: str = '',
         formula: str = '',
         name: str = '',
-        compartment: str = '',
+        compartment_id: str = '',
         logger: Logger = getLogger(__name__)
     ):
         Compound.__init__(
@@ -64,7 +64,7 @@ class rpCompound(Compound, rpObject):
             logger=logger
         )
         rpObject.__init__(self)
-        self.set_compartment(compartment)
+        self.set_compartment(compartment_id)
 
     def _to_dict(
         self,
@@ -84,6 +84,7 @@ class rpCompound(Compound, rpObject):
 
     def __to_dict(self) -> Dict:
         return {
+            # 'compartment': self.get_compartment()
         }
 
     def get_thermo_standard_dg_formation(self) -> TypeVar:
