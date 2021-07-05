@@ -68,6 +68,10 @@ from rptools.rpfba.cobra_format import (
 
 class rpPathway(Pathway, rpObject):
 
+    __fbc_lower = -10000
+    __fbc_upper = 10000
+    __fbc_units = 'mmol_per_gDW_per_hr'
+
     def __init__(
         self,
         id: str,
@@ -97,6 +101,16 @@ class rpPathway(Pathway, rpObject):
         #         ]
         #     )
         self.__parameters = {}
+        self.add_parameter(
+            id=rpReaction.get_default_fbc_lower(),
+            value=rpPathway.__fbc_lower,
+            units=rpPathway.__fbc_units
+        )
+        self.add_parameter(
+            id=rpReaction.get_default_fbc_upper(),
+            value=rpPathway.__fbc_upper,
+            units=rpPathway.__fbc_units
+        )
         self.__unit_def = {}
         self.__compartments = {}
         self.__sbml_rxn_target = None
@@ -193,7 +207,10 @@ class rpPathway(Pathway, rpObject):
         return {
             'sink': deepcopy(self.get_sink()),
             'target': self.get_target_id(),
-            'rpsbml_infos': deepcopy(self.get_rpsbml_infos())
+            'parameters': deepcopy(self.get_parameters()),
+            'unit_defs': deepcopy(self.get_unit_defs()),
+            'compartments': deepcopy(self.get_compartments()),
+            'sbml_rxn_target': self.get_sbml_target_rxn()
         }
 
     def __eq__(self, other) -> bool:

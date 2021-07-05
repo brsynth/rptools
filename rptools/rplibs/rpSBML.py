@@ -512,18 +512,6 @@ class rpSBML:
             source_sbml=pathway,
             compartment_id=compartment_id
         )
-        # pathway.write_to_file('joan.xml')
-        # exit()
-        # # Rename pathway species with model naming convention
-        # pathway = rpSBML.renameSpecies(
-        #     pathway,
-        #     species_pathway_model_transl
-        # )
-        # # Rename merged SBML species with model naming convention
-        # merged_rpsbml = rpSBML.renameSpecies(
-        #     merged_rpsbml,
-        #     species_pathway_model_transl
-        # )
 
         ## REACTIONS ###################################
         reactions_in_both = merged_rpsbml.copyReactions(
@@ -570,8 +558,7 @@ class rpSBML:
                 for speID, speID_transl in transl_dict_species.items():
                     text = text.replace(speID+'"', speID_transl+'"')
                 with NamedTemporaryFile() as out_tempf:
-                    # with open(out_tempf.name, 'w') as out_f:
-                    with open('joan.xml', 'w') as out_f:
+                    with open(out_tempf.name, 'w') as out_f:
                         out_f.write(text)
                         return rpSBML(inFile=out_f.name)
 
@@ -3955,6 +3942,7 @@ class rpSBML:
             species_dict[spe_id]['object'] = species
             species_dict[spe_id]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
             species_dict[spe_id]['miriam']  = self.readMIRIAMAnnotation(annot)
+
         return species_dict
 
 
@@ -4309,7 +4297,7 @@ class rpSBML:
                     smiles=infos['smiles'],
                     inchi=infos['inchi'],
                     inchikey=infos['inchikey'],
-                    compartment=spe['object'].getCompartment()
+                    compartment_id=spe['object'].getCompartment()
                 )
                 write_to(spe['brsynth'], compound)
 

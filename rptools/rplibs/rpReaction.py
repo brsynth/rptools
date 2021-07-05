@@ -29,6 +29,7 @@ from typing import (
     Union,
     TypeVar
 )
+from copy import deepcopy
 from logging import (
     Logger,
     getLogger
@@ -40,8 +41,8 @@ from rptools.rplibs.rpObject import rpObject
 
 class rpReaction(Reaction, rpObject):
 
-    __fbc_lower = -10000
-    __fbc_upper = 10000
+    __fbc_lower_str = 'cobra_default_lb'
+    __fbc_upper_str = 'cobra_default_ub'
 
     def __init__(
         self,
@@ -66,7 +67,7 @@ class rpReaction(Reaction, rpObject):
         self.set_tmpl_rxn_id(None)
         self.set_rule_score(float('nan'))
         self.set_idx_in_path(idx_in_path)
-        self.set_fbc(rpReaction.__fbc_lower, rpReaction.__fbc_upper)
+        self.set_fbc(rpReaction.__fbc_lower_str, rpReaction.__fbc_upper_str)
 
     ## OUT METHODS
     # def __repr__(self):
@@ -94,7 +95,8 @@ class rpReaction(Reaction, rpObject):
             'rule_id': self.get_rule_id(),
             'tmpl_rxn_id': self.get_tmpl_rxn_id(),
             'rule_score': self.get_rule_score(),
-            'idx_in_path': self.get_idx_in_path()
+            'idx_in_path': self.get_idx_in_path(),
+            # 'fbc': deepcopy(self.get_fbc())
         }
 
     def __eq__(self, other) -> bool:
@@ -130,18 +132,18 @@ class rpReaction(Reaction, rpObject):
         return self.__fbc
 
     def get_fbc_lower(self) -> float:
-        return self.__fbc.get('lower', self.__fbc_lower)
+        return self.__fbc_lower_str
 
     def get_fbc_upper(self) -> float:
-        return self.__fbc.get('upper', self.__fbc_upper)
+        return self.__fbc_upper_str
 
     @staticmethod
     def get_default_fbc_lower() -> float:
-        return rpReaction.__fbc_lower
+        return rpReaction.__fbc_lower_str
 
     @staticmethod
     def get_default_fbc_upper() -> float:
-        return rpReaction.__fbc_upper
+        return rpReaction.__fbc_upper_str
 
     ## WRITE METHODS
     def set_rp2_transfo_id(self, transfo_id: str) -> None:
@@ -160,15 +162,15 @@ class rpReaction(Reaction, rpObject):
         self.__idx_in_path = idx_in_path
 
     def set_fbc_lower(self, value: float) -> None:
-        self.__fbc['lower'] = value
+        self.__fbc[rpReaction.__fbc_lower_str] = value
 
     def set_fbc_upper(self, value: float) -> None:
-        self.__fbc['upper'] = value
+        self.__fbc[rpReaction.__fbc_upper_str] = value
 
     def set_fbc(
         self,
-        l_value: float,
-        u_value: float
+        l_value: str,
+        u_value: str
     ) -> None:
         self.__fbc = {}
         self.set_fbc_lower(l_value)
