@@ -240,7 +240,8 @@ def rp2paths_compounds_in_cache(path, cache, logger=getLogger(__name__)):
                 formula = cache.get('cid_strc')[spe_id]['formula']
             except KeyError:
                 formula = ''
-            compound = rpCompound(
+            # Create the compound that will add it to the cache
+            rpCompound(
                 id=spe_id,
                 smiles=smiles,
                 inchi=inchi,
@@ -248,7 +249,6 @@ def rp2paths_compounds_in_cache(path, cache, logger=getLogger(__name__)):
                 name=name,
                 formula=formula
             )
-            # Cache.add(compound)
 
     except (TypeError, FileNotFoundError) as e:
         logger.error('Could not read the compounds file ('+str(path)+')')
