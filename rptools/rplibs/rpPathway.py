@@ -26,9 +26,9 @@
 from typing import (
     Dict,
     List,
-    TypeVar,
-    Union,
-    Callable
+    # TypeVar,
+    # Union,
+    # Callable
 )
 from logging import (
     Logger,
@@ -36,15 +36,20 @@ from logging import (
     ERROR
 )
 from copy import deepcopy
-import libsbml
+# import libsbml
 from brs_utils import Cache
-from rr_cache import rrCache
+# from rr_cache import rrCache
 from chemlite import (
     Pathway,
     Compound
 )
 from rptools.rplibs.rpReaction import rpReaction
 from rptools.rplibs.rpObject import rpObject
+from rptools.rpfba.cobra_format import (
+    cobra_suffix,
+    cobraize,
+    uncobraize,
+)
 
 
 # def gen_dict_extract(key, var):
@@ -67,7 +72,7 @@ class rpPathway(Pathway, rpObject):
         self,
         id: str,
         cache: Cache = None,
-        rpsbml_infos: Dict = {},
+        # rpsbml_infos: Dict = {},
         logger: Logger = getLogger(__name__)
     ):
         Pathway.__init__(
@@ -82,83 +87,87 @@ class rpPathway(Pathway, rpObject):
         self.set_trunk_species([])
         self.set_completed_species([])
         self.set_fba_ignored_species([])
-        # Set default rpSBML infos
-        if cache is None:
-            cache = rrCache(
-                db='file',
-                attrs=[
-                    'comp_xref',
-                    'deprecatedCompID_compid',
-                ]
-            )
-        self.__set_rpsbml_infos(rpsbml_infos)
-        if self.get_rpsbml_infos() == {}:
-            self.add_rpsbml_info(
-                'compartments',
-                [
-                    {
-                        'id': 'MNXC3',
-                        'name': 'cytosol',
-                        'annot': cache.get('comp_xref')[
-                            cache.get('deprecatedCompID_compid')[
-                                'MNXC3'
-                            ]
-                        ]
-                    }
-                ]
-            )
-            self.add_rpsbml_info(
-                'parameters',
-                {
-                    'upper_flux_bound': {
-                        'value': 999999.0,
-                        'units': 'mmol_per_gDW_per_hr'
-                    },
-                    'lower_flux_bound': {
-                        'value': 0.0,
-                        'units': 'mmol_per_gDW_per_hr'
-                    }
-                }
-            )
-            self.add_rpsbml_info(
-                'unit_def',
-                {
-                    'mmol_per_gDW_per_hr': [
-                        {
-                            'kind': libsbml.UNIT_KIND_MOLE,
-                            'exponent': 1,
-                            'scale': -3,
-                            'multiplier': 1.0
-                        },
-                        {
-                            'kind': libsbml.UNIT_KIND_GRAM,
-                            'exponent': 1,
-                            'scale': 0,
-                            'multiplier': 1.0
-                        },
-                        {
-                            'kind': libsbml.UNIT_KIND_SECOND,
-                            'exponent': 1,
-                            'scale': 0,
-                            'multiplier': 3600.0
-                        }
-                    ],
-                    'kj_per_mol': [
-                        {
-                            'kind': libsbml.UNIT_KIND_JOULE,
-                            'exponent': 1,
-                            'scale': 3,
-                            'multiplier': 1.0
-                        },
-                        {
-                            'kind': libsbml.UNIT_KIND_JOULE,
-                            'exponent': -1,
-                            'scale': 1,
-                            'multiplier': 1.0
-                        }
-                    ]
-                }
-            )
+        # # Set default rpSBML infos
+        # if cache is None:
+        #     cache = rrCache(
+        #         db='file',
+        #         attrs=[
+        #             'comp_xref',
+        #             'deprecatedCompID_compid',
+        #         ]
+        #     )
+        self.__parameters = {}
+        self.__unit_def = {}
+        self.__compartments = {}
+        self.__sbml_rxn_target = None
+        # self.__set_rpsbml_infos(rpsbml_infos)
+        # if self.get_rpsbml_infos() == {}:
+        #     self.add_rpsbml_info(
+        #         'compartments',
+        #         [
+        #             {
+        #                 'id': 'MNXC3',
+        #                 'name': 'cytosol',
+        #                 'annot': cache.get('comp_xref')[
+        #                     cache.get('deprecatedCompID_compid')[
+        #                         'MNXC3'
+        #                     ]
+        #                 ]
+        #             }
+        #         ]
+        #     )
+        #     self.add_rpsbml_info(
+        #         'parameters',
+        #         {
+        #             'upper_flux_bound': {
+        #                 'value': 999999.0,
+        #                 'units': 'mmol_per_gDW_per_hr'
+        #             },
+        #             'lower_flux_bound': {
+        #                 'value': 0.0,
+        #                 'units': 'mmol_per_gDW_per_hr'
+        #             }
+        #         }
+        #     )
+        #     self.add_rpsbml_info(
+        #         'unit_def',
+        #         {
+        #             'mmol_per_gDW_per_hr': [
+        #                 {
+        #                     'kind': libsbml.UNIT_KIND_MOLE,
+        #                     'exponent': 1,
+        #                     'scale': -3,
+        #                     'multiplier': 1.0
+        #                 },
+        #                 {
+        #                     'kind': libsbml.UNIT_KIND_GRAM,
+        #                     'exponent': 1,
+        #                     'scale': 0,
+        #                     'multiplier': 1.0
+        #                 },
+        #                 {
+        #                     'kind': libsbml.UNIT_KIND_SECOND,
+        #                     'exponent': 1,
+        #                     'scale': 0,
+        #                     'multiplier': 3600.0
+        #                 }
+        #             ],
+        #             'kj_per_mol': [
+        #                 {
+        #                     'kind': libsbml.UNIT_KIND_JOULE,
+        #                     'exponent': 1,
+        #                     'scale': 3,
+        #                     'multiplier': 1.0
+        #                 },
+        #                 {
+        #                     'kind': libsbml.UNIT_KIND_JOULE,
+        #                     'exponent': -1,
+        #                     'scale': 1,
+        #                     'multiplier': 1.0
+        #                 }
+        #             ]
+        #         }
+        #     )
 
     ## OUT METHODS
     # def __repr__(self):
@@ -210,11 +219,14 @@ class rpPathway(Pathway, rpObject):
         return self.__trunk_species
 
     def get_intermediate_species(self) -> List[str]:
-        return list(
-            set(self.get_trunk_species())
-            - set(self.get_sink())
-            - set([self.get_target_id()])
-        )
+        try:
+            return list(
+                set(self.get_trunk_species())
+                - set(self.get_sink())
+                - set([self.get_target_id()])
+            )
+        except TypeError:
+            return None
 
     def get_target_rxn_id(self) -> str:
         for rxn in self.get_list_of_reactions():
@@ -223,6 +235,9 @@ class rpPathway(Pathway, rpObject):
 
     def get_rxn_target(self) -> rpReaction:
         return self.get_reaction(self.get_target_rxn_id())
+
+    def get_sbml_target_rxn(self) -> rpReaction:
+        return self.__sbml_rxn_target
 
     def get_target_id(self) -> str:
         return self.__target_id
@@ -248,6 +263,27 @@ class rpPathway(Pathway, rpObject):
         #     return super().get_reactions_ids()
         #     self.get_logger().warning(f'There is no \'idx_in_path\' value in one of the reactions of pathway {self.get_id()}')
 
+    def get_parameters(self) -> Dict:
+        return self.__parameters
+
+    def get_parameter(self, id: str) -> Dict:
+        return self.__parameters.get(id, {})
+
+    def get_parameter_value(self, id: str) -> Dict:
+        return self.get_parameter(id).get('value', float('NaN'))
+
+    def get_parameter_units(self, id: str) -> Dict:
+        return self.get_parameter(id).get('units', str(''))
+
+    def get_unit_defs(self) -> Dict:
+        return self.__unit_def
+
+    def get_unit_def(self, id: str) -> Dict:
+        return self.__unit_def.get(id, {})
+
+    def get_compartments(self) -> Dict:
+        return self.__compartments
+
     # def __get_infos(self, key: str) -> Dict[str, Dict]:
     #     species = {}
     #     for spe_id in self.get_species_ids():
@@ -262,15 +298,15 @@ class rpPathway(Pathway, rpObject):
     #         'pathway': pathway
     #     }
 
-    def get_rpsbml_infos(self) -> Dict:
-        return self.__rpsbml_infos
+    # def get_rpsbml_infos(self) -> Dict:
+    #     return self.__rpsbml_infos
 
-    def get_rpsbml_info(self, key: str) -> TypeVar:
-        try:
-            return self.get_rpsbml_infos()[key]
-        except KeyError:
-            self.get_logger().debug(f'There is no key \'{key}\' in rpsbml infos')
-            return None
+    # def get_rpsbml_info(self, key: str) -> TypeVar:
+    #     try:
+    #         return self.get_rpsbml_infos()[key]
+    #     except KeyError:
+    #         self.get_logger().debug(f'There is no key \'{key}\' in rpsbml infos')
+    #         return None
 
     # def __getattr__(self, name):
     #     '''Catch get_<key>_infos() call an returns the corresponding infos'''
@@ -576,55 +612,131 @@ class rpPathway(Pathway, rpObject):
         if target_id is not None:
             self.set_target_id(target_id)
 
+    def add_sbml_rxn_target(
+        self,
+        rxn: rpReaction
+    ) -> None:
+        self.__sbml_rxn_target = deepcopy(rxn)
+
     def set_sink(self, sink: List[str]) -> None:
         self.__sink = deepcopy(sink)
     
     def set_target_id(self, id: str) -> None:
         self.__target_id = id
 
+    def add_unit_def(
+        self,
+        id: str,
+        kind: int,
+        exp: int,
+        scale: int,
+        mult: float
+    ) -> None:
+        if id not in self.__parameters.keys():
+            self.__parameters[id] = []
+        self.__parameters[id] += [
+            {
+                'kind': kind,
+                'exponent': exp,
+                'scale': scale,
+                'multiplier': mult
+            }
+        ]
+
+    def add_parameter(
+        self,
+        id: str,
+        value: float,
+        units: str
+    ) -> None:
+        self.__parameters[id] = {
+            'value': value,
+            'units': units
+        }
+
+    def add_compartment(
+        self,
+        id: str,
+        name: str,
+        annot: str
+    ) -> None:
+        self.__compartments[id] = {
+            'name': name,
+            'annot': annot
+        }
+
+    ## MISC
     def rename_compound(self, id: str, new_id: str) -> None:
         # target
         if id == self.get_target_id():
             self.set_target_id(new_id)
+            # sbml_rxn_target
+            self.__sbml_rxn_target.rename_compound(id, new_id)
 
         super().rename_compound(id, new_id)
 
         # sink
         try:
             self.__sink[self.get_sink().index(id)] = new_id
-        except ValueError:
+        except (ValueError, AttributeError):
             pass
 
         # trunk species
         try:
             self.__trunk_species[self.get_trunk_species().index(id)] = new_id
-        except ValueError:
+        except (ValueError, AttributeError):
             pass
 
         # completed species
         try:
             self.__completed_species[self.get_completed_species().index(id)] = new_id
-        except ValueError:
+        except (ValueError, AttributeError):
             pass
 
-    ### RPSBML INFOS ###
-    def __set_rpsbml_infos(self, infos: Dict) -> None:
-        self.__rpsbml_infos = deepcopy(infos)
+    # ### RPSBML INFOS ###
+    # def __set_rpsbml_infos(self, infos: Dict) -> None:
+    #     self.__rpsbml_infos = deepcopy(infos)
 
-    def add_rpsbml_info(self, key: str, value: TypeVar) -> None:
-        if self.get_rpsbml_info(key) is not None:
-            if isinstance(self.__rpsbml_infos[key], list):
-                self.__rpsbml_infos[key] += [deepcopy(value)]
-            elif isinstance(self.__rpsbml_infos[key], dict):
-                self.__rpsbml_infos[key].update(value)
-            else:
-                self.__rpsbml_infos[key] = deepcopy(value)
-        else:
-            self.__rpsbml_infos[key] = deepcopy(value)
+    # def add_rpsbml_info(self, key: str, value: TypeVar) -> None:
+    #     if self.get_rpsbml_info(key) is not None:
+    #         if isinstance(self.__rpsbml_infos[key], list):
+    #             self.__rpsbml_infos[key] += [deepcopy(value)]
+    #         elif isinstance(self.__rpsbml_infos[key], dict):
+    #             self.__rpsbml_infos[key].update(value)
+    #         else:
+    #             self.__rpsbml_infos[key] = deepcopy(value)
+    #     else:
+    #         self.__rpsbml_infos[key] = deepcopy(value)
 
-    def del_rpsbml_info(self, key: str) -> None:
-        try:
-            del self.__rpsbml_infos[key]
-        except KeyError:
-            self.get_logger().warning(f'No such key {key} found in infos, nothing deleted.')
-    ## MISC
+    # def del_rpsbml_info(self, key: str) -> None:
+    #     try:
+    #         del self.__rpsbml_infos[key]
+    #     except KeyError:
+    #         self.get_logger().warning(f'No such key {key} found in infos, nothing deleted.')
+
+    def cobraize(self, compartment_id: str) -> None:
+        '''Make the Pathway compliant with what Cobra expects
+        Add <@compartmentID> to all compounds in species and reactions
+        '''
+        # SPECIES
+        for spe_id in self.get_species_ids():
+            if not spe_id.endswith(cobra_suffix(compartment_id)):
+                self.rename_compound(
+                    spe_id,
+                    cobraize(
+                        spe_id,
+                        compartment_id
+                    )
+                )
+            # pathway.get_specie(spe_id).set_id(cobraize_string(spe_id, pathway))
+
+        # REACTIONS
+        # cobraize_reactions(pathway)
+
+    def uncobraize(self) -> None:
+        '''Make the Pathway compliant with what Cobra expects
+        Remove <@compartmentID> from all compounds in species, reactions and scores
+        '''
+        for spe_id in self.get_species_ids():
+            self.rename_compound(spe_id, uncobraize(spe_id))
+
