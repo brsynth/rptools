@@ -172,6 +172,7 @@ class rpGraph:
         self,
         func_eq_0: Callable,
         func_gt_0: Callable,
+        species: List[str] = [],
         only_central: bool = False,
         only_rp_pathway: bool = True
     ) -> List[str]:
@@ -184,9 +185,12 @@ class rpGraph:
         :return: List of node ids
         :rtype: list
         """
-        species = []
-        for node_name in self.G.nodes():
-            node = self.G.nodes.get(node_name)
+        _species = []
+        if species == []:
+            species = self.G.nodes()
+        for spe_id in species:
+        # for node_name in self.G.nodes():
+            node = self.G.nodes.get(spe_id)
             if node['type'] == 'species':
                 if node['rp_pathway']:
                     # NOTE: if central species then must also be rp_pathway species
@@ -204,19 +208,19 @@ class rpGraph:
                             and not only_rp_pathway
                         )
                     ):
-                        self.logger.debug(node_name)
-                        self.logger.debug(f'succ: {list(func_gt_0(node_name))}')
-                        self.logger.debug(f'pred: {list(func_eq_0(node_name))}')
+                        self.logger.debug(spe_id)
+                        self.logger.debug(f'succ: {list(func_gt_0(spe_id))}')
+                        self.logger.debug(f'pred: {list(func_eq_0(spe_id))}')
                         if (
-                            len(list(func_gt_0(node_name))) > 0
-                            and len(list(func_eq_0(node_name))) == 0
+                            len(list(func_gt_0(spe_id))) > 0
+                            and len(list(func_eq_0(spe_id))) == 0
                         ):
-                            species.append(node_name)
+                            _species.append(spe_id)
 
-        return species
+        return _species
 
 
-    def onlyConsumedSpecies(self, only_central=False, only_rp_pathway=True):
+    def onlyConsumedSpecies(self, species=[], only_central=False, only_rp_pathway=True):
         """Private function that returns the single parent species that are consumed only
 
         :param only_central: Focus on the central species only
@@ -227,6 +231,7 @@ class rpGraph:
         :rtype: list
         """
         return self.__isolatedSpecies(
+            species=species,
             only_central=only_central,
             only_rp_pathway=only_rp_pathway,
             func_eq_0=self.G.predecessors,
@@ -234,7 +239,7 @@ class rpGraph:
         )
 
 
-    def onlyProducedSpecies(self, only_central=False, only_rp_pathway=True):
+    def onlyProducedSpecies(self, species=[], only_central=False, only_rp_pathway=True):
         """Private function that returns the single parent produced species
 
         :param only_central: Focus on the central species only
@@ -245,6 +250,7 @@ class rpGraph:
         :rtype: list
         """
         return self.__isolatedSpecies(
+            species=species,
             only_central=only_central,
             only_rp_pathway=only_rp_pathway,
             func_eq_0=self.G.successors,
