@@ -201,7 +201,7 @@ def build_reader(
     path: str,
     delimiter: str = ',',
     logger: Logger=getLogger(__name__)
-) -> '_csv.reader':
+) -> 'csv_reader':
     if isinstance(path, bytes):
         reader = csv_reader(
             StringIO(path.decode('utf-8')),
