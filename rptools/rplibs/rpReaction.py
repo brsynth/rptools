@@ -40,6 +40,9 @@ from rptools.rplibs.rpObject import rpObject
 
 class rpReaction(Reaction, rpObject):
 
+    __fbc_lower = -10000
+    __fbc_upper = 10000
+
     def __init__(
         self,
         id: str,
@@ -63,6 +66,7 @@ class rpReaction(Reaction, rpObject):
         self.set_tmpl_rxn_id(None)
         self.set_rule_score(float('nan'))
         self.set_idx_in_path(idx_in_path)
+        self.set_fbc(rpReaction.__fbc_lower, rpReaction.__fbc_upper)
 
     ## OUT METHODS
     # def __repr__(self):
@@ -121,6 +125,23 @@ class rpReaction(Reaction, rpObject):
 
     def get_idx_in_path(self) -> int:
         return self.__idx_in_path
+    
+    def get_fbc(self) -> float:
+        return self.__fbc
+
+    def get_fbc_lower(self) -> float:
+        return self.__fbc.get('lower', self.__fbc_lower)
+
+    def get_fbc_upper(self) -> float:
+        return self.__fbc.get('upper', self.__fbc_upper)
+
+    @staticmethod
+    def get_default_fbc_lower() -> float:
+        return rpReaction.__fbc_lower
+
+    @staticmethod
+    def get_default_fbc_upper() -> float:
+        return rpReaction.__fbc_upper
 
     ## WRITE METHODS
     def set_rp2_transfo_id(self, transfo_id: str) -> None:
@@ -137,3 +158,18 @@ class rpReaction(Reaction, rpObject):
 
     def set_idx_in_path(self, idx_in_path: str) -> None:
         self.__idx_in_path = idx_in_path
+
+    def set_fbc_lower(self, value: float) -> None:
+        self.__fbc['lower'] = value
+
+    def set_fbc_upper(self, value: float) -> None:
+        self.__fbc['upper'] = value
+
+    def set_fbc(
+        self,
+        l_value: float,
+        u_value: float
+    ) -> None:
+        self.__fbc = {}
+        self.set_fbc_lower(l_value)
+        self.set_fbc_upper(u_value)
