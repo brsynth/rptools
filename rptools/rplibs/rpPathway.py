@@ -68,10 +68,6 @@ from rptools.rpfba.cobra_format import (
 
 class rpPathway(Pathway, rpObject):
 
-    __fbc_lower = -10000
-    __fbc_upper = 10000
-    __fbc_units = 'mmol_per_gDW_per_hr'
-
     def __init__(
         self,
         id: str,
@@ -100,20 +96,26 @@ class rpPathway(Pathway, rpObject):
         #             'deprecatedCompID_compid',
         #         ]
         #     )
-        self.__parameters = {}
-        self.add_parameter(
-            id=rpReaction.get_default_fbc_lower(),
-            value=rpPathway.__fbc_lower,
-            units=rpPathway.__fbc_units
-        )
-        self.add_parameter(
-            id=rpReaction.get_default_fbc_upper(),
-            value=rpPathway.__fbc_upper,
-            units=rpPathway.__fbc_units
-        )
+        # for fbc_name in self.get_parameters():
+        #     self.add_parameter(
+        #         id=fbc_name,
+        #         value=self.get_parameter_value(fbc_name),
+        #         units=self.get_parameter_units(fbc_name)
+        #     )
         self.__unit_def = {}
         self.__compartments = {}
         self.__sbml_rxn_target = None
+        # Set flux bounds values/units
+        self.add_parameter(
+            id='BRS_default_fbc_l',
+            value=-10000,
+            units=rpReaction.get_default_fbc_units()
+        )
+        self.add_parameter(
+            id='BRS_default_fbc_u',
+            value=10000,
+            units=rpReaction.get_default_fbc_units()
+        )
         # self.__set_rpsbml_infos(rpsbml_infos)
         # if self.get_rpsbml_infos() == {}:
         #     self.add_rpsbml_info(
@@ -664,12 +666,19 @@ class rpPathway(Pathway, rpObject):
         self,
         id: str,
         value: float,
-        units: str
+        units: str = rpReaction.get_default_fbc_units()
     ) -> None:
-        self.__parameters[id] = {
-            'value': value,
-            'units': units
-        }
+        # Check if __parameters is defined
+        if not hasattr(self, '__parameters'):
+            self.__parameters = {}
+        # Check if id does not already exist in __parameters
+        if self.get_parameter(id) == {}:
+            self.__parameters[id] = {
+                'value': value,
+                'units': units
+            }
+        else:
+            self.get_logger.warning(f'Parameter {id} already exist in rpPathway parameters, nothing added.')
 
     def add_compartment(
         self,
@@ -677,10 +686,11 @@ class rpPathway(Pathway, rpObject):
         name: str,
         annot: str
     ) -> None:
-        self.__compartments[id] = {
-            'name': name,
-            'annot': annot
-        }
+        if id not in self.get_compartments():
+            self.__compartments[id] = {
+                'name': name,
+                'annot': annot
+            }
 
     ## MISC
     def rename_compound(self, id: str, new_id: str) -> None:

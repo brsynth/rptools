@@ -3855,24 +3855,24 @@ class rpSBML:
             rxn_l = self.readGroupMembers(pathway_id)
         for rxn_id in rxn_l:
             reactions[rxn_id] = self.read_reaction(rxn_id)
-            reaction = self.getModel().getReaction(rxn_id)
-            annot = reaction.getAnnotation()
-            species = self.readReactionSpecies(reaction)
-            fbc = reaction.getPlugin('fbc')
-            reactions[rxn_id] = {
-                # BRSynth annotations
-                'brsynth': self.readBRSYNTHAnnotation(annot, self.logger),
-                # species
-                'left': species['left'],
-                'right': species['right'],
-                # MIRIAM annotations
-                'miriam': self.readMIRIAMAnnotation(annot),
-                # FBC values
-                'fbc': {
-                    'lower': fbc.getLowerFluxBound(),
-                    'upper': fbc.getUpperFluxBound()
-                }
-            }
+            # reaction = self.getModel().getReaction(rxn_id)
+            # annot = reaction.getAnnotation()
+            # species = self.readReactionSpecies(reaction)
+            # fbc = reaction.getPlugin('fbc')
+            # reactions[rxn_id] = {
+            #     # BRSynth annotations
+            #     'brsynth': self.readBRSYNTHAnnotation(annot, self.logger),
+            #     # species
+            #     'left': species['left'],
+            #     'right': species['right'],
+            #     # MIRIAM annotations
+            #     'miriam': self.readMIRIAMAnnotation(annot),
+            #     # FBC values
+            #     'fbc': {
+            #         'lower': fbc.getLowerFluxBound(),
+            #         'upper': fbc.getUpperFluxBound()
+            #     }
+            # }
         return reactions
 
 
@@ -3912,7 +3912,8 @@ class rpSBML:
             'fbc': {
                 'lower': fbc.getLowerFluxBound(),
                 'upper': fbc.getUpperFluxBound()
-            }
+            },
+            'reversible': reaction.getReversible()
         }
 
 
@@ -4031,7 +4032,6 @@ class rpSBML:
             # Add the reaction in the model
             self.createReaction(
                 rxn=rxn,
-                pathway=pathway,
                 reacXref={'ec': rxn.get_ec_numbers()}
             )
 
@@ -4048,8 +4048,7 @@ class rpSBML:
             )
         # Create the reaction in the model
         self.createReaction(
-            rxn=rxn,
-            pathway=pathway,
+            rxn=rxn
         )
 
 
@@ -4202,9 +4201,12 @@ class rpSBML:
                 ec_numbers=ec_numbers,
                 reactants=infos['left'],
                 products=infos['right'],
+                lower_flux_bound=parameters[infos['fbc']['lower']]['value'],
+                upper_flux_bound=parameters[infos['fbc']['upper']]['value'],
+                flux_bound_units=parameters[infos['fbc']['upper']]['units'],
+                reversible=infos['reversible'],
                 logger=self.logger
             )
-            reaction.set_fbc(infos['fbc']['lower'], infos['fbc']['upper'])
             # Add additional infos
             write_to(infos['brsynth'], reaction)
             # Detects if the current reaction produces the target
@@ -4811,7 +4813,7 @@ class rpSBML:
     def createReturnFluxParameter(
         self,
         value,
-        unit='mmol_per_gDW_per_hr',
+        units='mmol_per_gDW_per_hr',
         is_constant=True,
         parameter_id=None,
         meta_id=None
@@ -4840,9 +4842,9 @@ class rpSBML:
             param_id = parameter_id
         else:
             if value >= 0:
-                param_id = 'B_'+str(round(abs(value), 4)).replace('.', '_')
+                param_id = 'BRS_FBC_'+str(round(abs(value), 4)).replace('.', '_')
             else:
-                param_id = 'B__'+str(round(abs(value), 4)).replace('.', '_')
+                param_id = 'BRS_FBC__'+str(round(abs(value), 4)).replace('.', '_')
         if param_id in [i.getId() for i in self.getModel().getListOfParameters()]:
             return self.getModel().getParameter(param_id)
         else:
@@ -4851,7 +4853,7 @@ class rpSBML:
             rpSBML.checklibSBML(newParam.setConstant(is_constant), 'setting as constant')
             rpSBML.checklibSBML(newParam.setId(param_id), 'setting ID')
             rpSBML.checklibSBML(newParam.setValue(value), 'setting value')
-            rpSBML.checklibSBML(newParam.setUnits(unit), 'setting unit')
+            rpSBML.checklibSBML(newParam.setUnits(units), 'setting unit')
             rpSBML.checklibSBML(newParam.setSBOTerm(625), 'setting SBO term')
             if not meta_id:
                 meta_id = self._genMetaID(parameter_id)
@@ -4864,7 +4866,6 @@ class rpSBML:
     def createReaction(
         self,
         rxn: rpReaction,
-        pathway: rpPathway,
         rxn_id: str = None,
         reacXref: Dict = {},
         meta_id: str = None
@@ -4909,46 +4910,36 @@ class rpSBML:
         ################ FBC ####################
         reac_fbc = reac.getPlugin('fbc')
         rpSBML.checklibSBML(reac_fbc, 'extending reaction for FBC')
-        # bounds
-        value = pathway.get_parameter_value(rxn.get_fbc_upper())
-        if isnan(value):
-            value = rpReaction.get_default_fbc_upper()
-        unit = pathway.get_parameter_units(rxn.get_fbc_upper())
-        if unit == '':
-            upper_bound = self.createReturnFluxParameter(
-                value=value
-            )
-        else:
-            upper_bound = self.createReturnFluxParameter(
-                value=value,
-                unit=unit
-            )
-        rpSBML.checklibSBML(reac_fbc.setUpperFluxBound(upper_bound.getId()), 'setting '+str(rxn_id)+' upper flux bound')
-        value = pathway.get_parameter_value(rxn.get_fbc_lower())
-        if isnan(value):
-            value = rpReaction.get_default_fbc_lower()
-        unit = pathway.get_parameter_units(rxn.get_fbc_lower())
-        if unit == '':
-            lower_bound = self.createReturnFluxParameter(
-                value=value
-            )
-        else:
-            lower_bound = self.createReturnFluxParameter(
-                value=value,
-                unit=unit
-            )
-        lower_bound = self.createReturnFluxParameter(
-            value=pathway.get_parameter_value(rxn.get_fbc_lower()),
-            unit=pathway.get_parameter_units(rxn.get_fbc_lower())
+        ## BOUNDS
+        # Upper
+        upper_bound = self.createReturnFluxParameter(
+            value=rxn.get_fbc_upper(),
+            units=rxn.get_fbc_units()
         )
-        rpSBML.checklibSBML(reac_fbc.setLowerFluxBound(lower_bound.getId()), 'setting '+str(rxn_id)+' lower flux bound')
+        rpSBML.checklibSBML(
+            reac_fbc.setUpperFluxBound(
+                upper_bound.getId()
+            ),
+            f'setting {str(rxn_id)} upper flux bound'
+        )
+        # Lower
+        lower_bound = self.createReturnFluxParameter(
+            value=rxn.get_fbc_lower(),
+            units=rxn.get_fbc_units()
+        )
+        rpSBML.checklibSBML(
+            reac_fbc.setLowerFluxBound(
+                lower_bound.getId()
+            ),
+            f'setting {str(rxn_id)} lower flux bound'
+        )
 
         #########################################
         # reactions
         rpSBML.checklibSBML(reac.setId(rxn_id), 'set reaction id') # same convention as cobrapy
         rpSBML.checklibSBML(reac.setSBOTerm(176), 'setting the system biology ontology (SBO)') # set as process
         # TODO: consider having the two parameters as input to the function
-        rpSBML.checklibSBML(reac.setReversible(True), 'set reaction reversibility flag')
+        rpSBML.checklibSBML(reac.setReversible(rxn.reversible()), 'set reaction reversibility flag')
         rpSBML.checklibSBML(reac.setFast(False), 'set reaction "fast" attribute')
         if not meta_id:
             meta_id = self._genMetaID(rxn_id)

@@ -41,8 +41,9 @@ from rptools.rplibs.rpObject import rpObject
 
 class rpReaction(Reaction, rpObject):
 
-    __fbc_lower_str = 'cobra_default_lb'
-    __fbc_upper_str = 'cobra_default_ub'
+    __default_fbc_lower = -10000
+    __default_fbc_upper = 10000
+    __default_fbc_units = 'mmol_per_gDW_per_hr'
 
     def __init__(
         self,
@@ -51,6 +52,10 @@ class rpReaction(Reaction, rpObject):
         reactants: Dict[str, int] = {},
         products: Dict[str, int] = {},
         idx_in_path: int = -1,
+        lower_flux_bound: float = __default_fbc_lower,
+        upper_flux_bound: float = __default_fbc_upper,
+        flux_bound_units: str = __default_fbc_units,
+        reversible: bool = False,
         logger: Logger = getLogger(__name__)
     ):
         Reaction.__init__(
@@ -67,7 +72,12 @@ class rpReaction(Reaction, rpObject):
         self.set_tmpl_rxn_id(None)
         self.set_rule_score(float('nan'))
         self.set_idx_in_path(idx_in_path)
-        self.set_fbc(rpReaction.__fbc_lower_str, rpReaction.__fbc_upper_str)
+        self.set_fbc(
+            l_value=lower_flux_bound,
+            u_value=upper_flux_bound,
+            units=flux_bound_units
+        )
+        self.set_reversible(reversible)
 
     ## OUT METHODS
     # def __repr__(self):
@@ -131,19 +141,29 @@ class rpReaction(Reaction, rpObject):
     def get_fbc(self) -> float:
         return self.__fbc
 
+    def get_fbc_units(self) -> str:
+        return self.__fbc_units
+
+    def reversible(self) -> bool:
+        return self.__reversible
+
+    @staticmethod
+    def get_default_fbc_units() -> str:
+        return rpReaction.__default_fbc_units
+
     def get_fbc_lower(self) -> float:
-        return self.__fbc_lower_str
+        return self.__fbc_lower
 
     def get_fbc_upper(self) -> float:
-        return self.__fbc_upper_str
+        return self.__fbc_upper
 
     @staticmethod
     def get_default_fbc_lower() -> float:
-        return rpReaction.__fbc_lower_str
+        return rpReaction.__default_fbc_lower
 
     @staticmethod
     def get_default_fbc_upper() -> float:
-        return rpReaction.__fbc_upper_str
+        return rpReaction.__default_fbc_upper
 
     ## WRITE METHODS
     def set_rp2_transfo_id(self, transfo_id: str) -> None:
@@ -162,16 +182,24 @@ class rpReaction(Reaction, rpObject):
         self.__idx_in_path = idx_in_path
 
     def set_fbc_lower(self, value: float) -> None:
-        self.__fbc[rpReaction.__fbc_lower_str] = value
+        self.__fbc_lower = value
 
     def set_fbc_upper(self, value: float) -> None:
-        self.__fbc[rpReaction.__fbc_upper_str] = value
+        self.__fbc_upper = value
+
+    def set_fbc_units(self, value: str) -> None:
+        self.__fbc_units = value
 
     def set_fbc(
         self,
-        l_value: str,
-        u_value: str
+        l_value: float,
+        u_value: float,
+        units: str = __default_fbc_units
     ) -> None:
         self.__fbc = {}
         self.set_fbc_lower(l_value)
         self.set_fbc_upper(u_value)
+        self.set_fbc_units(units)
+
+    def set_reversible(self, value: bool) -> None:
+        self.__reversible = value
