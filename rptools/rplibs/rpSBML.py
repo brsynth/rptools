@@ -573,22 +573,6 @@ class rpSBML:
                 ) for specie in list(rpsbml.getModel().getListOfSpecies())
             }
         )
-        with NamedTemporaryFile() as tempf:
-            rpsbml.write_to_file(tempf.name)
-            with open(tempf.name, 'r') as in_f:
-                text = in_f.read()
-                for specie in list(rpsbml.getModel().getListOfSpecies()):
-                    text = text.replace(
-                        specie.getId(),
-                        cobraize_string(
-                            specie.getId(),
-                            specie.getCompartment()
-                        )
-                    )
-                with NamedTemporaryFile() as out_tempf:
-                    with open(out_tempf.name, 'w') as out_f:
-                        out_f.write(text)
-                        return rpSBML(inFile=out_f.name)
 
     def enable_package(
         self,
