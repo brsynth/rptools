@@ -26,13 +26,17 @@ from rptools.rplibs import (
     rpSBML,
     rpPathway
 )
-from rptools.rpfba.cobra_format import (
+from .cobra_format import (
     cobraize,
     uncobraize,
     uncobraize_results,
     cobra_suffix,
     to_cobra,
     cobraize
+)
+from .Args import (
+    default_upper_flux_bound,
+    default_lower_flux_bound
 )
 
 
@@ -57,6 +61,8 @@ def runFBA(
     ignore_orphan_species: bool = True,
          species_group_id: str = 'rp_trunk_species',
     sink_species_group_id: str = 'rp_sink_species',
+    upper_flux_bound: float = default_upper_flux_bound,
+    lower_flux_bound: float = default_lower_flux_bound,
                    logger: Logger = getLogger(__name__)
 ) -> Dict:
     """Single rpSBML simulation
@@ -119,16 +125,27 @@ def runFBA(
     logger.debug('ignore_orphan_species: ' + str(ignore_orphan_species))
     logger.debug('     species_group_id: ' + str(species_group_id))
     logger.debug('sink_species_group_id: ' + str(sink_species_group_id))
+    logger.debug('     upper_flux_bound: ' + str(upper_flux_bound))
+    logger.debug('     lower_flux_bound: ' + str(lower_flux_bound))
 
 
     # # Rename all compounds with Cobra standard ('compound@compartment')
     # cobraize(pathway, compartment_id)
+
+    # Set Flux Bounds
+    for rxn in pathway.get_list_of_reactions():
+        rxn.set_fbc(
+            l_value=lower_flux_bound,
+            u_value=upper_flux_bound
+        )
+        rxn.set_reversible(False)
 
     # rpsbml = rpSBML(inFile=pathway_fn)
     rpsbml = rpSBML.from_Pathway(
         pathway=pathway,
         logger=logger
     )
+
     logger.debug('pathway (rpSBML): ' + str(rpsbml))
 
     rpsbml_gem = rpSBML(gem_sbml_path, logger=logger)
@@ -649,7 +666,6 @@ def rp_fraction(
     :rtype: tuple
     """
 
-    logger.info('Processing FBA (fraction of reaction)...')
     logger.debug('rpsbml:       ' + str(rpsbml))
     logger.debug('ignore_met:   ' + str(ignore_met))
     logger.debug('src_rxn_id:   ' + src_rxn_id)
@@ -709,6 +725,7 @@ def rp_fraction(
         ### FBA ###
         # logger.info('Running the FBA (fraction of reaction)...')
         # rpsbml.runFBA(source_reaction, source_coefficient, is_max, pathway_id)
+        logger.info('Processing FBA (biomass)...')
         cobra_results = runCobra(
             rpsbml = rpsbml,
             hidden_species = hidden_species,
@@ -773,6 +790,7 @@ def rp_fraction(
         source_flux*frac_of_src
     )
 
+    logger.info('Processing FBA (fraction)...')
     cobra_results = runCobra(
         rpsbml = rpsbml,
         hidden_species = hidden_species,
