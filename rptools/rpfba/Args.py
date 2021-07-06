@@ -1,6 +1,8 @@
 from argparse  import ArgumentParser
 from rptools._version import __version__
 
+default_upper_flux_bound = 10000
+default_lower_flux_bound = 0
 
 def add_arguments(parser):
     parser.add_argument(
@@ -106,5 +108,17 @@ def add_arguments(parser):
         action='store_true',
         default=False,
         help='Ignore metabolites that are only consumed or produced (default: False)'
+    )
+    parser.add_argument(
+        '--upper_flux_bound',
+        type=float,
+        default=default_upper_flux_bound,
+        help='Flux constaints (upper bound) for FBA (default: 10000)'
+    )
+    parser.add_argument(
+        '--lower_flux_bound',
+        type=float,
+        default=default_lower_flux_bound,
+        help='Flux constaints (lower bound) for FBA (default: 0)'
     )
     return parser
