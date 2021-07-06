@@ -4,9 +4,9 @@ Completes mono-component reactions output by RetroPath2.0 with the appropriate c
 
 All metabolic pathways will be built as the following:
 
-- For each "master" pathway
-  - Each chemical transformation can be produced by multiple reaction rules
-    - For each reaction rule can have been produced by multiple template chemical reactions.
+- In each "master" pathway,
+  - each chemical transformation could be produced by multiple reaction rules, and
+    - each reaction rule could be produced by multiple template chemical reactions.
 
 Thus, each different template reaction for each different reaction rule for each different chemical transformation provides one single possible pathway. The algorithm explores the combinatorics of all possible pathways and for each "master pathway" (the one from chemical transformations), keeps only top (10) ones.
 
@@ -14,6 +14,7 @@ Thus, each different template reaction for each different reaction rule for each
 
 Required:
 * **rp2_pathways**: (string) Path to the RetroPath2.0 pathways file
+* **sink**: (string) Path to the rpextratsink file containing infos on molecules in the sink
 * **rp2paths_compounds**: (string) Path to the rp2paths compounds file
 * **rp2paths_pathways**: (string) Path to the rp2paths pathways file
 * **outdir**: (string) Path to the folder where result files are written
