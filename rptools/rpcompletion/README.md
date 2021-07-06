@@ -2,6 +2,14 @@
 
 Completes mono-component reactions output by RetroPath2.0 with the appropriate cofactors. Creates sub-paths when multiple reaction rules are associated with a single reaction. Input is a single pathways file produced by RP2Paths. It stands on rrCache which store pre-computed data.
 
+All metabolic pathways will be built as the following:
+
+- For each "master" pathway
+  - Each chemical transformation can be produced by multiple reaction rules
+    - For each reaction rule can have been produced by multiple template chemical reactions.
+
+Thus, each different template reaction for each different reaction rule for each different chemical transformation provides one single possible pathway. The algorithm explores the combinatorics of all possible pathways and for each "master pathway" (the one from chemical transformations), keeps only top (10) ones.
+
 ## Input
 
 Required:
@@ -11,8 +19,8 @@ Required:
 * **outdir**: (string) Path to the folder where result files are written
 
 Advanced options:
-* **-upper_flux_bound**: (integer, default=9999) Upper flux bound value
-* **-lower_flux_bound**: (integer, default=0) Lower flux bound value
+* **-upper_flux_bound**: (integer, default=10000) Upper flux bound value
+* **-lower_flux_bound**: (integer, default=-10000) Lower flux bound value
 * **-maxSubPaths_filter**: (integer, default=10) Number of subpaths per path
 * **-pathway_id**: (string, default=rp_pathway) ID of the heterologous pathway
 * **-compartment_id**: (string, default=MNXC3 (i.e. cytoplasm)) Heterologous pathway compartment ID
