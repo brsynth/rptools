@@ -65,9 +65,10 @@ def entry_point():
       logger.info('No results written. Exiting...')
     else:
       logger.info('Writing into file...')
-      if not os_path.exists(os_path.dirname(args.outfile)):
+      dirname = os_path.dirname(args.outfile)
+      if dirname != '' and not os_path.exists(dirname):
           try:
-              os_makedirs(os_path.dirname(args.outfile))
+              os_makedirs(dirname)
           except OSError as exc: # Guard against race condition
               if exc.errno != errno_EEXIST:
                   raise
