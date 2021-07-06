@@ -8,7 +8,7 @@ All metabolic pathways will be built as the following:
   - each chemical transformation could be produced by multiple reaction rules, and
     - each reaction rule could be produced by multiple template chemical reactions.
 
-Thus, each different template reaction for each different reaction rule for each different chemical transformation provides one single possible pathway. The algorithm explores the combinatorics of all possible pathways and for each "master pathway" (the one from chemical transformations), keeps only top (10) ones.
+Thus, each different template reaction for each different reaction rule for each different chemical transformation provides one single possible pathway. The algorithm explores the combinatorics of all possible pathways and for each "master pathway" (the one from chemical transformations), keeps only top (defined by `maxSubPaths_filter` CLI option, default: 10) ones.
 
 ## Input
 
