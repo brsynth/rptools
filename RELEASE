@@ -1,5 +1,12 @@
 # Release history
 
+## 5.1.1
+- chore(rpcompletion): add flux bounds
+- chore(rpfba): create folder if does not exist
+- chore(rpfba): add CLI args for flux bounds
+- chore(rpfba): set flux bounds
+- chore(rplibs): set flux bounds positive and reactions not reversible
+
 ## 5.1.0
 - chore(rpfba): re-write cobra functions
 - chore(rpSBML): re-write merging and add cobra methods
