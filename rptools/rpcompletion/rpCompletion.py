@@ -38,6 +38,10 @@ from rptools.rplibs import (
     rpReaction,
     rpCompound
 )
+from .Args import (
+    default_upper_flux_bound,
+    default_lower_flux_bound
+)
 
 ## Function to group all the functions for parsing RP2 output to rpSBML files
 #
@@ -61,8 +65,8 @@ def rp_completion(
     rp2paths_compounds,
     rp2paths_pathways,
     cache: rrCache = None,
-    upper_flux_bound=999999,
-    lower_flux_bound=0,
+    upper_flux_bound: float = default_upper_flux_bound,
+    lower_flux_bound: float = default_lower_flux_bound,
     pathway_id='rp_pathway',
     compartment_id='MNXC3',
     species_group_id='rp_trunk_species',
@@ -137,6 +141,8 @@ def rp_completion(
         compounds_cache=cache.get('cid_strc'),
         max_subpaths_filter=max_subpaths_filter,
         compartment_id=compartment_id,
+        lower_flux_bound=lower_flux_bound,
+        upper_flux_bound=upper_flux_bound,
         logger=logger
     )
 
@@ -487,6 +493,8 @@ def build_all_pathways(
     compounds_cache: Dict,
     max_subpaths_filter: int,
     compartment_id: str,
+    lower_flux_bound: float,
+    upper_flux_bound: float,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
 
@@ -509,6 +517,16 @@ def build_all_pathways(
                 logger=logger
             )
             logger.debug(pathway.get_id())
+            # lower_flux_bound_id = f'FBC_{str(lower_flux_bound).replace("-", "_")}'
+            # upper_flux_bound_id = f'FBC_{str(upper_flux_bound).replace("-", "_")}'
+            # pathway.add_parameter(
+            #     id=lower_flux_bound_id,
+            #     value=lower_flux_bound
+            # )
+            # pathway.add_parameter(
+            #     id=upper_flux_bound_id,
+            #     value=upper_flux_bound
+            # )
 
             ## ITERATE OVER REACTIONS
             nb_reactions = len(sub_pathways[sub_path_idx])
@@ -557,7 +575,9 @@ def build_all_pathways(
                     id='rxn_'+str(rxn_idx_forward),
                     ec_numbers=transfo['ec'],
                     reactants=dict(compounds['left']),
-                    products=dict(compounds['right'])
+                    products=dict(compounds['right']),
+                    lower_flux_bound=lower_flux_bound,
+                    upper_flux_bound=upper_flux_bound
                 )
                 # write infos
                 for info_id, info in sub_pathways[sub_path_idx][rxn_idx].items():
