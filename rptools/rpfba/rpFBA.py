@@ -24,7 +24,8 @@ from cobra.core.solution import Solution  as cobra_solution
 from brs_utils import Cache
 from rptools.rplibs import (
     rpSBML,
-    rpPathway
+    rpPathway,
+    rpReaction
 )
 from .cobra_format import (
     cobraize,
@@ -132,18 +133,26 @@ def runFBA(
     # # Rename all compounds with Cobra standard ('compound@compartment')
     # cobraize(pathway, compartment_id)
 
+    # Create consumption of the target
+    rxn_target = create_target_consumption_reaction(
+        pathway.get_target_id(),
+        logger
+    )
     # Set Flux Bounds
-    for rxn in pathway.get_list_of_reactions():
+    for rxn in pathway.get_list_of_reactions()+[rxn_target]:
         rxn.set_fbc(
             l_value=lower_flux_bound,
             u_value=upper_flux_bound
         )
         rxn.set_reversible(False)
 
-    # rpsbml = rpSBML(inFile=pathway_fn)
     rpsbml = rpSBML.from_Pathway(
         pathway=pathway,
         logger=logger
+    )
+    # Create the reaction in the rpSBML
+    rpsbml.createReaction(
+        rxn=rxn_target
     )
 
     logger.debug('pathway (rpSBML): ' + str(rpsbml))
@@ -156,7 +165,8 @@ def runFBA(
     (
         rpsbml_merged,
         reactions_in_both,
-        missing_species
+        missing_species,
+        compartment_id
     ) = rpSBML.merge(
         pathway=rpsbml,
         model=rpsbml_gem,
@@ -386,6 +396,22 @@ def runFBA(
     # from json import dumps
     # print(dumps(pathway_fba, indent=4))
     # exit()
+
+
+def create_target_consumption_reaction(
+    target_id: str,
+    logger: Logger = getLogger(__name__)
+) -> 'rpReaction':
+    rxn = rpReaction(
+        id='rxn_target',
+        logger=logger
+    )
+    rxn.add_reactant(
+        compound_id=target_id,
+        stoichio=1
+    )
+    return rxn
+
 
 def write_results_to_pathway(
   pathway: rpPathway,
