@@ -1,5 +1,11 @@
 # Release history
 
+## 5.1.2
+- chore(rpcompletion): rm compartment_id arg
+- chore(rplibs): make 'c' the default compartment
+- chore(rplibs): handle matched compartments
+- chore(rpfba): add target consumption reaction
+
 ## 5.1.1
 - chore(rpcompletion): add flux bounds
 - chore(rpfba): create folder if does not exist
