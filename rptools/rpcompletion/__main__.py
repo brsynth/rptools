@@ -86,7 +86,7 @@ def _cli():
         upper_flux_bound=int(args.upper_flux_bound),
         lower_flux_bound=int(args.lower_flux_bound),
         pathway_id=args.pathway_id,
-        compartment_id=args.compartment_id,
+        # compartment_id=args.compartment_id,
         species_group_id=args.species_group_id,
         sink_species_group_id=args.sink_species_group_id,
         max_subpaths_filter=args.max_subpaths_filter,

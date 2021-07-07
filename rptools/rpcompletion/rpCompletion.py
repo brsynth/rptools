@@ -68,7 +68,7 @@ def rp_completion(
     upper_flux_bound: float = default_upper_flux_bound,
     lower_flux_bound: float = default_lower_flux_bound,
     pathway_id='rp_pathway',
-    compartment_id='MNXC3',
+    # compartment_id='MNXC3',
     species_group_id='rp_trunk_species',
     sink_species_group_id='sink',
     max_subpaths_filter: int = 10,
@@ -97,7 +97,7 @@ def rp_completion(
     rp2paths_compounds_in_cache(
         rp2paths_compounds,
         cache,
-        compartment_id=compartment_id,
+        # compartment_id=compartment_id,
         logger=logger
     )
     pathways, transfos = read_pathways(
@@ -140,7 +140,7 @@ def rp_completion(
         rr_reactions=cache.get('rr_reactions'),
         compounds_cache=cache.get('cid_strc'),
         max_subpaths_filter=max_subpaths_filter,
-        compartment_id=compartment_id,
+        # compartment_id=compartment_id,
         lower_flux_bound=lower_flux_bound,
         upper_flux_bound=upper_flux_bound,
         logger=logger
@@ -236,7 +236,7 @@ def build_reader(
 def rp2paths_compounds_in_cache(
     path: str,
     cache: rrCache,
-    compartment_id: str,
+    # compartment_id: str,
     logger: Logger = getLogger(__name__)
 ) -> None:
 
@@ -294,8 +294,7 @@ def rp2paths_compounds_in_cache(
                 inchi=inchi,
                 inchikey=inchikey,
                 name=name,
-                formula=formula,
-                compartment_id=compartment_id
+                formula=formula
             )
 
     except TypeError as e:
@@ -492,7 +491,7 @@ def build_all_pathways(
     rr_reactions: Dict,
     compounds_cache: Dict,
     max_subpaths_filter: int,
-    compartment_id: str,
+    # compartment_id: str,
     lower_flux_bound: float,
     upper_flux_bound: float,
     logger: Logger = getLogger(__name__)
@@ -553,13 +552,11 @@ def build_all_pathways(
                                     inchi=compounds_cache[spe_id]['inchi'],
                                     inchikey=compounds_cache[spe_id]['inchikey'],
                                     formula=compounds_cache[spe_id]['formula'],
-                                    name=compounds_cache[spe_id]['name'],
-                                    compartment_id=compartment_id
+                                    name=compounds_cache[spe_id]['name']
                                 )
                             except KeyError:
                                 rpCompound(
-                                    id=spe_id,
-                                    compartment_id=compartment_id
+                                    id=spe_id
                                 )
 
                 ## REACTION

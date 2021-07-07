@@ -27,7 +27,7 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument('--lower_flux_bound', type=int, default=default_lower_flux_bound)
     parser.add_argument('--max_subpaths_filter', type=int, default=10)
     parser.add_argument('--pathway_id', type=str, default='rp_pathway')
-    parser.add_argument('--compartment_id', type=str, default='MNXC3')
+    # parser.add_argument('--compartment_id', type=str, default='MNXC3')
     parser.add_argument('--species_group_id', type=str, default='rp_trunk_species')
     parser.add_argument('--sink_species_group_id', type=str, default='rp_sink_species')
     parser.add_argument('--pubchem_search', type=str, default='False')
