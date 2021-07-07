@@ -47,8 +47,8 @@ def add_arguments(parser):
     parser.add_argument(
         '--compartment_id',
         type=str,
-        default='MNXC3',
-        help='SBML compartment id (default: MNXC3)'
+        default='c',
+        help='SBML compartment id (default: c)'
     )
     parser.add_argument(
         '--sim',

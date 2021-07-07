@@ -50,7 +50,7 @@ class rpCompound(Compound, rpObject):
         inchikey: str = '',
         formula: str = '',
         name: str = '',
-        compartment_id: str = '',
+        compartment_id: str = 'c',
         logger: Logger = getLogger(__name__)
     ):
         Compound.__init__(

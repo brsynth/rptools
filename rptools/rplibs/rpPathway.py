@@ -68,6 +68,17 @@ from rptools.rpfba.cobra_format import (
 
 class rpPathway(Pathway, rpObject):
 
+    __MNXC3 = {
+        'id': 'c',
+        'name': 'cytosol',
+        'annot': {
+            'name': ['cytosol'],
+            'seed': ['cytosol', 'c0', 'c'],
+            'mnx': ['MNXC3'],
+            'bigg': ['c_c', 'c']
+        }
+    }
+
     def __init__(
         self,
         id: str,
@@ -104,7 +115,11 @@ class rpPathway(Pathway, rpObject):
         #     )
         self.__unit_def = {}
         self.__compartments = {}
-        self.__sbml_rxn_target = None
+        self.add_compartment(
+            id=rpPathway.__MNXC3['id'],
+            name=rpPathway.__MNXC3['name'],
+            annot=rpPathway.__MNXC3['annot'],
+        )
         # Set flux bounds values/units
         self.add_parameter(
             id='BRS_default_fbc_l',
@@ -212,7 +227,6 @@ class rpPathway(Pathway, rpObject):
             'parameters': deepcopy(self.get_parameters()),
             'unit_defs': deepcopy(self.get_unit_defs()),
             'compartments': deepcopy(self.get_compartments()),
-            'sbml_rxn_target': self.get_sbml_target_rxn()
         }
 
     def __eq__(self, other) -> bool:
@@ -254,9 +268,6 @@ class rpPathway(Pathway, rpObject):
 
     def get_rxn_target(self) -> rpReaction:
         return self.get_reaction(self.get_target_rxn_id())
-
-    def get_sbml_target_rxn(self) -> rpReaction:
-        return self.__sbml_rxn_target
 
     def get_target_id(self) -> str:
         return self.__target_id
@@ -631,12 +642,6 @@ class rpPathway(Pathway, rpObject):
         if target_id is not None:
             self.set_target_id(target_id)
 
-    def add_sbml_rxn_target(
-        self,
-        rxn: rpReaction
-    ) -> None:
-        self.__sbml_rxn_target = deepcopy(rxn)
-
     def set_sink(self, sink: List[str]) -> None:
         self.__sink = deepcopy(sink)
     
@@ -697,8 +702,6 @@ class rpPathway(Pathway, rpObject):
         # target
         if id == self.get_target_id():
             self.set_target_id(new_id)
-            # sbml_rxn_target
-            self.__sbml_rxn_target.rename_compound(id, new_id)
 
         super().rename_compound(id, new_id)
 
