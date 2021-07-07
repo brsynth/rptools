@@ -426,7 +426,7 @@ class rpSBML:
         model: 'rpSBML',
         compartment_id: str,
         logger: Logger = getLogger(__name__)
-    ) -> Tuple['rpSBML', Dict]:
+    ) -> Tuple['rpSBML', Dict, List, str]:
         """
         Merge two models species and reactions using the annotations to recognise the same species and reactions
 
@@ -492,7 +492,7 @@ class rpSBML:
         ## COMPARTMENTS ################################
         # Compare by MIRIAM annotations
         # Note that key is source and value is target conversion
-        merged_rpsbml.copyCompartments(pathway)
+        compartments_pathway_model_transl = merged_rpsbml.copyCompartments(pathway)
 
         ## PARAMETERS ##################################
         # WARNING: here we compare by ID
@@ -510,7 +510,7 @@ class rpSBML:
         ## SPECIES #####################################
         species_pathway_model_transl, missing_species = merged_rpsbml.copySpecies(
             source_sbml=pathway,
-            compartment_id=compartment_id
+            compartment_id=compartments_pathway_model_transl[compartment_id]
         )
 
         ## REACTIONS ###################################
@@ -540,11 +540,12 @@ class rpSBML:
             return (
                 merged_rpsbml,
                 reactions_in_both,
-                missing_species
+                missing_species,
+                compartments_pathway_model_transl[compartment_id]
             )
         else:
             logger.error('Merging rpSBML objects results in a invalid SBML format')
-            return None, None, None
+            return None, None, None, None
 
     @staticmethod
     def renameSpecies(
@@ -702,9 +703,9 @@ class rpSBML:
         rpsbml: 'rpSBML'
     ) -> None:
 
-        # compartments = {}
+        compartments = {}
 
-        for source_compartment in self.getModel().getListOfCompartments():
+        for source_compartment in rpsbml.getModel().getListOfCompartments():
 
             found = False
 
@@ -713,83 +714,86 @@ class rpSBML:
             if not source_annotation:
                 self.logger.warning('No annotation for the source of compartment '+str(source_compartment.getId()))
 
-            # compare by MIRIAM first
             for target_compartment in self.getModel().getListOfCompartments():
-                target_annotation = target_compartment.getAnnotation()
-                if not target_annotation:
-                    self.logger.warning('No annotation for the target of compartment: '+str(target_compartment.getId()))
-                    continue
-                if rpSBML.compareMIRIAMAnnotations(
-                    source_annotation,
-                    target_annotation,
-                    self.logger
+                # compare by ID or name first
+                if (
+                    source_compartment.getId() == target_compartment.getId()
+                    or source_compartment.getName() == target_compartment.getName()
                 ):
                     found = True
-                    # compartments[source_compartment.getId()] = target_compartment.getId()
+                    compartments[source_compartment.getId()] = target_compartment.getId()
                     break
-
-            if not found:
-                # if the id is not found, see if the ids already exists
-                if source_compartment.getId() in [i.getId() for i in self.getModel().getListOfCompartments()]:
-                    # compartments[source_compartment.getId()] = source_compartment.getId()
-                    found = True
-                # if there is not MIRIAM match and the id's differ then add it
+                # then, compare by MIRIAM
                 else:
-                    target_compartment = self.getModel().createCompartment()
+                    target_annotation = target_compartment.getAnnotation()
+                    if not target_annotation:
+                        self.logger.warning('No annotation for the target of compartment: '+str(target_compartment.getId()))
+                    elif rpSBML.compareMIRIAMAnnotations(
+                        source_annotation,
+                        target_annotation,
+                        self.logger
+                    ):
+                        found = True
+                        compartments[source_compartment.getId()] = target_compartment.getId()
+                        break
+
+            # If not found, add the compartment to the model
+            if not found:
+                target_compartment = self.getModel().createCompartment()
+                rpSBML.checklibSBML(
+                    target_compartment,
+                    'Creating target compartment'
+                )
+                rpSBML.checklibSBML(
+                    target_compartment.setMetaId(
+                        source_compartment.getMetaId()
+                    ),
+                    'setting target metaId'
+                )
+                # make sure that the ID is different
+                if source_compartment.getId() == target_compartment.getId():
                     rpSBML.checklibSBML(
-                        target_compartment,
-                        'Creating target compartment'
-                    )
-                    rpSBML.checklibSBML(
-                        target_compartment.setMetaId(
-                            source_compartment.getMetaId()
+                        target_compartment.setId(
+                            source_compartment.getId()+'_sourceModel'
                         ),
-                        'setting target metaId'
+                        'setting target id'
                     )
-                    # make sure that the ID is different
-                    if source_compartment.getId() == target_compartment.getId():
-                        rpSBML.checklibSBML(
-                            target_compartment.setId(
-                                source_compartment.getId()+'_sourceModel'
-                            ),
-                            'setting target id'
-                        )
-                    else:
-                        rpSBML.checklibSBML(
-                            target_compartment.setId(
-                                source_compartment.getId()
-                            ),
-                            'setting target id'
-                        )
+                else:
                     rpSBML.checklibSBML(
-                        target_compartment.setName(
-                            source_compartment.getName()
+                        target_compartment.setId(
+                            source_compartment.getId()
                         ),
-                        'setting target name'
+                        'setting target id'
                     )
-                    rpSBML.checklibSBML(
-                        target_compartment.setConstant(
-                            source_compartment.getConstant()
-                        ),
-                        'setting target constant'
+                rpSBML.checklibSBML(
+                    target_compartment.setName(
+                        source_compartment.getName()
+                    ),
+                    'setting target name'
+                )
+                rpSBML.checklibSBML(
+                    target_compartment.setConstant(
+                        source_compartment.getConstant()
+                    ),
+                    'setting target constant'
+                )
+                rpSBML.checklibSBML(
+                    target_compartment.setAnnotation(
+                        source_compartment.getAnnotation()
+                    ),
+                    'setting target annotation'
+                )
+                rpSBML.checklibSBML(
+                    target_compartment.setSBOTerm(
+                        source_compartment.getSBOTerm()
+                    ),
+                    'setting target annotation'
                     )
-                    rpSBML.checklibSBML(
-                        target_compartment.setAnnotation(
-                            source_compartment.getAnnotation()
-                        ),
-                        'setting target annotation'
-                    )
-                    rpSBML.checklibSBML(
-                        target_compartment.setSBOTerm(
-                            source_compartment.getSBOTerm()
-                        ),
-                        'setting target annotation'
-                        )
-                    # compartments[target_compartment.getId()] = target_compartment.getId()
+                compartments[target_compartment.getId()] = target_compartment.getId()
 
         # self.logger.debug('comp_source_target: '+str(comp_source_target))
 
-        # return compartments
+        return compartments
 
 
     def copyParameters(
@@ -979,7 +983,7 @@ class rpSBML:
     def copySpecies(
         self,
         source_sbml: 'rpSBML',
-        compartment_id: str
+        compartment_id: str,
     ) -> Tuple[List[str], List[str]]:
 
         self.logger.debug('compartment_id: ' + str(compartment_id))
@@ -1050,6 +1054,7 @@ class rpSBML:
                 # print('=====================================')
 
             # if no match then add it to the target model
+            # with the corresponding compartment:
             else:
                 self.logger.debug(source_spe_id, 'OUT OF MODEL')
                 # self.logger.debug('Creating source species '+str(source_species)+' in target rpsbml')
@@ -1088,7 +1093,7 @@ class rpSBML:
                     )
                     rpSBML.checklibSBML(
                         target_spe.setCompartment(
-                            source_spe.getCompartment()
+                            compartment_id
                         ),
                         'setting target compartment'
                     )
@@ -2268,15 +2273,29 @@ class rpSBML:
             # species_match[source_species.getId()] = {'id': None, 'score': 0.0, 'found': False}
             # TODO: need to exclude from the match if a simulated chemical species is already matched with a higher score to another measured species
             for target_species in target_sbml.getModel().getListOfSpecies():
-
-                # skip the species that are not in the same compartment as the source
-                # print(
-                #     source_species.getId(), compartment_id,
-                #     target_species.getId(), target_species.getCompartment()
-                # )
+                # print(source_species.getId(), source_species.getCompartment())
+                # print(target_species.getId(), target_species.getCompartment())
+                # print(compartment_ids)
+                # # Skip the species that are not in the same compartment as the source
+                # if source_species.getCompartment() != target_species.getCompartment():
+                #     # If the species compartment in the source (pathway)
+                #     # is the same than the one in the target (model)
+                #     # but with different names,
+                #     # Then rename the compartment of the source species
+                #     if compartment_ids[source_species.getCompartment()] == target_species.getCompartment():
+                #         source_species.setCompartment(target_species.getCompartment())
+                #     # If the species compartment in the source (pathway)
+                #     # is different than the one in the target (model)
+                #     # (different ids and names),
+                #     # Then they cannot be considered as same and so
+                #     # stop the match process and pass to the next step
+                #     # in the current loop
+                #     else:
+                #         continue
+                
+                # Skip the species that are not in the same compartment as the source
                 if compartment_id != target_species.getCompartment():
                     continue
-
                 # source_target[source_species.getId()][target_species.getId()] = {'score': 0.0, 'found': False}
 
                 # if not target_species.getId() in target_source:
@@ -2390,6 +2409,7 @@ class rpSBML:
         # # self.logger.debug('species_match:')
         # # self.logger.debug(species_match)
         # # self.logger.debug('-----------------------')
+
         return corr_species, miss_species
 
 
@@ -3164,6 +3184,7 @@ class rpSBML:
             reactions = reactions,
             objective_id = objective_id
         )
+        # print(reactions, objective_id, obj_id)
 
         # If cannot find a valid objective create it
         if obj_id is None:
@@ -3209,6 +3230,11 @@ class rpSBML:
             if objective.getId() == objective_id:
                 self.logger.debug('The specified objective id ('+str(objective_id)+') already exists')
                 return objective_id
+            
+            # if len(reactions) == 1:
+            #     for obj in objective.getListOfFluxObjectives():
+            #         if reactions[0].lower() in obj.getReaction().lower():
+            #             return objective.getId()
 
             if not set([i.getReaction() for i in objective.getListOfFluxObjectives()])-set(reactions):
                 # TODO: consider setting changing the name of the objective
@@ -4019,21 +4045,21 @@ class rpSBML:
                 reacXref={'ec': rxn.get_ec_numbers()}
             )
 
-        # Add the consumption of the target
-        rxn = pathway.get_sbml_target_rxn()
-        if rxn is None:
-            rxn = rpReaction(
-                id='rxn_target',
-                logger=self.logger
-            )
-            rxn.add_reactant(
-                compound_id=pathway.get_target_id(),
-                stoichio=1
-            )
-        # Create the reaction in the model
-        self.createReaction(
-            rxn=rxn
-        )
+        # # Add the consumption of the target
+        # rxn = pathway.get_sbml_target_rxn()
+        # if rxn is None:
+        #     rxn = rpReaction(
+        #         id='rxn_target',
+        #         logger=self.logger
+        #     )
+        #     rxn.add_reactant(
+        #         compound_id=pathway.get_target_id(),
+        #         stoichio=1
+        #     )
+        # # Create the reaction in the model
+        # self.createReaction(
+        #     rxn=rxn
+        # )
 
 
     def create_species_from_Pathway(
@@ -4296,13 +4322,13 @@ class rpSBML:
                     rxn=reaction,
                     target_id=target_id
                 )
-            # Add target consumption reaction
-            rxn_id = 'rxn_target'
-            rxn_infos = self.read_reaction(rxn_id)
-            if rxn_infos is not None:
-                reaction, target_id = build_reaction(rxn_id, rxn_infos)
-                # Add the reaction to the pathway
-                pathway.add_sbml_rxn_target(reaction)
+            # # Add target consumption reaction
+            # rxn_id = 'rxn_target'
+            # rxn_infos = self.read_reaction(rxn_id)
+            # if rxn_infos is not None:
+            #     reaction, target_id = build_reaction(rxn_id, rxn_infos)
+            #     # Add the reaction to the pathway
+            #     pathway.add_sbml_rxn_target(reaction)
 
         ## PATHWAY
         if 'pathway' in keys:
