@@ -16,6 +16,11 @@ def add_arguments(parser):
         help='GEM model file (SBML)'
     )
     parser.add_argument(
+        'compartment_id',
+        type=str,
+        help='Model compartment id (e.g. \'c\' or \'MNXC3\')'
+    )
+    parser.add_argument(
         'outfile',
         type=str,
         help='output file'
@@ -43,12 +48,6 @@ def add_arguments(parser):
         type=str,
         default='fraction',
         help='overwrite the auto-generated id of the results (default: fraction)'
-    )
-    parser.add_argument(
-        '--compartment_id',
-        type=str,
-        default='c',
-        help='SBML compartment id (default: c)'
     )
     parser.add_argument(
         '--sim',

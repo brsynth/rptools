@@ -39,9 +39,10 @@ def entry_point():
       logger=logger
     ).to_Pathway()
 
-    runFBA(
+    results = runFBA(
       pathway=pathway,
       gem_sbml_path=args.model,
+      compartment_id=args.compartment_id,
       sim_type=args.sim,
       src_rxn_id=args.source_reaction,
       tgt_rxn_id=args.target_reaction,
@@ -52,7 +53,6 @@ def entry_point():
       merge=args.merge,
       pathway_id=args.pathway_id,
       objective_id=args.objective_id,
-      compartment_id=args.compartment_id,
       ignore_orphan_species=not args.dont_ignore_orphan_species,
       species_group_id=args.species_group_id,
       sink_species_group_id=args.sink_species_group_id,
@@ -61,7 +61,7 @@ def entry_point():
       logger=logger
     )
 
-    if pathway is None:
+    if results is None:
       logger.info('No results written. Exiting...')
     else:
       logger.info('Writing into file...')
