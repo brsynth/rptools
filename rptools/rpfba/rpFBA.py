@@ -48,6 +48,7 @@ from .Args import (
 def runFBA(
                   pathway: rpPathway,
             gem_sbml_path: str,
+           compartment_id: str,
                  sim_type: str = 'fraction',
                src_rxn_id: str = 'biomass',
                 src_coeff: float = 1.0,
@@ -58,7 +59,6 @@ def runFBA(
                     merge: bool = False,
                pathway_id: str = 'rp_pathway',
              objective_id: str = None,
-           compartment_id: str = 'MNXC3',
     ignore_orphan_species: bool = True,
          species_group_id: str = 'rp_trunk_species',
     sink_species_group_id: str = 'rp_sink_species',
@@ -129,6 +129,12 @@ def runFBA(
     logger.debug('     upper_flux_bound: ' + str(upper_flux_bound))
     logger.debug('     lower_flux_bound: ' + str(lower_flux_bound))
 
+    rpsbml_gem = rpSBML(gem_sbml_path, logger=logger)
+    compartment_id = rpsbml_gem.get_compartment_id(compartment_id)
+    if compartment_id is None:
+        logger.error(f'Compartment \'{compartment_id}\' not found in the model \'{rpsbml_gem.getName()}\'')
+        logger.error(f'Available compartments: {list(rpsbml_gem.getModel().getListOfCompartments())}')
+        return None
 
     # # Rename all compounds with Cobra standard ('compound@compartment')
     # cobraize(pathway, compartment_id)
@@ -156,8 +162,6 @@ def runFBA(
     )
 
     logger.debug('pathway (rpSBML): ' + str(rpsbml))
-
-    rpsbml_gem = rpSBML(gem_sbml_path, logger=logger)
 
     # Merge predicted pathway with the full model
     # missing_species are species that are not detected in the model
