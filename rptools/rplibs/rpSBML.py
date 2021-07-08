@@ -3919,10 +3919,8 @@ class rpSBML:
             # MIRIAM annotations
             'miriam': self.readMIRIAMAnnotation(annot),
             # FBC values
-            'fbc': {
-                'lower': fbc.getLowerFluxBound(),
-                'upper': fbc.getUpperFluxBound()
-            },
+            'fbc_lower_value': fbc.getLowerFluxBound(),
+            'fbc_upper_value': fbc.getUpperFluxBound(),
             'reversible': reaction.getReversible()
         }
 
@@ -4212,9 +4210,9 @@ class rpSBML:
                 ec_numbers=ec_numbers,
                 reactants=infos['left'],
                 products=infos['right'],
-                lower_flux_bound=parameters[infos['fbc']['lower']]['value'],
-                upper_flux_bound=parameters[infos['fbc']['upper']]['value'],
-                flux_bound_units=parameters[infos['fbc']['upper']]['units'],
+                lower_flux_bound=infos['fbc_lower_value'],
+                upper_flux_bound=infos['fbc_upper_value'],
+                flux_bound_units=infos['fbc_units'],
                 reversible=infos['reversible'],
                 logger=self.logger
             )
@@ -4237,65 +4235,40 @@ class rpSBML:
                 ]
             )
 
-        ## RPSBML
-        # Unit Definitions
-        unit_defs = {}
-        for unit_def in self.getModel().getListOfUnitDefinitions():
-            unit_defs[unit_def.getId()] = []
-            for unit in unit_def.getListOfUnits():
-                unit_defs[unit_def.getId()] +=  [{
-                    'kind': unit.getKind(),
-                    'exp': unit.getExponent(),
-                    'scale': unit.getScale(),
-                    'mult': unit.getMultiplier()
-                }]
-
-        # Compartments
-        compartments = []
-        for compartment in self.getModel().getListOfCompartments():
-            compartments += [
-                {
-                    'id': compartment.getId(),
-                    'name': compartment.getName(),
-                    'annot': rpSBML.readMIRIAMAnnotation(compartment.getAnnotation()),
-                }
-            ]
-
-        # Parameters
-        parameters = {}
-        for param in self.getModel().getListOfParameters():
-            parameters[param.getId()] =  {
-                'value': param.getValue(),
-                'units': param.getUnits()
-            }
-
+        # Create the rpPathway object
         pathway = rpPathway(
             id=self.getName(),
             logger=self.logger
         )
-        for comp in compartments:
+
+        ## COMPARTMENTS
+        for compartment in self.getModel().getListOfCompartments():
             pathway.add_compartment(
-                id=comp['id'],
-                name=comp['name'],
-                annot=comp['annot'],
-            )
-        for unit_def_id, unit_def_l in unit_defs.items():
-            for unit_def in unit_def_l:
-                pathway.add_unit_def(
-                    id=unit_def_id,
-                    kind=unit_def['kind'],
-                    exp=unit_def['exp'],
-                    scale=unit_def['scale'],
-                    mult=unit_def['mult']
-                )
-        for param_id, param in parameters.items():
-            pathway.add_parameter(
-                id=param_id,
-                value=param['value'],
-                units=param['units']
+                id=compartment.getId(),
+                name=compartment.getName(),
+                annot=rpSBML.readMIRIAMAnnotation(compartment.getAnnotation()),
             )
 
-        # SPECIES
+        ## UNIT DEFINITIONS
+        for unit_defs in self.getModel().getListOfUnitDefinitions():
+            for unit in unit_defs.getListOfUnits():
+                pathway.add_unit_def(
+                    id=unit.getId(),
+                    kind=unit.getKind(),
+                    exp=unit.getExponent(),
+                    scale=unit.getScale(),
+                    mult=unit.getMultiplier()
+                )
+
+        ## PARAMETERS
+        for param in self.getModel().getListOfParameters():
+            pathway.add_parameter(
+                id=param.getId(),
+                value=param.getValue(),
+                units=param.getUnits()
+            )
+
+        ## SPECIES
         for spe_id, spe in self.read_species().items():
             infos = {}
             for key in ['smiles', 'inchi', 'inchikey']:
@@ -4315,24 +4288,15 @@ class rpSBML:
 
         ## REACTIONS
         for rxn_id, rxn_infos in self.read_reactions(pathway_id).items():
+            rxn_infos['fbc_lower_value'] = pathway.get_parameter_value(rxn_infos['fbc_lower_value'])
+            rxn_infos['fbc_upper_value'] = pathway.get_parameter_value(rxn_infos['fbc_upper_value'])
+            rxn_infos['fbc_units'] = pathway.get_parameter_units(rxn_infos['fbc_lower_value'])
             reaction, target_id = build_reaction(rxn_id, rxn_infos)
             # Add the reaction to the pathway
             pathway.add_reaction(
                 rxn=reaction,
                 target_id=target_id
             )
-            # # Add target consumption reaction
-            # rxn_id = 'rxn_target'
-            # rxn_infos = self.read_reaction(rxn_id)
-            # if rxn_infos is not None:
-            #     reaction, target_id = build_reaction(rxn_id, rxn_infos)
-            #     # Add the reaction to the pathway
-            #     pathway.add_sbml_rxn_target(reaction)
-
-        # ## PATHWAY
-        # if 'pathway' in keys:
-        #     pathway_sbml = self.read_pathway(pathway_id)
-        #     write_to(pathway_sbml, pathway)
 
         ## GROUPS
         for group in self.getPlugin('groups').getListOfGroups():
@@ -4353,9 +4317,6 @@ class rpSBML:
                     },
                     pathway
                 )
-        # pathway.set_sink(self.readGroupMembers('rp_sink_species'))
-        # pathway.set_completed_species(self.readGroupMembers('rp_completed_species'))
-        # pathway.set_trunk_species(self.readGroupMembers('rp_trunk_species'))
 
         return pathway
 
