@@ -14,7 +14,7 @@ Thus, each different template reaction for each different reaction rule for each
 
 Required:
 * **rp2_pathways**: (string) Path to the RetroPath2.0 pathways file
-* **sink**: (string) Path to the rpextratsink file containing infos on molecules in the sink
+* **sink**: (string) Path to the rpextractsink file containing infos on molecules in the sink
 * **rp2paths_compounds**: (string) Path to the rp2paths compounds file
 * **rp2paths_pathways**: (string) Path to the rp2paths pathways file
 * **outdir**: (string) Path to the folder where result files are written
@@ -24,7 +24,7 @@ Advanced options:
 * **-lower_flux_bound**: (integer, default=-10000) Lower flux bound value
 * **-maxSubPaths_filter**: (integer, default=10) Number of subpaths per path
 * **-pathway_id**: (string, default=rp_pathway) ID of the heterologous pathway
-* **-compartment_id**: (string, default=MNXC3 (i.e. cytoplasm)) Heterologous pathway compartment ID
+* **-compartment_id**: (string, default='c' (i.e. cytoplasm)) Heterologous pathway compartment ID
 * **-species_group_id**: (string, default=central_species) ID of the central species, i.e. not cofactors, in the heterologous reactions
 * **--store-mode, -sm**: (optional, string, default: file) Store mode. If 'file', rrCache is supposed to be stored in files. Else, the rrCache is supposed to be stored in a redis database which the name is the value of this input field. The redis server is considered to be up and running.
 
