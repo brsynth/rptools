@@ -587,7 +587,7 @@
           </rdf:RDF>
         </annotation>
       </groups:group>
-      <groups:group metaid="ce6cefc77140ff2f704ddaa820e059ea259c587dd3f7a1eb56ae1af4a0cac251" groups:id="rpfba_ignored_species" groups:kind="collection">
+      <groups:group metaid="ce6cefc77140ff2f704ddaa820e059ea259c587dd3f7a1eb56ae1af4a0cac251" groups:id="rp_fba_ignored_species" groups:kind="collection">
         <annotation>
           <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
             <rdf:BRSynth rdf:about="#ce6cefc77140ff2f704ddaa820e059ea259c587dd3f7a1eb56ae1af4a0cac251">
