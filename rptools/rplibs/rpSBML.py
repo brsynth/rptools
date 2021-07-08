@@ -362,6 +362,14 @@ class rpSBML:
         #                 unit = None
         #             self.updateBRSynth(reaction, bd_id, value, unit, False)
 
+    def get_compartment_id(self, compartment_id: str):
+        for group in self.getModel().getListOfCompartments():
+            if (
+                compartment_id == group.getId()
+                or compartment_id == group.getName()
+            ):
+                return group.getId()
+        return None
 
     #############################################################################################################
     ############################################ MERGE ##########################################################
@@ -493,7 +501,7 @@ class rpSBML:
         ## COMPARTMENTS ################################
         # Compare by MIRIAM annotations
         # Note that key is source and value is target conversion
-        compartments_pathway_model_transl = merged_rpsbml.copyCompartments(pathway)
+        merged_rpsbml.copyCompartments(pathway)
 
         ## PARAMETERS ##################################
         # WARNING: here we compare by ID
@@ -511,7 +519,7 @@ class rpSBML:
         ## SPECIES #####################################
         species_pathway_model_transl, missing_species = merged_rpsbml.copySpecies(
             source_sbml=pathway,
-            compartment_id=compartments_pathway_model_transl[compartment_id]
+            compartment_id=compartment_id
         )
 
         ## REACTIONS ###################################
@@ -542,7 +550,7 @@ class rpSBML:
                 merged_rpsbml,
                 reactions_in_both,
                 missing_species,
-                compartments_pathway_model_transl[compartment_id]
+                compartment_id
             )
         else:
             logger.error('Merging rpSBML objects results in a invalid SBML format')
@@ -704,8 +712,6 @@ class rpSBML:
         rpsbml: 'rpSBML'
     ) -> None:
 
-        compartments = {}
-
         for source_compartment in rpsbml.getModel().getListOfCompartments():
 
             found = False
@@ -722,7 +728,6 @@ class rpSBML:
                     or source_compartment.getName() == target_compartment.getName()
                 ):
                     found = True
-                    compartments[source_compartment.getId()] = target_compartment.getId()
                     break
                 # then, compare by MIRIAM
                 else:
@@ -735,7 +740,6 @@ class rpSBML:
                         self.logger
                     ):
                         found = True
-                        compartments[source_compartment.getId()] = target_compartment.getId()
                         break
 
             # If not found, add the compartment to the model
@@ -790,11 +794,8 @@ class rpSBML:
                     ),
                     'setting target annotation'
                     )
-                compartments[target_compartment.getId()] = target_compartment.getId()
 
         # self.logger.debug('comp_source_target: '+str(comp_source_target))
-
-        return compartments
 
 
     def copyParameters(
@@ -4035,30 +4036,12 @@ class rpSBML:
         pathway: rpPathway,
         logger: Logger = getLogger(__name__)
     ) -> None:
-
         for rxn in pathway.get_list_of_reactions():
             # Add the reaction in the model
             self.createReaction(
                 rxn=rxn,
                 reacXref={'ec': rxn.get_ec_numbers()}
             )
-
-        # # Add the consumption of the target
-        # rxn = pathway.get_sbml_target_rxn()
-        # if rxn is None:
-        #     rxn = rpReaction(
-        #         id='rxn_target',
-        #         logger=self.logger
-        #     )
-        #     rxn.add_reactant(
-        #         compound_id=pathway.get_target_id(),
-        #         stoichio=1
-        #     )
-        # # Create the reaction in the model
-        # self.createReaction(
-        #     rxn=rxn
-        # )
-
 
     def create_species_from_Pathway(
         self,
