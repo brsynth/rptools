@@ -79,6 +79,13 @@ class rpPathway(Pathway, rpObject):
         }
     }
 
+    __SPECIES_GROUPS = [
+        'sink',
+        'trunk',
+        'completed',
+        'fba_ignored'
+    ]
+
     def __init__(
         self,
         id: str,
@@ -94,10 +101,12 @@ class rpPathway(Pathway, rpObject):
         )
         rpObject.__init__(self, logger)
         self.set_target_id(None)
-        self.set_sink([])
-        self.set_trunk_species([])
-        self.set_completed_species([])
-        self.set_fba_ignored_species([])
+        for group_id in self.get_species_groups():
+            getattr(self, f'set_{group_id}_species')([])
+        # self.set_sink_species([])
+        # self.set_trunk_species([])
+        # self.set_completed_species([])
+        # self.set_fba_ignored_species([])
         self.__unit_def = {}
         self.__compartments = {}
         self.add_compartment(
@@ -140,7 +149,7 @@ class rpPathway(Pathway, rpObject):
 
     def __to_dict(self) -> Dict:
         return {
-            'sink': deepcopy(self.get_sink()),
+            'sink': deepcopy(self.get_sink_species()),
             'target': self.get_target_id(),
             'parameters': deepcopy(self.get_parameters()),
             'unit_defs': deepcopy(self.get_unit_defs()),
@@ -160,6 +169,9 @@ class rpPathway(Pathway, rpObject):
         )
 
     ## READ METHODS
+    def get_species_groups(self) -> List[str]:
+        return rpPathway.__SPECIES_GROUPS
+
     def get_completed_species(self) -> List[str]:
         return self.__completed_species
 
@@ -173,7 +185,7 @@ class rpPathway(Pathway, rpObject):
         try:
             return list(
                 set(self.get_trunk_species())
-                - set(self.get_sink())
+                - set(self.get_sink_species())
                 - set([self.get_target_id()])
             )
         except TypeError:
@@ -193,7 +205,7 @@ class rpPathway(Pathway, rpObject):
     def get_target(self) -> Compound:
         return self.get_specie(self.get_target_id())
 
-    def get_sink(self) -> List[str]:
+    def get_sink_species(self) -> List[str]:
         return self.__sink
 
     def get_reactions_ids(self) -> List[str]:
@@ -275,7 +287,7 @@ class rpPathway(Pathway, rpObject):
         if target_id is not None:
             self.set_target_id(target_id)
 
-    def set_sink(self, sink: List[str]) -> None:
+    def set_sink_species(self, sink: List[str]) -> None:
         self.__sink = deepcopy(sink)
     
     def set_target_id(self, id: str) -> None:
@@ -340,7 +352,7 @@ class rpPathway(Pathway, rpObject):
 
         # sink
         try:
-            self.__sink[self.get_sink().index(id)] = new_id
+            self.__sink[self.get_sink_species().index(id)] = new_id
         except (ValueError, AttributeError):
             pass
 

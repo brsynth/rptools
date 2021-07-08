@@ -603,7 +603,7 @@ def build_all_pathways(
                 pathway.add_completed_species([spe_id for value in added_cmpds.values() for spe_id in value.keys()])
 
             ## SINK
-            pathway.set_sink(
+            pathway.set_sink_species(
                 list(
                     set(pathway.get_species_ids()) & set(sink_molecules)
                 )

@@ -29,6 +29,7 @@ from filetype import guess
 from tempfile import (
     NamedTemporaryFile,
     TemporaryDirectory,
+    gettempdir,
 )
 from math import isnan
 from brs_utils import(
@@ -4067,11 +4068,11 @@ class rpSBML:
 
         for specie in pathway.get_species():
 
-            # Handle the sink
-            if specie.get_id() in pathway.get_sink():
-                sink_species_group_id = 'rp_sink_species'
-            else:
-                sink_species_group_id = None
+            # # Handle the sink
+            # if specie.get_id() in pathway.get_sink_species():
+            #     sink_species_group_id = 'rp_sink_species'
+            # else:
+            #     sink_species_group_id = None
 
             self.createSpecies(
                 species_id=specie.get_id(),
@@ -4080,8 +4081,8 @@ class rpSBML:
                 inchikey=specie.get_inchikey(),
                 smiles=specie.get_smiles(),
                 compartment=specie.get_compartment(),
-                species_group_id='rp_trunk_species',
-                in_sink_group_id=sink_species_group_id,
+                # species_group_id='rp_trunk_species',
+                # in_sink_group_id=sink_species_group_id,
                 infos=pathway.get_specie(specie.get_id())._to_dict(specific=True)
             )
 
@@ -4125,45 +4126,17 @@ class rpSBML:
                 isList=isList
             )
 
-        ## RP_SINK_SPECIES
-        group = self.createGroup('rp_sink_species')
-        for member_id in pathway.get_sink():
-            member = libsbml.Member()
-            member.setIdRef(member_id)
-            group.addMember(member)
-
-        ## CENTRAL SPECIES
-        group = self.createGroup('rp_trunk_species')
-        for member_id in pathway.get_trunk_species():
-            member = libsbml.Member()
-            member.setIdRef(member_id)
-            group.addMember(member)
-
-        ## INTERMEDIATE SPECIES
-        group = self.createGroup('rp_intermediate_species')
-        for member_id in pathway.get_intermediate_species():
-            member = libsbml.Member()
-            member.setIdRef(member_id)
-            group.addMember(member)
-
-        ## COMPLETED COMPOUNDS
-        group = self.createGroup('rp_completed_species')
-        for member_id in pathway.get_completed_species():
-            member = libsbml.Member()
-            member.setIdRef(member_id)
-            group.addMember(member)
-
-        ## FBA IGNORED SPECIES
-        group = self.createGroup('rp_fba_ignored_species')
-        for member_id in pathway.get_fba_ignored_species():
-            member = libsbml.Member()
-            member.setIdRef(member_id)
-            group.addMember(member)
+        ## RP_GROUPS
+        for group_id in pathway.get_species_groups()+['intermediate']:
+            group = self.createGroup(f'rp_{group_id}_species')
+            for member_id in getattr(pathway, f'get_{group_id}_species')():
+                member = libsbml.Member()
+                member.setIdRef(member_id)
+                group.addMember(member)
 
 
     def to_Pathway(
         self,
-        cache: rrCache=None,
         pathway_id: str='rp_pathway',
     ) -> rpPathway:
         """Generate the dictionnary of all the annotations of a pathway species, reaction and pathway annotations
@@ -4225,15 +4198,6 @@ class rpSBML:
             else:
                 target_id = None
             return reaction, target_id
-
-        if cache is None:
-            cache = rrCache(
-                db='file',
-                attrs=[
-                    'cid_strc',
-                    'comp_xref',
-                ]
-            )
 
         # Create the rpPathway object
         pathway = rpPathway(
@@ -5110,8 +5074,8 @@ class rpSBML:
         inchikey=None,
         smiles=None,
         compartment=None,
-        species_group_id=None,
-        in_sink_group_id=None,
+        # species_group_id=None,
+        # in_sink_group_id=None,
         meta_id=None,
         infos: Dict = None
     ):
