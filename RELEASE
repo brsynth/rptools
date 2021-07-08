@@ -1,5 +1,10 @@
 # Release history
 
+## 5.1.4
+- chore(rpfba): BREAK! make CLI option 'compartment_id' mandatory
+- chore(rpfba): check first if compartment_id exists in the model
+- chore(rpSBML): take compartment_id only from user CLI
+
 ## 5.1.3
 - chore(rplibs): rename rpfba_ignored_species into rp_fba_ignored_species
 - test(rpfba): rename rpfba_ignored_species into rp_fba_ignored_species
