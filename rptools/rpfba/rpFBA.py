@@ -150,7 +150,7 @@ def runFBA(
         pathway=pathway,
         logger=logger
     )
-    # Create the reaction in the rpSBML
+    # Create the target consumption reaction in the rpSBML
     rpsbml.createReaction(
         rxn=rxn_target
     )

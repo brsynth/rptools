@@ -3513,7 +3513,7 @@ class rpSBML:
         return reacMembers
 
 
-    def readUniqueRPspecies(self, pathway_id='rp_pathway'):
+    def readUniqueRPspecies(self):
         """Return the unique species of a pathway
 
         :param pathway_id: The pathway ID (Default: rp_pathway)
@@ -3816,28 +3816,28 @@ class rpSBML:
         )['pathway']['brsynth']['global_score']
 
 
-    def read_pathway(
-        self,
-        pathway_id: str = 'rp_pathway',
-        logger: Logger = getLogger(__name__)
-    ) -> Dict:
-        """
-        Read pathway field in rpSBML file fir rp_pathway.
+    # def read_pathway(
+    #     self,
+    #     pathway_id: str = 'rp_pathway',
+    #     logger: Logger = getLogger(__name__)
+    # ) -> Dict:
+    #     """
+    #     Read pathway field in rpSBML file fir rp_pathway.
 
-        Parameters
-        ----------
-        rp_pathway: libsbml.Group
-            Pathway to extract infos from
+    #     Parameters
+    #     ----------
+    #     rp_pathway: libsbml.Group
+    #         Pathway to extract infos from
 
-        Returns
-        -------
-        pathway: Dict
-            Read fields
-        """
-        return self.readBRSYNTHAnnotation(
-            self.getGroup(pathway_id).getAnnotation(),
-            self.logger
-        )
+    #     Returns
+    #     -------
+    #     pathway: Dict
+    #         Read fields
+    #     """
+    #     return self.readBRSYNTHAnnotation(
+    #         self.getGroup(pathway_id).getAnnotation(),
+    #         self.logger
+    #     )
 
 
     def read_reactions(
@@ -3929,7 +3929,6 @@ class rpSBML:
 
     def read_species(
         self,
-        pathway_id: str = 'rp_pathway',
         logger: Logger = getLogger(__name__)
     ) -> Dict:
         """
@@ -3946,7 +3945,7 @@ class rpSBML:
             Read fields
         """
         species_dict = {}
-        for spe_id in self.readUniqueRPspecies(pathway_id):
+        for spe_id in self.readUniqueRPspecies():
             species = self.getModel().getSpecies(spe_id)
             annot = species.getAnnotation()
             species_dict[spe_id] = {}
@@ -4157,7 +4156,7 @@ class rpSBML:
             group.addMember(member)
 
         ## FBA IGNORED SPECIES
-        group = self.createGroup('rpfba_ignored_species')
+        group = self.createGroup('rp_fba_ignored_species')
         for member_id in pathway.get_fba_ignored_species():
             member = libsbml.Member()
             member.setIdRef(member_id)
@@ -4168,7 +4167,6 @@ class rpSBML:
         self,
         cache: rrCache=None,
         pathway_id: str='rp_pathway',
-        keys: List[str] = ['pathway', 'reactions', 'species']
     ) -> rpPathway:
         """Generate the dictionnary of all the annotations of a pathway species, reaction and pathway annotations
 
@@ -4191,7 +4189,10 @@ class rpSBML:
                     object.set_fba_info(key[len(fba_pre):], value)
                 else:
                     try:
-                        getattr(object, 'set_'+key)(value)
+                        getattr(
+                            object,
+                            'set_'+key.replace('rp_', '')
+                        )(value)
                     except AttributeError:
                         pass
 
@@ -4295,33 +4296,31 @@ class rpSBML:
             )
 
         # SPECIES
-        if 'species' in keys:
-            for spe_id, spe in self.read_species(pathway_id).items():
-                infos = {}
-                for key in ['smiles', 'inchi', 'inchikey']:
-                    try:
-                        infos[key] = spe['brsynth'][key]
-                    except KeyError:
-                        infos[key] = ''
-                # Create compound to add it in the cache
-                compound = rpCompound(
-                    id=spe_id,
-                    smiles=infos['smiles'],
-                    inchi=infos['inchi'],
-                    inchikey=infos['inchikey'],
-                    compartment_id=spe['object'].getCompartment()
-                )
-                write_to(spe['brsynth'], compound)
+        for spe_id, spe in self.read_species().items():
+            infos = {}
+            for key in ['smiles', 'inchi', 'inchikey']:
+                try:
+                    infos[key] = spe['brsynth'][key]
+                except KeyError:
+                    infos[key] = ''
+            # Create compound to add it in the cache
+            compound = rpCompound(
+                id=spe_id,
+                smiles=infos['smiles'],
+                inchi=infos['inchi'],
+                inchikey=infos['inchikey'],
+                compartment_id=spe['object'].getCompartment()
+            )
+            write_to(spe['brsynth'], compound)
 
         ## REACTIONS
-        if 'reactions' in keys:
-            for rxn_id, rxn_infos in self.read_reactions(pathway_id).items():
-                reaction, target_id = build_reaction(rxn_id, rxn_infos)
-                # Add the reaction to the pathway
-                pathway.add_reaction(
-                    rxn=reaction,
-                    target_id=target_id
-                )
+        for rxn_id, rxn_infos in self.read_reactions(pathway_id).items():
+            reaction, target_id = build_reaction(rxn_id, rxn_infos)
+            # Add the reaction to the pathway
+            pathway.add_reaction(
+                rxn=reaction,
+                target_id=target_id
+            )
             # # Add target consumption reaction
             # rxn_id = 'rxn_target'
             # rxn_infos = self.read_reaction(rxn_id)
@@ -4330,16 +4329,33 @@ class rpSBML:
             #     # Add the reaction to the pathway
             #     pathway.add_sbml_rxn_target(reaction)
 
-        ## PATHWAY
-        if 'pathway' in keys:
-            pathway_sbml = self.read_pathway(pathway_id)
-            write_to(pathway_sbml, pathway)
+        # ## PATHWAY
+        # if 'pathway' in keys:
+        #     pathway_sbml = self.read_pathway(pathway_id)
+        #     write_to(pathway_sbml, pathway)
 
-        # Groups
-        # groups = [group.getId() for group in self.getPlugin('groups').getListOfGroups()]
-        pathway.set_sink(self.readGroupMembers('rp_sink_species'))
-        pathway.set_completed_species(self.readGroupMembers('rp_completed_species'))
-        pathway.set_trunk_species(self.readGroupMembers('rp_trunk_species'))
+        ## GROUPS
+        for group in self.getPlugin('groups').getListOfGroups():
+            group_id = group.getId()
+            # 'rp_pathway' has no member to write into rpPathway
+            if group_id == pathway_id:
+                annot = self.readBRSYNTHAnnotation(
+                    self.getGroup(group_id).getAnnotation(),
+                    self.logger
+                )
+                write_to(annot, pathway)
+            # 'rp_sink_species', 'rp_completed_species', 'rp_trunk_species'
+            # have no annotation to write into rpPathway
+            else:
+                write_to(
+                    {
+                        group_id: self.readGroupMembers(group_id)
+                    },
+                    pathway
+                )
+        # pathway.set_sink(self.readGroupMembers('rp_sink_species'))
+        # pathway.set_completed_species(self.readGroupMembers('rp_completed_species'))
+        # pathway.set_trunk_species(self.readGroupMembers('rp_trunk_species'))
 
         return pathway
 

@@ -86,7 +86,7 @@ class rpGraph:
         # rp_central_species_id = [i.getIdRef() for i in c_s.getListOfMembers()]
         rp_sink_species_id = [i.getIdRef() for i in s_s.getListOfMembers()]
         rp_pathway = self.rpsbml.getGroup(pathway_id)
-        rp_species_id = self.rpsbml.readUniqueRPspecies(pathway_id)
+        rp_species_id = self.rpsbml.readUniqueRPspecies()
         rp_reactions_id = [i.getIdRef() for i in rp_pathway.getListOfMembers()]
         self.logger.debug('rp_reactions_id: '+str(rp_reactions_id))
         self.G = nx.DiGraph(
