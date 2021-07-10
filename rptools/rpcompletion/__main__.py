@@ -64,7 +64,7 @@ def _cli():
             'template_reactions',
             'cid_strc',
             # 'deprecatedCID_cid',
-            'comp_xref',
+            # 'comp_xref',
             'deprecatedCompID_compid',
             # 'cid_xref',
             # 'cid_name',
@@ -73,7 +73,7 @@ def _cli():
         # logger=logger
     )
 
-    # print(cache.get('cid_name')['MNXM725856'])
+    # print(cache.get('comp_xref'))
     # exit()
 
 
@@ -85,10 +85,10 @@ def _cli():
         cache=cache,
         upper_flux_bound=int(args.upper_flux_bound),
         lower_flux_bound=int(args.lower_flux_bound),
-        pathway_id=args.pathway_id,
+        # pathway_id=args.pathway_id,
         # compartment_id=args.compartment_id,
-        species_group_id=args.species_group_id,
-        sink_species_group_id=args.sink_species_group_id,
+        # species_group_id=args.species_group_id,
+        # sink_species_group_id=args.sink_species_group_id,
         max_subpaths_filter=args.max_subpaths_filter,
         # args.pubchem_search,
         logger=logger
@@ -108,7 +108,7 @@ def _cli():
                 os_path.join(
                     args.outdir,
                     'rp_'+sub_pathway.get_id()
-                ) + '.sbml'
+                ) + '.xml'
             )
             # print(sub_pathway)
             # write_to_JSON(
