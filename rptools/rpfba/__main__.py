@@ -35,13 +35,13 @@ def entry_point():
     logger = init(parser, args)
 
     pathway = rpSBML(
-      inFile=args.pathway,
+      inFile=args.pathway_file,
       logger=logger
     ).to_Pathway()
 
     results = runFBA(
       pathway=pathway,
-      gem_sbml_path=args.model,
+      gem_sbml_path=args.model_file,
       compartment_id=args.compartment_id,
       biomass_rxn_id=args.biomass_rxn_id,
       objective_rxn_id=args.objective_rxn_id,
