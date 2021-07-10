@@ -2,6 +2,7 @@ from logging import (
     Logger,
     getLogger
 )
+from os import path
 from pandas.core.series  import Series    as np_series
 from typing import (
     List,
@@ -256,30 +257,6 @@ def runFBA(
 
     cobra_rpsbml_merged = rpSBML.cobraize(rpsbml_merged)
 
-    # rpsbml.writeToFile('out.xml')
-    # exit()
-    # from json import dumps
-    # print(dumps(rpsbml.to_dict(), indent=4))
-    # exit()
-    # rpsbml_gem = rpSBML.cobraize(
-    #     rpSBML(gem_sbml_path, logger=logger)
-    # )
-    # logger.debug('rpsbml_gem: ' + str(rpsbml_gem))
-
-    # If the specie does not match with any of species in the model...
-    # for spe_id in cobra_missing_species:
-    #     if (
-    #         # ... and is not the target...
-    #         spe_id != pathway.get_target_id()
-    #         # ... and is isolated in the predicted pathway
-    #         # (i.e. not present in both reactants and products of the pathway)
-    #         and not (
-    #             spe_id in pathway.get_reactants_ids()
-    #             and spe_id in pathway.get_products_ids()
-    #         )
-    #     ):  # then hide it
-    #         hidden_species += [spe_id]
-
     # NOTE: reactions is organised with key being the rpsbml reaction and value being the rpsbml_gem value`
     # BUG: when merging the rxn_sink (very rare cases) can be recognised if another reaction contains the same species as a reactant
     ## under such as scenario the algorithm will consider that they are the same -- TODO: overwrite it
@@ -291,122 +268,65 @@ def runFBA(
         )
         return None
 
-    ## Check COBRA
     ######## FBA ########
-    if sim_type == 'fraction':
-        results, rpsbml_merged = rp_fraction(
-                  rpsbml = cobra_rpsbml_merged,
-        objective_rxn_id = objective_rxn_id,
-          biomass_rxn_id = biomass_rxn_id,
-         objective_coeff = objective_coeff,
-           biomass_coeff = biomass_coeff,
-          hidden_species = hidden_species,
-              ignore_met = ignore_orphan_species,
-          fraction_coeff = fraction_coeff,
-                  is_max = is_max,
-              pathway_id = pathway_id,
-                  logger = logger
+    results = {}
+    if sim_type.lower() in ['fba', 'pfba']:
+        objective_id = cobra_rpsbml_merged.find_or_create_objective(
+            rxn_id=objective_rxn_id,
+            obj_id=f'brs_obj_{objective_rxn_id}',
+            coeff=objective_coeff,
+            is_max=is_max
+        )
+        cobra_results = runCobra(
+            sim_type=sim_type,
+            rpsbml=cobra_rpsbml_merged,
+            hidden_species=hidden_species,
+            objective_id=objective_id,
+            fraction_coeff=fraction_coeff,
+            logger=logger
         )
     else:
-        results = {}
-        objective_id = rpsbml_merged.find_or_create_objective(
-            reactions = [tgt_rxn_id],
-            coefficients = [tgt_coeff],
-            is_max = is_max,
-            biomass_objective_id = biomass_objective_id
+        (
+            cobra_results,
+            results_biomass,
+            objective_id
+        ) = rp_fraction(
+            rpsbml=cobra_rpsbml_merged,
+            objective_rxn_id=objective_rxn_id,
+            biomass_rxn_id=biomass_rxn_id,
+            objective_coeff=objective_coeff,
+            biomass_coeff=biomass_coeff,
+            hidden_species=hidden_species,
+            fraction_coeff=fraction_coeff,
+            is_max=is_max,
+            pathway_id=pathway_id,
+            logger=logger
         )
-        if sim_type == 'fba':
-            cobra_results = rp_fba(
-                      rpsbml = rpsbml_merged,
-                objective_id = objective_id,
-                  ignore_met = ignore_orphan_species,
-                      logger = logger
-            )
-        ####### pFBA #######
-        elif sim_type == 'pfba':
-            cobra_results = rp_pfba(
-                      rpsbml = rpsbml_merged,
-                objective_id = objective_id,
-                  ignore_met = ignore_orphan_species,
-                 frac_of_opt = frac_of_src,
-                      logger = logger
-            )
-        else:
-            logger.error('Cannot recognise sim_type: ' + str(sim_type))
-            return None
-
-        results[objective_id] = cobra_results
-
-        # Write results for merged model
-        write_results_to_rpsbml(
-            rpsbml = rpsbml_merged,
-            hidden_species = hidden_species,
-            objective_id = objective_id,
-            cobra_results = cobra_results,
-            pathway_id = pathway_id,
-            logger = logger
-        )
+        results['biomass'] = results_biomass
 
     # print(cobra_results.objective_value)
     # print(cobra_results.status)
     # print(cobra_results.fluxes)
     # print(cobra_results.shadow_prices)
 
-    _results = {
-        'species': {},
-        'reactions': {},
-        'pathway': {},
-        'rpfba_ignored_species': hidden_species
-    }
+    results[sim_type] = cobra_results
 
-    # SPECIES
-    for spe_id in pathway.get_species_ids():
-        _results['species'][spe_id] = {}
-        for obj_id, cobra_r in results.items():
-            value = cobra_r.shadow_prices.get(
-                to_cobra(cobraize(spe_id, compartment_id))
-            )
-            _results['species'][spe_id][obj_id+'_shadow_price'] = {
-                'value': value,
-                # 'units': 'milimole / gDW / hour',
-            }
-    # REACTIONS
-    for rxn_id in pathway.get_reactions_ids():
-        _results['reactions'][rxn_id] = {}
-        for obj_id, cobra_r in results.items():
-            _results['reactions'][rxn_id][obj_id] = {
-                'value': cobra_r.fluxes[rxn_id],
-                'units': 'milimole / gDW / hour'
-            }
-            # if obj_id == 'biomass':
-            #     _results['reactions'][rxn_id][obj_id] = {
-            #         'value': cobra_r.objective_value,
-            #         'units': 'milimole / gDW / hour'
-            #     }
-            # else:
-            #     _results['reactions'][rxn_id][obj_id] = {
-            #         'value': cobra_r.fluxes[rxn_id],
-            #         'units': 'milimole / gDW / hour'
-            #     }
+    # Write results for merged model
+    write_results_to_rpsbml(
+        rpsbml=cobra_rpsbml_merged,
+        objective_id=objective_id,
+        cobra_results=cobra_results,
+        pathway_id=pathway_id,
+        sim_type=sim_type,
+        logger=logger
+    )
 
-    # PATHWAY
-    _results['pathway'] = {}
-    for obj_id, cobra_r in results.items():
-        _results['pathway'][obj_id] = {
-            'value': cobra_r.objective_value,
-            'units': 'milimole / gDW / hour'
-        }
-
-    # results['pathway'] = {
-    #     objective_id: {
-    #         'value': cobra_results.objective_value,
-    #         'units': 'milimole / gDW / hour',
-    #     },
-    #     'biomass': {
-    #             'value': biomass,
-    #             'units': 'milimole / gDW / hour',
-    #     }
-    # }
+    _results = build_results(
+        results=results,
+        pathway=pathway,
+        compartment_id=compartment_id,
+        hidden_species=hidden_species
+    )
 
     # Remove the Cobra standard ('compound@compartment') from all compounds
     pathway.uncobraize()
@@ -459,6 +379,47 @@ def runFBA(
     # print(dumps(pathway_fba, indent=4))
     # exit()
 
+
+def build_results(
+    results: Dict,
+    pathway: rpPathway,
+    compartment_id: str,
+    hidden_species: List[str]
+) -> Dict:
+    _results = {
+        'species': {},
+        'reactions': {},
+        'pathway': {},
+        'rpfba_ignored_species': hidden_species
+    }
+
+    # SPECIES
+    for spe_id in pathway.get_species_ids():
+        _results['species'][spe_id] = {}
+        for sim_type, cobra_r in results.items():
+            value = cobra_r.shadow_prices.get(
+                to_cobra(cobraize(spe_id, compartment_id))
+            )
+            _results['species'][spe_id][sim_type+'_shadow_price'] = {
+                'value': value,
+                # 'units': 'milimole / gDW / hour',
+            }
+    # REACTIONS
+    for rxn_id in pathway.get_reactions_ids():
+        _results['reactions'][rxn_id] = {}
+        for sim_type, cobra_r in results.items():
+            _results['reactions'][rxn_id][sim_type] = {
+                'value': cobra_r.fluxes[rxn_id],
+                'units': 'milimole / gDW / hour'
+            }
+    # PATHWAY
+    _results['pathway'] = {}
+    for sim_type, cobra_r in results.items():
+        _results['pathway'][sim_type] = {
+            'value': cobra_r.objective_value,
+            'units': 'milimole / gDW / hour'
+        }
+    return _results
 
 def create_target_consumption_reaction(
     target_id: str,
@@ -624,96 +585,85 @@ def complete_heterologous_pathway(
     target_fbc.setActiveObjectiveId(source_obj_id) # tmp random assignement of objective
 
 
-def rp_fba(
-          rpsbml: rpSBML,
-    objective_id: str,
-      ignore_met: bool = True,
-          logger: Logger = getLogger(__name__)
-) -> cobra_solution:
-    """Run FBA using a single objective
+# def rp_fba(
+#           rpsbml: rpSBML,
+#     objective_id: str,
+#   hidden_species: List[str],
+#           logger: Logger = getLogger(__name__)
+# ) -> cobra_solution:
+#     """Run FBA using a single objective
 
-    :param reaction_id: The id of the reactions involved in the objective
-    :param coefficient: The coefficient associated with the reactions id (Default: 1.0)
-    :param is_max: Maximise or minimise the objective (Default: True)
-    :param pathway_id: The id of the heterologous pathway (Default: rp_pathway)
-    :param objective_id: Overwrite the default id (Default: None)
+#     :param reaction_id: The id of the reactions involved in the objective
+#     :param coefficient: The coefficient associated with the reactions id (Default: 1.0)
+#     :param is_max: Maximise or minimise the objective (Default: True)
+#     :param pathway_id: The id of the heterologous pathway (Default: rp_pathway)
+#     :param objective_id: Overwrite the default id (Default: None)
 
-    :type reaction_id: str
-    :type coefficient: float
-    :type is_max: bool
-    :type pathway_id: str
-    :type objective_id: str
+#     :type reaction_id: str
+#     :type coefficient: float
+#     :type is_max: bool
+#     :type pathway_id: str
+#     :type objective_id: str
 
-    :return: Tuple with the results of the FBA and boolean indicating the success or failure of the function
-    :rtype: tuple
-    """
-    logger.info('Running FBA...')
-    logger.debug('rpsbml:       ' + str(rpsbml))
-    logger.debug('ignore_met:  ' + str(ignore_met))
+#     :return: Tuple with the results of the FBA and boolean indicating the success or failure of the function
+#     :rtype: tuple
+#     """
+#     logger.info('Running FBA...')
+#     logger.debug('rpsbml:       ' + str(rpsbml))
+#     logger.debug('hidden_species:  ' + str(hidden_species))
 
-    cobra_results = runCobra(
-        rpsbml = rpsbml,
-        objective_id = objective_id,
-        ignore_met = ignore_met,
-        logger = logger
-    )
+#     cobra_results = runCobra(
+#         rpsbml=rpsbml,
+#         objective_id=objective_id,
+#         hidden_species=hidden_species,
+#         logger=logger
+#     )
 
-    return cobra_results
+#     return cobra_results
 
 
-def rp_pfba(
-          rpsbml: rpSBML,
-    objective_id: str,
-      ignore_met: bool = True,
-     frac_of_opt: float = 0.95,
-          logger: Logger = getLogger(__name__)
-) -> cobra_solution:
-    """Run parsimonious FBA using a single objective
+# def rp_pfba(
+#           rpsbml: rpSBML,
+#     objective_id: str,
+#   hidden_species: List[str],
+#      fraction_coeff: float = 0.95,
+#           logger: Logger = getLogger(__name__)
+# ) -> cobra_solution:
+#     """Run parsimonious FBA using a single objective
 
-    :param reaction_id: The id of the reactions involved in the objective
-    :param coefficient: The coefficient associated with the reactions id (Default: 1.0)
-    :param fraction_of_optimum: Between 0.0 and 1.0 determining the fraction of optimum (Default: 0.95)
-    :param is_max: Maximise or minimise the objective (Default: True)
-    :param pathway_id: The id of the heterologous pathway (Default: rp_pathway)
-    :param objective_id: Overwrite the default id (Default: None)
+#     :param reaction_id: The id of the reactions involved in the objective
+#     :param coefficient: The coefficient associated with the reactions id (Default: 1.0)
+#     :param fraction_of_optimum: Between 0.0 and 1.0 determining the fraction of optimum (Default: 0.95)
+#     :param is_max: Maximise or minimise the objective (Default: True)
+#     :param pathway_id: The id of the heterologous pathway (Default: rp_pathway)
+#     :param objective_id: Overwrite the default id (Default: None)
 
-    :type reaction_id: str
-    :type coefficient: float
-    :type fraction_of_optimum: float
-    :type is_max: bool
-    :type pathway_id: str
-    :type objective_id: str
+#     :type reaction_id: str
+#     :type coefficient: float
+#     :type fraction_of_optimum: float
+#     :type is_max: bool
+#     :type pathway_id: str
+#     :type objective_id: str
 
-    :return: Tuple with the results of the FBA and boolean indicating the success or failure of the function
-    :rtype: tuple
-    """
-    logger.info('Running FBA (parsimonious)...')
-    logger.debug('rpsbml:       ' + str(rpsbml))
-    logger.debug('ignore_met:  ' + str(ignore_met))
-    logger.debug('frac_of_opt:  ' + str(frac_of_opt))
+#     :return: Tuple with the results of the FBA and boolean indicating the success or failure of the function
+#     :rtype: tuple
+#     """
+#     logger.info('Running FBA (parsimonious)...')
+#     logger.debug('rpsbml:       ' + str(rpsbml))
+#     logger.debug('fraction_coeff:  ' + str(fraction_coeff))
 
-    rpsbml.activateObjective(
-        objective_id = objective_id,
-        plugin = 'fbc'
-    )
-
-    cobraModel = cobra_model(
-        rpsbml = rpsbml,
-        logger = logger
-    )
-    if not cobraModel:
-        return None
-
-    if ignore_met:
-        isolated_species = [cmp.replace('__64__', '@') for cmp in rpsbml.get_isolated_species()]
-        # print([cobraModel.metabolites.get_by_id(met) for met in isolated_species])
-        cobraModel.remove_metabolites([cobraModel.metabolites.get_by_id(met) for met in isolated_species])
-
-    cobra_results = pfba(cobraModel, frac_of_opt)
-
-    logger.debug(cobra_results)
-
-    return cobra_results
+#     sim_type = 'pfba'
+#     cobra_results = runCobra(
+#         method=sim_type,
+#         rpsbml=rpsbml,
+#         hidden_species=hidden_species,
+#         objective_id=objective_id,
+#         fraction_coeff=fraction_coeff,
+#         logger=logger
+#     )
+#     if cobra_results is None:
+#         return None
+#     return cobra_results
 
 
 def rp_fraction(
@@ -722,13 +672,12 @@ def rp_fraction(
     biomass_rxn_id: str,
     objective_coeff: float,
     biomass_coeff: float,
- hidden_species:   List,
+ hidden_species: List[str],
      fraction_coeff:  float = 0.75,
           is_max:   bool = True,
       pathway_id:    str = 'rp_pathway',
-      ignore_met:   bool = True,
           logger: Logger = getLogger(__name__)
-) -> Tuple[cobra_solution, 'rpSBML']:
+) -> cobra_solution:
     """Optimise for a target reaction while fixing a source reaction to the fraction of its optimum
 
     :param source_reaction: The id of the source reaction
@@ -754,7 +703,7 @@ def rp_fraction(
     """
 
     logger.debug('rpsbml:       ' + str(rpsbml))
-    logger.debug('ignore_met:   ' + str(ignore_met))
+    logger.debug('hidden_species:   ' + str(hidden_species))
     logger.debug('objective_rxn_id:   ' + objective_rxn_id)
     logger.debug('biomass_rxn_id: ' + str(biomass_rxn_id))
     logger.debug('objective_coeff:    ' + str(objective_coeff))
@@ -787,12 +736,10 @@ def rp_fraction(
     # retreive the biomass objective and flux results and set as maxima
     biomass_objective_id = rpsbml.find_or_create_objective(
         rxn_id=biomass_rxn_id,
-        obj_id='brs_obj_biomass',
+        obj_id=f'brs_obj_{biomass_rxn_id}',
         coeff=biomass_coeff,
         is_max=is_max
     )
-
-    results = {}
 
     # fbc_plugin = rpsbml.getPlugin('fbc')
     # TODO: use the rpSBML BRSynth annotation parser
@@ -809,26 +756,24 @@ def rp_fraction(
         # rpsbml.runFBA(source_reaction, source_coefficient, is_max, pathway_id)
         logger.info('Processing FBA (biomass)...')
         cobra_results = runCobra(
+            sim_type='biomass',
             rpsbml=rpsbml,
             hidden_species=hidden_species,
             objective_id=biomass_objective_id,
-            ignore_met=ignore_met,
             logger=logger
         )
 
         # rxn>scores>fba>biomass = cobra_results.fluxes('rxn_X')
         # scores>fba>biomass = cobra_results.objective_value
         if cobra_results is None:
-            return None, rpsbml
+            return None, None, biomass_objective_id
 
-        sim_type = 'biomass'
-        results[sim_type] = cobra_results
+        results_biomass = cobra_results
 
         write_results_to_rpsbml(
-            rpsbml = rpsbml,
-            hidden_species=hidden_species,
+            rpsbml=rpsbml,
             objective_id=biomass_objective_id,
-            sim_type=sim_type,
+            sim_type='biomass',
             cobra_results=cobra_results,
             pathway_id=pathway_id,
             logger=logger
@@ -865,7 +810,7 @@ def rp_fraction(
 
     objective_id = rpsbml.find_or_create_objective(
         rxn_id=objective_rxn_id,
-        obj_id='brs_obj',
+        obj_id=f'brs_obj_{objective_rxn_id}',
         coeff=objective_coeff,
         is_max=is_max
     )
@@ -888,31 +833,31 @@ def rp_fraction(
     )
 
     logger.info('Processing FBA (fraction)...')
+    sim_type = 'fraction'
     cobra_results = runCobra(
+        sim_type=sim_type,
         rpsbml=rpsbml,
         hidden_species=hidden_species,
         objective_id=objective_id,
-        ignore_met=ignore_met,
+        fraction_coeff=fraction_coeff,
         logger=logger
     )
     if cobra_results is None:
-        return None, rpsbml
+        return results_biomass, None, objective_id
 
-    # rxn>scores>fba>fraction = cobra_results.fluxes('rxn_X')
-    # scores>fba>fraction = cobra_results.objective_value
-    sim_type = 'fraction'
-    results[sim_type] = cobra_results
+    # # rxn>scores>fba>fraction = cobra_results.fluxes('rxn_X')
+    # # scores>fba>fraction = cobra_results.objective_value
+    # results[sim_type] = cobra_results
 
-    # Write results for merged model
-    write_results_to_rpsbml(
-        rpsbml=rpsbml,
-        hidden_species=hidden_species,
-        objective_id=objective_id,
-        sim_type=sim_type,
-        cobra_results=cobra_results,
-        pathway_id=pathway_id,
-        logger=logger
-    )
+    # # Write results for merged model
+    # write_results_to_rpsbml(
+    #     rpsbml=rpsbml,
+    #     objective_id=objective_id,
+    #     sim_type=sim_type,
+    #     cobra_results=cobra_results,
+    #     pathway_id=pathway_id,
+    #     logger=logger
+    # )
 
     # rpsbml.write_to_file('joan.xml')
     ##### print the biomass results ######
@@ -928,14 +873,15 @@ def rp_fraction(
 
     logger.debug('The objective '+str(objective_id)+' results '+str(cobra_results.objective_value))
 
-    return results, rpsbml
+    return cobra_results, results_biomass, objective_id
 
 
 def runCobra(
+    sim_type: str,
     rpsbml: rpSBML,
     objective_id: str,
     hidden_species: List[str] = [],
-    ignore_met: bool = True,
+    fraction_coeff: float = 0.95,
     logger: Logger = getLogger(__name__)
 ) -> cobra_solution:
     """
@@ -953,100 +899,32 @@ def runCobra(
         Logger object
     """
 
-    rpsbml.activateObjective(
-        objective_id = objective_id,
-        plugin = 'fbc'
-    )
-    # print(objective_id)
-
     cobraModel = cobra_model(
-        rpsbml = rpsbml,
-        logger = logger
+        rpsbml=rpsbml,
+        objective_id=objective_id,
+        hidden_species=hidden_species,
+        logger=logger
     )
-
     if not cobraModel:
         return None
 
-    # print("Reactions")
-    # print("---------")
-    # for x in cobraModel.reactions:
-    #     print("%s : %s" % (x.id, x.reaction))
-
-    # x = cobraModel.reactions.rxn_1
-    # print("%s : %s" % (x.id, x.reaction))
-    # x = cobraModel.reactions.rxn_2
-    # print("%s : %s" % (x.id, x.reaction))
-    # x = cobraModel.reactions.rxn_3
-    # print("%s : %s" % (x.id, x.reaction))
-    # x = cobraModel.reactions.rxn_target
-    # print("%s : %s" % (x.id, x.reaction))
-
-    # remove isolated species from the model
-    # if ignore_met:
-    #     # isolated_species = [to_cobra(cmp) for cmp in hide_species]
-    #     # print(isolated_species)
-    #     # isolated_species = ['MNXM473@MNXC3']
-    #     # print("")
-    #     # print("Metabolites")
-    #     # print("-----------")
-    #     # for x in cobraModel.metabolites:
-    #     #     if x.id in isolated_species:
-    #     #         print('%9s : %s' % (x.id, x.formula))
-    # hide_species = [
-    #     spe_id+'__64__MNXC3'
-    #     for spe_id
-    #     in ['CMPD_0000000001', 'MNXM8975', 'TARGET_0000000001']
-    # ]
-
-    # print(hidden_species)
-    cobraModel.remove_metabolites(
-        [
-            cobraModel.metabolites.get_by_id(
-                to_cobra(met)
-            ) for met in hidden_species
-        ]
-    )
-
-    cobra_results = cobraModel.optimize(
-        objective_sense='maximize',
-        raise_error=True
-    )
-
-    # # Detect species with shadow price to 0 to hide them
-    # hidden_species = []
-    # for spe_id in rpsbml.to_Pathway().get_species_ids():
-    #     spe_shad_pri = cobra_results.shadow_prices.get(
-    #         to_cobra(spe_id)
-    #     )
-    #     print(spe_id, spe_shad_pri)
-    #     if spe_shad_pri == 0:
-    #         # to report in rpSBML file
-    #         hidden_species += [spe_id]
-    #         cobraModel.remove_metabolites(
-    #             cobraModel.metabolites.get_by_id(
-    #                 to_cobra(spe_id)
-    #             )
-    #         )
-
-    # cobra_results = cobraModel.optimize(
-    #     objective_sense='maximize',
-    #     raise_error=True
-    # )
-
-    # print(cobra_results.shadow_prices)
-
-    # .shadow_prices.get(_spe_id)
-
-    # print(cobraModel.summary())
-    # exit()
+    if sim_type.lower() == 'pfba':
+        cobra_results = pfba(cobraModel, fraction_coeff)
+    else:
+        cobra_results = cobraModel.optimize(
+            objective_sense='maximize',
+            raise_error=True
+        )
 
     logger.debug(cobra_results)
 
-    return cobra_results#, hidden_species
+    return cobra_results
 
 
 def cobra_model(
     rpsbml: rpSBML,
+    objective_id: str,
+    hidden_species: List[str] = [],
     logger: Logger = getLogger(__name__)
 ) -> cobra_model:
     """Convert the rpSBML object to cobra object
@@ -1057,6 +935,10 @@ def cobra_model(
 
     rpsbml.logger.info('Creating Cobra object from rpSBML...')
 
+    rpsbml.activateObjective(
+        objective_id = objective_id,
+        plugin = 'fbc'
+    )
     with NamedTemporaryFile() as temp_f:
         rpsbml.write_to_file(temp_f.name)
         try:
@@ -1067,6 +949,15 @@ def cobra_model(
             logger.error(str(json_dumps(errors, indent=4)))
             return None
 
+    # Hide to Cobra species that are isolated
+    cobraModel.remove_metabolites(
+        [
+            cobraModel.metabolites.get_by_id(
+                to_cobra(met)
+            ) for met in hidden_species
+        ]
+    )
+
     logger.debug(cobraModel)
 
     return cobraModel
@@ -1074,7 +965,6 @@ def cobra_model(
 
 def write_results_to_rpsbml(
     rpsbml: rpSBML,
-    hidden_species: List[str],
     objective_id: str,
     sim_type: str,
     cobra_results: cobra_solution,
