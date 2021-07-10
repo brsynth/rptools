@@ -362,7 +362,7 @@ class rpSBML:
         #                 unit = None
         #             self.updateBRSynth(reaction, bd_id, value, unit, False)
 
-    def get_compartment_id(self, compartment_id: str):
+    def search_compartment_id(self, compartment_id: str):
         for group in self.getModel().getListOfCompartments():
             if (
                 compartment_id == group.getId()
@@ -3167,45 +3167,57 @@ class rpSBML:
 
     def find_or_create_objective(
         self,
-        reactions: List[str],
-        coefficients: List[float],
+        rxn_id: str,
+        obj_id: str,
+        # reactions: List[str],
+        # coefficients: List[float],
+        coeff: float,
         is_max: bool = True,
-        objective_id: str = None
+        # objective_id: str = None
     ) -> str:
 
-        self.logger.debug('reactions:    ' + str(reactions))
-        self.logger.debug('coefficients: ' + str(coefficients))
+        self.logger.debug('rxn_id:    ' + str(rxn_id))
+        self.logger.debug('coeff: ' + str(coeff))
         self.logger.debug('is_max:       ' + str(is_max))
-        self.logger.debug('objective_id: ' + str(objective_id))
+        # self.logger.debug('objective_id: ' + str(objective_id))
 
-        if objective_id is None:
-            objective_id = 'obj_'+'_'.join(reactions)
-            # self.logger.debug('Set objective as \''+str(objective_id)+'\'')
+        # if objective_id is None:
+        #     objective_id = 'obj_'+'_'.join(reactions)
+        #     # self.logger.debug('Set objective as \''+str(objective_id)+'\'')
 
-        obj_id = self.search_objective(
-            reactions = reactions,
-            objective_id = objective_id
-        )
-        # print(reactions, objective_id, obj_id)
+        _obj_id = self.search_objective_from_rxnid(rxn_id)
 
         # If cannot find a valid objective create it
-        if obj_id is None:
+        if _obj_id is None:
             self.create_multiflux_objective(
-                fluxobj_id = objective_id,
-                reactionNames = reactions,
-                coefficients = coefficients,
+                fluxobj_id = obj_id,
+                reactionNames = [rxn_id],
+                coefficients = [coeff],
                 is_max = is_max
             )
         else:
-            objective_id = obj_id
+            obj_id = _obj_id
 
-        return objective_id
+        return obj_id
 
+
+    def getListOfObjectives(self) -> List:
+        return list(self.getPlugin('fbc').getListOfObjectives())
+
+    def search_objective_from_rxnid(
+        self,
+        rxn_id: str
+    ) -> str:
+        for objective in self.getPlugin('fbc').getListOfObjectives():
+            for flux_obj in objective.getListOfFluxObjectives():
+                if flux_obj.getReaction() == rxn_id:
+                    return objective.getId()
+        return None
 
     def search_objective(
         self,
-        reactions: List[str],
-        objective_id: str
+        objective_id: str,
+        reactions: List[str] = []
     ) -> str:
         """Find the objective (with only one reaction associated) based on the reaction ID and if not found create it
 
@@ -3233,11 +3245,6 @@ class rpSBML:
                 self.logger.debug('The specified objective id ('+str(objective_id)+') already exists')
                 return objective_id
             
-            # if len(reactions) == 1:
-            #     for obj in objective.getListOfFluxObjectives():
-            #         if reactions[0].lower() in obj.getReaction().lower():
-            #             return objective.getId()
-
             if not set([i.getReaction() for i in objective.getListOfFluxObjectives()])-set(reactions):
                 # TODO: consider setting changing the name of the objective
                 self.logger.debug('The specified objective id ('+str(objective_id)+') has another objective with the same reactions: '+str(objective.getId()))
@@ -3280,7 +3287,7 @@ class rpSBML:
 
         fbc_plugin = self.getPlugin('fbc')
         target_obj = fbc_plugin.createObjective()
-        target_obj.setAnnotation(self._defaultBRSynthAnnot(meta_id))
+        # target_obj.setAnnotation(self._defaultBRSynthAnnot(meta_id))
         target_obj.setId(fluxobj_id)
 
         if is_max:
@@ -3294,10 +3301,10 @@ class rpSBML:
             target_flux_obj = target_obj.createFluxObjective()
             target_flux_obj.setReaction(reac)
             target_flux_obj.setCoefficient(coef)
-            if not meta_id:
-                meta_id = self._genMetaID(str(fluxobj_id))
-            target_flux_obj.setMetaId(meta_id)
-            target_flux_obj.setAnnotation(self._defaultBRSynthAnnot(meta_id))
+            # if not meta_id:
+            #     meta_id = self._genMetaID(str(fluxobj_id))
+            # target_flux_obj.setMetaId(meta_id)
+            # target_flux_obj.setAnnotation(self._defaultBRSynthAnnot(meta_id))
 
 
     #####################################################################
