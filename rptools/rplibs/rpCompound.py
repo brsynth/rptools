@@ -96,6 +96,12 @@ class rpCompound(Compound, rpObject):
     def get_fba_fraction_shadow_price(self) -> TypeVar:
         return self.get_fba_info(rpCompound.fba_fraction_str)
 
+    def get_fba_fba_shadow_price(self) -> TypeVar:
+        return self.get_fba_info(rpCompound.fba_fba_str)
+
+    def get_fba_pfba_shadow_price(self) -> TypeVar:
+        return self.get_fba_info(rpCompound.fba_pfba_str)
+
     def get_compartment(self) -> str:
         return self.__compartment
 
@@ -107,6 +113,12 @@ class rpCompound(Compound, rpObject):
 
     def set_fba_fraction_shadow_price(self, value: float) -> None:
         self.set_fba_info(rpCompound.fba_fraction_shadow_price, value)
+
+    def set_fba_fba_shadow_price(self, value: float) -> None:
+        self.set_fba_info(rpCompound.fba_fba_shadow_price, value)
+
+    def set_fba_pfba_shadow_price(self, value: float) -> None:
+        self.set_fba_info(rpCompound.fba_pfba_shadow_price, value)
 
     def set_compartment(self, compartment: str) -> None:
         self.__compartment = compartment
