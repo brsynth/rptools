@@ -1,5 +1,8 @@
 # Release history
 
+## 5.2.1
+- chore(rpfba): change units for fba fraction
+
 ## 5.2.0
 - chore(rpfba): remove CLI args
 - chore(rpfba): refactor code, push back 'fba' and 'pfba' sim types
