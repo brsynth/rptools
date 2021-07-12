@@ -33,7 +33,7 @@ def add_arguments(parser):
         '--biomass_rxn_id',
         type=str,
         default='biomass',
-        help='biomass reaction ID (default: biomass)'
+        help='biomass reaction ID (default: biomass). Note: Only for \'fraction\' simulation'
     )
     parser.add_argument(
         '--sim',
