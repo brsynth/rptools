@@ -1,8 +1,6 @@
 from argparse  import ArgumentParser
 from rptools._version import __version__
 
-default_upper_flux_bound = 10000
-default_lower_flux_bound = 0
 
 def add_arguments(parser):
     parser.add_argument(
@@ -18,7 +16,7 @@ def add_arguments(parser):
     parser.add_argument(
         'compartment_id',
         type=str,
-        help='model compartment id to consider (e.g. \'c\' or \'MNXC3\')'
+        help='model compartment id to consider (e.g. \'c\' or \'MNXC3\' or \'c|MNXC3|cytosol|cytoplasm\')'
     )
     parser.add_argument(
         'outfile',
