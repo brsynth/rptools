@@ -128,26 +128,9 @@ def runFBA(
         return None
 
     # PATHWAY
-    # Create consumption of the target
-    rxn_target = create_target_consumption_reaction(
-        pathway.get_target_id(),
-        logger
-    )
-    # Set Flux Bounds
-    for rxn in pathway.get_list_of_reactions()+[rxn_target]:
-        rxn.set_fbc(
-            l_value=0,
-            u_value=rpReaction.get_default_fbc_upper()
-        )
-        rxn.set_reversible(False)
-    # Create rpSBML object
-    rpsbml = rpSBML.from_Pathway(
+    rpsbml = build_rpsbml(
         pathway=pathway,
         logger=logger
-    )
-    # Create the target consumption reaction in the rpSBML
-    rpsbml.createReaction(
-        rxn=rxn_target
     )
     # Check objective reaction ID
     objective_rxn_id = check_SBML_rxnid(
@@ -173,26 +156,23 @@ def runFBA(
         compartment_id=compartment_id,
         logger=logger
     )
-
-    # Detect orphan species among missing ones in the model,
-    # i.e. that are only consumed or produced
-    if ignore_orphan_species:
-        rpsbml.search_isolated_species(missing_species)
-        hidden_species = [
-            cobraize(spe_id, compartment_id) for
-            spe_id in rpsbml.get_isolated_species()
-        ]
-        logger.debug(f'isolated species: {rpsbml.get_isolated_species()}')
-    else:
-        hidden_species = []
-    
     if rpsbml_merged is None:
         return None
     logger.debug('rpsbml_merged: ' + str(rpsbml_merged))
     logger.debug('reactions_in_both: ' + str(reactions_in_both))
-
     cobra_rpsbml_merged = rpSBML.cobraize(rpsbml_merged)
 
+    # Detect orphan species among missing ones in the model,
+    # i.e. that are only consumed or produced
+    if ignore_orphan_species:
+        hidden_species = build_hidden_species(
+            rpsbml=rpsbml,
+            missing_species=missing_species,
+            compartment_id=compartment_id,
+            logger=logger
+        )
+    else: hidden_species = []
+    
     # NOTE: reactions is organised with key being the rpsbml reaction and value being the rpsbml_gem value`
     # BUG: when merging the rxn_sink (very rare cases) can be recognised if another reaction contains the same species as a reactant
     ## under such as scenario the algorithm will consider that they are the same -- TODO: overwrite it
@@ -309,6 +289,46 @@ def runFBA(
     # exit()
 
 
+def build_rpsbml(
+    pathway: rpPathway,
+    logger: Logger = getLogger(__name__)
+) -> rpSBML:
+    # Create consumption of the target
+    rxn_target = create_target_consumption_reaction(
+        pathway.get_target_id(),
+        logger
+    )
+    # Set Flux Bounds
+    for rxn in pathway.get_list_of_reactions()+[rxn_target]:
+        rxn.set_fbc(
+            l_value=0,
+            u_value=rpReaction.get_default_fbc_upper()
+        )
+        rxn.set_reversible(False)
+    # Create rpSBML object
+    rpsbml = rpSBML.from_Pathway(
+        pathway=pathway,
+        logger=logger
+    )
+    # Create the target consumption reaction in the rpSBML
+    rpsbml.createReaction(
+        rxn=rxn_target
+    )
+    return rpsbml
+
+
+def build_hidden_species(
+    rpsbml: rpSBML,
+    missing_species: List[str],
+    compartment_id: bool,
+    logger: Logger = getLogger(__name__)
+) -> List[str]:
+    rpsbml.search_isolated_species(missing_species)
+    return [
+        cobraize(spe_id, compartment_id) for
+        spe_id in rpsbml.get_isolated_species()
+    ]
+
 def check_SBML_compartment(
     rpsbml: rpSBML,
     compartment_id: str,
@@ -406,7 +426,7 @@ def build_results(
             'units': 'milimole / gDW / hour'
         }
         if sim_type == 'biomass':
-            _results['reactions'][rxn_id][sim_type]['units'] = 'gDW / gDW / hour'
+            _results['pathway'][sim_type]['units'] = 'gDW / gDW / hour'
     return _results
 
 def create_target_consumption_reaction(
