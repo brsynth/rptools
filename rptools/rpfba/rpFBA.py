@@ -36,10 +36,6 @@ from .cobra_format import (
     to_cobra,
     cobraize
 )
-from .Args import (
-    default_upper_flux_bound,
-    default_lower_flux_bound
-)
 
 
 # TODO: add the pareto frontier optimisation as an automatic way to calculate the optimal fluxes
