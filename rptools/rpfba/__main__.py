@@ -46,15 +46,9 @@ def entry_point():
       biomass_rxn_id=args.biomass_rxn_id,
       objective_rxn_id=args.objective_rxn_id,
       sim_type=args.sim,
-      biomass_coeff=args.biomass_coeff,
-      objective_coeff=args.objective_coeff,
-      is_max=args.is_max,
       fraction_coeff=args.fraction_of,
       merge=args.merge,
-      pathway_id=args.pathway_id,
       ignore_orphan_species=args.ignore_orphan_species,
-      upper_flux_bound=float(args.upper_flux_bound),
-      lower_flux_bound=float(args.lower_flux_bound),
       logger=logger
     )
 

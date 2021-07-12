@@ -26,12 +26,6 @@ def add_arguments(parser):
         help='output file'
     )
     parser.add_argument(
-        '--pathway_id',
-        type=str,
-        default='rp_pathway',
-        help='id of the heterologous pathway (default: rp_pathway)'
-    )
-    parser.add_argument(
         '--objective_rxn_id',
         type=str,
         default='rxn_target',
@@ -41,7 +35,7 @@ def add_arguments(parser):
         '--biomass_rxn_id',
         type=str,
         default='biomass',
-        help='Biomass reaction ID (default: biomass)'
+        help='biomass reaction ID (default: biomass)'
     )
     parser.add_argument(
         '--sim',
@@ -49,40 +43,6 @@ def add_arguments(parser):
         choices=['fba', 'pfba', 'fraction'],
         default='fraction',
         help='type of simulation to use (default: fraction)'
-    )
-    # parser.add_argument(
-    #     '--source_reaction',
-    #     type=str,
-    #     default='biomass',
-    #     help='reaction id of the source reaction (default: biomass)'
-    # )
-    # parser.add_argument(
-    #     '--target_reaction',
-    #     type=str,
-    #     default='rxn_target',
-    #     help='reaction id of the target reaction (default: rxn_target). Note: if \'fba\' or \'rpfba\' options are used, then these are ignored'
-    # )
-    parser.add_argument(
-        '--biomass_coeff',
-        type=float,
-        default=1.0,
-        help='source coefficient (default: 1.0)'
-    )
-    parser.add_argument(
-        '--objective_coeff',
-        type=float,
-        default=1.0,
-        help='target coefficient (default: 1.0)'
-    )
-    # parser.add_argument('--num_workers',
-    #                     type=int,
-    #                     default=10,
-    #                     help='number of workers (multi-threads)')
-    parser.add_argument(
-        '--is_max',
-        action='store_true',
-        default=True,
-        help='maximise the objective'
     )
     parser.add_argument(
         '--fraction_of',
@@ -101,17 +61,5 @@ def add_arguments(parser):
         action='store_true',
         default=True,
         help='ignore metabolites that are only consumed or produced (default: True)'
-    )
-    parser.add_argument(
-        '--upper_flux_bound',
-        type=float,
-        default=default_upper_flux_bound,
-        help='flux constaints (upper bound) for FBA (default: 10000)'
-    )
-    parser.add_argument(
-        '--lower_flux_bound',
-        type=float,
-        default=default_lower_flux_bound,
-        help='Flux constaints (lower bound) for FBA (default: 0)'
     )
     return parser

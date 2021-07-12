@@ -3171,7 +3171,7 @@ class rpSBML:
         obj_id: str,
         # reactions: List[str],
         # coefficients: List[float],
-        coeff: float,
+        coeff: float = 1.0,
         is_max: bool = True,
         # objective_id: str = None
     ) -> str:

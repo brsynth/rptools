@@ -1,5 +1,11 @@
 # Release history
 
+## 5.2.0
+- chore(rpfba): remove CLI args
+- chore(rpfba): refactor code, push back 'fba' and 'pfba' sim types
+- chore(rplibs): add fba and pfba methods
+- fix(rpfba): CLI args name
+
 ## 5.1.4
 - chore(rpfba): BREAK! make CLI option 'compartment_id' mandatory
 - chore(rpfba): check first if compartment_id exists in the model
