@@ -365,8 +365,8 @@ class rpSBML:
     def search_compartment_id(self, compartment_id: str):
         for group in self.getModel().getListOfCompartments():
             if (
-                compartment_id == group.getId()
-                or compartment_id == group.getName()
+                compartment_id.lower() == group.getId().lower()
+                or compartment_id.lower() == group.getName().lower()
             ):
                 return group.getId()
         return None
