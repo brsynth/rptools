@@ -617,10 +617,26 @@ def build_all_pathways(
                 )
 
                 ## TRUNK SPECIES
-                pathway.add_trunk_species([spe_id for value in core_species.values() for spe_id in value.keys()])
+                pathway.add_species_group(
+                    'trunk',
+                    [
+                        spe_id
+                        for value
+                        in core_species.values()
+                        for spe_id in value.keys()
+                    ]
+                )
 
                 ## COMPLETED SPECIES
-                pathway.add_completed_species([spe_id for value in added_cmpds.values() for spe_id in value.keys()])
+                pathway.add_species_group(
+                    'completed',
+                    [
+                        spe_id
+                        for value
+                        in added_cmpds.values()
+                        for spe_id in value.keys()
+                    ]
+                )
 
             ## SINK
             pathway.set_sink_species(

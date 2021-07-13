@@ -26,9 +26,8 @@
 from typing import (
     Dict,
     List,
-    # TypeVar,
-    # Union,
-    # Callable
+    Set,
+    Union,
 )
 from logging import (
     Logger,
@@ -43,6 +42,7 @@ from chemlite import (
     Pathway,
     Compound
 )
+from numpy import isin
 from rptools.rplibs.rpReaction import rpReaction
 from rptools.rplibs.rpObject import rpObject
 from rptools.rpfba.cobra_format import (
@@ -79,18 +79,10 @@ class rpPathway(Pathway, rpObject):
         }
     }
 
-    __SPECIES_GROUPS = [
-        'sink',
-        'trunk',
-        'completed',
-        'fba_ignored'
-    ]
-
     def __init__(
         self,
         id: str,
         cache: Cache = None,
-        # rpsbml_infos: Dict = {},
         logger: Logger = getLogger(__name__)
     ):
         Pathway.__init__(
@@ -100,13 +92,8 @@ class rpPathway(Pathway, rpObject):
             logger=logger
         )
         rpObject.__init__(self, logger)
+        self.__species_groups = {}
         self.set_target_id(None)
-        for group_id in self.get_species_groups():
-            getattr(self, f'set_{group_id}_species')([])
-        # self.set_sink_species([])
-        # self.set_trunk_species([])
-        # self.set_completed_species([])
-        # self.set_fba_ignored_species([])
         self.__unit_def = {}
         self.__compartments = {}
         self.add_compartment(
@@ -169,27 +156,34 @@ class rpPathway(Pathway, rpObject):
         )
 
     ## READ METHODS
-    def get_species_groups(self) -> List[str]:
-        return rpPathway.__SPECIES_GROUPS
+    def get_species_groups(self) -> Dict[str, Set]:
+        return self.__species_groups
+        # return rpPathway.__SPECIES_GROUPS
+
+    def get_species_group(self, group_id: str) -> List[str]:
+        return list(self.get_species_groups().get(group_id, set()))
 
     def get_completed_species(self) -> List[str]:
-        return self.__completed_species
+        return self.get_species_group('completed')
+        # return self.__completed_species
 
     def get_fba_ignored_species(self) -> List[str]:
-        return self.__fba_ignored_species
+        return self.get_species_group('fba_ignored')
+        # return self.__fba_ignored_species
 
     def get_trunk_species(self) -> List[str]:
-        return self.__trunk_species
+        return self.get_species_group('trunk')
+        # return self.__trunk_species
+
+    def get_thermo_substituted_species(self) -> List[str]:
+        return self.get_species_group('thermo_substituted')
+
+    def get_sink_species(self) -> List[str]:
+        return self.get_species_group('sink')
+        # return self.__sink
 
     def get_intermediate_species(self) -> List[str]:
-        try:
-            return list(
-                set(self.get_trunk_species())
-                - set(self.get_sink_species())
-                - set([self.get_target_id()])
-            )
-        except TypeError:
-            return None
+        return self.get_species_group('intermediate')
 
     def get_target_rxn_id(self) -> str:
         for rxn in self.get_list_of_reactions():
@@ -204,9 +198,6 @@ class rpPathway(Pathway, rpObject):
 
     def get_target(self) -> Compound:
         return self.get_specie(self.get_target_id())
-
-    def get_sink_species(self) -> List[str]:
-        return self.__sink
 
     def get_reactions_ids(self) -> List[str]:
         '''Returns the list of reaction IDs sorted by index within the pathway
@@ -265,14 +256,65 @@ class rpPathway(Pathway, rpObject):
             )
         )
 
+    def add_species_group(
+        self,
+        group_id: str,
+        species: List[str]
+    ) -> None:
+        try:
+            # Add species to the existing group
+            self.__species_groups[group_id].update(deepcopy(species))
+        except KeyError:
+            # Create a new group
+            self.set_species_group(group_id, species)
+
+    def set_species_group(
+        self,
+        group_id: str,
+        species: Union[List[str], Dict[str, str]]
+    ) -> None:
+        # Create a new group
+        if isinstance(species, list):
+            self.__species_groups[group_id] = set(deepcopy(species))
+        elif isinstance(species, dict):
+            self.__species_groups[group_id] = deepcopy(species)
+        else:
+            self.get_logger().error(f'Wrong type {type(species)} for \'species\' argument, \'list\' or \'dict\' expected, nothing set.')
+
     def set_completed_species(self, species: List[str]) -> None:
-        self.__completed_species = deepcopy(species)
+        self.add_species_group('completed', species)
+        # self.__completed_species = deepcopy(species)
 
     def set_fba_ignored_species(self, species: List[str]) -> None:
-        self.__fba_ignored_species = deepcopy(species)
+        self.add_species_group('fba_ignored', species)
+        # self.__fba_ignored_species = deepcopy(species)
 
     def set_trunk_species(self, species: List[str]) -> None:
-        self.__trunk_species = deepcopy(species)
+        self.add_species_group('trunk', species)
+        # (re-)build intermediate species group
+        self.__build_intermediate_species()
+        # self.__trunk_species = deepcopy(species)
+
+    def set_thermo_substituted_species(self, species: List[str]) -> None:
+        self.add_species_group('thermo_substituted', species)
+        # self.__trunk_species = deepcopy(species)
+
+    def set_sink_species(self, species: List[str]) -> None:
+        self.add_species_group('sink', species)
+        # (re-)build intermediate species group
+        self.__build_intermediate_species()
+        # self.__sink = deepcopy(sink)
+
+    def __build_intermediate_species(self) -> None:
+        try:
+            members = list(
+                set(self.get_trunk_species())
+                - set(self.get_sink_species())
+                - set([self.get_target_id()])
+            )
+            self.set_species_group('intermediate', members)
+        except TypeError:
+            return None
 
     def add_reaction(
         self,
@@ -287,11 +329,10 @@ class rpPathway(Pathway, rpObject):
         if target_id is not None:
             self.set_target_id(target_id)
 
-    def set_sink_species(self, sink: List[str]) -> None:
-        self.__sink = deepcopy(sink)
-    
     def set_target_id(self, id: str) -> None:
         self.__target_id = id
+        # (re-)build intermediate species group
+        self.__build_intermediate_species()
 
     def add_unit_def(
         self,

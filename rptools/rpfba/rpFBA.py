@@ -1,3 +1,4 @@
+from copy import deepcopy
 from logging import (
     Logger,
     getLogger
@@ -239,9 +240,9 @@ def runFBA(
     _results = build_results(
         results=results,
         pathway=pathway,
-        compartment_id=compartment_id,
-        hidden_species=hidden_species
+        compartment_id=compartment_id
     )
+    _results['ignored_species'] = deepcopy(hidden_species)
 
     # Remove the Cobra standard ('compound@compartment') from all compounds
     pathway.uncobraize()
@@ -254,7 +255,6 @@ def runFBA(
     write_results_to_pathway(
         pathway,
         _results,
-        sim_type,
         logger
     )
 
@@ -398,13 +398,11 @@ def build_results(
     results: Dict,
     pathway: rpPathway,
     compartment_id: str,
-    hidden_species: List[str]
 ) -> Dict:
     _results = {
         'species': {},
         'reactions': {},
-        'pathway': {},
-        'rpfba_ignored_species': hidden_species
+        'pathway': {}
     }
 
     # SPECIES
@@ -457,34 +455,33 @@ def create_target_consumption_reaction(
 def write_results_to_pathway(
   pathway: rpPathway,
   results: Dict,
-  sim: str,
   logger: Logger = getLogger(__name__)
 ) -> None:
-
-  # Write species results
-  for spe_id, score in results['species'].items():
-    for k, v in score.items():
-      pathway.get_specie(spe_id).set_fba_info(
-        key=k,
-        value=v
-      )
-  # Write reactions results
-  for rxn_id, score in results['reactions'].items():
-    for k, v in score.items():
-      pathway.get_reaction(rxn_id).set_fba_info(
-        key=k,
-        value=v
-      )
-  # Write pathway result
-  for k, v in results['pathway'].items():
-    pathway.set_fba_info(
-      key=k,
-      value=v
+    # Write species results
+    for spe_id, score in results['species'].items():
+        for k, v in score.items():
+            pathway.get_specie(spe_id).set_fba_info(
+                key=k,
+                value=v
+            )
+    # Write reactions results
+    for rxn_id, score in results['reactions'].items():
+        for k, v in score.items():
+            pathway.get_reaction(rxn_id).set_fba_info(
+                key=k,
+                value=v
+            )
+    # Write pathway result
+    for k, v in results['pathway'].items():
+        pathway.set_fba_info(
+            key=k,
+            value=v
+        )
+    # Write ignored species
+    pathway.add_species_group(
+        'fba_ignored',
+        results['ignored_species']
     )
-  # Write ignored species
-  pathway.set_fba_ignored_species(
-    results['rpfba_ignored_species']
-  )
 
 
 def complete_heterologous_pathway(

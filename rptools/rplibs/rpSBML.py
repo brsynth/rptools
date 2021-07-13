@@ -4117,12 +4117,19 @@ class rpSBML:
             )
 
         ## RP_GROUPS
-        for group_id in pathway.get_species_groups()+['intermediate']:
+        for group_id, group_members in pathway.get_species_groups().items():
             group = self.createGroup(f'rp_{group_id}_species')
-            for member_id in getattr(pathway, f'get_{group_id}_species')():
+            for member_id in group_members:
                 member = libsbml.Member()
                 member.setIdRef(member_id)
                 group.addMember(member)
+        # for group_id in pathway.get_species_groups()+['intermediate']:
+        #     group = self.createGroup(f'rp_{group_id}_species')
+        #     # for member_id in getattr(pathway, f'get_{group_id}_species')():
+        #     for member_id in pathway.get_species_group(group_id):
+        #         member = libsbml.Member()
+        #         member.setIdRef(member_id)
+        #         group.addMember(member)
 
 
     def to_Pathway(
@@ -5160,24 +5167,6 @@ class rpSBML:
                 value=value,
                 isList=isList
             )
-            # if isinstance(value, dict):
-            #     isList = True
-            # else:
-            #     isList = False
-            # self.updateBRSynth(
-            #     sbase_obj=spe,
-            #     annot_header=key,
-            #     value=value,
-            #     isList=isList
-            # )
-        # if fba is not None:
-        #     for fba_id, fba in fba.items():
-        #         self.updateBRSynth(
-        #             sbase_obj=spe,
-        #             annot_header=fba_id,
-        #             value=fba['value'],
-        #             unit=fba['units']
-        #         )
         #### GROUPS #####
         # TODO: check that it actually exists
         # if species_group_id:

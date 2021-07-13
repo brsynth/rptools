@@ -159,6 +159,7 @@ def runThermo(
 
     # Search for the key ID known by eQuilibrator
     cc_species = {}
+    substituted_species = {}
     for spe in pathway.get_species():
         # If the specie is listed in substitutes file, then take search values from it
         if spe.get_id() in compound_substitutes:
@@ -179,13 +180,16 @@ def runThermo(
                 smiles=spe.get_smiles(),
                 logger=logger
             )
+        if spe.get_id() != cc_species[spe.get_id()]['id']:
+            substituted_species[spe.get_id()] = cc_species[spe.get_id()][cc_species[spe.get_id()]['cc_key']]
 
     # Store thermo values for the net reactions
     # and for each of the reactions within the pathway
     results = {
         'net_reaction': {},
         'reactions': {},
-        'species': {}
+        'species': {},
+        'substituted_species': substituted_species
     }
 
     # Get the formation energy for each compound
@@ -350,6 +354,10 @@ def write_results_to_pathway(
         key=k,
         value=v
         )
+    pathway.set_species_group(
+        'thermo_substituted',
+        results['substituted_species']
+    )
 
 def eQuilibrator(
     species_stoichio: Dict[str, float],
@@ -399,7 +407,6 @@ def eQuilibrator(
         right=' + '.join(compounds[SIDES[1]['name']])
     )
 
-    print(rxn_str)
     logger.debug(rxn_str)
 
     results = {}
