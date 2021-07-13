@@ -10,6 +10,7 @@
 # import tempfile
 # import shutil
 
+from os import path as os_path
 from logging import (
     Logger,
     getLogger,
@@ -20,7 +21,8 @@ from typing import (
     List,
     Tuple
 )
-from json.decoder import JSONDecodeError
+from csv import reader as csv_reader
+from copy import deepcopy
 from time import sleep
 from equilibrator_api import (
     ComponentContribution,
@@ -63,6 +65,7 @@ def runThermo(
     ionic_strength: float = None,
     pMg: float = None,
     temp_k: float = None,
+    compound_substitutes: Dict = None,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
     """Given a tar input file, perform thermodynamics analysis for each rpSBML file.
@@ -94,13 +97,13 @@ def runThermo(
     #     logger=logger
     # )
 
-    # Store thermo values for the net reactions
-    # and for each of the reactions within the pathway
-    results = {
-        'net_reaction': {},
-        'reactions': {},
-        'species': {}
-    }
+    if compound_substitutes is None:
+        compound_substitutes = read_compound_substitutes(
+            os_path.join(
+                os_path.dirname(os_path.realpath(__file__)),
+                'data/compound_substitutes.csv'
+            )
+        )
 
     print_title(
         txt='Pathway Reactions',
@@ -154,27 +157,50 @@ def runThermo(
         )
     print_OK(logger)
 
-    species_ids = {}
+    # Search for the key ID known by eQuilibrator
+    cc_species = {}
     for spe in pathway.get_species():
-        spe_id = cc.get_compound(spe.get_id())
-        if spe_id is None:
-            spe_id = spe.get_inchikey()
-            if spe_id == '':
-                spe_id = spe.get_inchi()
+        # If the specie is listed in substitutes file, then take search values from it
+        if spe.get_id() in compound_substitutes:
+            cc_species[spe.get_id()] = search_equilibrator_compound(
+                cc=cc,
+                id=compound_substitutes[spe.get_id()]['id'],
+                inchikey=compound_substitutes[spe.get_id()]['inchikey'],
+                inchi=compound_substitutes[spe.get_id()]['inchi'],
+                logger=logger
+            )
+        # Else, take search values from rpCompound
         else:
-            spe_id = spe.get_id()
-        species_ids[spe.get_id()] = spe_id
+            cc_species[spe.get_id()] = search_equilibrator_compound(
+                cc=cc,
+                id=spe.get_id(),
+                inchikey=spe.get_inchikey(),
+                inchi=spe.get_inchi(),
+                smiles=spe.get_smiles(),
+                logger=logger
+            )
+
+    # Store thermo values for the net reactions
+    # and for each of the reactions within the pathway
+    results = {
+        'net_reaction': {},
+        'reactions': {},
+        'species': {}
+    }
 
     # Get the formation energy for each compound
-    for spe_id in species_ids:
+    for spe_id, cc_spe in cc_species.items():
         try:
-            value = cc.standard_dg_formation(cc.get_compound(spe_id))[0]  # get .mu
+            value = cc.standard_dg_formation(
+                cc.get_compound(
+                    cc_spe[cc_spe['cc_key']]
+                )
+            )[0]  # get .mu
         except Exception as e:
-            value = float('nan')
+            value = None
             logger.debug(e)
         if value is None:
             value = float('nan')
-        # print(spe_id, value)
         results['species'][spe_id] = {
             'standard_dg_formation': {
                 'value': value,
@@ -182,12 +208,20 @@ def runThermo(
             }
         }
 
+    # Build the list of IDs known by eQuilibrator
+    species_cc_ids = {}
+    for spe_id, cc_spe in cc_species.items():
+        if cc_spe == {}:
+            species_cc_ids[spe_id] = spe_id
+        else:
+            species_cc_ids[spe_id] = cc_spe[cc_spe['cc_key']]
+
     ## REACTIONS
     # Compute thermo for each reaction
     for rxn in pathway.get_list_of_reactions():
         results['reactions'][rxn.get_id()] = eQuilibrator(
             species_stoichio=rxn.get_species(),
-            species_ids=species_ids,
+            species_ids=species_cc_ids,
             cc=cc,
             logger=logger
         )
@@ -201,7 +235,7 @@ def runThermo(
 
     results['net_reaction'] = eQuilibrator(
         species_stoichio=Reaction.sum_stoichio(reactions),
-        species_ids=species_ids,
+        species_ids=species_cc_ids,
         cc=cc,
         logger=logger
     )
@@ -211,6 +245,61 @@ def runThermo(
     write_results_to_pathway(pathway, results, logger)
 
     return results
+
+
+def read_compound_substitutes(filename: str) -> Dict[str, str]:
+    comp_sub = {}
+    with open(filename, 'r') as csv_file:
+        reader = csv_reader(csv_file, delimiter=';')
+        for row in reader:
+            if (
+                not row[0].startswith('#')
+                and not row[6] == row[7] == row[8] == ''
+            ):
+                comp_sub[row[0]] = {
+                    'id': row[6],
+                    'inchi': row[7],
+                    'inchikey': row[8]
+                }
+    return comp_sub
+
+
+def search_equilibrator_compound(
+    cc: ComponentContribution,
+    id: str = None,
+    inchikey: str = None,
+    inchi: str = None,
+    smiles: str = None,
+    logger: Logger = getLogger(__name__)
+) -> Dict[str, str]:
+    data = {
+        'id': id,
+        'inchi_key': inchikey,
+        'inchi': inchi,
+        'smiles': smiles
+    }
+    for key, val in data.items():
+        if (
+            val is not None
+            and val != ''
+        ):
+            compound = cc.get_compound(val)
+            # If compound is found in eQuilibrator, then...
+            if compound is not None:
+                # ...copy initial data into result compound
+                _compound = deepcopy(data)
+                # fill with eQuilibrator data for empty fields
+                for k, v in _compound.items():
+                    if (
+                        v is None
+                        or v == ''
+                    ): _compound[k] = getattr(compound, k)
+                # keep the key known by eQuilibrator
+                _compound['cc_key'] = key
+                # keep the value known by eQuilibrator
+                _compound[key] = val
+                return _compound
+    return {}
 
 
 def write_results_to_pathway(
