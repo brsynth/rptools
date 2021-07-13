@@ -1,5 +1,8 @@
 # Release history
 
+## 5.2.2
+- fix(rpthermo): fix params naming
+
 ## 5.2.1
 - chore(rpfba): change units for fba fraction
 
