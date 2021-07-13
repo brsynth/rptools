@@ -272,6 +272,27 @@ def search_equilibrator_compound(
     smiles: str = None,
     logger: Logger = getLogger(__name__)
 ) -> Dict[str, str]:
+
+    def copy_data(
+        compound,
+        data: Dict,
+        overwrite: bool = False,
+    ) -> Dict:
+        # ...copy initial data into result compound
+        _compound = deepcopy(data)
+        # fill with eQuilibrator data for empty fields
+        for k, v in _compound.items():
+            if (
+                overwrite
+                or v is None
+                or v == ''
+            ): _compound[k] = getattr(compound, k)
+        # keep the key known by eQuilibrator
+        _compound['cc_key'] = key
+        # keep the value known by eQuilibrator
+        _compound[key] = val
+        return _compound
+
     data = {
         'id': id,
         'inchi_key': inchikey,
@@ -287,18 +308,20 @@ def search_equilibrator_compound(
             # If compound is found in eQuilibrator, then...
             if compound is not None:
                 # ...copy initial data into result compound
-                _compound = deepcopy(data)
-                # fill with eQuilibrator data for empty fields
-                for k, v in _compound.items():
-                    if (
-                        v is None
-                        or v == ''
-                    ): _compound[k] = getattr(compound, k)
-                # keep the key known by eQuilibrator
-                _compound['cc_key'] = key
-                # keep the value known by eQuilibrator
-                _compound[key] = val
+                _compound = copy_data(compound, data)
                 return _compound
+
+    # In last resort, try to search only with the first part of inchikey
+    compound = cc.search_compound_by_inchi_key(
+        # first part of inchikey
+        inchikey.split('-')[0]
+    )[0]  # first compound in the list, hope it is sorted by decrease relevance
+    if compound is not None:
+        _compound = copy_data(compound, data, overwrite=True)
+        # make inchi_key the ID key
+        _compound['cc_key'] = 'inchi_key'
+        return _compound
+
     return {}
 
 
