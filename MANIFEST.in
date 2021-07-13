@@ -3,4 +3,4 @@ recursive-include extras *
 include rptools/.env
 graft rptools/rpreport/dictor
 graft rptools/rpreport/templates
-include rptools/rpthermo/data
+graft rptools/rpthermo/data
