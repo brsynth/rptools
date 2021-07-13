@@ -252,55 +252,75 @@ def rp2paths_compounds_in_cache(
         for row in reader:
             spe_id = row[0]
             smiles = row[1]
-            try:
-                inchi = cache.get('cid_strc')[spe_id]['inchi']
-            except KeyError:
-                # try to generate them yourself by converting them directly
-                try:
-                    resConv = cache._convert_depiction(
-                        idepic=smiles,
-                        itype='smiles',
-                        otype={'inchi'}
-                    )
-                    inchi = resConv['inchi']
-                except NotImplementedError as e:
-                    logger.warning('Could not convert the following SMILES to InChI: '+str(smiles))
-            try:
-                inchikey = cache.get('cid_strc')[spe_id]['inchikey']
-                # try to generate them yourself by converting them directly
-                # TODO: consider using the inchi writing instead of the SMILES notation to find the inchikey
-            except KeyError:
-                try:
-                    resConv = cache._convert_depiction(
-                        idepic=smiles,
-                        itype='smiles',
-                        otype={'inchikey'}
-                    )
-                    inchikey = resConv['inchikey']
-                except NotImplementedError as e:
-                    logger.warning('Could not convert the following SMILES to InChI key: '+str(smiles))
-            try:
-                name = cache.get('cid_strc')[spe_id]['name']
-            except KeyError:
-                name = ''
-            try:
-                formula = cache.get('cid_strc')[spe_id]['formula']
-            except KeyError:
-                formula = ''
+            cmpd = get_compound_from_cache(
+                spe_id=spe_id,
+                smiles=smiles,
+                cache=cache,
+                logger=logger
+            )
             # Create the compound that will add it to the cache
             rpCompound(
                 id=spe_id,
                 smiles=smiles,
-                inchi=inchi,
-                inchikey=inchikey,
-                name=name,
-                formula=formula
+                inchi=cmpd['inchi'],
+                inchikey=cmpd['inchikey'],
+                name=cmpd['name'],
+                formula=cmpd['formula']
             )
 
     except TypeError as e:
         logger.error('Could not read the compounds file ('+str(path)+')')
         raise RuntimeError
 
+
+def get_compound_from_cache(
+    spe_id: str,
+    smiles: str,
+    cache: rrCache,
+    logger: Logger = getLogger(__name__)
+) -> Dict[str, str]:
+    try:
+        inchi = cache.get('cid_strc')[spe_id]['inchi']
+    except KeyError:
+        # try to generate them yourself by converting them directly
+        try:
+            resConv = cache._convert_depiction(
+                idepic=smiles,
+                itype='smiles',
+                otype={'inchi'}
+            )
+            inchi = resConv['inchi']
+        except NotImplementedError as e:
+            logger.warning('Could not convert the following SMILES to InChI: '+str(smiles))
+    try:
+        inchikey = cache.get('cid_strc')[spe_id]['inchikey']
+    # try to generate them yourself by converting them directly
+    # TODO: consider using the inchi writing instead of the SMILES notation to find the inchikey
+    except KeyError:
+        try:
+            resConv = cache._convert_depiction(
+                idepic=smiles,
+                itype='smiles',
+                otype={'inchikey'}
+            )
+            inchikey = resConv['inchikey']
+        except NotImplementedError as e:
+            logger.warning('Could not convert the following SMILES to InChI key: '+str(smiles))
+    try:
+        name = cache.get('cid_strc')[spe_id]['name']
+    except KeyError:
+        name = ''
+    try:
+        formula = cache.get('cid_strc')[spe_id]['formula']
+    except KeyError:
+        formula = ''
+
+    return {
+        'inchi': inchi,
+        'inchikey': inchikey,
+        'name': name,
+        'formula': formula
+    }
 
 ## Function to parse the scope.csv file
 #
