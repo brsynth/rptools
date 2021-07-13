@@ -46,11 +46,11 @@ def _cli():
 
     # RUN THERMO
     results = runThermo(
-        pathway,
-        args.ph,
-        args.ionic_strength,
-        args.pMg,
-        args.temp_k,
+        pathway=pathway,
+        ph=args.ph,
+        ionic_strength=args.ionic_strength,
+        pMg=args.pMg,
+        temp_k=args.temp_k,
         logger=logger
     )
 
