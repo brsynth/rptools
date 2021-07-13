@@ -2,6 +2,8 @@
 
 ## 5.2.2
 - fix(rpthermo): fix params naming
+- chore(rpfba): add compartment synonyms for searching
+- feat(rpthermo): when a species has not been found in the eQuilibrator cache, the first part of InChIKey is looked for
 
 ## 5.2.1
 - chore(rpfba): change units for fba fraction
