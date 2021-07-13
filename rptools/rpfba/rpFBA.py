@@ -38,6 +38,12 @@ from .cobra_format import (
 )
 
 
+__COMPARTMENTS = [
+    ['c', 'mnxc3', 'cytosol', 'cytoplasm'],
+    ['e', 'mnxc2', 'extracellular space'],
+    ['p', 'mnxc19', 'periplasm']
+]
+
 # TODO: add the pareto frontier optimisation as an automatic way to calculate the optimal fluxes
 
 def runFBA(
@@ -335,6 +341,9 @@ def check_SBML_compartment(
     logger: Logger = getLogger(__name__)
 ) -> Tuple[str, str]:
 
+    for comp_synonyms in __COMPARTMENTS:
+        if compartment_id.lower() in comp_synonyms:
+            compartment_id = '|'.join(comp_synonyms)
     comp_ids = compartment_id.split('|')
 
     for comp_id in comp_ids:
@@ -380,6 +389,7 @@ def check_SBML_rxnid(
                     rxn_ids=', '.join(possible_rxn_ids)
                 )
             )
+        return None
 
     return _rxn.getId()
 
