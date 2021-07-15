@@ -36,16 +36,29 @@ from copy import deepcopy
 
 class rpObject():
 
-    thermo_prefix = 'thermo_'
-    fba_prefix = 'fba_'
-    thermo_dG0_prime_str = thermo_prefix+'dG0_prime'
-    thermo_dGm_prime_str = thermo_prefix+'dGm_prime'
-    thermo_dG_prime_str = thermo_prefix+'dG_prime'
-    thermo_dG_str = thermo_prefix+'dG'
-    fba_biomass_str = fba_prefix+'biomass'
-    fba_fraction_str = fba_prefix+'fraction'
-    fba_fba_str = fba_prefix
-    fba_pfba_str = fba_prefix+'pfba'
+    __thermo_prefix = 'thermo_'
+    __fba_prefix = 'fba_'
+    __dG0_prime_str = 'dG0_prime'
+    __dGm_prime_str = 'dGm_prime'
+    __dG_prime_str = 'dG_prime'
+    __dG_str = 'dG'
+    __thermo_dG0_prime_str = __thermo_prefix+__dG0_prime_str
+    __thermo_dGm_prime_str = __thermo_prefix+__dGm_prime_str
+    __thermo_dG_prime_str = __thermo_prefix+__dG_prime_str
+    __thermo_dG_str = __thermo_prefix+__dG_str
+    __biomass_str = 'biomass'
+    __fraction_str = 'fraction'
+    __fba_biomass_str = __fba_prefix+__biomass_str
+    __fba_fraction_str = __fba_prefix+__fraction_str
+    __fba_str = 'fba'
+    __pfba_str = 'pfba'
+    __fba_fba_str = __fba_prefix+__fba_str
+    __fba_pfba_str = __fba_prefix+__pfba_str
+
+    @staticmethod
+    def get_fba_biomass_str() -> str: return rpObject.__fba_biomass_str
+    @staticmethod
+    def get_fba_fraction_str() -> str: return rpObject.__fba_fraction_str
 
     def __init__(
         self,
@@ -84,19 +97,19 @@ class rpObject():
         return self.__thermo.get('thermo_'+key, None)
 
     def get_thermo_dG0_prime(self) -> TypeVar:
-        return self.__thermo.get(rpObject.thermo_dG0_prime_str, None)
+        return self.__thermo.get(rpObject.__thermo_dG0_prime_str, None)
 
     def get_thermo_dGm_prime(self) -> TypeVar:
-        return self.__thermo.get(rpObject.thermo_dGm_prime_str, None)
+        return self.__thermo.get(rpObject.__thermo_dGm_prime_str, None)
 
     def get_thermo_dG_prime(self) -> TypeVar:
-        return self.__thermo.get(rpObject.thermo_dG_prime_str, None)
+        return self.__thermo.get(rpObject.__thermo_dG_prime_str, None)
 
     def get_thermo_dG(self) -> TypeVar:
-        return self.__thermo.get(rpObject.thermo_dG_str, None)
+        return self.__thermo.get(rpObject.__thermo_dG_str, None)
 
     def get_fba_info(self, key: str) -> TypeVar:
-        return self.__fba.get(rpObject.fba_prefix+key, None)
+        return self.__fba.get(rpObject.__fba_prefix+key, None)
 
     def get_fba(self) -> TypeVar:
         return self.__fba
@@ -113,16 +126,16 @@ class rpObject():
                 return None
 
     def get_fba_biomass(self) -> TypeVar:
-        return self.__get_fba_(rpObject.fba_biomass_str)
+        return self.__get_fba_(rpObject.__fba_biomass_str)
 
     def get_fba_fraction(self) -> TypeVar:
-        return self.__get_fba_(rpObject.fba_fraction_str)
+        return self.__get_fba_(rpObject.__fba_fraction_str)
 
     def get_fba_fba(self) -> TypeVar:
-        return self.__get_fba_(rpObject.fba_str)
+        return self.__get_fba_(rpObject.__fba_str)
 
     def get_fba_pfba(self) -> TypeVar:
-        return self.__get_fba_(rpObject.pfba_str)
+        return self.__get_fba_(rpObject.__pfba_str)
 
     ## WRITE METHODS
     ### THERMO ###
@@ -130,41 +143,35 @@ class rpObject():
         self.__thermo = deepcopy(thermo)
 
     def set_thermo_info(self, key: str, value: TypeVar) -> None:
-        prefix = 'thermo_'
-        if key.startswith(prefix):
-            prefix = ''
-        self.__thermo[prefix+key] = deepcopy(value)
+        self.__thermo[rpObject.__thermo_prefix+key] = deepcopy(value)
 
     ### FBA ###
     def __set_fba(self, fba: TypeVar) -> None:
         self.__fba = deepcopy(fba)
 
     def set_fba_info(self, key: str, value: TypeVar) -> None:
-        prefix = 'fba_'
-        # if key.startswith(prefix):
-        #     prefix = ''
-        self.__fba[prefix+key] = deepcopy(value)
+        self.__fba[rpObject.__fba_prefix+key] = deepcopy(value)
 
     def set_thermo_dG0_prime(self, value: float) -> None:
-        self.set_thermo_info(rpObject.dG0_prime_str, value)
+        self.set_thermo_info(rpObject.__dG0_prime_str, value)
 
     def set_thermo_dGm_prime(self, value: float) -> None:
-        self.set_thermo_info(rpObject.dGm_prime_str, value)
+        self.set_thermo_info(rpObject.__dGm_prime_str, value)
 
     def set_thermo_dG_prime(self, value: float) -> None:
-        self.set_thermo_info(rpObject.dG_prime_str, value)
+        self.set_thermo_info(rpObject.__dG_prime_str, value)
 
     def set_thermo_dG(self, value: float) -> None:
-        self.set_thermo_info(rpObject.dG_str, value)
+        self.set_thermo_info(rpObject.__dG_str, value)
 
     def set_fba_biomass(self, value: float) -> None:
-        self.set_fba_info(rpObject.fba_biomass_str, value)
+        self.set_fba_info(rpObject.__biomass_str, value)
 
     def set_fba_fraction(self, value: float) -> None:
-        self.set_fba_info(rpObject.fba_fraction_str, value)
+        self.set_fba_info(rpObject.__fraction_str, value)
 
     def set_fba_fba(self, value: float) -> None:
-        self.set_fba_info(rpObject.fba_fba_str, value)
+        self.set_fba_info(rpObject.__fba_str, value)
 
     def set_fba_pfba(self, value: float) -> None:
-        self.set_fba_info(rpObject.fba_pfba_str, value)
+        self.set_fba_info(rpObject.__pfba_str, value)
