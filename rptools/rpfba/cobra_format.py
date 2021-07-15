@@ -6,8 +6,6 @@ from typing import (
     Dict
 )
 from copy import deepcopy
-from rptools.rplibs import rpPathway
-from brs_utils import Cache
 
 at_pattern = '__64__'
 bigg_prefix = 'M_'
@@ -62,26 +60,3 @@ def uncobraize_results(
         res[key] = deepcopy(results[key])
     return res
 
-
-
-# def uncobraize_scores(pathway: Pathway) -> None:
-#     '''Make the Pathway compliant with what Cobra expects
-#     Remove <@compartmentID> from all compounds in scores
-#     '''
-#     uncobraize_scores_fba(pathway)
-
-# def uncobraize_scores_fba(pathway: Pathway) -> None:
-#     '''Make the Pathway compliant with what Cobra expects
-#     Remove <@compartmentID> from all compounds in FBA scores
-#     '''
-#     # SPECIES
-#     species = pathway.get_fba()['species'].keys()
-#     for spe_id in species:
-#         print(spe_id, pathway.get_fba_species(spe_id))
-#         for objective_id, value in pathway.get_fba_species(spe_id).items():
-#             pathway.set_fba_species(
-#                 spe_id=uncobraize_string(spe_id, pathway),
-#                 objective_id=objective_id,
-#                 value=value
-#             )
-#     exit()

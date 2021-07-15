@@ -18,10 +18,7 @@ from copy import deepcopy
 from rptools import build_args_parser
 from rptools.rpfba.Args import add_arguments
 from rptools.rpfba import runFBA
-from rptools.rplibs import (
-  rpSBML,
-  rpPathway
-)
+from rptools.rplibs.rpPathway import rpPathway
 
 def entry_point():
     parser = build_args_parser(
@@ -34,10 +31,10 @@ def entry_point():
     from rptools.__main__ import init
     logger = init(parser, args)
 
-    pathway = rpSBML(
-      inFile=args.pathway_file,
+    pathway = rpPathway.from_rpSBML(
+      infile=args.pathway_file,
       logger=logger
-    ).to_Pathway()
+    )
 
     results = runFBA(
       pathway=pathway,
@@ -63,7 +60,7 @@ def entry_point():
           except OSError as exc: # Guard against race condition
               if exc.errno != errno_EEXIST:
                   raise
-      rpSBML.from_Pathway(pathway).write_to_file(args.outfile)
+      pathway.to_rpSBML().write_to_file(args.outfile)
       logger.info('   |--> written in ' + args.outfile)
 
 

@@ -21,10 +21,7 @@ from brs_utils import (
 from rptools.rpthermo import runThermo
 from rptools.rpthermo.Args import add_arguments
 from rptools import build_args_parser
-from rptools.rplibs import (
-    rpSBML,
-    rpPathway
-)
+from rptools.rplibs import rpPathway
 
 
 def _cli():
@@ -39,10 +36,10 @@ def _cli():
     logger = init(parser, args)
 
     ## READ PATHWAY FROM FILE
-    pathway = rpSBML(
-        inFile=args.infile,
-        logger=logger
-    ).to_Pathway()
+    pathway = rpPathway.from_rpSBML(
+      infile=args.infile,
+      logger=logger
+    )
 
     # RUN THERMO
     results = runThermo(
@@ -57,7 +54,7 @@ def _cli():
     # Print results
     print_results(pathway, results, logger)
     # Write pathway into file
-    rpSBML.from_Pathway(pathway).write_to_file(args.outfile)
+    pathway.to_rpSBML().write_to_file(args.outfile)
     logger.info(
         "{color}{typo}Written into file: {file}{rst}".format(
             color=fg('white'),

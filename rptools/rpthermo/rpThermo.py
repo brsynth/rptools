@@ -204,7 +204,7 @@ def runThermo(
             value = None
             logger.debug(e)
         if value is None:
-            value = float('nan')
+            value = 'NaN'
         results['species'][spe_id] = {
             'standard_dg_formation': {
                 'value': value,
@@ -428,8 +428,8 @@ def eQuilibrator(
     except Exception as e:
         for key in measures.keys():
             results[key] = {
-                'value': float('nan'),
-                'error': float('nan'),
+                'value': 'NaN',
+                'error': 'NaN',
                 'units': 'kilojoule / mole',
             }
         logger.debug(e)

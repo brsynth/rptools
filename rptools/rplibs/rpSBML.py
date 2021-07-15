@@ -35,14 +35,7 @@ from math import isnan
 from brs_utils import(
     extract_gz
 )
-from rr_cache import rrCache
-from rptools.rplibs.rpGraph import rpGraph
-from rptools.rplibs.rpPathway import rpPathway
-from rptools.rplibs.rpReaction import rpReaction
-from rptools.rplibs.rpCompound import rpCompound
-from rptools.rpfba.cobra_format import (
-    cobraize
-)
+from .rpGraph import rpGraph
 
 ## @package RetroPath SBML writer
 # Documentation for SBML representation of the different model
@@ -574,6 +567,9 @@ class rpSBML:
 
     @staticmethod
     def cobraize(rpsbml: 'rpSBML') -> 'rpSBML':
+        from rptools.rpfba.cobra_format import (
+            cobraize
+        )
         return rpSBML.renameSpecies(
             rpsbml=rpsbml,
             transl_dict_species={
@@ -3967,63 +3963,6 @@ class rpSBML:
     ################### CONVERT BETWEEEN FORMATS ############################
     #########################################################################
     @staticmethod
-    def from_Pathway(
-        pathway: rpPathway,
-        cache: rrCache=None,
-        logger: Logger=getLogger(__name__)
-    ) -> 'rpSBML':
-
-        # print(pathway)
-        # print(pathway.get_list_of_reactions())
-        # print(pathway.get_list_of_species())
-        # print(pathway.get_infos())
-
-        rpsbml = rpSBML(name='rp_'+pathway.get_id(), logger=logger)
-
-        if cache is None:
-            cache = rrCache(
-                db='file',
-                attrs=[
-                    'rr_reactions',
-                    'template_reactions',
-                    'cid_strc',
-                    'comp_xref',
-                    'deprecatedCompID_compid',
-                ]
-            )
-
-        ## Create a generic Model, ie the structure and unit definitions that we will use the most
-        rpsbml.genericModel(
-            pathway.get_id(),
-            'RP_model_'+pathway.get_id(),
-            pathway.get_compartments(),
-            pathway.get_unit_defs(),
-            # upper_flux_bound,
-            # lower_flux_bound
-        )
-
-        ## Create the groups (pathway, species, sink species)
-        rpsbml.create_groups_from_Pathway(
-            pathway=pathway,
-            logger=logger
-        )
-
-        ## Add species to the model
-        rpsbml.create_species_from_Pathway(
-            pathway=pathway,
-            logger=logger
-        )
-
-        ## Add reactions to the model
-        rpsbml.create_reactions_from_Pathway(
-            pathway=pathway,
-            logger=logger
-        )
-
-        return rpsbml
-
-
-    @staticmethod
     def from_json(
         filename: str,
         logger: Logger = getLogger(__name__)
@@ -4037,74 +3976,21 @@ class rpSBML:
             logger=logger
         )
 
-
-    def create_reactions_from_Pathway(
+    def create_enriched_group(
         self,
-        pathway: rpPathway,
-        logger: Logger = getLogger(__name__)
-    ) -> None:
-        for rxn in pathway.get_list_of_reactions():
-            # Add the reaction in the model
-            self.createReaction(
-                rxn=rxn,
-                reacXref={'ec': rxn.get_ec_numbers()}
-            )
-
-    def create_species_from_Pathway(
-        self,
-        pathway: rpPathway,
+        group_id: str,
+        members: List = [],
+        infos: Dict = {},
         logger: Logger = getLogger(__name__)
     ) -> None:
 
-        for specie in pathway.get_species():
-
-            # # Handle the sink
-            # if specie.get_id() in pathway.get_sink_species():
-            #     sink_species_group_id = 'rp_sink_species'
-            # else:
-            #     sink_species_group_id = None
-
-            self.createSpecies(
-                species_id=specie.get_id(),
-                species_name=specie.get_name(),
-                inchi=specie.get_inchi(),
-                inchikey=specie.get_inchikey(),
-                smiles=specie.get_smiles(),
-                compartment=specie.get_compartment(),
-                # species_group_id='rp_trunk_species',
-                # in_sink_group_id=sink_species_group_id,
-                infos=pathway.get_specie(specie.get_id())._to_dict(specific=True)
-            )
-
-
-    ## Function that returns rpSBML object with groups (pathway, species, sink species) added
-    #
-    #  @param rpsbml rpSBML The in-building rpSBML object
-    #  @param pathway_id Str The id of the pathway to add reactions to
-    #  @param path_id Str The name of the pathway to add reactions to
-    #  @param path_base_idx Int The index of base pathway (rules based)
-    #  @param path_variant_idx Int The index of variant pathway (reactions based)
-    #  @param species_group_id Str The Groups id to add the species
-    #  @param sink_group_id Str The Groups id sink species to add the species
-    #  @return rpSBML The updated rpSBML object
-    def create_groups_from_Pathway(
-        self,
-        pathway: rpPathway,
-        logger: Logger = getLogger(__name__)
-    ) -> None:
-
-        ## RP_PATHWAY
-        group = self.createGroup('rp_pathway')
-        # List of reactions in the pathway
-        for member_id in pathway.get_reactions_ids():
+        group = self.createGroup(group_id)
+        for member_id in members:
             member = libsbml.Member()
             member.setIdRef(member_id)
             group.addMember(member)
 
-        for key, value in {
-            **pathway.get_fba(),
-            **pathway.get_thermo()
-        }.items():
+        for key, value in infos.items():
             if isinstance(value, dict):
                 isList = True
             else:
@@ -4115,171 +4001,6 @@ class rpSBML:
                 value=value,
                 isList=isList
             )
-
-        ## RP_GROUPS
-        for group_id, group_members in pathway.get_species_groups().items():
-            group = self.createGroup(f'rp_{group_id}_species')
-            for member_id in group_members:
-                member = libsbml.Member()
-                member.setIdRef(member_id)
-                group.addMember(member)
-        # for group_id in pathway.get_species_groups()+['intermediate']:
-        #     group = self.createGroup(f'rp_{group_id}_species')
-        #     # for member_id in getattr(pathway, f'get_{group_id}_species')():
-        #     for member_id in pathway.get_species_group(group_id):
-        #         member = libsbml.Member()
-        #         member.setIdRef(member_id)
-        #         group.addMember(member)
-
-
-    def to_Pathway(
-        self,
-        pathway_id: str='rp_pathway',
-    ) -> rpPathway:
-        """Generate the dictionnary of all the annotations of a pathway species, reaction and pathway annotations
-
-        :param pathway_id: The pathway ID (Default: rp_pathway)
-
-        :type pathway_id: str
-
-        :rtype: dict
-        :return: Dictionnary of the pathway annotation
-        """
-
-        def write_to(data: Dict, object: TypeVar) -> None:
-            # Detect fba and thermo infos
-            thermo_pre = 'thermo_'
-            fba_pre = 'fba_'
-            for key, value in data.items():
-                if key.startswith(thermo_pre):
-                    object.set_thermo_info(key[len(thermo_pre):], value)
-                elif key.startswith(fba_pre):
-                    object.set_fba_info(key[len(fba_pre):], value)
-                else:
-                    try:
-                        getattr(
-                            object,
-                            'set_'+key.replace('rp_', '')
-                        )(value)
-                    except AttributeError:
-                        pass
-
-        def build_reaction(
-            rxn_id: str,
-            infos: Dict
-        ) -> Tuple[
-            rpReaction,
-            Union[str, None]
-        ]:
-            try:
-                ec_numbers = infos['miriam']['ec-code']
-            except KeyError:
-                ec_numbers = []
-            reaction = rpReaction(
-                id=rxn_id,
-                ec_numbers=ec_numbers,
-                reactants=infos['left'],
-                products=infos['right'],
-                lower_flux_bound=infos['fbc_lower_value'],
-                upper_flux_bound=infos['fbc_upper_value'],
-                flux_bound_units=infos['fbc_units'],
-                reversible=infos['reversible'],
-                logger=self.logger
-            )
-            # Add additional infos
-            write_to(infos['brsynth'], reaction)
-            # Detects if the current reaction produces the target
-            target_id = [spe_id for spe_id in reaction.get_products_ids() if 'TARGET' in spe_id]
-            if target_id != []:
-                target_id = target_id[0]
-            else:
-                target_id = None
-            return reaction, target_id
-
-        # Create the rpPathway object
-        pathway = rpPathway(
-            id=self.getName(),
-            logger=self.logger
-        )
-
-        ## COMPARTMENTS
-        for compartment in self.getModel().getListOfCompartments():
-            pathway.add_compartment(
-                id=compartment.getId(),
-                name=compartment.getName(),
-                annot=rpSBML.readMIRIAMAnnotation(compartment.getAnnotation()),
-            )
-
-        ## UNIT DEFINITIONS
-        for unit_defs in self.getModel().getListOfUnitDefinitions():
-            for unit in unit_defs.getListOfUnits():
-                pathway.add_unit_def(
-                    id=unit.getId(),
-                    kind=unit.getKind(),
-                    exp=unit.getExponent(),
-                    scale=unit.getScale(),
-                    mult=unit.getMultiplier()
-                )
-
-        ## PARAMETERS
-        for param in self.getModel().getListOfParameters():
-            pathway.add_parameter(
-                id=param.getId(),
-                value=param.getValue(),
-                units=param.getUnits()
-            )
-
-        ## SPECIES
-        for spe_id, spe in self.read_species().items():
-            infos = {}
-            for key in ['smiles', 'inchi', 'inchikey']:
-                try:
-                    infos[key] = spe['brsynth'][key]
-                except KeyError:
-                    infos[key] = ''
-            # Create compound to add it in the cache
-            compound = rpCompound(
-                id=spe_id,
-                smiles=infos['smiles'],
-                inchi=infos['inchi'],
-                inchikey=infos['inchikey'],
-                compartment_id=spe['object'].getCompartment()
-            )
-            write_to(spe['brsynth'], compound)
-
-        ## REACTIONS
-        for rxn_id, rxn_infos in self.read_reactions(pathway_id).items():
-            rxn_infos['fbc_lower_value'] = pathway.get_parameter_value(rxn_infos['fbc_lower_value'])
-            rxn_infos['fbc_upper_value'] = pathway.get_parameter_value(rxn_infos['fbc_upper_value'])
-            rxn_infos['fbc_units'] = pathway.get_parameter_units(rxn_infos['fbc_lower_value'])
-            reaction, target_id = build_reaction(rxn_id, rxn_infos)
-            # Add the reaction to the pathway
-            pathway.add_reaction(
-                rxn=reaction,
-                target_id=target_id
-            )
-
-        ## GROUPS
-        for group in self.getPlugin('groups').getListOfGroups():
-            group_id = group.getId()
-            # 'rp_pathway' has no member to write into rpPathway
-            if group_id == pathway_id:
-                annot = self.readBRSYNTHAnnotation(
-                    self.getGroup(group_id).getAnnotation(),
-                    self.logger
-                )
-                write_to(annot, pathway)
-            # 'rp_sink_species', 'rp_completed_species', 'rp_trunk_species'
-            # have no annotation to write into rpPathway
-            else:
-                write_to(
-                    {
-                        group_id: self.readGroupMembers(group_id)
-                    },
-                    pathway
-                )
-
-        return pathway
 
     # def to_json(
     #     self,
@@ -4813,9 +4534,16 @@ class rpSBML:
     # TODO as of now not generic, works when creating a new SBML file, but no checks if modifying existing SBML file
     def createReaction(
         self,
-        rxn: rpReaction,
-        rxn_id: str = None,
+        id: str,
+        reactants: Dict[str, float],
+        products: Dict[str, float],
+        smiles: str,
+        fbc_upper: float,
+        fbc_lower: float,
+        fbc_units: str,
+        reversible: bool = True,
         reacXref: Dict = {},
+        infos: Dict = {},
         meta_id: str = None
     ):
         """Create libSBML reaction
@@ -4849,8 +4577,6 @@ class rpSBML:
         :rtype: None
         :return: None
         """
-        if rxn_id is None:
-            rxn_id = rxn.get_id()
 
         reac = self.getModel().createReaction()
         rpSBML.checklibSBML(reac, 'create reaction')
@@ -4861,45 +4587,40 @@ class rpSBML:
         ## BOUNDS
         # Upper
         upper_bound = self.createReturnFluxParameter(
-            value=rxn.get_fbc_upper(),
-            units=rxn.get_fbc_units()
+            value=fbc_upper,
+            units=fbc_units
         )
         rpSBML.checklibSBML(
             reac_fbc.setUpperFluxBound(
                 upper_bound.getId()
             ),
-            f'setting {str(rxn_id)} upper flux bound'
+            f'setting {str(id)} upper flux bound'
         )
         # Lower
         lower_bound = self.createReturnFluxParameter(
-            value=rxn.get_fbc_lower(),
-            units=rxn.get_fbc_units()
+            value=fbc_lower,
+            units=fbc_units
         )
         rpSBML.checklibSBML(
             reac_fbc.setLowerFluxBound(
                 lower_bound.getId()
             ),
-            f'setting {str(rxn_id)} lower flux bound'
+            f'setting {str(id)} lower flux bound'
         )
 
         #########################################
         # reactions
-        rpSBML.checklibSBML(reac.setId(rxn_id), 'set reaction id') # same convention as cobrapy
+        rpSBML.checklibSBML(reac.setId(id), 'set reaction id') # same convention as cobrapy
         rpSBML.checklibSBML(reac.setSBOTerm(176), 'setting the system biology ontology (SBO)') # set as process
         # TODO: consider having the two parameters as input to the function
-        rpSBML.checklibSBML(reac.setReversible(rxn.reversible()), 'set reaction reversibility flag')
+        rpSBML.checklibSBML(reac.setReversible(reversible), 'set reaction reversibility flag')
         rpSBML.checklibSBML(reac.setFast(False), 'set reaction "fast" attribute')
         if not meta_id:
-            meta_id = self._genMetaID(rxn_id)
+            meta_id = self._genMetaID(id)
         rpSBML.checklibSBML(reac.setMetaId(meta_id), 'setting species meta_id')
         # TODO: check that the species exist
-        # reactants_dict
-        # print(reaction_smiles)
 
-        for spe_id, spe_sto in rxn.get_reactants().items():
-            # print(str(reactant))
-            # print(str(reactant))
-            # print(str(reactant)+'__64__'+str(compartment_id))
+        for spe_id, spe_sto in reactants.items():
             spe = reac.createReactant()
             rpSBML.checklibSBML(
                 spe,
@@ -4907,25 +4628,10 @@ class rpSBML:
             )
             # use the same writing convention as CobraPy
             reactant_ext = spe_id
-            # if not reactant_ext.endswith('__64__'+compartment_id):
-            #     reactant_ext += '__64__'+compartment_id
             rpSBML.checklibSBML(
-                # spe.setSpecies(str(reactant)+'__64__'+str(compartment_id)),
                 spe.setSpecies(str(reactant_ext)),
                 'assign reactant species'
             )
-            # from cobra.io.sbml       import validate_sbml_model
-            # from json import dumps as json_dumps
-            # merged_rpsbml_path = '/tmp/merged.sbml'
-            # from inspect import currentframe, getframeinfo
-            # self.writeToFile(merged_rpsbml_path)
-            # (model, errors) = validate_sbml_model(merged_rpsbml_path)
-            # if model is None:
-            #     frameinfo = getframeinfo(currentframe())
-            #     print(frameinfo.filename, frameinfo.lineno)
-            #     self.logger.error('Something went wrong reading the SBML model')
-            #     self.logger.error(str(json_dumps(errors, indent=4)))
-            #     return None
             # TODO: check to see the consequences of heterologous parameters not being constant
             rpSBML.checklibSBML(
                 spe.setConstant(True),
@@ -4935,67 +4641,22 @@ class rpSBML:
                 spe.setStoichiometry(float(spe_sto)),
                 'set stoichiometry ('+str(float(spe_sto))+')'
             )
-            # from cobra.io.sbml       import validate_sbml_model
-            # from json import dumps as json_dumps
-            # merged_rpsbml_path = '/tmp/merged.sbml'
-            # from inspect import currentframe, getframeinfo
-            # self.writeToFile(merged_rpsbml_path)
-            # (model, errors) = validate_sbml_model(merged_rpsbml_path)
-            # if model is None:
-            #     frameinfo = getframeinfo(currentframe())
-            #     print(frameinfo.filename, frameinfo.lineno)
-            #     self.logger.error('Something went wrong reading the SBML model')
-            #     self.logger.error(str(json_dumps(errors, indent=4)))
-            #     return None
 
-        # TODO: check that the species exist
-        # products_dict
-
-        # from cobra.io.sbml       import validate_sbml_model
-        # from json import dumps as json_dumps
-        # merged_rpsbml_path = '/tmp/merged.sbml'
-        # from inspect import currentframe, getframeinfo
-        # self.writeToFile(merged_rpsbml_path)
-        # (model, errors) = validate_sbml_model(merged_rpsbml_path)
-        # if model is None:
-        #     frameinfo = getframeinfo(currentframe())
-        #     print(frameinfo.filename, frameinfo.lineno)
-        #     self.logger.error('Something went wrong reading the SBML model')
-        #     self.logger.error(str(json_dumps(errors, indent=4)))
-        #     return None
-
-        for spe_id, spe_sto in rxn.get_products().items():
+        for spe_id, spe_sto in products.items():
             pro = reac.createProduct()
             rpSBML.checklibSBML(pro, 'create product')
-            # rpSBML.checklibSBML(pro.setSpecies(str(product)+'__64__'+str(compartment_id)), 'assign product species')
             product_ext = spe_id
-            # if not product_ext.endswith('__64__'+compartment_id):
-            #     product_ext += '__64__'+compartment_id
             rpSBML.checklibSBML(pro.setSpecies(str(product_ext)), 'assign product species')
             # TODO: check to see the consequences of heterologous parameters not being constant
             rpSBML.checklibSBML(pro.setConstant(True), 'set "constant" on species '+str(product_ext))
             rpSBML.checklibSBML(pro.setStoichiometry(float(spe_sto)),
                 'set the stoichiometry ('+str(float(spe_sto))+')')
-        # exit()
-
-        # from cobra.io.sbml       import validate_sbml_model
-        # from json import dumps as json_dumps
-        # merged_rpsbml_path = '/tmp/merged.sbml'
-        # from inspect import currentframe, getframeinfo
-        # self.writeToFile(merged_rpsbml_path)
-        # (model, errors) = validate_sbml_model(merged_rpsbml_path)
-        # if model is None:
-        #     frameinfo = getframeinfo(currentframe())
-        #     print(frameinfo.filename, frameinfo.lineno)
-        #     self.logger.error('Something went wrong reading the SBML model')
-        #     self.logger.error(str(json_dumps(errors, indent=4)))
-        #     return None
 
         ############################ MIRIAM ############################
         rpSBML.checklibSBML(reac.setAnnotation(self._defaultBothAnnot(meta_id)), 'creating annotation')
         self.addUpdateMIRIAM(reac, 'reaction', reacXref, meta_id)
         ###### BRSYNTH additional information ########
-        self.updateBRSynth(reac, 'smiles', rxn.get_smiles(), None, True, False, False, meta_id)
+        self.updateBRSynth(reac, 'smiles', smiles, None, True, False, False, meta_id)
         # if rxn['rule_id']:
         #     self.updateBRSynth(reac, 'rule_id', rxn['rule_id'], None, True, False, False, meta_id)
         # # TODO: need to change the name and content (to dict) upstream
@@ -5011,9 +4672,7 @@ class rpSBML:
         # if 'rxn_idx' in rxn:
         #     if rxn['rxn_idx']:
         #         self.updateBRSynth(reac, 'rxn_idx', rxn['rxn_idx'], None, False, False, False, meta_id)
-        for key, value in rxn._to_dict(specific=True).items():
-            # if key.startswith('fba') or key.startswith('thermo'):
-            # for k, v in value.items():
+        for key, value in infos.items():
             if isinstance(value, dict):
                 isList = True
             else:
@@ -5024,43 +4683,6 @@ class rpSBML:
                 value=value,
                 isList=isList
             )
-            # else:
-            #     if isinstance(value, dict):
-            #         isList = True
-            #     else:
-            #         isList = False
-            #     self.updateBRSynth(
-            #         sbase_obj=reac,
-            #         annot_header=key,
-            #         value=value,
-            #         isList=isList
-            #     )
-        # if step['sub_step']:
-        #     self.updateBRSynth(reac, 'sub_step', step['sub_step'], None, False, False, False, meta_id)
-
-        # from cobra.io.sbml       import validate_sbml_model
-        # from json import dumps as json_dumps
-        # merged_rpsbml_path = '/tmp/merged.sbml'
-        # from inspect import currentframe, getframeinfo
-        # self.writeToFile(merged_rpsbml_path)
-        # (model, errors) = validate_sbml_model(merged_rpsbml_path)
-        # if model is None:
-        #     frameinfo = getframeinfo(currentframe())
-        #     print(frameinfo.filename, frameinfo.lineno)
-        #     self.logger.error('Something went wrong reading the SBML model')
-        #     self.logger.error(str(json_dumps(errors, indent=4)))
-        #     return None
-
-        # #### GROUPS #####
-        # if pathway_id:
-        #     hetero_group = self.getGroup(pathway_id)
-        #     if not hetero_group:
-        #         self.logger.warning('The pathway_id '+str(pathway_id)+' does not exist in the model')
-        #     else:
-        #         newM = hetero_group.createMember()
-        #         rpSBML.checklibSBML(newM, 'Creating a new groups member')
-        #         rpSBML.checklibSBML(newM.setIdRef(reac_id), 'Setting name to the groups member')
-
 
     def createSpecies(
         self,

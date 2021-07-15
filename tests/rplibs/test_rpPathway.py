@@ -270,8 +270,8 @@ class Test_rpPathway(TestCase):
     ## READ METHODS
     def test_get_sink(self):
         self.assertListEqual(
-            self.pathway.get_sink(),
-            self.sink
+            sorted(self.pathway.get_sink()),
+            sorted(self.sink)
         )
 
     def test_get_fba(self):
@@ -282,8 +282,14 @@ class Test_rpPathway(TestCase):
 
     def test_get_thermo(self):
         self.assertDictEqual(
-            self.pathway.get_thermo_dGm_prime(),
-            self.thermo.get('thermo_dGm_prime')
+            self.pathway.get_thermo(),
+            self.thermo
+        )
+
+    def test_rpSBML(self):
+        self.assertEqual(
+            self.pathway,
+            rpPathway.from_rpSBML(rpsbml=self.pathway.to_rpSBML())
         )
 
     # def test_get_compartments(self):

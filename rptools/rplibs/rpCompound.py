@@ -38,9 +38,8 @@ from rptools.rplibs.rpObject import rpObject
 
 class rpCompound(Compound, rpObject):
 
-    __thermo_str = 'thermo_standard_dg_formation'
-    __fba_biomass_str = rpObject.get_fba_biomass_str()+'_shadow_price'
-    __fba_fraction_str = rpObject.get_fba_fraction_str()+'_shadow_price'
+    __thermo_str = 'standard_dg_formation'
+    __fba_str = 'shadow_price'
 
     def __init__(
         self,
@@ -91,16 +90,16 @@ class rpCompound(Compound, rpObject):
         return self.get_thermo_info(rpCompound.__thermo_str)
 
     def get_fba_biomass_shadow_price(self) -> TypeVar:
-        return self.get_fba_info(rpCompound.__fba_biomass_str)
+        return self.get_fba_biomass_info(rpCompound.__fba_str)
 
     def get_fba_fraction_shadow_price(self) -> TypeVar:
-        return self.get_fba_info(rpCompound.__fba_fraction_str)
+        return self.get_fba_fraction_info(rpCompound.__fba_str)
 
     def get_fba_fba_shadow_price(self) -> TypeVar:
-        return self.get_fba_info(rpCompound.__fba_fba_str)
+        return self.get_fba_fba_info(rpCompound.__fba_str)
 
     def get_fba_pfba_shadow_price(self) -> TypeVar:
-        return self.get_fba_info(rpCompound.__fba_pfba_str)
+        return self.get_fba_pfba_info(rpCompound.__fba_str)
 
     def get_compartment(self) -> str:
         return self.__compartment

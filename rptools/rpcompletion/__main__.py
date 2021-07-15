@@ -16,7 +16,6 @@ from json import dump as json_dump
 from colored import fg, bg, attr
 from rr_cache import rrCache
 from rptools import build_args_parser
-from rptools.rplibs import rpSBML
 from rptools.rpcompletion import rp_completion
 from rptools.rpcompletion.Args import add_arguments
 
@@ -100,11 +99,7 @@ def _cli():
     # Write out only topX sub-pathways per master pathway
     for pathway_id, sub_pathways in pathways.items():
         for sub_pathway in sub_pathways[-args.max_subpaths_filter:]:
-            rpSBML.from_Pathway(
-                pathway=sub_pathway,
-                cache=cache,
-                logger=logger
-            ).write_to_file(
+            sub_pathway.to_rpSBML().write_to_file(
                 os_path.join(
                     args.outdir,
                     'rp_'+sub_pathway.get_id()

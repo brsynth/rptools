@@ -14,7 +14,6 @@ from tempfile import (
     NamedTemporaryFile
 )
 from json import dumps as json_dumps
-from libsbml             import Objective as sbml_objective
 from cobra.flux_analysis import pfba
 from cobra               import io        as cobra_io
 from cobra.io.sbml       import (
@@ -23,19 +22,14 @@ from cobra.io.sbml       import (
 )
 from cobra.core.model    import Model     as cobra_model
 from cobra.core.solution import Solution  as cobra_solution
-from brs_utils import Cache
-from rptools.rplibs import (
-    rpSBML,
-    rpPathway,
-    rpReaction
-)
+from rptools.rplibs.rpSBML import rpSBML
+from rptools.rplibs.rpPathway import rpPathway
+from rptools.rplibs.rpReaction import rpReaction
 from .cobra_format import (
     cobraize,
-    uncobraize,
     uncobraize_results,
     cobra_suffix,
-    to_cobra,
-    cobraize
+    to_cobra
 )
 
 
@@ -312,13 +306,19 @@ def build_rpsbml(
         )
         rxn.set_reversible(False)
     # Create rpSBML object
-    rpsbml = rpSBML.from_Pathway(
-        pathway=pathway,
-        logger=logger
-    )
+    rpsbml = pathway.to_rpSBML()
     # Create the target consumption reaction in the rpSBML
     rpsbml.createReaction(
-        rxn=rxn_target
+        id=rxn_target.get_id(),
+        reactants=rxn_target.get_reactants(),
+        products=rxn_target.get_products(),
+        smiles=rxn_target.get_smiles(),
+        fbc_upper=rxn_target.get_fbc_upper(),
+        fbc_lower=rxn_target.get_fbc_lower(),
+        fbc_units=rxn_target.get_fbc_units(),
+        reversible=rxn_target.reversible(),
+        reacXref={'ec': rxn_target.get_ec_numbers()},
+        infos=rxn_target._to_dict(specific=True)
     )
     return rpsbml
 

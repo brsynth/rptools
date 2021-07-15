@@ -36,7 +36,7 @@ from logging import (
 )
 from math import isnan
 from chemlite import Reaction
-from rptools.rplibs.rpObject import rpObject
+from .rpObject import rpObject
 
 
 class rpReaction(Reaction, rpObject):
@@ -70,7 +70,7 @@ class rpReaction(Reaction, rpObject):
         self.set_rp2_transfo_id(None)
         self.set_rule_id(None)
         self.set_tmpl_rxn_id(None)
-        self.set_rule_score(float('nan'))
+        self.set_rule_score('NaN')
         self.set_idx_in_path(idx_in_path)
         self.set_fbc(
             l_value=lower_flux_bound,
