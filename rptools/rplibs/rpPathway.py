@@ -114,6 +114,9 @@ class rpPathway(Pathway, rpObject):
             value=10000,
             units=rpReaction.get_default_fbc_units()
         )
+        # Additional names for methods
+        self.get_sink = self.get_sink_species
+        self.set_sink = self.set_sink_species
 
     ## OUT METHODS
     # def __repr__(self):
