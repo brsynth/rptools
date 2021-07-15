@@ -43,6 +43,7 @@ from chemlite import (
     Compound
 )
 from numpy import isin
+from rptools.rplibs import rpSBML
 from rptools.rplibs.rpReaction import rpReaction
 from rptools.rplibs.rpObject import rpObject
 from rptools.rpfba.cobra_format import (
@@ -315,6 +316,15 @@ class rpPathway(Pathway, rpObject):
             self.set_species_group('intermediate', members)
         except TypeError:
             return None
+
+    def from_rpSBML(self, infile: str) -> 'rpPathway':
+        return rpSBML(inFile=infile).to_Pathway()
+
+    def to_rpSBML(self, outfile: str = None) -> rpSBML:
+        if outfile is None:
+            return rpSBML.from_Pathway(self)
+        else:
+            rpSBML.from_Pathway(self).write_to_file(outfile)
 
     def add_reaction(
         self,
