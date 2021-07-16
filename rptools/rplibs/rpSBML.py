@@ -2846,6 +2846,13 @@ class rpSBML:
         :return: Sucess or failure of the function
         """
         self.logger.debug('############### '+str(annot_header)+' ################')
+        #### create the string
+        annotation = f'''
+            <annotation>
+                <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                    <rdf:BRSynth rdf:about="# adding">
+                        <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
+                            <brsynth:{str(annot_header)}'''
         if isList:
             # annotation = '''
             #     <annotation>
@@ -2854,16 +2861,19 @@ class rpSBML:
             #             <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
             #                 <brsynth:'''+str(annot_header)+'''>
             # '''
-            annotation = '''
-                <annotation>
-                    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
-                        <rdf:BRSynth rdf:about="# adding">
-                        <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
-            '''
-            annotation += '<brsynth:'+str(annot_header)
+            # annotation = '''
+            #     <annotation>
+            #         <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+            #             <rdf:BRSynth rdf:about="# adding">
+            #             <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
+            # '''
+            # annotation += '<brsynth:'+str(annot_header)
+            annotation += '>'
             for k, v in value.items():
-                annotation += f' {k}="{v}"'
-            annotation += ' />'
+                annotation += f'''
+                    <brsynth:{k} value="{v}"/>'''
+            annotation += f'''
+                            </brsynth:{str(annot_header)}>'''
             # if isSort:
             #     for name in sorted(value, key=value.get, reverse=True):
             #         if isAlone:
@@ -2888,33 +2898,30 @@ class rpSBML:
             #         </rdf:BRSynth>
             #         </rdf:RDF>
             #     </annotation>'''
-            annotation += '''
-                    </brsynth:brsynth>
-                    </rdf:BRSynth>
-                    </rdf:RDF>
-                </annotation>'''
+            # annotation += '''
+            #         </brsynth:brsynth>
+            #         </rdf:BRSynth>
+            #         </rdf:RDF>
+            #     </annotation>'''
         else:
-            #### create the string
-            annotation = '''
-                <annotation>
-                    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
-                        <rdf:BRSynth rdf:about="# adding">
-                            <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">'''
-            if isAlone:
-                annotation += '<brsynth:'+str(annot_header)+'>'+str(value)+'</brsynth:'+str(annot_header)+'>'
+            if isinstance(value, dict):
+                for k, v in value.items():
+                    annotation += f' {k}="{v}"'
             else:
-                if unit:
-                    if error:
-                        annotation += '<brsynth:'+str(annot_header)+' unit="'+str(unit)+'" value="'+str(value)+'" error="'+str(error)+'" />'
-                    else:
-                        annotation += '<brsynth:'+str(annot_header)+' unit="'+str(unit)+'" value="'+str(value)+'" />'
-                else:
-                    annotation += '<brsynth:'+str(annot_header)+' value="'+str(value)+'" />'
-            annotation += '''
-                            </brsynth:brsynth>
-                        </rdf:BRSynth>
-                    </rdf:RDF>
-                </annotation>'''
+                annotation += f' value="{str(value)}"'
+            annotation += ' />'
+            #     if unit:
+            #         if error:
+            #             annotation += '<brsynth:'+str(annot_header)+' unit="'+str(unit)+'" value="'+str(value)+'" error="'+str(error)+'" />'
+            #         else:
+            #             annotation += '<brsynth:'+str(annot_header)+' unit="'+str(unit)+'" value="'+str(value)+'" />'
+            #     else:
+            #         annotation += '<brsynth:'+str(annot_header)+' value="'+str(value)+'" />'
+        annotation += '''
+                        </brsynth:brsynth>
+                    </rdf:BRSynth>
+                </rdf:RDF>
+            </annotation>'''
         self.logger.debug('annotation: {0}'.format(annotation))
         annot_obj = libsbml.XMLNode.convertStringToXMLNode(annotation)
         if not annot_obj:
@@ -3731,7 +3738,7 @@ class rpSBML:
             # lists in the annotation
             # The below is for the pre-new rules organisation of the SBML files
             # elif ann.getName()=='selenzyme' or ann.getName()=='rule_ori_reac':
-            elif ann.getName() == 'selenzyme':
+            elif ann.getName() == 'selenzy':
                 toRet[ann.getName()] = {}
                 for y in range(ann.getNumChildren()):
                     selAnn = ann.getChild(y)
@@ -3991,10 +3998,11 @@ class rpSBML:
             group.addMember(member)
 
         for key, value in infos.items():
-            if isinstance(value, dict):
-                isList = True
-            else:
-                isList = False
+            # if isinstance(value, dict):
+            #     isList = True
+            # else:
+            #     isList = False
+            isList = False
             self.updateBRSynth(
                 sbase_obj=self.getGroup('rp_pathway'),
                 annot_header=key,
@@ -4673,7 +4681,8 @@ class rpSBML:
         #     if rxn['rxn_idx']:
         #         self.updateBRSynth(reac, 'rxn_idx', rxn['rxn_idx'], None, False, False, False, meta_id)
         for key, value in infos.items():
-            if isinstance(value, dict):
+            # if isinstance(value, dict):
+            if 'selenzy' in key.lower():
                 isList = True
             else:
                 isList = False
@@ -4779,10 +4788,11 @@ class rpSBML:
             self.updateBRSynth(spe, 'inchikey', inchikey, None, True, False, False, meta_id)
         for key, value in infos.items():
             # for k, v in value.items():
-            if isinstance(value, dict):
-                isList = True
-            else:
-                isList = False
+            # if isinstance(value, dict):
+            #     isList = True
+            # else:
+            #     isList = False
+            isList = False
             self.updateBRSynth(
                 sbase_obj=spe,
                 annot_header=key,
