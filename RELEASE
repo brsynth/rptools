@@ -2,8 +2,6 @@
 
 ## 5.3.1
 - feat(rplibs): add MIRIAM infos
-- feat(rplibs.rpReaction): add selenzy score
-- feat(rplibs.rpSBML): handle lists in rpSBML files
 
 ## 5.3.0
 - chore(rplibs): swap rpPathway methods from rpSBML to rpSBML methods into rpPathway
