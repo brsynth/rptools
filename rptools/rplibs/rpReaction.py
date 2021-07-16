@@ -45,6 +45,16 @@ class rpReaction(Reaction, rpObject):
     __default_fbc_upper = 10000
     __default_fbc_units = 'mmol_per_gDW_per_hr'
 
+    @staticmethod
+    def get_default_fbc_units() -> str:
+        return rpReaction.__default_fbc_units
+    @staticmethod
+    def get_default_fbc_lower() -> float:
+        return rpReaction.__default_fbc_lower
+    @staticmethod
+    def get_default_fbc_upper() -> float:
+        return rpReaction.__default_fbc_upper
+
     def __init__(
         self,
         id: str,
@@ -80,6 +90,7 @@ class rpReaction(Reaction, rpObject):
             u_value=upper_flux_bound,
             units=flux_bound_units
         )
+        self.set_selenzy({})
         self.set_reversible(reversible)
         self.set_miriam(miriam)
 
@@ -110,6 +121,7 @@ class rpReaction(Reaction, rpObject):
             'tmpl_rxn_id': self.get_tmpl_rxn_id(),
             'rule_score': self.get_rule_score(),
             'idx_in_path': self.get_idx_in_path(),
+            'selenzy': self.get_selenzy()
             # 'fbc': deepcopy(self.get_fbc())
         }
 
@@ -154,23 +166,20 @@ class rpReaction(Reaction, rpObject):
     def get_miriam(self) -> Dict:
         return self.__miriam
 
-    @staticmethod
-    def get_default_fbc_units() -> str:
-        return rpReaction.__default_fbc_units
-
     def get_fbc_lower(self) -> float:
         return self.__fbc_lower
 
     def get_fbc_upper(self) -> float:
         return self.__fbc_upper
 
-    @staticmethod
-    def get_default_fbc_lower() -> float:
-        return rpReaction.__default_fbc_lower
+    def get_selenzy(self) -> Dict[str, float]:
+        return self.get_selenzy_scores()
 
-    @staticmethod
-    def get_default_fbc_upper() -> float:
-        return rpReaction.__default_fbc_upper
+    def get_selenzy_scores(self) -> Dict[str, float]:
+        return self.__selenzy
+
+    def get_selenzy_score(self, id: str) -> float:
+        return self.get_selenzy_scores().get(id, None)
 
     ## WRITE METHODS
     def set_rp2_transfo_id(self, transfo_id: str) -> None:
@@ -210,6 +219,17 @@ class rpReaction(Reaction, rpObject):
 
     def set_reversible(self, value: bool) -> None:
         self.__reversible = value
+
+    def set_selenzy(self, scores: Dict[str, float]) -> None:
+        self.set_selenzy_scores(scores)
+
+    def set_selenzy_scores(self, scores: Dict[str, float]) -> None:
+        self.__selenzy = {}
+        for uniprot_id, score in scores.items():
+            self.add_selenzy_score(uniprot_id, score)
+
+    def add_selenzy_score(self, id: str, score: float) -> None:
+        self.__selenzy[id] = score
 
     def set_miriam(self, miriam: Dict) -> None:
         self.__miriam = deepcopy(miriam)
