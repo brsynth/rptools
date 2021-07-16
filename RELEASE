@@ -1,5 +1,8 @@
 # Release history
 
+## 5.3.1
+- feat(rplibs): add MIRIAM infos
+
 ## 5.3.0
 - chore(rplibs): swap rpPathway methods from rpSBML to rpSBML methods into rpPathway
 
