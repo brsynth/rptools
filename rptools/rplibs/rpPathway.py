@@ -334,14 +334,16 @@ class rpPathway(Pathway, rpObject):
                     value = None
                 elif str(value) == 'nan':
                     value = 'NaN'
+                fba_offset = len(rpObject.get_fba_prefix()) + len(rpObject.get_sep())
+                thermo_offset = len(rpObject.get_thermo_prefix()) + len(rpObject.get_sep())
                 if key.startswith(rpObject.get_thermo_prefix()):
                     object.set_thermo_info(
-                        key[len(rpObject.get_thermo_prefix())+1:],
+                        key[thermo_offset:],
                         value
                     )
                 elif key.startswith(rpObject.get_fba_prefix()):
                     object.set_fba_info(
-                        key[len(rpObject.get_fba_prefix())+1:],
+                        key[fba_offset:],
                         value
                     )
                 else:
