@@ -56,8 +56,11 @@ class rpReaction(Reaction, rpObject):
         upper_flux_bound: float = __default_fbc_upper,
         flux_bound_units: str = __default_fbc_units,
         reversible: bool = False,
+        miriam: Dict = {},
         logger: Logger = getLogger(__name__)
     ):
+        if 'ec-code' in miriam:
+            ec_numbers = miriam['ec-code']
         Reaction.__init__(
             self,
             id=id,
@@ -78,6 +81,7 @@ class rpReaction(Reaction, rpObject):
             units=flux_bound_units
         )
         self.set_reversible(reversible)
+        self.set_miriam(miriam)
 
     ## OUT METHODS
     # def __repr__(self):
@@ -147,6 +151,9 @@ class rpReaction(Reaction, rpObject):
     def reversible(self) -> bool:
         return self.__reversible
 
+    def get_miriam(self) -> Dict:
+        return self.__miriam
+
     @staticmethod
     def get_default_fbc_units() -> str:
         return rpReaction.__default_fbc_units
@@ -203,3 +210,9 @@ class rpReaction(Reaction, rpObject):
 
     def set_reversible(self, value: bool) -> None:
         self.__reversible = value
+
+    def set_miriam(self, miriam: Dict) -> None:
+        self.__miriam = deepcopy(miriam)
+
+    def add_miriam(self, key: str, infos: TypeVar) -> None:
+        self.__miriam[key] = deepcopy(infos)

@@ -363,19 +363,20 @@ class rpPathway(Pathway, rpObject):
             rpReaction,
             Union[str, None]
         ]:
-            try:
-                ec_numbers = infos['miriam']['ec-code']
-            except KeyError:
-                ec_numbers = []
+            # try:
+            #     ec_numbers = infos['miriam']['ec-code']
+            # except KeyError:
+            #     ec_numbers = []
             reaction = rpReaction(
                 id=rxn_id,
-                ec_numbers=ec_numbers,
+                # ec_numbers=ec_numbers,
                 reactants=infos['left'],
                 products=infos['right'],
                 lower_flux_bound=infos['fbc_lower_value'],
                 upper_flux_bound=infos['fbc_upper_value'],
                 flux_bound_units=infos['fbc_units'],
                 reversible=infos['reversible'],
+                miriam=infos['miriam'],
                 logger=logger
             )
             # Add additional infos
@@ -518,6 +519,10 @@ class rpPathway(Pathway, rpObject):
 
         ## Add reactions to the model
         for rxn in self.get_list_of_reactions():
+            xref = {
+                'ec': rxn.get_ec_numbers(),
+                **rxn.get_miriam()
+            }
             # Add the reaction in the model
             rpsbml.createReaction(
                 id=rxn.get_id(),
@@ -528,7 +533,7 @@ class rpPathway(Pathway, rpObject):
                 fbc_lower=rxn.get_fbc_lower(),
                 fbc_units=rxn.get_fbc_units(),
                 reversible=rxn.reversible(),
-                reacXref={'ec': rxn.get_ec_numbers()},
+                reacXref=xref,
                 infos=rxn._to_dict(specific=True)
             )
 
