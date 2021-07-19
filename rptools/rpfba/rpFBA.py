@@ -42,16 +42,16 @@ __COMPARTMENTS = [
 # TODO: add the pareto frontier optimisation as an automatic way to calculate the optimal fluxes
 
 def runFBA(
-                  pathway: rpPathway,
-            gem_sbml_path: str,
-           compartment_id: str,
-         objective_rxn_id: str = 'rxn_target',
-           biomass_rxn_id: str = 'biomass',
-                 sim_type: str = 'fraction',
-           fraction_coeff: float = 0.75,
-                    merge: bool = False,
+    pathway: rpPathway,
+    gem_sbml_path: str,
+    compartment_id: str,
+    objective_rxn_id: str = 'rxn_target',
+    biomass_rxn_id: str = 'biomass',
+    sim_type: str = 'fraction',
+    fraction_coeff: float = 0.75,
+    merge: bool = False,
     ignore_orphan_species: bool = True,
-                   logger: Logger = getLogger(__name__)
+    logger: Logger = getLogger(__name__)
 ) -> Dict:
     """Single rpSBML simulation
 

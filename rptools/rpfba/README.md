@@ -13,21 +13,18 @@ NOTE: In order to FBA works correctly, some of chemical species have to be ignor
 ## Input
 
 Required:
-* **input_sbml**: (string) Path to the input file
-* **gem_sbml**: (string) Path to the GEM SBML model
+* **pathway_file**: (string) Path to the pathway file (rpSBML)
+* **model_file**: (string) Path to the GEM SBML model
+* **compartment_id**: (string, e.g. cytoplasm) ID of the compartment that contains the chemical species involved in the heterologous pathway
+* **out_file**: (string) Path to the ouput upgraded pathway file
 
 Advanced options:
-* **--pathway_id**: (string, default=rp_pathway) ID of the heterologous pathway
-* **--compartment_id**: (string, default=MNXC3 (i.e. cytoplasm)) ID of the compartment ID that contains the heterologous pathway
-* **--sim_type**: (string, default=fraction) Valid options include: fraction, fba, pfba. The type of constraint based modelling method
-* **--source_reaction**: (string, default=biomass) Name of the source reaction that will be restricted in the "fraction" simulation type. This parameter is ignored for "fba" and "pfba"
-* **--target_reaction**: (string, default=RP1_sink) Heterologous pathway flux sink reaction. This parameters is required in all simulation type
-* **--source_coefficient**: (float, default=1.0) Objective coefficient for the source reaction. This parameter is ignored for "fba" and "pfba"
-* **--target_coefficient**: (float, default=1.0) Objective coefficient for the target reaction.
-* **--is_max**: (boolean, default=True) Maximise or minimise the objective function
-* **--fraction_of**: (float, default=0.75) Portion of the maximal flux used to set the maximal and minimal bounds for the source reaction of the "fraction" simulation type
+* **--sim**: (string, default='fraction') Valid options include: 'fraction', 'fba', 'pfba'. The type of constraint based modelling method
+* **--objective_rxn_id**: (string, default=rxn_target) Reaction ID to optimise
+* **--biomass_rxn_id**: (string, default='biomass') Biomass reaction ID. Note: Only for 'fraction' simulation
+* **--fraction_of**: (float, default=0.75) Portion of the maximal flux used to set the maximal and minimal bounds for the source reaction of the 'fraction' simulation type
 * **--merge**: (boolean, default=False) Return the merged GEM+heterologous pathway SBML or only the heterologous pathway SBML files
-* **--log**: (string, default=error) Set the log level, choices are 'debug', 'info', 'warning', 'error', 'critical'
+* **--ignore_orphan_species**: (string, default=True) Ignore metabolites that are only consumed or produced
 
 ## Output
 
@@ -45,12 +42,22 @@ rpFBA is part of rpTools suite:
 ### rpFBA process
 **From Python code**
 ```python
-from rptools.rplibs import rpSBML
+from rptools.rplibs import rpPathway
 from rptools.rpfba import runFBA
 
-pathway = rpSBML(inFile='lycopene/rp_003_0382.sbml').to_Pathway()
+pathway = rpPathway.from_rpSBML(infile='tests/rpfba/data/sets/measured_3/B.xml')
 
-runFBA(pathway, 'e_coli_model.sbml.gz')
+results = runFBA(
+    pathway=pathway,
+    gem_sbml_path='tests/rpfba/data/sets/measured_3/e_coli_iJ01366.xml',
+    compartment_id='MNXC3',
+    biomass_rxn_id='biomass',
+    objective_rxn_id='rxn_target',
+    sim_type='fraction',
+    fraction_coeff=0.75,
+    merge=False,
+    ignore_orphan_species=True
+)
 
 pathway.get_fba_biomass().get('value')
 0.7638744755010194
@@ -59,7 +66,7 @@ pathway.get_fba_biomass()
 ```
 **From CLI**
 ```sh
-python -m rptools.rpfba <input_sbml> <gem_sbml> <outfile>
+python -m rptools.rpfba <pathway_rpsbml> <model_gem_sbml> <compartment_id> <outfile>
 ```
 
 ## Tests
