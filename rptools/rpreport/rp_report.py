@@ -76,7 +76,7 @@ def to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose=F
         if verbose:
             print("Parsing", name)
 
-        pathway = rpSBML(inFile=os.path.join(source_path, name)).to_Pathway()
+        pathway = rpPathway.from_rpSBML(infile=os.path.join(source_path, name))
         
         rp_name = pathway.get_id()
         if verbose:
