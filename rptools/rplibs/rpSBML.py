@@ -4664,7 +4664,16 @@ class rpSBML:
         rpSBML.checklibSBML(reac.setAnnotation(self._defaultBothAnnot(meta_id)), 'creating annotation')
         self.addUpdateMIRIAM(reac, 'reaction', reacXref, meta_id)
         ###### BRSYNTH additional information ########
-        self.updateBRSynth(reac, 'smiles', smiles, None, True, False, False, meta_id)
+        self.updateBRSynth(
+            sbase_obj=reac,
+            annot_header='smiles',
+            value=smiles,
+            unit=None,
+            error=True,
+            isAlone=True,
+            isList=False,
+            meta_id=meta_id
+        )
         # if rxn['rule_id']:
         #     self.updateBRSynth(reac, 'rule_id', rxn['rule_id'], None, True, False, False, meta_id)
         # # TODO: need to change the name and content (to dict) upstream
@@ -4780,12 +4789,39 @@ class rpSBML:
         self.addUpdateMIRIAM(spe, 'species', chemXref, meta_id)
         ###### BRSYNTH additional information ########
         if smiles is not None:
-            self.updateBRSynth(spe, 'smiles', smiles, None, True, False, False, meta_id)
+            self.updateBRSynth(
+                sbase_obj=spe,
+                annot_header='smiles',
+                value=smiles,
+                unit=None,
+                error=True,
+                isAlone=True,
+                isList=False,
+                meta_id=meta_id
+            )
             #                   sbase_obj, annot_header, value, unit=None, isAlone=False, isList=False, isSort=True, meta_id=None)
         if inchi is not None:
-            self.updateBRSynth(spe, 'inchi', inchi, None, True, False, False, meta_id)
+            self.updateBRSynth(
+                sbase_obj=spe,
+                annot_header='inchi',
+                value=inchi,
+                unit=None,
+                error=True,
+                isAlone=True,
+                isList=False,
+                meta_id=meta_id
+            )
         if inchikey is not None:
-            self.updateBRSynth(spe, 'inchikey', inchikey, None, True, False, False, meta_id)
+            self.updateBRSynth(
+                sbase_obj=spe,
+                annot_header='inchikey',
+                value=inchikey,
+                unit=None,
+                error=True,
+                isAlone=True,
+                isList=False,
+                meta_id=meta_id
+            )
         for key, value in infos.items():
             # for k, v in value.items():
             # if isinstance(value, dict):
