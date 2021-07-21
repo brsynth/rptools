@@ -160,19 +160,21 @@ def runThermo(
     # Search for the key ID known by eQuilibrator
     cc_species = {}
     substituted_species = {}
-    # sep = '__64__'
+    sep = '__64__'
     for spe in pathway.get_species():
-        # spe_split = spe.get_id().split(sep)
-        # if len(spe_split) > 1:
-        #     _compound_substitutes = {}
+        spe_split = spe.get_id().split(sep)
+        if len(spe_split) > 1:
+            _compound_substitutes = {k+sep+spe_split[1]: v for k, v in compound_substitutes.items()}
+        else:
+            _compound_substitutes = deepcopy(compound_substitutes)
         # If the specie is listed in substitutes file, then take search values from it
         # Check if starts with in case of compound names are like CMPD_NAME__64__COMPID
-        if spe.get_id() in compound_substitutes:
+        if spe.get_id() in _compound_substitutes:
             cc_species[spe.get_id()] = search_equilibrator_compound(
                 cc=cc,
-                id=compound_substitutes[spe.get_id()]['id'],
-                inchikey=compound_substitutes[spe.get_id()]['inchikey'],
-                inchi=compound_substitutes[spe.get_id()]['inchi'],
+                id=_compound_substitutes[spe.get_id()]['id'],
+                inchikey=_compound_substitutes[spe.get_id()]['inchikey'],
+                inchi=_compound_substitutes[spe.get_id()]['inchi'],
                 logger=logger
             )
         # Else, take search values from rpCompound
