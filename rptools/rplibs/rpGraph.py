@@ -186,7 +186,7 @@ class rpGraph:
         :rtype: list
         """
         _species = []
-        if species == []:
+        if not species:
             species = self.G.nodes()
         for spe_id in species:
         # for node_name in self.G.nodes():
