@@ -1,5 +1,8 @@
 # Release history
 
+## 5.3.5
+- chore(rpthermo): handle __64__ suffix for substituted compounds
+
 ## 5.3.4
 - fix(rpthermo): consider species are well-formed (i.e. without __64__)
 
