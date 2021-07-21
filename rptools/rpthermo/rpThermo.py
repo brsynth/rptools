@@ -162,7 +162,8 @@ def runThermo(
     substituted_species = {}
     for spe in pathway.get_species():
         # If the specie is listed in substitutes file, then take search values from it
-        if spe.get_id() in compound_substitutes:
+        # Check if starts with in case of compound names are like CMPD_NAME__64__COMPID
+        if spe.get_id().startswith(tuple(compound_substitutes)):
             cc_species[spe.get_id()] = search_equilibrator_compound(
                 cc=cc,
                 id=compound_substitutes[spe.get_id()]['id'],
@@ -180,8 +181,11 @@ def runThermo(
                 smiles=spe.get_smiles(),
                 logger=logger
             )
-        if spe.get_id() != cc_species[spe.get_id()]['id']:
-            substituted_species[spe.get_id()] = cc_species[spe.get_id()][cc_species[spe.get_id()]['cc_key']]
+        if cc_species[spe.get_id()] != {}:
+            if spe.get_id() != cc_species[spe.get_id()]['id']:
+                substituted_species[spe.get_id()] = cc_species[spe.get_id()][cc_species[spe.get_id()]['cc_key']]
+        else:
+            logger.warning(f'Compound {spe.get_id()} has not been found within eQuilibrator cache')
 
     # Store thermo values for the net reactions
     # and for each of the reactions within the pathway
@@ -304,10 +308,7 @@ def search_equilibrator_compound(
         'smiles': smiles
     }
     for key, val in data.items():
-        if (
-            val is not None
-            and val != ''
-        ):
+        if val:
             compound = cc.get_compound(val)
             # If compound is found in eQuilibrator, then...
             if compound is not None:
@@ -315,16 +316,19 @@ def search_equilibrator_compound(
                 _compound = copy_data(compound, data)
                 return _compound
 
-    # In last resort, try to search only with the first part of inchikey
-    compound = cc.search_compound_by_inchi_key(
-        # first part of inchikey
-        inchikey.split('-')[0]
-    )[0]  # first compound in the list, hope it is sorted by decrease relevance
-    if compound is not None:
-        _compound = copy_data(compound, data, overwrite=True)
-        # make inchi_key the ID key
-        _compound['cc_key'] = 'inchi_key'
-        return _compound
+    if inchikey:
+        # In last resort, try to search only with the first part of inchikey
+        compounds = cc.search_compound_by_inchi_key(
+            # first part of inchikey
+            inchikey.split('-')[0]
+        )
+        # eQuilibrator returns a list of compounds
+        if compounds:
+            # first compound in the list, hope it is sorted by decrease relevance
+            _compound = copy_data(compounds[0], data, overwrite=True)
+            # make inchi_key the ID key
+            _compound['cc_key'] = 'inchi_key'
+            return _compound
 
     return {}
 
@@ -519,7 +523,7 @@ def remove_compounds(
 
     # unk_compounds = ['CMPD_0000000003', 'CMPD_0000000010', 'CMPD_0000000025']
 
-    if compounds == []:
+    if not compounds:
         return reactions
 
     # # If the target is unknown in eQuilibrator cache,
@@ -696,7 +700,7 @@ def build_stoichio_matrix(
     # If compounds not passed in arg,
     # then detect them from reactions
     # else only put in the matrix compounds contained in 'compounds'
-    if compounds == []:
+    if not compounds:
         species = [rxn.get_species_ids() for rxn in reactions]
         _compounds = list(
             set(
@@ -735,75 +739,75 @@ def build_stoichio_matrix(
     return sto_mat
 
 
-def get_compounds_from_cache(
-    compounds: List[Compound],
-    cc: ComponentContribution,
-    logger: Logger=getLogger(__name__)
-) -> Dict:
-    """Get compounds accession from the cache
-    Compounds are None if not found
+# def get_compounds_from_cache(
+#     compounds: List[Compound],
+#     cc: ComponentContribution,
+#     logger: Logger=getLogger(__name__)
+# ) -> Dict:
+#     """Get compounds accession from the cache
+#     Compounds are None if not found
 
-    Parameters
-    ----------
-    compounds : Dict
-        Compounds to check the existence in the cache
-    cc : ComponentContribution
-        ComponentContribution
-    logger : Logger
+#     Parameters
+#     ----------
+#     compounds : Dict
+#         Compounds to check the existence in the cache
+#     cc : ComponentContribution
+#         ComponentContribution
+#     logger : Logger
 
-    Returns
-    -------
-    Dictionary of compounds
+#     Returns
+#     -------
+#     Dictionary of compounds
 
-    """
-    compounds_dict = {}
-    unknown_compounds = []
+#     """
+#     compounds_dict = {}
+#     unknown_compounds = []
 
-    for cmpd in compounds:
+#     for cmpd in compounds:
 
-        # print(cmpd._to_dict())
+#         # print(cmpd._to_dict())
 
-        logger.debug(f'Searching {cmpd.to_string()}...')
-        compound = cc.get_compound(cmpd.get_id())
-        logger.debug(f'Found {compound.__repr__()}')
+#         logger.debug(f'Searching {cmpd.to_string()}...')
+#         compound = cc.get_compound(cmpd.get_id())
+#         logger.debug(f'Found {compound.__repr__()}')
 
-        if compound is not None:
-            compounds_dict[cmpd.get_id()] = compound
-        # If ID not found,
-        # then search with inchikey
-        else:
-            try:
-                logger.debug(f'id: {cmpd.get_id()} ; inchi: {cmpd.get_inchi()} ; inchikey: {cmpd.get_inchikey()}')
-                if cmpd.get_inchikey() is not None:
-                    logger.debug(f'Searching {cmpd.get_inchikey()}...')
-                    compound = cc.search_compound(cmpd.get_inchikey())
-                    logger.debug(f'Found {compound.__repr__()}')
-                    # If the first level of inchikeys are the same,
-                    # then substitute
-                    if compound.inchi_key.split('-')[0] == cmpd.get_inchikey().split('-')[0]:
-                        compounds_dict[cmpd.get_id()] = compound
-                    else:
-                        # search by inchikey
-                        try:
-                            compounds_dict[cmpd.get_id()] = cc.search_compound_by_inchi_key(cmpd.get_inchikey())[0]
-                        except IndexError:  # the compound is considered as unknown
-                            unknown_compounds += [cmpd.get_id()]
-                # else:
-                #     logger.debug(f'Searching {cmpd.to_string()}...')
-                #     compound = cc.get_compound(cmpd.get_id())
-                #     logger.debug(f'Found {compound.__repr__()}')
-                #     if compound is not None:
-                #         compounds_dict[cmpd.get_id()] = compound
-            except (AttributeError, ValueError):
-                try:
-                    logger.debug(f'Searching {cmpd.get_inchi()}...')
-                    compounds_dict[cmpd.get_id()] = cc.get_compound_by_inchi(cmpd.get_inchi())
-                    logger.debug(f'Found {compound.__repr__()}')
-                except ValueError:
-                    unknown_compounds += [cmpd.get_id()]
+#         if compound is not None:
+#             compounds_dict[cmpd.get_id()] = compound
+#         # If ID not found,
+#         # then search with inchikey
+#         else:
+#             try:
+#                 logger.debug(f'id: {cmpd.get_id()} ; inchi: {cmpd.get_inchi()} ; inchikey: {cmpd.get_inchikey()}')
+#                 if cmpd.get_inchikey() is not None:
+#                     logger.debug(f'Searching {cmpd.get_inchikey()}...')
+#                     compound = cc.search_compound(cmpd.get_inchikey())
+#                     logger.debug(f'Found {compound.__repr__()}')
+#                     # If the first level of inchikeys are the same,
+#                     # then substitute
+#                     if compound.inchi_key.split('-')[0] == cmpd.get_inchikey().split('-')[0]:
+#                         compounds_dict[cmpd.get_id()] = compound
+#                     else:
+#                         # search by inchikey
+#                         try:
+#                             compounds_dict[cmpd.get_id()] = cc.search_compound_by_inchi_key(cmpd.get_inchikey())[0]
+#                         except IndexError:  # the compound is considered as unknown
+#                             unknown_compounds += [cmpd.get_id()]
+#                 # else:
+#                 #     logger.debug(f'Searching {cmpd.to_string()}...')
+#                 #     compound = cc.get_compound(cmpd.get_id())
+#                 #     logger.debug(f'Found {compound.__repr__()}')
+#                 #     if compound is not None:
+#                 #         compounds_dict[cmpd.get_id()] = compound
+#             except (AttributeError, ValueError):
+#                 try:
+#                     logger.debug(f'Searching {cmpd.get_inchi()}...')
+#                     compounds_dict[cmpd.get_id()] = cc.get_compound_by_inchi(cmpd.get_inchi())
+#                     logger.debug(f'Found {compound.__repr__()}')
+#                 except ValueError:
+#                     unknown_compounds += [cmpd.get_id()]
 
-    exit()
-    return compounds_dict, unknown_compounds
+#     exit()
+#     return compounds_dict, unknown_compounds
 
 
 def print_reaction(
