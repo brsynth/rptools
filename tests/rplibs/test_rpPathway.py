@@ -4,6 +4,8 @@ Created on May 28 2021
 @author: Joan Hérisson
 """
 
+from os import path as os_path
+from tempfile import NamedTemporaryFile
 from unittest import TestCase
 from copy import deepcopy
 from rr_cache import rrCache
@@ -98,12 +100,16 @@ class Test_rpPathway(TestCase):
     }
 
     def setUp(self):
+        self.target = rpCompound(
+            id='TARGET_0000000001',
+            smiles='[H]OC(=O)C([H])=C([H])C([H])=C([H])C(=O)O[H]'
+        )
         self.reactants = {
             "CMPD_0000000003": 1,
             "MNXM4": 1
         }
         self.products = {
-            "TARGET_0000000001": 1,
+            self.target.get_id(): 1,
             "MNXM1": 2
         }
         self.rxn = rpReaction(
@@ -163,17 +169,17 @@ class Test_rpPathway(TestCase):
         ]
         self.fba = 0.57290585662576
         self.thermo = {
-            "thermo_dG0_prime": {
+            "dG0_prime": {
                 "value": -884.6296371353768,
                 "error": 9.819227446307337,
                 "units": "kilojoule / mole"
             },
-            "thermo_dGm_prime": {
+            "dGm_prime": {
                 "value": -884.6296371353768,
                 "error": 9.819227446307337,
                 "units": "kilojoule / mole"
             },
-            "thermo_dG_prime": {
+            "dG_prime": {
                 "value": -884.6296371353768,
                 "error": 9.819227446307337,
                 "units": "kilojoule / mole"
@@ -253,12 +259,14 @@ class Test_rpPathway(TestCase):
         self.pathway = rpPathway(
             id=self.id,
         )
+        self.pathway.set_parameters(self.parameters)
+        self.pathway.set_unit_defs(self.unit_def)
         self.rxn.set_rp2_transfo_id(self.rp2_transfo_id)
         self.rxn.set_rule_id(self.rule_id)
         self.rxn.set_tmpl_rxn_id(self.tmpl_rxn_id)
         self.rxn.set_idx_in_path(self.idx_in_path)
         self.rxn.set_rule_score(self.rule_score)
-        self.pathway.add_reaction(rxn=self.rxn, target_id='TARGET_0000000001')
+        self.pathway.add_reaction(rxn=self.rxn, target_id=self.target.get_id())
         for rxn in self.reactions[1:]:
             self.pathway.add_reaction(rxn)
         self.sink = ['MNXM23', 'MNXM6', 'MNXM13']
@@ -268,10 +276,128 @@ class Test_rpPathway(TestCase):
         self.pathway.set_fba_fraction(self.fba)
 
     ## READ METHODS
-    def test_get_sink(self):
+    def test__to_dict(self):
+        self.assertDictEqual(
+            self.pathway._to_dict(specific=True),
+            {
+                'sink': self.pathway.get_sink(),
+                'target': self.pathway.get_target_id(),
+                'parameters': self.pathway.get_parameters(),
+                'unit_defs': self.pathway.get_unit_defs(),
+                'compartments': self.pathway.get_compartments(),
+                'fba_fraction': self.pathway.get_fba_fraction(),
+                'thermo_dG0_prime': self.pathway.get_thermo_dG0_prime(),
+                'thermo_dGm_prime': self.pathway.get_thermo_dGm_prime(),
+                'thermo_dG_prime': self.pathway.get_thermo_dG_prime(),
+            }
+        )
+
+    def test_completed_species(self):
+        species = ['SPE_1', 'SPE_2']
+        self.pathway.set_completed_species([species[0]])
+        self.pathway.add_completed_species(species)
+        self.assertCountEqual(
+            self.pathway.get_completed_species(),
+            species
+        )
+
+    def test_add_species_group_new(self):
+        species = ['SPE_1', 'SPE_2']
+        self.pathway.add_species_group(
+            'completed',
+            species
+        )
+        self.assertCountEqual(
+            self.pathway.get_completed_species(),
+            species
+        )
+
+    def test_add_species_group(self):
+        species = ['SPE_1', 'SPE_2']
+        self.pathway.set_completed_species([species[0]])
+        self.pathway.add_species_group(
+            'completed',
+            species
+        )
+        self.assertCountEqual(
+            self.pathway.get_completed_species(),
+            species
+        )
+
+    def test___set_species_group_wrong_type(self):
+        species = {'SPE_1': 1, 'SPE_2': 2}
+        self.pathway.add_species_group(
+            'completed',
+            species
+        )
         self.assertListEqual(
-            sorted(self.pathway.get_sink()),
-            sorted(self.sink)
+            sorted(self.pathway.get_completed_species()),
+            list(species.keys())
+        )
+
+    def test_fba_ignored_species(self):
+        species = ['SPE_1', 'SPE_2']
+        self.pathway.set_fba_ignored_species(species)
+        self.assertCountEqual(
+            self.pathway.get_fba_ignored_species(),
+            species
+        )
+
+    def test_thermo_substituted_species(self):
+        species = ['SPE_1', 'SPE_2']
+        self.pathway.set_thermo_substituted_species(species)
+        self.assertCountEqual(
+            self.pathway.get_thermo_substituted_species(),
+            species
+        )
+
+    def test_intermediate_species(self):
+        species = ['SPE_1', 'SPE_2']
+        self.pathway.set_trunk_species(
+            species
+            + self.sink[:1]
+        )
+        self.pathway.add_trunk_species([self.pathway.get_target_id()])
+        self.assertCountEqual(
+            self.pathway.get_intermediate_species(),
+            species
+        )
+
+    def test_get_sink(self):
+        self.assertCountEqual(
+            self.pathway.get_sink(),
+            self.sink
+        )
+
+    def test_get_target_rxn_id(self):
+        self.assertEqual(
+            self.pathway.get_target_rxn_id(),
+            self.rxn.get_id()
+        )
+
+    def test_get_rxn_target(self):
+        self.assertEqual(
+            self.pathway.get_rxn_target(),
+            self.rxn
+        )
+
+    def test_get_target(self):
+        self.assertEqual(
+            self.pathway.get_target(),
+            self.target
+        )
+
+    def test_get_parameters(self):
+        self.assertDictEqual(
+            self.pathway.get_parameters(),
+            self.parameters
+        )
+
+    def test_get_unit_def(self):
+        unit = 'mmol_per_gDW_per_hr'
+        self.assertListEqual(
+            self.pathway.get_unit_def(unit),
+            self.unit_def[unit]
         )
 
     def test_get_fba(self):
@@ -286,67 +412,69 @@ class Test_rpPathway(TestCase):
             self.thermo
         )
 
-    def test_rpSBML(self):
+    def test_rpSBML_rpsbml(self):
+        # print(self.pathway.get_species_ids())
+        # print(self.pathway)
         self.assertEqual(
             self.pathway,
             rpPathway.from_rpSBML(rpsbml=self.pathway.to_rpSBML())
         )
 
-    # def test_get_compartments(self):
-    #     self.assertDictEqual(
-    #         self.pathway.get_compartments(),
-    #         self.compartments
-    #     )
+    def test_rpSBML_file(self):
+        with NamedTemporaryFile() as tempf:
+            self.pathway.to_rpSBML().write_to_file(tempf.name)
+            self.assertEqual(
+                self.pathway,
+                rpPathway.from_rpSBML(
+                    infile=tempf.name
+                )
+            )
 
-    # def test_get_compartment(self):
-    #     self.assertDictEqual(
-    #         self.pathway.get_compartment('MNXC3'),
-    #         self.compartments['MNXC3']
-    #     )
+    def test_rpSBML_file_rpsbml(self):
+        with NamedTemporaryFile() as tempf:
+            self.pathway.to_rpSBML().write_to_file(tempf.name)
+            self.assertEqual(
+                self.pathway,
+                rpPathway.from_rpSBML(
+                    infile=tempf.name,
+                    rpsbml=None
+                )
+            )
 
-    # def test_get_compartment_wrong_id(self):
-    #     self.assertEqual(
-    #         self.pathway.get_compartment('WRONG_ID'),
-    #         None
-    #     )
+    def test_rename_compound(self):
+        for spe_id in ['CMPD_0000000003', 'TARGET_0000000001']:
+            with self.subTest("Message for this subtest", spe_id=spe_id):
+                species = deepcopy(self.pathway.get_species_ids())
+                new_spe_id = 'NEW'+spe_id
+                self.pathway.rename_compound(
+                    spe_id,
+                    new_spe_id
+                )
+                self.assertCountEqual(
+                    list(set(self.pathway.get_species_ids())),
+                    list(
+                        (
+                            set(species)
+                            - {spe_id}
+                        )
+                        | {new_spe_id}
+                    )
+                )
 
-    # def test_get_parameters(self):
-    #     self.assertDictEqual(
-    #         self.pathway.get_parameters(),
-    #         self.parameters
-    #     )
-
-    # def test_get_parameter(self):
-    #     self.assertDictEqual(
-    #         self.pathway.get_parameter('upper_flux_bound'),
-    #         self.parameters['upper_flux_bound']
-    #     )
-
-    # def test_get_parameter_wrong_ID(self):
-    #     self.assertEqual(
-    #         self.pathway.get_parameter('WRONG_ID'),
-    #         None
-    #     )
-
-    # def test_get_unit_def(self):
-    #     self.assertDictEqual(
-    #         self.pathway.get_unit_def(),
-    #         self.unit_def
-    #     )
-
-    # def test_get_unit_def_id(self):
-    #     id = 'mmol_per_gDW_per_hr'
-    #     self.assertListEqual(
-    #         self.pathway.get_unit_def(id),
-    #         self.unit_def[id]
-    #     )
-
-    # def test_get_unit_def_wrong_id(self):
-    #     id = 'WRONG_ID'
-    #     self.assertEqual(
-    #         self.pathway.get_unit_def(id),
-    #         None
-    #     )
+    def test_cobraize_uncobraize(self):
+        from rptools.rpfba.cobra_format import at_pattern
+        compartment = 'COMP'
+        species = deepcopy(self.pathway.get_species_ids())
+        self.pathway.cobraize(compartment)
+        self.assertCountEqual(
+            self.pathway.get_species_ids(),
+            [spe_id+at_pattern+compartment for spe_id in species]
+        )
+        self.pathway.uncobraize()
+        self.assertCountEqual(
+            self.pathway.get_species_ids(),
+            species
+        )
 
     def test_set_id(self):
         name = 'test pathway'
@@ -364,84 +492,17 @@ class Test_rpPathway(TestCase):
             self.reactions + [rxn]
         )
     
-    # def test_add_compartment(self):
-    #     name = 'MNXC4'
-    #     compartment = {
-    #         "name": name,
-    #         "annot": name
-    #     }
-    #     self.pathway.add_compartment(name, compartment)
-    #     self.assertDictEqual(
-    #         self.pathway.get_compartment(name),
-    #         compartment
-    #     )
-
-    # def test_add_parameter(self):
-    #     name = 'new_param'
-    #     param = {
-    #         "value": 999999.0,
-    #         "units": "mmol_per_gDW_per_hr"
-    #     }
-    #     self.pathway.add_parameter(name, param)
-    #     # print(self.pathway.get_parameter(name))
-    #     self.assertDictEqual(
-    #         self.pathway.get_parameter(name),
-    #         param
-    #     )
-
-    # def test_add_unit_def(self):
-    #     name = 'mmol_per_gDW_per_hr'
-    #     unit_def = {
-    #         "kind": 23,
-    #         "exponent": 1,
-    #         "scale": -3,
-    #         "multiplier": 1.0
-    #     }
-    #     self.pathway.add_unit_def(name, unit_def)
-    #     self.assertDictEqual(
-    #         self.pathway.get_unit_def(name),
-    #         unit_def
-    #     )
-
-    # def test__to_dict(self):
-    #     reactions = {rxn.get_id():rxn._to_dict() for rxn in self.reactions}
-    #     species = {spe.get_id():spe._to_dict() for rxn in self.reactions for spe in rxn.get_species_compounds()}
-    #     pathway_dict = {
-    #             **{
-    #                 'id': self.id,
-    #                 'reactions': reactions,
-    #                 'species': species,
-    #                 'sink': self.sink,
-    #                 'target': self.species[list(self.species.keys())[0]].get_id(),
-    #                 'parameters': self.parameters,
-    #                 'thermo_dG_prime': 
-    #                 'rpsbml_infos': {
-    #                     'compartments': self.compartments,
-    #                     'unit_def': self.unit_def,
-                        
-    #                 }
-    #             },
-    #             **self.pathway.get_fba(),
-    #             **self.thermo
-    #         }
-    #     for key in self.pathway._to_dict().keys():
-    #         if self.pathway._to_dict().get(key) != pathway_dict.get(key):
-    #             if isinstance(self.pathway._to_dict().get(key), dict):
-    #                 for sub_key in self.pathway._to_dict().get(key):
-    #                     print(key, sub_key)
-    #                     print(self.pathway._to_dict())
-    #                     if self.pathway._to_dict().get(key).get(sub_key) != pathway_dict.get(key).get(sub_key):
-    #                         print(sub_key)
-    #                         print(self.pathway._to_dict().get(key).get(sub_key))
-    #                         print(pathway_dict.get(key).get(sub_key))
-    #             else:
-    #                 print(self.pathway._to_dict().get(key))
-    #                 print(pathway_dict.get(key))
-    #             exit()
-    #     self.assertDictEqual(
-    #         self.pathway._to_dict(),
-    #         pathway_dict
-    #     )
+    def test_add_parameter(self):
+        name = 'upper_flux_bound'
+        params = {
+            "value": 0,
+            "units": "other"
+        }
+        self.pathway.add_parameter(name, params)
+        self.assertDictEqual(
+            self.pathway.get_parameter(name),
+            self.parameters[name]
+        )
 
     def test_eq(self):
         pathway = rpPathway(id='test_pathway')
