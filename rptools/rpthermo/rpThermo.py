@@ -364,8 +364,7 @@ def write_results_to_pathway(
         key=k,
         value=v
         )
-    pathway.set_species_group(
-        'thermo_substituted',
+    pathway.set_thermo_substituted_species(
         results['substituted_species']
     )
 
