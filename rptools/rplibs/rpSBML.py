@@ -103,11 +103,11 @@ class rpSBML:
             except FileNotFoundError as e:
                 self.logger.error(str(e))
                 self.logger.error('Exiting...')
-                exit(-1)
+                exit()
             except TypeError as e:
                 self.logger.error(e)
                 self.logger.error('Exiting...')
-                exit(-1)
+                exit()
             with TemporaryDirectory() as temp_d:
                 if kind:
                     self.logger.debug('inFile is detected as ' + str(kind))
@@ -124,7 +124,7 @@ class rpSBML:
         if rpsbml is not None and not self.checkSBML():
             self.logger.error('SBML document not valid')
             self.logger.error('Exiting...')
-            exit(-1)
+            exit()
 
         # model name
         self.setName(name if name else self.getName())
@@ -2845,7 +2845,7 @@ class rpSBML:
         :rtype: bool
         :return: Sucess or failure of the function
         """
-        self.logger.debug('############### '+str(annot_header)+' ################')
+        # self.logger.debug('############### '+str(annot_header)+' ################')
         #### create the string
         annotation = f'''
             <annotation>
@@ -2922,7 +2922,7 @@ class rpSBML:
                     </rdf:BRSynth>
                 </rdf:RDF>
             </annotation>'''
-        self.logger.debug('annotation: {0}'.format(annotation))
+        # self.logger.debug('annotation: {0}'.format(annotation))
         annot_obj = libsbml.XMLNode.convertStringToXMLNode(annotation)
         if not annot_obj:
             self.logger.error('Cannot convert this string to annotation object: '+str(annotation))
@@ -2960,7 +2960,7 @@ class rpSBML:
 
         for i in range(annot.getNumChildren()):
 
-            self.logger.debug(annot_header+' -- '+str(annot.getChild(i).getName()))
+            # self.logger.debug(annot_header+' -- '+str(annot.getChild(i).getName()))
 
             if annot_header == annot.getChild(i).getName():
 
@@ -2974,10 +2974,10 @@ class rpSBML:
                 source_annot = annot_obj.getChild('RDF').getChild('BRSynth').getChild('brsynth')
 
                 for y in range(source_annot.getNumChildren()):
-                    self.logger.debug('\t'+annot_header+' -- '+str(source_annot.getChild(y).getName()))
+                    # self.logger.debug('\t'+annot_header+' -- '+str(source_annot.getChild(y).getName()))
                     if str(annot_header)==str(source_annot.getChild(y).getName()):
                         source_found = True
-                        self.logger.debug('Adding annotation to the brsynth annotation: '+str(source_annot.getChild(y).toXMLString()))
+                        # self.logger.debug('Adding annotation to the brsynth annotation: '+str(source_annot.getChild(y).toXMLString()))
                         towrite_annot = source_annot.getChild(y)
                         self.checklibSBML(annot.addChild(towrite_annot), ' 1 - Adding annotation to the brsynth annotation', self.logger)
                         break
@@ -2990,16 +2990,16 @@ class rpSBML:
 
     def addBRSynthAnnot(self, brsynth_annot, annot_obj, annot_header):
 
-        self.logger.debug('Cannot find '+str(annot_header)+' in target annotation')
+        # self.logger.debug('Cannot find '+str(annot_header)+' in target annotation')
 
         source_found = False
         source_brsynth_annot = annot_obj.getChild('RDF').getChild('BRSynth').getChild('brsynth')
 
         for y in range(source_brsynth_annot.getNumChildren()):
-            self.logger.debug('\t'+annot_header+' -- '+str(source_brsynth_annot.getChild(y).getName()))
+            # self.logger.debug('\t'+annot_header+' -- '+str(source_brsynth_annot.getChild(y).getName()))
             if str(annot_header) == str(source_brsynth_annot.getChild(y).getName()):
                 source_found = True
-                self.logger.debug('Adding annotation to the brsynth annotation: '+str(source_brsynth_annot.getChild(y).toXMLString()))
+                # self.logger.debug('Adding annotation to the brsynth annotation: '+str(source_brsynth_annot.getChild(y).toXMLString()))
                 towrite_annot = source_brsynth_annot.getChild(y)
                 self.checklibSBML(brsynth_annot.addChild(towrite_annot), '2 - Adding annotation to the brsynth annotation', self.logger)
                 break
@@ -3944,24 +3944,22 @@ class rpSBML:
         """
         Read species field in rpSBML file for pathway_id.
 
-        Parameters
-        ----------
-        pathway_id: str
-            ID of the pathway to read infos from
-
         Returns
         -------
         pathway: Dict
             Read fields
         """
         species_dict = {}
-        for spe_id in self.readUniqueRPspecies():
-            species = self.getModel().getSpecies(spe_id)
+        # for spe_id in self.readUniqueRPspecies():
+        for species in self.getModel().getListOfSpecies():
+            # self.write_to_file('joan.xml')
+            # print(spe_id, list(self.getModel().getListOfSpecies()))
+            # species = self.getModel().getSpecies(spe_id)
             annot = species.getAnnotation()
-            species_dict[spe_id] = {}
-            species_dict[spe_id]['object'] = species
-            species_dict[spe_id]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
-            species_dict[spe_id]['miriam']  = self.readMIRIAMAnnotation(annot)
+            species_dict[species.getId()] = {}
+            species_dict[species.getId()]['object'] = species
+            species_dict[species.getId()]['brsynth'] = self.readBRSYNTHAnnotation(annot, self.logger)
+            species_dict[species.getId()]['miriam']  = self.readMIRIAMAnnotation(annot)
 
         return species_dict
 

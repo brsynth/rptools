@@ -37,6 +37,9 @@ from rptools.rplibs.rpObject import rpObject
 
 
 class rpCompound(Compound, rpObject):
+    """A class to implement a chemical species
+    enriched with FBA and thermodynamics informations.
+    """
 
     __thermo_str = 'standard_dg_formation'
     __fba_str = 'shadow_price'
@@ -52,6 +55,19 @@ class rpCompound(Compound, rpObject):
         compartment_id: str = 'c',
         logger: Logger = getLogger(__name__)
     ):
+        """Create a rpCompound object with default settings.
+
+        Parameters
+        ----------
+        id: str
+        smiles: str, optional
+        inchi: str, optional
+        inchikey: str, optional
+        formula: str, optional
+        name: str, optional
+        compartment_id: str, optional
+        logger : Logger, optional
+        """
         Compound.__init__(
             self,
             id=id,
@@ -69,6 +85,14 @@ class rpCompound(Compound, rpObject):
         self,
         specific: bool = False
     ) -> Dict:
+        """Get attributes as a dictionary.
+
+        Parameters
+        ----------
+        specific: bool, optional
+            If set to True, the returned dictionary will not
+            contain attributes inherited from Compound class.
+        """
         if specific:
             return {
                 **self.__to_dict(),
@@ -82,42 +106,90 @@ class rpCompound(Compound, rpObject):
             }
 
     def __to_dict(self) -> Dict:
+        """Returns a dictionary which contains attributes
+        only from rpCompound class excluding inherited ones."""
         return {
             # 'compartment': self.get_compartment()
         }
 
+    # def __eq__(self, other) -> bool:
+    #     """Returns the equality between two rpCompound objects."""
+    #     return super(Compound, self).__eq__(other)
+
     def get_thermo_standard_dg_formation(self) -> TypeVar:
+        """Get thermodynamics dG formation cost."""
         return self.get_thermo_info(rpCompound.__thermo_str)
 
     def get_fba_biomass_shadow_price(self) -> TypeVar:
-        return self.get_fba_biomass_info(rpCompound.__fba_str)
+        """Get flux shadow price during biomass production."""
+        return self.get_fba_info(f'biomass_{rpCompound.__fba_str}')
 
     def get_fba_fraction_shadow_price(self) -> TypeVar:
-        return self.get_fba_fraction_info(rpCompound.__fba_str)
+        """Get flux shadow price during fraction of reaction analysis."""
+        return self.get_fba_info(f'fraction_{rpCompound.__fba_str}')
 
     def get_fba_fba_shadow_price(self) -> TypeVar:
-        return self.get_fba_fba_info(rpCompound.__fba_str)
+        """Get flux shadow price during balance analysis."""
+        return self.get_fba_info(f'fba_{rpCompound.__fba_str}')
 
     def get_fba_pfba_shadow_price(self) -> TypeVar:
-        return self.get_fba_pfba_info(rpCompound.__fba_str)
+        """Get flux shadow price during parcimonious balance analysis."""
+        return self.get_fba_info(f'pfba_{rpCompound.__fba_str}')
 
     def get_compartment(self) -> str:
+        """Get compound compartment ID."""
         return self.__compartment
 
     def set_thermo_standard_dg_formation(self, value: float) -> None:
+        """Set dG formation cost.
+        
+        Parameters
+        ----------
+        value: float
+        """
         self.set_thermo_info(rpCompound.__thermo_str, value)
 
     def set_fba_biomass_shadow_price(self, value: float) -> None:
-        self.set_fba_info(rpCompound.fba_biomass_shadow_price, value)
+        """Set flux shadow price during biomass production.
+        
+        Parameters
+        ----------
+        value: float
+        """
+        self.set_fba_info(f'biomass_{rpCompound.__fba_str}', value)
 
     def set_fba_fraction_shadow_price(self, value: float) -> None:
-        self.set_fba_info(rpCompound.fba_fraction_shadow_price, value)
+        """Set flux shadow price during fraction of reaction analysis.
+        
+        Parameters
+        ----------
+        value: float
+        """
+        self.set_fba_info(f'fraction_{rpCompound.__fba_str}', value)
 
     def set_fba_fba_shadow_price(self, value: float) -> None:
-        self.set_fba_info(rpCompound.fba_fba_shadow_price, value)
+        """Set flux shadow price during balance analysis..
+        
+        Parameters
+        ----------
+        value: float
+        """
+        self.set_fba_info(f'fba_{rpCompound.__fba_str}', value)
 
     def set_fba_pfba_shadow_price(self, value: float) -> None:
-        self.set_fba_info(rpCompound.fba_pfba_shadow_price, value)
+        """Set flux shadow price during parcimonious balance analysis.
+        
+        Parameters
+        ----------
+        value: float
+        """
+        self.set_fba_info(f'pfba_{rpCompound.__fba_str}', value)
 
     def set_compartment(self, compartment: str) -> None:
+        """Set compartment ID of the compound.
+        
+        Parameters
+        ----------
+        compartment: str
+        """
         self.__compartment = compartment

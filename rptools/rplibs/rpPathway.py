@@ -64,6 +64,10 @@ from .rpObject import rpObject
 #                         yield result
 
 class rpPathway(Pathway, rpObject):
+    """A class to implement a metabolic pathway
+    enriched with both FBA and thermodynamics informations,
+    and with RP informations (from RetroPath2 and rp2paths).
+    """
 
     __MNXC3 = {
         'id': 'c',
@@ -82,6 +86,16 @@ class rpPathway(Pathway, rpObject):
         cache: Cache = None,
         logger: Logger = getLogger(__name__)
     ):
+        """Create a rpPathway object with default settings.
+
+        Parameters
+        ----------
+        id: str
+            ID of the reaction
+        cache: Cache, optional
+            Cache to store compounds once over reactions
+        logger : Logger, optional
+        """
         Pathway.__init__(
             self,
             id=id,
@@ -122,6 +136,14 @@ class rpPathway(Pathway, rpObject):
         self,
         specific: bool = False
     ) -> Dict:
+        """Get attributes as a dictionary.
+
+        Parameters
+        ----------
+        specific: bool, optional
+            If set to True, the returned dictionary will not
+            contain attributes inherited from Pathway class.
+        """
         if specific:
             return {
                 **self.__to_dict(),
@@ -135,6 +157,8 @@ class rpPathway(Pathway, rpObject):
             }
 
     def __to_dict(self) -> Dict:
+        """Returns a dictionary which contains attributes
+        only from rpPathway class excluding inherited ones."""
         return {
             'sink': deepcopy(self.get_sink_species()),
             'target': self.get_target_id(),
@@ -144,6 +168,7 @@ class rpPathway(Pathway, rpObject):
         }
 
     def __eq__(self, other) -> bool:
+        """Returns the equality between two rpPathway objects."""
         if not isinstance(self, other.__class__):
             return False
         # Compare with specific keys
@@ -160,46 +185,79 @@ class rpPathway(Pathway, rpObject):
 
     ## READ METHODS
     def get_species_groups(self) -> Dict[str, Set]:
+        """Get the ID of all groups of species (trunk, completed...)
+        contained in the pathway."""
         return self.__species_groups
         # return rpPathway.__SPECIES_GROUPS
 
     def get_species_group(self, group_id: str) -> List[str]:
+        """Get the ID of all species contained in a specific group
+
+        Parameters
+        ----------
+        group_id: str,
+            ID of the group to return species from.
+        """
         return list(self.get_species_groups().get(group_id, []))
 
     def get_completed_species(self) -> List[str]:
+        """Get the ID of completed species, i.e. added
+        to reaction rule in the completion step."""
         return self.get_species_group('completed')
         # return self.__completed_species
 
     def get_fba_ignored_species(self) -> List[str]:
+        """Get the ID of ignored species during the FBA
+        computation process."""
         return self.get_species_group('fba_ignored')
         # return self.__fba_ignored_species
 
     def get_trunk_species(self) -> List[str]:
+        """Get the ID of trunk species, i.e. all species
+        involved in the pathway before the completion step.
+        trunk = intermediate + sink + target."""
         return self.get_species_group('trunk')
         # return self.__trunk_species
 
     def get_thermo_substituted_species(self) -> List[str]:
+        """Get the ID of species substituted during the
+        thermodynamics computation process."""
         return self.get_species_group('thermo_substituted')
 
     def get_sink_species(self) -> List[str]:
+        """Get the ID of species present in the organism.
+        Note that sink species are mainly species consumed
+        by the pathway. Nevertheless some sink species can
+        also be produced somewhere in the pathway, creating a
+        loop. In addition, some precursors of the pathway may
+        not appear in the sink."""
         return self.get_species_group('sink')
         # return self.__sink
 
     def get_intermediate_species(self) -> List[str]:
+        """Get the ID of species that are both
+        produced and consumed by the pathway.
+        intermediate = trunk - sink - target"""
         return self.get_species_group('intermediate')
 
     def get_target_rxn_id(self) -> str:
+        """Get the ID of the reaction that produces
+        the target compound of the pathway."""
         for rxn in self.get_list_of_reactions():
             if self.get_target_id() in rxn.get_products_ids():
                 return rxn.get_id()
 
     def get_rxn_target(self) -> rpReaction:
+        """Get the object of the reaction that produces
+        the target compound of the pathway."""
         return self.get_reaction(self.get_target_rxn_id())
 
     def get_target_id(self) -> str:
+        """Get the ID of the pathway target compound."""
         return self.__target_id
 
-    def get_target(self) -> Compound:
+    def get_target(self) -> rpCompound:
+        """Get the object of the pathway target compound."""
         return self.get_specie(self.get_target_id())
 
     def get_reactions_ids(self) -> List[str]:
@@ -214,32 +272,74 @@ class rpPathway(Pathway, rpObject):
         ]
 
     def get_parameters(self) -> Dict:
-        try:
-            return self.__parameters
-        except AttributeError:
-            return None
+        """Get the dictionary of the pathway
+        parameters definition."""
+        return self.__parameters
 
     def get_parameter(self, id: str) -> Dict:
-        return self.__parameters.get(id, {})
+        """Get a specific parameter of the pathway.
+
+        Parameters
+        ----------
+        id: str,
+            ID of the parameter to return data from.
+        """
+        return self.get_parameters().get(id, {})
 
     def get_parameter_value(self, id: str) -> Dict:
+        """Get the value of a specific parameter
+        of the pathway.
+
+        Parameters
+        ----------
+        id: str,
+            ID of the parameter to return value from.
+        """
         return self.get_parameter(id).get('value', 'NaN')
 
     def get_parameter_units(self, id: str) -> Dict:
+        """Get the units of a specific parameter
+        of the pathway.
+
+        Parameters
+        ----------
+        id: str,
+            ID of the parameter to return units from.
+        """
         return self.get_parameter(id).get('units', str(''))
 
     def get_unit_defs(self) -> Dict:
+        """Get the dictionary of the pathway
+        units definitions."""
         return self.__unit_def
 
     def get_unit_def(self, id: str) -> Dict:
-        return self.__unit_def.get(id, {})
+        """Get the units definition of a specific parameter
+        of the pathway.
+
+        Parameters
+        ----------
+        id: str,
+            ID of the parameter to return unit definition from.
+        """
+        return self.get_unit_defs().get(id, {})
 
     def get_compartments(self) -> Dict:
+        """Get the compartments of which species
+        in the pathway belong."""
         return self.__compartments
 
 
     ## WRITE METHODS
     def add_trunk_species(self, species: List[str]) -> None:
+        """Add species in the 'trunk' group. One occurence
+        of each species appear in this group.
+
+        Parameters
+        ----------
+        species: List[str],
+            IDs of species to add.
+        """
         self.set_trunk_species(
             list(
                 set(
@@ -250,6 +350,14 @@ class rpPathway(Pathway, rpObject):
         )
 
     def add_completed_species(self, species: List[str]) -> None:
+        """Add species in the 'completed' group. One occurence
+        of each species appear in this group.
+
+        Parameters
+        ----------
+        species: List[str],
+            IDs of species to add.
+        """
         self.set_completed_species(
             list(
                 set(
@@ -264,6 +372,17 @@ class rpPathway(Pathway, rpObject):
         group_id: str,
         species: List[str]
     ) -> None:
+        """Add species in a group. One occurence
+        of each species appear in this group.
+        If the group does not exist, it is created.
+
+        Parameters
+        ----------
+        group_id: str,
+            ID of group to add species in.
+        species: List[str],
+            IDs of species to add.
+        """
         try:
             s = set(self.__species_groups[group_id])
             s.update(species)
@@ -271,55 +390,236 @@ class rpPathway(Pathway, rpObject):
             self.__species_groups[group_id] = deepcopy(s)
         except KeyError:
             # Create a new group
-            self.set_species_group(group_id, species)
+            self.__set_species_group(group_id, species)
 
-    def set_species_group(
+    def set_parameters(self, parameters: Dict) -> None:
+        """Set parameters.
+
+        Parameters
+        ----------
+        parameters: Dict,
+            Parameters to set
+        """
+        self.__parameters = deepcopy(parameters)
+
+    def set_unit_defs(self, unit_defs: Dict) -> None:
+        """Set units definitions.
+
+        Parameters
+        ----------
+        unit_defs: Dict,
+            Units to define
+        """
+        self.__unit_def = deepcopy(unit_defs)
+
+    def __set_species_group(
         self,
         group_id: str,
         species: Union[List[str], Dict[str, str]]
     ) -> None:
+        """Assign given species to a group. If species
+        already belong to this group, they will be overwritten.
+
+        Parameters
+        ----------
+        group_id: str,
+            ID of group to add species in.
+        species: Union[List[str], Dict[str, str]],
+            IDs of species to add.
+        """
         # Create a new group
         if isinstance(species, list):
             self.__species_groups[group_id] = list(set(deepcopy(species)))
+        # For example, thermo_substituted_species is a dictionary
         elif isinstance(species, dict):
             self.__species_groups[group_id] = deepcopy(species)
         else:
-            self.get_logger().error(f'Wrong type {type(species)} for \'species\' argument, \'list\' or \'dict\' expected, nothing set.')
+            self.get_logger().error(
+                f'Wrong type {type(species)} for \'species\' argument, \'list\' expected, nothing set.'
+            )
 
     def set_completed_species(self, species: List[str]) -> None:
-        self.add_species_group('completed', species)
+        """Assign given species to 'completed' group. If species
+        already belong to this group, they will be overwritten.
+
+        Parameters
+        ----------
+        species: List[str],
+            IDs of species to add.
+        """
+        self.__set_species_group('completed', species)
         # self.__completed_species = deepcopy(species)
 
     def set_fba_ignored_species(self, species: List[str]) -> None:
-        self.add_species_group('fba_ignored', species)
+        """Assign given species to 'fba_ignored' group. If species
+        already belong to this group, they will be overwritten.
+
+        Parameters
+        ----------
+        species: List[str],
+            IDs of species to add.
+        """
+        self.__set_species_group('fba_ignored', species)
         # self.__fba_ignored_species = deepcopy(species)
 
     def set_trunk_species(self, species: List[str]) -> None:
-        self.add_species_group('trunk', species)
+        """Assign given species to 'trunk' group. If species
+        already belong to this group, they will be overwritten.
+        After having modify this group, re-build 'intermediate'
+        species group.
+
+        Parameters
+        ----------
+        species: List[str],
+            IDs of species to add.
+        """
+        self.__set_species_group('trunk', species)
         # (re-)build intermediate species group
         self.__build_intermediate_species()
         # self.__trunk_species = deepcopy(species)
 
     def set_thermo_substituted_species(self, species: List[str]) -> None:
-        self.add_species_group('thermo_substituted', species)
+        """Assign given species to 'thermo_substituted' group.
+        If species already belong to this group,
+        they will be overwritten.
+
+        Parameters
+        ----------
+        species: List[str],
+            IDs of species to add.
+        """
+        self.__set_species_group('thermo_substituted', species)
         # self.__trunk_species = deepcopy(species)
 
     def set_sink_species(self, species: List[str]) -> None:
-        self.add_species_group('sink', species)
+        """Assign given species to 'sink' group. If species
+        already belong to this group, they will be overwritten.
+        After having modify this group, re-build 'intermediate'
+        species group.
+
+        Parameters
+        ----------
+        species: List[str],
+            IDs of species to add.
+        """
+        self.__set_species_group('sink', species)
         # (re-)build intermediate species group
         self.__build_intermediate_species()
         # self.__sink = deepcopy(sink)
 
-    def __build_intermediate_species(self) -> None:
-        try:
-            members = list(
-                set(self.get_trunk_species())
-                - set(self.get_sink_species())
-                - set([self.get_target_id()])
+    def set_target_id(self, id: str) -> None:
+        """Set the ID of the pathway target.
+        After that, 'intermediate' species group is rebuilt.
+
+        Parameters
+        ----------
+        id: str,
+            ID of the species to set as the pathway target.
+        """
+        self.__target_id = id
+        # (re-)build intermediate species group
+        self.__build_intermediate_species()
+
+    def add_unit_def(
+        self,
+        id: str,
+        kind: int,
+        exp: int,
+        scale: int,
+        mult: float
+    ) -> None:
+        """Add units definition to the pathway.
+
+        Parameters
+        ----------
+        id: str,
+            Name of the unit definition.
+        kind: int,
+            Kind of the unit definition according to SBML standard.
+        scale: int,
+            Scale of the unit definition according to SBML standard.
+        mult: float,
+            Multiplier of the unit definition according to SBML standard.
+        """
+        if id not in self.__parameters.keys():
+            self.__parameters[id] = []
+        self.__parameters[id] += [
+            {
+                'kind': kind,
+                'exponent': exp,
+                'scale': scale,
+                'multiplier': mult
+            }
+        ]
+
+    def add_parameter(
+        self,
+        id: str,
+        value: float,
+        units: str = rpReaction.get_default_fbc_units()
+    ) -> None:
+        """Add a parameter to the pathway.
+
+        Parameters
+        ----------
+        id: str,
+            Name of the parameter.
+        value: float,
+            Value of the parameter (default: rpReaction.get_default_fbc_units()).
+        units: str,
+            Units of the parameter.
+        """
+        # # Check if __parameters is defined
+        # if not hasattr(self, '__parameters'):
+        #     self.__parameters = {}
+        # Check if id does not already exist in __parameters
+        if self.get_parameter(id) == {}:
+            self.__parameters[id] = {
+                'value': value,
+                'units': units
+            }
+        else:
+            self.get_logger().warning(
+                f'Parameter {id} already exist in rpPathway parameters, nothing added.'
             )
-            self.set_species_group('intermediate', members)
-        except TypeError:
-            self.set_species_group('intermediate', [])
+
+    def add_compartment(
+        self,
+        id: str,
+        name: str,
+        annot: str
+    ) -> None:
+        """Add a compartment to the pathway.
+
+        Parameters
+        ----------
+        id: str,
+            ID of the compartment.
+        name: str,
+            Name of the compartment.
+        annot: str,
+            Annotation attached to the compartment.
+        """
+        if id not in self.get_compartments():
+            self.__compartments[id] = {
+                'name': name,
+                'annot': annot
+            }
+
+    def __build_intermediate_species(self) -> None:
+        """Build the intermediate species group.
+        As this group depends of other groups,
+        a dedicated method is needed.
+        """
+        # try:
+        members = list(
+            set(self.get_trunk_species())
+            - set(self.get_sink_species())
+            - set([self.get_target_id()])
+        )
+        self.__set_species_group('intermediate', members)
+        # except TypeError:
+        #     self.__set_species_group('intermediate', [])
 
     @staticmethod
     def from_rpSBML(
@@ -327,6 +627,23 @@ class rpPathway(Pathway, rpObject):
         rpsbml: rpSBML = None,
         logger: Logger = getLogger(__name__)
     ) -> 'rpPathway':
+        """Build a rpPathway object from either
+        a rpsbml file or a rpSBML object.
+        If both are passed as arguments, 'infile' has
+        top priority.
+
+        Parameters
+        ----------
+        infile: str,
+            Path to rpsbml file.
+        rpsbml: rpSBML,
+            rpSBML object
+        logger : Logger, optional
+
+        Returns
+        -------
+        rpPathway object built.
+        """
         def write_to(data: Dict, object: TypeVar) -> None:
             # Detect fba and thermo infos
             for key, value in data.items():
@@ -480,6 +797,13 @@ class rpPathway(Pathway, rpObject):
         return pathway
 
     def to_rpSBML(self) -> rpSBML:
+        """Convert the current rpPathway object
+        into a rpSBML object.
+
+        Returns
+        -------
+        rpSBML object.
+        """
 
         rpsbml = rpSBML(name='rp_'+self.get_id(), logger=self.get_logger())
 
@@ -545,6 +869,18 @@ class rpPathway(Pathway, rpObject):
         rxn_id: str = None,
         target_id: str = None
     ) -> None:
+        """
+        Add a reaction to the pathway.
+
+        Parameters
+        ----------
+        rxn: rpReaction,
+            Reaction object to add
+        rxn_id: str, optional
+            ID of the reaction within the pathway
+        target_id: str, optional
+            ID of the compound if it is the pathway target
+        """
 
         super().add_reaction(rxn, rxn_id)
 
@@ -552,62 +888,18 @@ class rpPathway(Pathway, rpObject):
         if target_id is not None:
             self.set_target_id(target_id)
 
-    def set_target_id(self, id: str) -> None:
-        self.__target_id = id
-        # (re-)build intermediate species group
-        self.__build_intermediate_species()
-
-    def add_unit_def(
-        self,
-        id: str,
-        kind: int,
-        exp: int,
-        scale: int,
-        mult: float
-    ) -> None:
-        if id not in self.__parameters.keys():
-            self.__parameters[id] = []
-        self.__parameters[id] += [
-            {
-                'kind': kind,
-                'exponent': exp,
-                'scale': scale,
-                'multiplier': mult
-            }
-        ]
-
-    def add_parameter(
-        self,
-        id: str,
-        value: float,
-        units: str = rpReaction.get_default_fbc_units()
-    ) -> None:
-        # # Check if __parameters is defined
-        # if not hasattr(self, '__parameters'):
-        #     self.__parameters = {}
-        # Check if id does not already exist in __parameters
-        if self.get_parameter(id) == {}:
-            self.__parameters[id] = {
-                'value': value,
-                'units': units
-            }
-        else:
-            self.get_logger.warning(f'Parameter {id} already exist in rpPathway parameters, nothing added.')
-
-    def add_compartment(
-        self,
-        id: str,
-        name: str,
-        annot: str
-    ) -> None:
-        if id not in self.get_compartments():
-            self.__compartments[id] = {
-                'name': name,
-                'annot': annot
-            }
-
     ## MISC
     def rename_compound(self, id: str, new_id: str) -> None:
+        """Rename a compound and all its references through
+        all objects in the pathway (reactions, groups...)
+
+        Parameters
+        ----------
+        id: str,
+            ID of the compound to replace
+        new_id: str,
+            New ID of the compound
+        """
         # target
         if id == self.get_target_id():
             self.set_target_id(new_id)
@@ -635,6 +927,11 @@ class rpPathway(Pathway, rpObject):
     def cobraize(self, compartment_id: str) -> None:
         '''Make the Pathway compliant with what Cobra expects
         Add <@compartmentID> to all compounds in species and reactions
+
+        Parameters
+        ----------
+        compartment_id: str,
+            ID of the compartment of species
         '''
         from rptools.rpfba.cobra_format import (
             cobra_suffix,
