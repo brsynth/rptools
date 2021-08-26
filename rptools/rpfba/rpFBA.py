@@ -301,8 +301,8 @@ def build_rpsbml(
     # Set Flux Bounds
     for rxn in pathway.get_list_of_reactions()+[rxn_target]:
         rxn.set_fbc(
-            l_value=0,
-            u_value=rpReaction.get_default_fbc_upper()
+            l_bound=0,
+            u_bound=rpReaction.get_default_fbc_upper()
         )
         rxn.set_reversible(False)
     # Create rpSBML object
