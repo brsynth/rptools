@@ -195,7 +195,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        group_id: str,
+        group_id: str
             ID of the group to return species from.
         """
         return list(self.get_species_groups().get(group_id, []))
@@ -281,7 +281,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        id: str,
+        id: str
             ID of the parameter to return data from.
         """
         return self.get_parameters().get(id, {})
@@ -292,7 +292,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        id: str,
+        id: str
             ID of the parameter to return value from.
         """
         return self.get_parameter(id).get('value', 'NaN')
@@ -303,7 +303,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        id: str,
+        id: str
             ID of the parameter to return units from.
         """
         return self.get_parameter(id).get('units', str(''))
@@ -319,7 +319,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        id: str,
+        id: str
             ID of the parameter to return unit definition from.
         """
         return self.get_unit_defs().get(id, {})
@@ -337,7 +337,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        species: List[str],
+        species: List[str]
             IDs of species to add.
         """
         self.set_trunk_species(
@@ -355,7 +355,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        species: List[str],
+        species: List[str]
             IDs of species to add.
         """
         self.set_completed_species(
@@ -378,7 +378,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        group_id: str,
+        group_id: str
             ID of group to add species in.
         species: List[str],
             IDs of species to add.
@@ -397,7 +397,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        parameters: Dict,
+        parameters: Dict
             Parameters to set
         """
         self.__parameters = deepcopy(parameters)
@@ -407,7 +407,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        unit_defs: Dict,
+        unit_defs: Dict
             Units to define
         """
         self.__unit_def = deepcopy(unit_defs)
@@ -422,9 +422,9 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        group_id: str,
+        group_id: str
             ID of group to add species in.
-        species: Union[List[str], Dict[str, str]],
+        species: Union[List[str], Dict[str, str]]
             IDs of species to add.
         """
         # Create a new group
@@ -444,7 +444,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        species: List[str],
+        species: List[str]
             IDs of species to add.
         """
         self.__set_species_group('completed', species)
@@ -456,7 +456,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        species: List[str],
+        species: List[str]
             IDs of species to add.
         """
         self.__set_species_group('fba_ignored', species)
@@ -470,7 +470,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        species: List[str],
+        species: List[str]
             IDs of species to add.
         """
         self.__set_species_group('trunk', species)
@@ -485,7 +485,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        species: List[str],
+        species: List[str]
             IDs of species to add.
         """
         self.__set_species_group('thermo_substituted', species)
@@ -499,7 +499,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        species: List[str],
+        species: List[str]
             IDs of species to add.
         """
         self.__set_species_group('sink', species)
@@ -513,7 +513,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        id: str,
+        id: str
             ID of the species to set as the pathway target.
         """
         self.__target_id = id
@@ -532,13 +532,13 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        id: str,
+        id: str
             Name of the unit definition.
-        kind: int,
+        kind: int
             Kind of the unit definition according to SBML standard.
-        scale: int,
+        scale: int
             Scale of the unit definition according to SBML standard.
-        mult: float,
+        mult: float
             Multiplier of the unit definition according to SBML standard.
         """
         if id not in self.__parameters.keys():
@@ -562,11 +562,11 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        id: str,
+        id: str
             Name of the parameter.
-        value: float,
+        value: float
             Value of the parameter (default: rpReaction.get_default_fbc_units()).
-        units: str,
+        units: str
             Units of the parameter.
         """
         # # Check if __parameters is defined
@@ -593,11 +593,11 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        id: str,
+        id: str
             ID of the compartment.
-        name: str,
+        name: str
             Name of the compartment.
-        annot: str,
+        annot: str
             Annotation attached to the compartment.
         """
         if id not in self.get_compartments():
@@ -634,9 +634,9 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        infile: str,
+        infile: str
             Path to rpsbml file.
-        rpsbml: rpSBML,
+        rpsbml: rpSBML
             rpSBML object
         logger : Logger, optional
 
@@ -874,7 +874,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        rxn: rpReaction,
+        rxn: rpReaction
             Reaction object to add
         rxn_id: str, optional
             ID of the reaction within the pathway
@@ -895,7 +895,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        id: str,
+        id: str
             ID of the compound to replace
         new_id: str,
             New ID of the compound
@@ -930,7 +930,7 @@ class rpPathway(Pathway, rpObject):
 
         Parameters
         ----------
-        compartment_id: str,
+        compartment_id: str
             ID of the compartment of species
         '''
         from rptools.rpfba.cobra_format import (

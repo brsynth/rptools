@@ -6,44 +6,37 @@ All metabolic pathways will be built as the following:
 
 - In each "master" pathway,
   - each chemical transformation could be produced by multiple reaction rules, and
-    - each reaction rule could be produced by multiple template chemical reactions.
+    - each reaction rule could have been produced by multiple template chemical reactions.
 
-Thus, each different template reaction for each different reaction rule for each different chemical transformation provides one single possible pathway. The algorithm explores the combinatorics of all possible pathways and for each "master pathway" (the one from chemical transformations), keeps only top (defined by `maxSubPaths_filter` CLI option, default: 10) ones.
+Thus, each different template reaction for each different reaction rule for each different chemical transformation provides one single possible pathway. The algorithm explores the combinatorics of all possible pathways and for each "master pathway" (the one from chemical transformations), keeps only top (defined by `max_subpaths_filter` CLI option, default: 10) ones.
 
 ## Input
 
 Required:
-* **rp2_pathways**: (string) Path to the RetroPath2.0 pathways file
+* **rp2_metnet**: (string) Path to the metabolic network file built by RetroPath2.0
 * **sink**: (string) Path to the rpextractsink file containing infos on molecules in the sink
 * **rp2paths_compounds**: (string) Path to the rp2paths compounds file
 * **rp2paths_pathways**: (string) Path to the rp2paths pathways file
 * **outdir**: (string) Path to the folder where result files are written
 
 Advanced options:
-* **-upper_flux_bound**: (integer, default=10000) Upper flux bound value
-* **-lower_flux_bound**: (integer, default=-10000) Lower flux bound value
-* **-maxSubPaths_filter**: (integer, default=10) Number of subpaths per path
-* **-pathway_id**: (string, default=rp_pathway) ID of the heterologous pathway
-* **-compartment_id**: (string, default='c' (i.e. cytoplasm)) Heterologous pathway compartment ID
-* **-species_group_id**: (string, default=central_species) ID of the central species, i.e. not cofactors, in the heterologous reactions
-* **--store-mode, -sm**: (optional, string, default: file) Store mode. If 'file', rrCache is supposed to be stored in files. Else, the rrCache is supposed to be stored in a redis database which the name is the value of this input field. The redis server is considered to be up and running.
+* **--upper_flux_bound**: (integer, default=10000) Upper flux bound value for all new reactions created
+* **--lower_flux_bound**: (integer, default=-10000) Lower flux bound value for all new reactions created
+* **--max_subpaths_filter**: (integer, default=10) Number of subpaths per master pathway
 
 
 
-## Memory management
+<!-- ## Memory management
 
 ### File mode
 This is the default mode. All cache data are stored into files on disk and loaded in memory each time the tool is used. In this mode, fingerprint in memory is equal to the size of cache files loaded in memory multiplied by the number of processes which are running at the same time. Option can be specified by `--store-mode file`.
 
 ### DB mode
-In order to save memory space, cache data can be loaded once in a database (redis) so that the memory space taken is equal to one instance of the cache, whatever the number of processes whic are running. Option can be specified by `--store-mode <db_host>`, where `db_host` is the hostname on which redis server is running.
+In order to save memory space, cache data can be loaded once in a database (redis) so that the memory space taken is equal to one instance of the cache, whatever the number of processes whic are running. Option can be specified by `--store-mode <db_host>`, where `db_host` is the hostname on which redis server is running. -->
 
 
 ## Install
-rpCompletion is part of rpTools suite:
-```sh
-[sudo] conda install -c brsynth -c conda-forge -c bioconda rptools
-```
+Please see `rptool` documentation.
 
 ## Run
 
@@ -54,6 +47,7 @@ from rptools.rpcompletion import rp_completion
 
 pathways = rp_completion(
     rp2_metnet_filename,
+    sink_filename,
     rp2paths_compounds_filename,
     rp2paths_pathways_filename,
 )
@@ -62,6 +56,7 @@ pathways = rp_completion(
 ```sh
 python -m rptools.rpcompletion \
   rp2_metnet.csv \
+  sink.csv \
   rp2paths_compounds.csv \
   rp2paths_pathways.csv \
   <outdir>
@@ -79,16 +74,14 @@ pytest -v
 # CI/CD
 For further tests and development tools, a CI toolkit is provided in `ci` folder (see [ci/README.md](ci/README.md)).
 
-
 ## Authors
 
-* **Melchior du Lac**
 * **Joan Hérisson**
 
 ## Acknowledgments
 
 * Thomas Duigou
-
+* Melchior du Lac
 
 ## Licence
 rpCompletion is released under the MIT licence. See the LICENCE file for details.

@@ -16,7 +16,7 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     #     help='Retrosynthesis network provided by RetroPath2.0'
     # )
     parser.add_argument(
-        'rp2_sink',
+        'sink',
         type=str,
         help='List of compounds in the sink'
     )
@@ -45,5 +45,5 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     # parser.add_argument('--compartment_id', type=str, default='MNXC3')
     # parser.add_argument('--species_group_id', type=str, default='rp_trunk_species')
     # parser.add_argument('--sink_species_group_id', type=str, default='rp_sink_species')
-    parser.add_argument('--pubchem_search', type=str, default='False')
+    # parser.add_argument('--pubchem_search', type=str, default='False')
     return parser
