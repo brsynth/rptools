@@ -7,12 +7,6 @@ from logging import (
     Logger,
     getLogger,
 )
-from typing import(
-    Dict,
-    List,
-    Tuple,
-)
-from json import dump as json_dump
 from colored import fg, bg, attr
 from rr_cache import rrCache
 from rptools import build_args_parser
@@ -28,8 +22,6 @@ def _cli():
     )
     args  = parser.parse_args()
 
-    # args.pubchem_search = args.pubchem_search.lower() in ['true', 't']
-
     from rptools.__main__ import init
     logger = init(parser, args)
 
@@ -39,22 +31,6 @@ def _cli():
         args.outdir,
         logger
     )
-    # StreamHandler.terminator = ""
-    # logger.info(
-    #     '{color}{typo}Loading cache{rst}'.format(
-    #         color=fg('white'),
-    #         typo=attr('bold'),
-    #         rst=attr('reset')
-    #     )
-    # )
-    # StreamHandler.terminator = "\n"
-    # logger.info(
-    #     '{color}{typo} OK{rst}'.format(
-    #         color=fg('green'),
-    #         typo=attr('bold'),
-    #         rst=attr('reset')
-    #     )
-    # )
 
     cache = rrCache(
         db='file',
@@ -62,18 +38,9 @@ def _cli():
             'rr_reactions',
             'template_reactions',
             'cid_strc',
-            # 'deprecatedCID_cid',
-            # 'comp_xref',
             'deprecatedCompID_compid',
-            # 'cid_xref',
-            # 'cid_name',
-            # 'deprecatedRID_rid'
         ]
-        # logger=logger
     )
-
-    # print(cache.get('comp_xref'))
-    # exit()
 
     pathways = rp_completion(
         rp2_metnet=args.rp2_metnet,
@@ -83,12 +50,7 @@ def _cli():
         cache=cache,
         upper_flux_bound=int(args.upper_flux_bound),
         lower_flux_bound=int(args.lower_flux_bound),
-        # pathway_id=args.pathway_id,
-        # compartment_id=args.compartment_id,
-        # species_group_id=args.species_group_id,
-        # sink_species_group_id=args.sink_species_group_id,
         max_subpaths_filter=args.max_subpaths_filter,
-        # args.pubchem_search,
         logger=logger
     )
 
@@ -104,12 +66,6 @@ def _cli():
                     'rp_'+sub_pathway.get_id()
                 ) + '.xml'
             )
-            # print(sub_pathway)
-            # write_to_JSON(
-            #     pathway=sub_pathway.object,
-            #     outdir=args.outdir,
-            #     logger=logger
-            # )
     StreamHandler.terminator = ""
     logger.info(
         '{color}{typo}Results are stored in {rst}'.format(
