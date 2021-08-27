@@ -1,15 +1,3 @@
-# import libsbml
-# import argparse
-# import sys #exit using sys exit if any error is encountered
-# import os
-
-# import io
-# #import zipfile
-# import tarfile
-# import glob
-# import tempfile
-# import shutil
-
 from os import path as os_path
 from logging import (
     Logger,
