@@ -6,9 +6,9 @@ from rptools.rpthermo.rpThermo import (
     get_target_rxn_idx,
     minimize,
     remove_compounds,
-    eQuilibrator,
-    initThermo,
-    get_compounds_from_cache
+    # eQuilibrator,
+    # initThermo,
+    # get_compounds_from_cache
 )
 from brs_utils import (
     create_logger,
