@@ -2871,7 +2871,13 @@ class rpSBML:
             annotation += '>'
             for k, v in value.items():
                 annotation += f'''
-                    <brsynth:{k} value="{v}"/>'''
+                                <brsynth:{k}'''
+                if isinstance(v, dict):
+                    for _k, _v in v.items():
+                        annotation += f''' {_k}="{_v}"'''
+                else:
+                    annotation += f'''value="{v}"'''
+                annotation += f'''/>'''
             annotation += f'''
                             </brsynth:{str(annot_header)}>'''
             # if isSort:
@@ -3737,15 +3743,14 @@ class rpSBML:
 
             # lists in the annotation
             # The below is for the pre-new rules organisation of the SBML files
-            # elif ann.getName()=='selenzyme' or ann.getName()=='rule_ori_reac':
             elif ann.getName() == 'selenzy':
                 toRet[ann.getName()] = {}
-                for y in range(ann.getNumChildren()):
-                    selAnn = ann.getChild(y)
-                    try:
-                        toRet[ann.getName()][selAnn.getName()] = float(selAnn.getAttrValue('value'))
-                    except ValueError:
-                        toRet[ann.getName()][selAnn.getName()] = selAnn.getAttrValue('value')
+                for i_child in range(ann.getNumChildren()):
+                    child = ann.getChild(i_child)
+                    toRet[ann.getName()][child.getName()] = {
+                        child.getAttributes().getName(i_attr): child.getAttributes().getValue(i_attr)
+                        for i_attr in range(child.getAttributes().getNumAttributes())
+                    }
 
             else:
                 toRet[ann.getName()] = ann.getChild(0).toXMLString()

@@ -230,22 +230,22 @@ class rpReaction(Reaction, rpObject):
         return self.__miriam
 
     def get_selenzy(self) -> Dict[str, float]:
-        """Same as get_selenzy_scores()."""
-        return self.get_selenzy_scores()
+        """Same as get_selenzy_infos()."""
+        return self.get_selenzy_infos()
 
-    def get_selenzy_scores(self) -> Dict[str, float]:
-        """Get selenzyme scores."""
+    def get_selenzy_infos(self) -> Dict[str, float]:
+        """Get selenzyme infos."""
         return self.__selenzy
 
-    def get_selenzy_score(self, id: str) -> float:
-        """Get selenzyme score for a specific UniProtID.
+    def get_selenzy_infos_fromID(self, id: str) -> float:
+        """Get selenzyme infos for a specific UniProtID.
         
         Parameters
         ----------
         id: str,
-            UniProtID to get the score for.
+            UniProtID to get the infos for.
         """
-        return self.get_selenzy_scores().get(id, None)
+        return self.get_selenzy_infos().get(id, None)
 
     ## WRITE METHODS
     def set_rp2_transfo_id(self, id: str) -> None:
@@ -359,33 +359,49 @@ class rpReaction(Reaction, rpObject):
         """
         self.__reversible = reversible
 
-    def set_selenzy(self, scores: Dict[str, float]) -> None:
-        """Same as set_selenzy_scores()."""
-        self.set_selenzy_scores(scores)
+    def set_selenzy(
+        self,
+        infos: Dict
+    ) -> None:
+        """Same as set_selenzy_infos()."""
+        self.set_selenzy_infos(infos)
 
-    def set_selenzy_scores(self, scores: Dict[str, float]) -> None:
-        """Set the selenzyme scores.
+    def set_selenzy_infos(
+        self,
+        infos: Dict,
+    ) -> None:
+        """Set the selenzyme infos.
         
         Parameters
         ----------
-        scores: Dict[str, float]
-            A dictionary which links each UniProtID to a score
+        infos: Dict
+            A dictionary which links each UniProtID to infos
+        taxonIDs: str
+            Organism taxonomic IDs from enzymes
+            (with `id` identifier) come from
         """
         self.__selenzy = {}
-        for uniprot_id, score in scores.items():
-            self.add_selenzy_score(uniprot_id, score)
+        for uniprot_id, _infos in infos.items():
+            self.add_selenzy_infos(
+                id=uniprot_id,
+                infos=_infos
+            )
 
-    def add_selenzy_score(self, id: str, score: float) -> None:
-        """Add a selenzyme score.
+    def add_selenzy_infos(
+        self,
+        id: str,
+        infos: Dict
+    ) -> None:
+        """Add selenzyme infos.
         
         Parameters
         ----------
         id: str
             UniProtID
-        score: float
-            Score to link to the UniProtID
+        infos: Dict
+            A dictionary which links each UniProtID to infos
         """
-        self.__selenzy[id] = score
+        self.__selenzy[id] = deepcopy(infos)
 
     def set_miriam(self, miriam: Dict) -> None:
         """Set extended informations as cross references.

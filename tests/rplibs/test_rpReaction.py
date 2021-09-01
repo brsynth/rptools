@@ -158,7 +158,7 @@ class Test_rpReaction(TestCase):
         )
         id = 'UniProtID_1'
         self.assertEqual(
-            self.rxn.get_selenzy_score(id),
+            self.rxn.get_selenzy_infos_fromID(id),
             self.selenzy[id]
         )
 
