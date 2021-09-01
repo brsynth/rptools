@@ -1,5 +1,8 @@
 # Release history
 
+## 5.3.6
+- chore(rplibs): change format for selenzy informations (single score into dictionnary)
+
 ## 5.3.5
 - chore(rpthermo): handle __64__ suffix for substituted compounds
 
