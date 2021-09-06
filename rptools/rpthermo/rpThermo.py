@@ -451,48 +451,6 @@ def eQuilibrator(
     # }
 
 
-# def net_reaction(
-#     reactions: List[Reaction],
-#     logger: Logger=getLogger(__name__)
-# ) -> Dict:
-#     '''
-#     '''
-
-#     # SUM ALL SPECIES
-#     species = {}
-#     for rxn in reactions:
-#         # For both sides left and right
-#         for spe_id, spe_sto in rxn.get_left().items():
-#             if spe_id in species:
-#                 species[spe_id] -= spe_sto
-#             else:
-#                 species[spe_id] = -spe_sto
-#         for spe_id, spe_sto in rxn.get_right().items():
-#             if spe_id in species:
-#                 species[spe_id] += spe_sto
-#             else:
-#                 species[spe_id] = spe_sto
-#         # for side in SIDES:
-#         #     for spe_id, spe_sto in getattr(rxn, 'get_'+side['name']).items():
-#         #         if spe_id in species:
-#         #             species[spe_id] += side['sign']*spe_sto
-#         #         else:
-#         #             species[spe_id] = side['sign']*spe_sto
-#     # WRITE INTO REACTIONS
-#     net_reaction = {
-#         SIDES[0]['name']: {},
-#         SIDES[1]['name']: {}
-#     }
-#     for spe_id, spe_sto in species.items():
-#         # Ignore compounds with stochio = 0
-#         if spe_sto < 0:
-#             net_reaction[SIDES[0]['name']][spe_id] = SIDES[0]['sign']*spe_sto
-#         elif spe_sto > 0:
-#             net_reaction[SIDES[1]['name']][spe_id] = SIDES[1]['sign']*spe_sto
-
-#     return net_reaction
-
-
 def remove_compounds(
     reactions: List[Reaction],
     rxn_target_id: str,

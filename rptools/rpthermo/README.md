@@ -1,8 +1,8 @@
 # rpThermo
 
-Calculate the formation energy of chemical species and the gibbs free energy of reactions and the heterologous pathway. This tool uses the [component contribution](https://gitlab.com/elad.noor/component-contribution) method for determining the formation energy of chemical species that are either not annotated, or cannot be found in the internal database.
+Calculate the formation energy of chemical species and the Gibbs free energy of reactions and the heterologous pathway. This tool uses the [component contribution](https://gitlab.com/elad.noor/component-contribution) method for determining the formation energy of chemical species that are either not annotated, or cannot be found in the internal database.
 
-For each species, the challenge is to find the corresponding compound in the eQuilibrator cache. To search the good compound, one tries to exact match species ID, InChIKey, InChI or SMILES and stops with the first hits. Then, if no compound has been found, in the last resort, the first part of species InChIKey is looked for within the cache. If the result (a list) is not empty, the first compound is taken.
+For each species, the challenge is to find the corresponding compound in the eQuilibrator cache. To find the good compound, one tries to exact match species ID, InChIKey, InChI or SMILES and stops with the first hit. Then, if no compound has been found, in the last resort, the first part of species InChIKey is looked for within the cache. If the result (a list) is not empty, the first compound is taken.
 
 ## Input
 
