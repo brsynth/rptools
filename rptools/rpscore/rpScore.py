@@ -1,296 +1,339 @@
-from logging import (
-    Logger,
-    getLogger
+from os import(
+    path as os_path,
+    remove as os_remove
 )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-from rptools.rplibs      import rpSBML
-from typing import (
-    List,
-    Dict,
-    Tuple
+from sys import exit as sys_exit
+from pandas import (
+    DataFrame as pd_DataFrame,
+    read_csv as pd_read_csv
 )
-from copy import deepcopy
-from numpy import (
-    average as np_avg,
-    std as np_std
+import numpy as np
+from rdkit import (
+    Chem,
+    DataStructs,
+    RDLogger
 )
+from rdkit.Chem import AllChem
+from h5py import File as h5py_File
+from tqdm import tqdm
+from sklearn.utils import shuffle
+from statistics import (
+    mean,
+    stdev
+)
+from xgboost import DMatrix
+from pickle import load as pickle_load
+
+##############################################################################################
+
+def feature_template_df(no_of_rxns_thres):
+    '''Creates a template dataframe
+       containing all the feature columns'''
+    feature_data_columns = []
+    for n in range(no_of_rxns_thres):
+        smarts = "Rxn"+str(n+1)+"_SMARTS"
+        rxn_delta_g = "Rxn"+str(n+1)+"_DeltaG"
+        rxn_rule_score = "Rxn"+str(n+1)+"_Rule_Score"
+        feature_data_columns.extend([smarts, rxn_delta_g, rxn_rule_score])
+    feature_data_columns.extend(["Pathway_Delta_G", "Pathway_Flux", "Pathway_Score", "Round1"])
+    #print(feature_data_columns)
+    feature_data = pd_DataFrame(  columns = feature_data_columns , index = None)
+    return feature_data
+
+def loop(i , temp, data):
+    '''Returns the indices of all the reactions
+       for a pathway in the dataset'''
+    temp_list = []
+    break_index = None
+    flag = True
+    j = 1
+    for index in range(i, len(data)):
+        if temp == data.loc[index,'Pathway Name'] and data.loc[index,'Reaction'] == "RP"+str(j):
+            j =j+1
+            temp_list.append(index)
+            if index+1 == len(data):
+                flag = False
+        else:
+            break_index = index
+            break
+    return temp_list , break_index , flag
 
 
-## Extract the reaction SMILES from an SBML, query rule_score and write the results back to the SBML
-#
-# Higher is better
-#
-# NOTE: all the scores are normalised by their maximal and minimal, and normalised to be higher is better
-# Higher is better
-# TODO: try to standardize the values instead of normalisation.... Advantage: not bounded
-def compute_globalscore(
-    rpsbml: rpSBML,
-    weight_rp_steps: float = 0.10002239003499142,
-    weight_rule_score: float = 0.13346271414277305,
-    weight_fba: float = 0.6348436269211155,
-    weight_thermo: float = 0.13167126890112002,
-    max_rp_steps: int = 15, # TODO: add this as a limit in RP2
-    thermo_ceil: float = 5000.0,
-    thermo_floor: float = -5000.0,
-    fba_ceil: float = 5.0,
-    fba_floor: float = 0.0,
-    pathway_id: str = 'rp_pathway',
-    objective_id: str = 'obj_fraction',
-    thermo_id: str = 'dfG_prime_m',
-    logger: Logger = getLogger(__name__)
-) -> Dict:
-    """From a rpsbml object, retreive the different characteristics of a pathway and combine them to calculate a global score.
+def pathways_index_list(data):
+    '''Returns the indices of all the reactions
+       for each of the pathways in dataset'''
+    pathways_index_list = []
+    i = 0
+    flag = True
+    while flag:
+        temp = data.loc[i,'Pathway Name']
+        temp_list, i , flag = loop( i , temp, data)
+        pathways_index_list.append(temp_list)
 
-    Note that the results are written to the rpsbml directly
-
-    :param rpsbml: rpSBML object
-    :param weight_rp_steps: The weight associated with the number of steps (Default: 0.10002239003499142)
-    :param weight_rule_score: The weight associated with the mean of reaction rule scores (Default: 0.13346271414277305)
-    :param weight_fba: The weight associated with the flux of the target (Default: 0.6348436269211155)
-    :param weight_thermo: The weight associated with the sum of reaction Gibbs free energy (Default: 0.13167126890112002)
-    :param max_rp_steps: The maximal number of steps are run in RP2 (Default: 15)
-    :param thermo_ceil: The upper limit of Gibbs free energy for each reaction (Default: 5000.0)
-    :param thermo_floor: The lower limit of Gibbs free energy for each reaction (Default: -5000.0)
-    :param fba_ceil: The upper flux limit of the heterologous pathway (Default: 5.0)
-    :param fba_floor: The lower flux limit of the heterologous pathway (Default: 5.0)
-    :param pathway_id: The ID of the heterologous pathway (Default: rp_pathway)
-    :param objective_id: The ID of the FBA objective (Default: obj_fraction)
-    :param thermo_id: The ID of the Gibbs free energy that may be used. May be either dfG_prime_m or dfG_prime_o (Default: dfG_prime_m)
-
-    :rtype: float
-    :return: The global score
-    """
-
-    # WARNING: we do this because the list gets updated
-    logger.debug('thermo_ceil:  '+str(thermo_ceil))
-    logger.debug('thermo_floor: '+str(thermo_floor))
-    logger.debug('fba_ceil:     '+str(fba_ceil))
-    logger.debug('fba_floor:    '+str(fba_floor))
-
-    bounds = {
-        'thermo': {
-            'floor': thermo_floor,
-            'ceil' : thermo_ceil
-        },
-        'fba': {
-            'floor': fba_floor,
-            'ceil' : fba_ceil
-        },
-        'max_rp_steps': max_rp_steps
-    }
-    # Dict to store list of scores over reactions
-    scores = {}
-    # score_names = ['dfG_prime_m', 'dfG_uncert', 'dfG_prime_o', 'rule_score', 'fba_obj_biomass', 'fba_obj_fraction']
-    rpsbml_dict = rpsbml.toDict(pathway_id)
-
-    rpsbml_dict, scores = score_from_reactions(
-        rpsbml_dict,
-        scores,
-        bounds,
-        pathway_id,
-        logger
-    )
-
-    rpsbml_dict = score_from_pathway(
-        rpsbml_dict,
-        scores,
-        bounds,
-        pathway_id,
-        logger
-    )
-
-    #################################################
-    ################# GLOBAL ########################
-    #################################################
-
-    ##### global score #########
-    weights = {
-        'norm_rule_score': weight_rule_score,
-        'norm_'+str(thermo_id): weight_thermo,
-        'norm_steps': weight_rp_steps,
-        'norm_fba_'+str(objective_id): weight_fba
-    }
-    scores_l = weights_l = []
-    logger.info('Checking scores...')
-    for key in weights.keys():
-        try:
-            score = rpsbml_dict['pathway']['brsynth'][key]
-            scores_l += [score]
-            weights_l += [weights[key]]
-            logger.info('   |- \'' + key + '\' added...')
-        except KeyError as e:
-            key = str(e)
-            logger.debug('KeyError: ' + key)
-            logger.warning('   |- ' + key + ' not found...')
-
-    globalScore = np_avg(
-        scores_l,
-        weights = weights_l
-    )
-
-    rpsbml_dict['pathway']['brsynth']['global_score'] = globalScore
-
-    return rpsbml_dict
+    return pathways_index_list
 
 
-def score_from_reactions(
-    rpsbml_dict: Dict,
-    scores: Dict,
-    bounds: Dict,
-    pathway_id: str,
-    logger: Logger = getLogger(__name__)
-) -> Tuple[Dict, Dict]:
+def transform_into_pathway_features(data, scores, flag, no_of_rxns_thres):
+    '''Generates the dataframe containing
+       all the features.
+       data and scores ate the 2 inputs files
+       The reactions are represented in SMILES'''
 
-    rpsbml_dict_copy = deepcopy(rpsbml_dict)
-    scores_copy      = deepcopy(scores)
+    df = feature_template_df(no_of_rxns_thres)
+    pathways_list = pathways_index_list(data)
+    #print(pathways_list)
+    #print(len(pathways_list))
+    drop_list = []
+    print("Transforming into pathway features...")
+    for count_p, rxn_list in tqdm(enumerate(pathways_list)) :
+        if len(rxn_list) > 10:
+            drop_list.append(count_p)
+            continue
+        # At the level of each reaction reading data file
+        for n , index in enumerate(rxn_list):
+            #print(index)
+            smarts = "Rxn"+str(n+1)+"_SMARTS"
+            rxn_delta_g = "Rxn"+str(n+1)+"_DeltaG"
+            rxn_rule_score = "Rxn"+str(n+1)+"_Rule_Score"
+            df.loc[count_p, smarts] = data.loc[index,'Reaction Rule']
+            df.loc[count_p, rxn_delta_g] = data.loc[index,'Normalised dfG_prime_m']
+            df.loc[count_p, rxn_rule_score] = data.loc[index,'Rule Score']
+        # At the level of pathway reading scores file
+        df.loc[count_p, "Pathway_Delta_G"] = scores.loc[count_p, 'dfG_prime_m']
+        df.loc[count_p, "Pathway_Flux"] = float( scores.loc[count_p,'FBA Flux'].split(';')[1] )
+        df.loc[count_p, "Pathway_Score"] = scores.loc[count_p,'Global Score']
+        df.loc[count_p, "Lit"] = scores.loc[count_p,'Lit']
+        df.loc[count_p, "Round1"] = scores.loc[count_p,'Round1']
+    df = df.drop(drop_list)
+    df = df.fillna(0)
+    if flag:
+        df = df[~(df.Round1 < 0)]
+        df["Round1"][df['Round1'] > 0] = 1
+        #df.to_csv("raw_df.csv")
+        df["Round1_OR"] = df["Round1"]
+        df = shuffle(df, random_state = 42).reset_index(drop =True)
+        for row in range(len(df)):
+            if  df.loc[row , "Lit"] == 1 :
+                df.loc[row , "Round1_OR"] = 1
+        #df.to_csv("raw_df_csv", index = None)
+        #print(df)
+    else :
+        df["Round1_OR"] = df["Round1"]
+    return df
 
-    for reac_id in list(rpsbml_dict_copy['reactions'].keys()):
+def features_encoding (df, flag, data_predict_file):
+    '''Creates a HDF5 file containing
+       all the features
+       Rnx features are encoded in fingerprints'''
+    no_of_rxns = 10
+    fp_len = 4096
+    rxn_len = fp_len + 2
+    pathway_len = 3
+    y_len = 1
 
-        for bd_id in list(
-            rpsbml_dict_copy['reactions'][reac_id]['brsynth'].keys()
-        ):
+    if flag == "train":
+        sys_exit('Encoding feature for training data not available file data_train.h5 must be present in models folder')
+    elif flag == "predict":
+        path = data_predict_file
+        print("Encodining features for the Test set......")
+    if os_path.exists(path):
+        os_remove(path)
+    f=h5py_File(path, "w")
+    dset = f.create_dataset('data', (  0, (rxn_len*no_of_rxns + pathway_len + y_len)),dtype='i2',maxshape=(None,(rxn_len*no_of_rxns + pathway_len + y_len)), compression='gzip')
 
-            thermo     = bd_id.startswith('dfG_')
-            fba        = bd_id.startswith('fba_')
-            rule_score = bd_id=='rule_score'
-
-            if thermo or fba:
-
-                try:
-                    ####### Thermo ############
-                    # lower is better -> -1.0 to have highest better
-                    # WARNING: we will only take the dfG_prime_m value
-                    ####### FBA ##############
-                    # higher is better
-                    # return all the FBA values
-                    # ------- reactions ----------
-                    if bd_id not in scores_copy:
-                        scores_copy[bd_id] = []
-
-                    value = rpsbml_dict_copy['reactions'][reac_id]['brsynth'][bd_id]['value']
-                    floor = bounds['thermo']['floor'] if thermo else bounds['fba']['floor']
-                    ceil  = bounds['thermo']['ceil']  if thermo else bounds['fba']['ceil']
-                    norm_score = minmax_score(value, floor, ceil)
-
-                except (KeyError, TypeError) as e:
-                    logger.warning('Cannot find: '+str(bd_id)+' for the reaction: '+str(reac_id))
-                    norm_score = 0.0
-
-                if thermo:
-                    norm_score = 1 - norm_score
-                rpsbml_dict_copy['reactions'][reac_id]['brsynth']['norm_'+bd_id] = norm_score
-                scores_copy[bd_id].append(norm_score)
-
-            elif rule_score:
-                if bd_id not in scores_copy:
-                    scores_copy[bd_id] = []
-                # rule score higher is better
-                scores_copy[bd_id].append(
-                    rpsbml_dict_copy['reactions'][reac_id]['brsynth'][bd_id]
-                )
+    for row in tqdm(range(len(df))):
+        pathway_rxns = np.array([]).reshape(0, rxn_len * no_of_rxns)
+        rxns_list = []
+        for rxn_no_ in range(no_of_rxns):
             
+            rxn_smiles_index = rxn_no_ * 3
+            rxn_dg_index = (rxn_no_ + 1)* 3 -2
+            rxn_rule_score_index = (rxn_no_ + 1)* 3 - 1
+        
+            if  str(df.iloc[row , rxn_smiles_index]) != '0':
+                #print(df.iloc[row , rxn_smiles_index])
+                rxn_smiles = df.iloc[row , rxn_smiles_index]
+                rxn_smiles_list = rxn_smiles.split(">>")
+                #print(len(rxn_smiles_list))
+
+                if len(rxn_smiles_list) == 2:
+
+                    sub_smiles = rxn_smiles_list[0]
+                    sub_m= Chem.MolFromSmiles(sub_smiles)
+                    #print(m)
+                    sub_fp = AllChem.GetMorganFingerprintAsBitVect(sub_m, 2, nBits = 2048)
+                    sub_arr = np.array([])
+                    DataStructs.ConvertToNumpyArray(sub_fp, sub_arr)
+                    sub_fp= sub_arr.reshape(1,-1)
+
+                    pro_smiles = rxn_smiles_list[1]
+                    pro_m= Chem.MolFromSmiles(pro_smiles)
+                    #print(m)
+                    pro_fp = AllChem.GetMorganFingerprintAsBitVect(pro_m, 2, nBits = 2048)
+                    pro_arr = np.zeros((1,))
+                    DataStructs.ConvertToNumpyArray(pro_fp, pro_arr)
+                    pro_fp= pro_arr.reshape(1,-1)
+                    rxn_fp = np.concatenate([sub_fp , pro_fp]).reshape(1, -1)
+
+                elif len(rxn_smiles_list) < 2:
+                     
+                    pro_smiles = rxn_smiles_list[0]
+                    #print(pro_smiles)
+                    pro_m= Chem.MolFromSmiles(pro_smiles)
+                    #print(pro_m)
+                    pro_fp = AllChem.GetMorganFingerprintAsBitVect(pro_m, 2, nBits = fp_len) # JLF: not good !!
+                    pro_arr = np.zeros((1,))
+                    DataStructs.ConvertToNumpyArray(pro_fp, pro_arr)
+                    rxn_fp= pro_arr.reshape(1,-1)
+                else:
+                    print("There is a problem with the number of components in the reaction")
+
             else:
-                logger.debug('Not normalising: '+str(bd_id))
+                rxn_fp = np.zeros(fp_len).reshape(1,-1)
 
-    return rpsbml_dict_copy, scores_copy
+            rxn_dg = df.iloc[row , rxn_dg_index].reshape(1,-1)
+            rxn_rule_score = df.iloc[row , rxn_rule_score_index].reshape(1,-1)
+            rxns_list.extend([rxn_fp, rxn_dg, rxn_rule_score])
+            #print(rxn_rule_score)
+
+        pathway_rxns = np.concatenate(rxns_list , axis = 1).reshape(1,-1)
+        pathway_dg = df.loc[row, "Pathway_Delta_G"].reshape(1,-1)
+        pathway_flux = df.loc[row, "Pathway_Flux"].reshape(1,-1)
+        pathway_score = df.loc[row, "Pathway_Score"].reshape(1,-1)
+        pathway_y = df.loc[row, "Round1_OR"].reshape(1,-1)
+        feature = np.concatenate((pathway_rxns, pathway_dg, pathway_flux, pathway_score, pathway_y), axis =1)
+        dset.resize(dset.shape[0]+feature.shape[0], axis=0)
+        dset[-feature.shape[0]:]= feature
+        #print(pathway_flux)
+
+    return dset
 
 
-def score_from_pathway(
-    rpsbml_dict: Dict,
-    scores: Dict,
-    bounds: Dict,
-    pathway_id: str,
-    logger: Logger = getLogger(__name__)
-) -> Dict:
-
-    rpsbml_dict_copy = deepcopy(rpsbml_dict)
-
-    for bd_id in scores:
-
-        ############### FBA ################
-        # higher is better
-        if bd_id.startswith('fba_'):
-            rpsbml_dict_copy['pathway']['brsynth']['norm_'+bd_id] = \
-                minmax_score(
-                    rpsbml_dict_copy['pathway']['brsynth'][bd_id]['value'],
-                    bounds['fba']['floor'], bounds['fba']['ceil']
-                )
-
-        ############# Thermo ################
-        elif bd_id.startswith('dfG_'):
-            # here add weights based on std
-            rpsbml_dict_copy['pathway']['brsynth']['norm_'+bd_id] = \
-                np_avg(
-                    [np_avg(scores[bd_id]),
-                    1.0-np_std(scores[bd_id])],
-                    weights = [0.5, 0.5]
-                )
-            # the score is higher is better - (-1 since we want lower variability)
-            # rpsbml_dict['pathway']['brsynth']['var_'+bd_id] = 1.0-np.var(path_norm[bd_id])
-
-    bd_id = 'rule_score'
-    ############# rule score ############
-    # higher is better
-    if not bd_id in scores:
-        logger.warning('Cannot detect rule_score: '+str(scores))
-        rpsbml_dict_copy['pathway']['brsynth']['norm_'+bd_id] = 0.0
+def transform_to_matrix(dset, model_file):
+    ''''Transforms the prediction dataset into
+        an appropriate matrix which is suitable for
+        XGBoost'''
+    X_test = dset[:,:-1]
+    Y_test = dset[:, -1]
+    
+    if not os_path.exists(model_file):
+        sys_exit(f'{model_file} not found')
     else:
-        rpsbml_dict_copy['pathway']['brsynth']['norm_'+bd_id] = np_avg(scores[bd_id])
+        trained_model = pickle_load(open(model_file,'rb'))
 
-    ##### length of pathway ####
-    # lower is better -> -1.0 to reverse it
-    norm_steps = 0.0
-    if len(rpsbml_dict_copy['reactions']) > bounds['max_rp_steps']:
-        logger.warning('There are more steps than specified')
-        norm_steps = 0.0
-    else:
-        try:
-            norm_steps = (
-                float(len(rpsbml_dict_copy['reactions']))-1.0
-            ) / (
-                float(bounds['max_rp_steps'])-1.0
+    dset_matrix = DMatrix(X_test, label = Y_test)
+    trained_model_score =  trained_model.predict(dset_matrix)
+    trained_model_score_1 = trained_model_score[:, 1].reshape(-1,1)
+    X_test = np.concatenate((X_test, trained_model_score_1), axis = 1)
+    dset_matrix = DMatrix(X_test)
+
+    return  dset_matrix
+    
+
+###############################################################
+def score_prediction(features_dset_train, features_dset_pred, models_path):
+
+    stdev_ = []
+    mean_ = []
+    pb1_mean = []
+    pb1_stdev = []
+    print(features_dset_pred)
+    n_predictions = np.array([[]])
+    print("Predicting n times...")
+    for model_number,  n in tqdm( enumerate([ 0, 10, 20, 30, 40, 50, 60, 70,80, 90])): ##########################
+        modelfile = os_path.join(
+            models_path,
+            f'model{model_number}.pickle'
+        )
+        if not os_path.exists(modelfile):
+            sys_exit('modelfile not found')
+        model = pickle_load( open(modelfile, 'rb')) ############
+        df_test_matrix = transform_to_matrix(
+            features_dset_pred,
+            os_path.join(
+                models_path,
+                'model.pickle'
             )
-            norm_steps = 1.0 - norm_steps
-        except ZeroDivisionError:
-            norm_steps = 0.0
+        )
+        prediction = model.predict(df_test_matrix)
+        pb_1 = prediction[:, 1].reshape(-1, 1)
+        prediction = np.asarray([np.argmax(line) for line in prediction]).reshape(-1, 1)
+        if n_predictions.shape[1] == 0 :
+            n_predictions = prediction
+            n_pb_1 = pb_1
+        else:
+            n_predictions = np.concatenate((n_predictions , prediction), axis = 1)
+            n_pb_1 = np.concatenate((n_pb_1, pb_1), axis = 1)
 
-    rpsbml_dict_copy['pathway']['brsynth']['norm_steps'] = norm_steps
+    for row in range(len(n_predictions)):
+        line = n_predictions[row, :].tolist()
+        line_pb1 = n_pb_1[row, :].tolist()
 
-    return rpsbml_dict_copy
+        mean_.append(mean(line))
+        stdev_.append(stdev(line))
+        pb1_mean.append(mean(line_pb1))
+        pb1_stdev.append(stdev(line_pb1))
+
+    mean_stdev = pd_DataFrame( { 'mean' : mean_ , 'stdev' : stdev_ , 'Prob1_mean': pb1_mean , 'Prob1_stdev' : pb1_stdev})
+    mean_stdev.to_csv("mean_stdev_.csv")
 
 
-def minmax_score(
-    value: float,
-    floor: float,
-    ceil: float,
-    logger: Logger = getLogger(__name__)
-) -> float:
-    """Compute and returns score
-    """
-    if ceil >= value >= floor:
-        # min-max feature scaling
-        norm = (value-floor) / (ceil-floor)
-    elif value < floor:
-        norm = 0.0
-    # then value > ceil
-    else:
-        norm = 1.0
+##############################################################
 
-    return norm
+# Loading training data saved in models folder
+def load_training_data(filename: str):
+    if not os_path.exists(filename):
+        sys_exit(f'{filename} not found')
+    f = h5py_File(filename, "r")
+    features_dset_train = f["data"]
+    f.close()
+    return features_dset_train
+
+# Loading query
+def loading_query(
+    test_data_file: str,
+    test_score_file: str
+):
+    data_test = pd_read_csv(test_data_file)
+    scores_test = pd_read_csv(test_score_file)
+    print("Number of pathways : ",len(scores_test))
+    print("Total number of reactions  : ", len(data_test))
+    return data_test, scores_test
+
+# Encoding and prediction
+def encode_and_predict(
+    data_test: str,
+    scores_test: str,
+    data_predict_file: str,
+    models_path: str,
+    features_dset_train,
+    no_of_rxns_thres: int
+):
+    df_test = transform_into_pathway_features(data_test, scores_test, False, no_of_rxns_thres)
+    features_dset_pred  = features_encoding(df_test, "predict", data_predict_file)
+    score_prediction(features_dset_train, features_dset_pred, models_path)
+    print("Mean - Stdev stats is saved")
+
+def predict_score(
+      test_data_file: str,
+      test_score_file: str,
+      data_predict_file: str,
+      models_path: str,
+      features_dset_train,
+      no_of_rxns_thres: int
+):
+    data_test, scores_test = loading_query(
+      test_data_file,
+      test_score_file
+    )
+    encode_and_predict(
+      data_test,
+      scores_test,
+      data_predict_file,
+      models_path,
+      features_dset_train,
+      no_of_rxns_thres
+    )
+################################################################
 
 
