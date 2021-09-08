@@ -28,6 +28,19 @@ from pickle import load as pickle_load
 from rptools.rplibs import rpPathway
 
 
+__CURRENT_PATH = os_path.dirname(
+    os_path.abspath(__file__)
+)
+__MODELS_PATH = os_path.join(
+    __CURRENT_PATH,
+    'models'
+)
+__DATA_TRAIN_FILE = os_path.join(
+    __MODELS_PATH,
+    'data_train.h5'
+)
+
+
 ##############################################################################################
 
 def feature_template_df(no_of_rxns_thres):
@@ -372,77 +385,80 @@ def _predict_score(
     return list(score_df.to_dict()['Prob1_mean'].values())
 
 def predict_score(
-    pathways: List[rpPathway],
-    data_train_file: str,
-    models_path: str,
+    # pathways: List[rpPathway],
+    pathway: rpPathway,
+    # data_train_file: str,
+    # models_path: str,
     no_of_rxns_thres: int
-) -> List[float]:
+) -> float:
+# ) -> List[float]:
 
     with NamedTemporaryFile() as rf:
         with NamedTemporaryFile() as pf:
             reactions_fp = open(rf.name, 'w')
             pathways_fp = open(pf.name, 'w')
             format_files(
-                pathways=pathways,
+                pathway=pathway,
                 reactions_fp=reactions_fp,
                 pathways_fp=pathways_fp
             )
             reactions_fp.close()
             pathways_fp.close()
             features_dset_train = load_training_data(
-                data_train_file
+                __DATA_TRAIN_FILE
             )
             return _predict_score(
                 rf.name,
                 pf.name,
-                models_path,
+                __MODELS_PATH,
                 features_dset_train,
                 no_of_rxns_thres
-            )
+            )[0]
 
 def format_files(
-  pathways: List[rpPathway],
-  reactions_fp: str,
-  pathways_fp: str
+#   pathways: List[rpPathway],
+    pathway: rpPathway,
+    reactions_fp: str,
+    pathways_fp: str
 ) -> None:
 
-  # PATHWAYS FILE
-  columns = [
-    'Unnamed: 0',
-    'target_name',
-    'target_structure',
-    'Pathway Name',
-    'pathway_dummy_name',
-    'chassis',
-    'Reaction',
-    'Global Score',
-    'Rule ID',
-    'EC_number',
-    'Reaction Rule',
-    'Rule Score',
-    'dfG_prime_o',
-    'dfG_prime_m',
-    'dfG_uncert',
-    'Normalised dfG_prime_o',
-    'Normalised dfG_prime_m',
-    'Normalised dfG_uncert',
-    'FBA',
-    'FBA Flux',
-    'FBA Normalised Flux',
-    'UniProt',
-    'Selenzyme Score',
-    'Measured',
-    'Sub',
-    'Lit',
-    'Round1',
-    'Lit_score',
-    'Lit_best'
-  ]
-  # Header
-  pathways_fp.write(','.join(columns)+'\n')
-  # Body
-  i = 0
-  for pathway in pathways:
+    # PATHWAYS FILE
+    columns = [
+        'Unnamed: 0',
+        'target_name',
+        'target_structure',
+        'Pathway Name',
+        'pathway_dummy_name',
+        'chassis',
+        'Reaction',
+        'Global Score',
+        'Rule ID',
+        'EC_number',
+        'Reaction Rule',
+        'Rule Score',
+        'dfG_prime_o',
+        'dfG_prime_m',
+        'dfG_uncert',
+        'Normalised dfG_prime_o',
+        'Normalised dfG_prime_m',
+        'Normalised dfG_uncert',
+        'FBA',
+        'FBA Flux',
+        'FBA Normalised Flux',
+        'UniProt',
+        'Selenzyme Score',
+        'Measured',
+        'Sub',
+        'Lit',
+        'Round1',
+        'Lit_score',
+        'Lit_best'
+    ]
+    # Header
+    pathways_fp.write(','.join(columns)+'\n')
+    # Body
+    i = 0
+#   for pathway in pathways:
     data = {}
     data['Unnamed: 0'] = i
     data['Pathway Name'] = pathway.get_id()
@@ -450,52 +466,52 @@ def format_files(
     data['FBA'] = ';'.join(pathway.get_fba().keys())
     data['FBA Flux'] = ';'.join([v['value'] for v in pathway.get_fba().values()])
     pathways_fp.write(
-      ','.join(
+        ','.join(
         [str(data.get(c, '')) for c in columns]
-      ) + '\n'
+        ) + '\n'
     )
     i += 1
 
-  # REACTIONS FILE
-  columns = [
-    '',
-    'target_name',
-    'target_structure',
-    'Pathway Name',
-    'pathway_dummy_name',
-    'Reaction',
-    'Global Score',
-    'Rule ID',
-    'EC_number',
-    'Reaction Rule',
-    'Rule Score',
-    'dfG_prime_o',
-    'dfG_prime_m',
-    'dfG_uncert',
-    'Normalised dfG_prime_o',
-    'Normalised dfG_prime_m',
-    'Normalised dfG_uncert',
-    'FBA',
-    'FBA Flux',
-    'FBA Normalised Flux',
-    'UniProt',
-    'Selenzyme Score',
-    'Measured',
-    'Sub'
-  ]
-  # Header
-  reactions_fp.write(','.join(columns)+'\n')
-  # Body
-  i = 0
-  for pathway in pathways:
+    # REACTIONS FILE
+    columns = [
+        '',
+        'target_name',
+        'target_structure',
+        'Pathway Name',
+        'pathway_dummy_name',
+        'Reaction',
+        'Global Score',
+        'Rule ID',
+        'EC_number',
+        'Reaction Rule',
+        'Rule Score',
+        'dfG_prime_o',
+        'dfG_prime_m',
+        'dfG_uncert',
+        'Normalised dfG_prime_o',
+        'Normalised dfG_prime_m',
+        'Normalised dfG_uncert',
+        'FBA',
+        'FBA Flux',
+        'FBA Normalised Flux',
+        'UniProt',
+        'Selenzyme Score',
+        'Measured',
+        'Sub'
+    ]
+    # Header
+    reactions_fp.write(','.join(columns)+'\n')
+    # Body
+    i = 0
+    # for pathway in pathways:
     # List of reactions with the one producing the target in fist place
     rxn_lst = (
-      [pathway.get_target_rxn_id()] +
-      [
+    [pathway.get_target_rxn_id()] +
+    [
         rxn_id
         for rxn_id in pathway.get_reactions_ids()
         if rxn_id != pathway.get_target_rxn_id()
-      ]
+    ]
     )
     # smiles = [
     #   '[H]OC(=NC([H])([H])C([H])([H])SC(=O)C([H])=C([H])c1c([H])c([H])c(O[H])c(O[H])c1[H])C([H])([H])C([H])([H])N=C(O[H])C([H])(O[H])C(C([H])([H])[H])(C([H])([H])[H])C([H])([H])OP(=O)(O[H])OP(=O)(O[H])OC([H])([H])C1([H])OC([H])(n2c([H])nc3c(N([H])[H])nc([H])nc32)C([H])(O[H])C1([H])OP(=O)(O[H])O[H].[H]OC(=O)C([H])(O[H])C([H])([H])c1c([H])c([H])c(O[H])c(O[H])c1[H]>>CC(C)(COP(=O)(O)OP(=O)(O)OCC1OC(n2cnc3c(N)ncnc32)C(O)C1OP(=O)(O)O)C(O)C(O)=NCCC(O)=NCCS.[H]OC(=O)C([H])(OC(=O)C([H])=C([H])c1c([H])c([H])c(O[H])c(O[H])c1[H])C([H])([H])c1c([H])c([H])c(O[H])c(O[H])c1[H]',

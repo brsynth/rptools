@@ -37,9 +37,9 @@ class Test_rpScore(TestCase):
         self.assertEqual(
             0.1922311931848526,
             predict_score(
-                pathways=[self.pathway],
+                pathway=self.pathway,
                 data_train_file=DATA_TRAIN_FILE,
                 models_path=MODELS_PATH,
                 no_of_rxns_thres=10
-            )[0]
+            )
         )
