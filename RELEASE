@@ -1,5 +1,8 @@
 # Release history
 
+## 5.4.0
+- feat(rpscore): add scoring function based on learning
+
 ## 5.3.6
 - chore(rplibs): change format for selenzy informations (single score into dictionnary)
 
