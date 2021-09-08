@@ -124,6 +124,8 @@ class rpPathway(Pathway, rpObject):
             value=10000,
             units=rpReaction.get_default_fbc_units()
         )
+        # Init global score
+        self.set_global_score(-1)
         # Additional names for methods
         self.get_sink = self.get_sink_species
         self.set_sink = self.set_sink_species
@@ -147,13 +149,15 @@ class rpPathway(Pathway, rpObject):
         if specific:
             return {
                 **self.__to_dict(),
-                **rpObject._to_dict(self)
+                **rpObject._to_dict(self),
+                'global_score': self.get_global_score()
             }
         else:
             return {
                 **Pathway._to_dict(self),
                 **rpObject._to_dict(self),
-                **self.__to_dict()
+                **self.__to_dict(),
+                'global_score': self.get_global_score()
             }
 
     def __to_dict(self) -> Dict:
@@ -329,8 +333,22 @@ class rpPathway(Pathway, rpObject):
         in the pathway belong."""
         return self.__compartments
 
+    def get_global_score(self) -> float:
+        """Get the global score value."""
+        return self.__global_score
+
 
     ## WRITE METHODS
+    def set_global_score(self, score: float) -> None:
+        """Set global score value to the pathway.
+
+        Parameters
+        ----------
+        score: float
+            Score value to set.
+        """
+        self.__global_score = score
+
     def add_trunk_species(self, species: List[str]) -> None:
         """Add species in the 'trunk' group. One occurence
         of each species appear in this group.
@@ -821,7 +839,10 @@ class rpPathway(Pathway, rpObject):
         rpsbml.create_enriched_group(
             group_id='rp_pathway',
             members=self.get_reactions_ids(),
-            infos=rpObject._to_dict(self)
+            infos={
+                **rpObject._to_dict(self),
+                'global_score': self.get_global_score()
+            }
         )
         for group_id, group_members in self.get_species_groups().items():
             rpsbml.create_enriched_group(
