@@ -130,11 +130,11 @@ class rpSBML:
         self.setName(name if name else self.getName())
 
         # scores
-        self.score = {
-            'value': -1,
-            'nb_rules': 0
-        }
-        self.global_score = 0
+        # self.score = {
+        #     'value': -1,
+        #     'nb_rules': 0
+        # }
+        # self.global_score = 0
 
         # headers
         self.miriam_header = {
@@ -269,91 +269,91 @@ class rpSBML:
         self.logger = logger
 
 
-    def compute_score(self, pathway_id: str = 'rp_pathway') -> float:
-        self.score['value'] = 0
-        for member in self.readGroupMembers(pathway_id):
-            rxn = self.getModel().getReaction(member)
-            self.add_rule_score(
-                float(
-                    rxn.getAnnotation().getChild('RDF').getChild('BRSynth').getChild('brsynth').getChild('rule_score').getAttrValue('value')
-                )
-            )
-        return self.getScore()
+    # def compute_score(self, pathway_id: str = 'rp_pathway') -> float:
+    #     self.score['value'] = 0
+    #     for member in self.readGroupMembers(pathway_id):
+    #         rxn = self.getModel().getReaction(member)
+    #         self.add_rule_score(
+    #             float(
+    #                 rxn.getAnnotation().getChild('RDF').getChild('BRSynth').getChild('brsynth').getChild('rule_score').getAttrValue('value')
+    #             )
+    #         )
+    #     return self.getScore()
 
 
-    def getScore(self) -> float:
-        try:
-            return self.score['value'] / self.score['nb_rules']
-        except ZeroDivisionError as e:
-            self.logger.debug(e)
-            return -1
+    # def getScore(self) -> float:
+    #     try:
+    #         return self.score['value'] / self.score['nb_rules']
+    #     except ZeroDivisionError as e:
+    #         self.logger.debug(e)
+    #         return -1
 
 
-    def add_rule_score(self, score: float) -> None:
-        self.score['value']    += score
-        self.score['nb_rules'] += 1
+    # def add_rule_score(self, score: float) -> None:
+    #     self.score['value']    += score
+    #     self.score['nb_rules'] += 1
 
 
-    def setGlobalScore(self, score: float) -> None:
-        self.global_score = score
+    # def setGlobalScore(self, score: float) -> None:
+    #     self.global_score = score
 
 
-    def updateBRSynthPathway(
-        self,
-        rpsbml_dict: Dict,
-        pathway_id: str = 'rp_pathway'
-    ) -> None:
-        """Update the heterologous pathway from a dictionary to a rpsbml file
+    # def updateBRSynthPathway(
+    #     self,
+    #     rpsbml_dict: Dict,
+    #     pathway_id: str = 'rp_pathway'
+    # ) -> None:
+    #     """Update the heterologous pathway from a dictionary to a rpsbml file
 
-        :param self: rpSBML object
-        :param rpsbml_dict: The dictionary of the heterologous pathway
-        :param pathway_id: The ID of the heterologous pathway
+    #     :param self: rpSBML object
+    #     :param rpsbml_dict: The dictionary of the heterologous pathway
+    #     :param pathway_id: The ID of the heterologous pathway
         
-        :return: None
-        """
+    #     :return: None
+    #     """
 
-        self.logger.debug('rpsbml_dict: {0}'.format(rpsbml_dict))
+    #     self.logger.debug('rpsbml_dict: {0}'.format(rpsbml_dict))
 
-        rp_pathway = self.getGroup(pathway_id)
+    #     rp_pathway = self.getGroup(pathway_id)
 
-        for bd_id in rpsbml_dict['pathway']['brsynth']:
+    #     for bd_id in rpsbml_dict['pathway']['brsynth']:
 
-            # print(bd_id)
-            unit = None
+    #         # print(bd_id)
+    #         unit = None
 
-            try: # read 'value' field
-                value = rpsbml_dict['pathway']['brsynth'][bd_id]['value']
-                try: # read 'unit' field
-                    unit = rpsbml_dict['pathway']['brsynth'][bd_id]['units']
-                except KeyError:
-                    pass
+    #         try: # read 'value' field
+    #             value = rpsbml_dict['pathway']['brsynth'][bd_id]['value']
+    #             try: # read 'unit' field
+    #                 unit = rpsbml_dict['pathway']['brsynth'][bd_id]['units']
+    #             except KeyError:
+    #                 pass
 
-            except (KeyError, TypeError, IndexError):
-                # self.logger.warning('The entry '+str(bd_id)+' does not contain any \'value\' field. Trying using the root...')
-                try: # read value directly
-                    value = rpsbml_dict['pathway']['brsynth'][bd_id]
-                except KeyError:
-                    self.logger.warning('The entry '+str(bd_id)+' does not exist. Giving up...')
+    #         except (KeyError, TypeError, IndexError):
+    #             # self.logger.warning('The entry '+str(bd_id)+' does not contain any \'value\' field. Trying using the root...')
+    #             try: # read value directly
+    #                 value = rpsbml_dict['pathway']['brsynth'][bd_id]
+    #             except KeyError:
+    #                 self.logger.warning('The entry '+str(bd_id)+' does not exist. Giving up...')
 
-            self.updateBRSynth(rp_pathway, bd_id, value, unit, False)
+    #         self.updateBRSynth(rp_pathway, bd_id, value, unit, False)
 
-        # for reac_id in rpsbml_dict['reactions']:
-        #     reaction = self.getModel().getReaction(reac_id)
-        #     if reaction==None:
-        #         self.logger.warning('Skipping updating '+str(reac_id)+', cannot retreive it')
-        #         continue
-        #     for bd_id in rpsbml_dict['reactions'][reac_id]['brsynth']:
-        #         if bd_id[:5]=='norm_':
-        #             try:
-        #                 value = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']
-        #             except KeyError:
-        #                 value = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]
-        #                 self.logger.warning('No" value", using the root')
-        #             try:
-        #                 unit = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['unit']
-        #             except KeyError:
-        #                 unit = None
-        #             self.updateBRSynth(reaction, bd_id, value, unit, False)
+    #     # for reac_id in rpsbml_dict['reactions']:
+    #     #     reaction = self.getModel().getReaction(reac_id)
+    #     #     if reaction==None:
+    #     #         self.logger.warning('Skipping updating '+str(reac_id)+', cannot retreive it')
+    #     #         continue
+    #     #     for bd_id in rpsbml_dict['reactions'][reac_id]['brsynth']:
+    #     #         if bd_id[:5]=='norm_':
+    #     #             try:
+    #     #                 value = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['value']
+    #     #             except KeyError:
+    #     #                 value = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]
+    #     #                 self.logger.warning('No" value", using the root')
+    #     #             try:
+    #     #                 unit = rpsbml_dict['reactions'][reac_id]['brsynth'][bd_id]['unit']
+    #     #             except KeyError:
+    #     #                 unit = None
+    #     #             self.updateBRSynth(reaction, bd_id, value, unit, False)
 
     def search_compartment_id(self, compartment_id: str):
         for group in self.getModel().getListOfCompartments():
@@ -2593,19 +2593,21 @@ class rpSBML:
             other._get_reactions_with_species_keys()
 
 
-    def __lt__(self, rpsbml):
-        return self.getScore() < rpsbml.getScore()
+    # def __lt__(self, rpsbml):
+    #     return self.getScore() < rpsbml.getScore()
 
 
-    def __gt__(self, rpsbml):
-        return self.getScore() > rpsbml.getScore()
+    # def __gt__(self, rpsbml):
+    #     return self.getScore() > rpsbml.getScore()
 
 
     def __str__(self):
-        return 'name: '      + str(self.getName())  + '\n' \
-             + 'score: '     + str(self.getScore()) + '\n' \
-             + 'document: '  + str(self.document)   + '\n' \
-             + 'model: '     + str(self.getModel())      + '\n'
+        return f'''
+            name: {str(self.getName())}
+            document: {str(self.document)}
+            model: {str(self.getModel())}
+            '''
+            #  + 'score: '     + str(self.getScore()) + '\n' \
 
 
     def getPlugin(self, plugin: str) -> object:
@@ -3822,15 +3824,15 @@ class rpSBML:
         return False
 
 
-    def read_global_score(
-        self,
-        pathway_id: str = 'rp_pathway',
-        logger: Logger = getLogger(__name__)
-    ) -> float:
-        return self.toDict(
-            pathway_id = pathway_id,
-            keys = ['pathway']
-        )['pathway']['brsynth']['global_score']
+    # def read_global_score(
+    #     self,
+    #     pathway_id: str = 'rp_pathway',
+    #     logger: Logger = getLogger(__name__)
+    # ) -> float:
+    #     return self.toDict(
+    #         pathway_id = pathway_id,
+    #         keys = ['pathway']
+    #     )['pathway']['brsynth']['global_score']
 
 
     # def read_pathway(
