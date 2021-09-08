@@ -1,20 +1,25 @@
 from typing import (
-  Dict,
-  List
+    Dict,
+    List
 )
 from logging import (
-  Logger,
-  getLogger
+    Logger,
+    getLogger
 )
+from os import (
+    path as os_path,
+    makedirs
+)
+from tempfile import NamedTemporaryFile
 from rptools.rpscore import (
     load_training_data,
     predict_score
 )
 from rptools.rpscore.Args import (
-  add_arguments,
-  __MODELS_PATH as models_path
+    add_arguments,
+    __MODELS_PATH as models_path
 )
-from rptools.rplibs import rpSBML
+from rptools.rplibs import rpPathway
 from rptools import build_args_parser
 
 def entry_point():
@@ -29,54 +34,51 @@ def entry_point():
     from rptools.__main__ import init
     logger = init(parser, args)
 
-    # rpsbml = rpSBML(
-    #     inFile = args.pathway_file,
-    #     logger = logger
-    # )
+    if len(args.pathways) == 1:
+      if args.outfile is None or args.outfile == '':
+        logger.error('Option --outfile has to be set in case of single input pathway, exiting...')
+        exit(1)
 
-    features_dset_train = load_training_data(args.data_train_file)
-    predict_score(
-      args.test_data_file,
-      args.test_score_file,
-      args.data_predict_file,
-      models_path,
-      features_dset_train,
-      no_of_rxns_thres=10
+    pathways = []
+    for pathway in args.pathways:
+        pathways.append(
+            rpPathway.from_rpSBML(
+                infile=pathway,
+                logger=logger
+            )
+        )
+
+    scores = predict_score(
+        pathways=pathways,
+        data_train_file=args.data_train_file,
+        models_path=models_path,
+        no_of_rxns_thres=args.no_of_rxns_thres
     )
 
-
-    # if pathway is None:
-    #   logger.info('No results written. Exiting...')
-    # else:
-    #   logger.info('Writing into file...')
-    #   # Write results into the pathway
-    #   write_results(
-    #     pathway,
-    #     global_score,
-    #     logger
-    #   )
-    #   # Write pathway into file
-    #   if args.outfile is not None or args.outfile != '':
-    #     with open(args.outfile, 'w') as fp:
-    #         pathway = json_dump(pathway, fp, indent=4)
-    #     logger.info('   |--> written in ' + args.outfile)
-
-    # if not args.silent:
-    #     if args.log.lower() in ['critical', 'error', 'warning']:
-    #         print(global_score)
-    #     else:
-    #         logger.info('\nGlobal Score = ' + str(global_score))
-
-
-def write_results(
-  pathway: Dict,
-  score: float,
-  logger: Logger = getLogger(__name__)
-) -> None:
-  # Write pathway result
-  if 'scores' not in pathway:
-    pathway['scores'] = {}
-  pathway['scores']['global'] = score
+    if len(pathways) > 1:
+        if not os_path.exists(args.outdir):
+            makedirs(args.outdir)
+        for i in range(len(pathways)):
+            # Write results into the pathway
+            pathways[i].set_global_score(
+                scores[i]
+            )
+            # Write pathway into file
+            pathways[i].to_rpSBML().write_to_file(
+                os_path.join(
+                    args.outdir,
+                    os_path.basename(args.pathways[i])
+                )
+            )
+        else:
+            # Write results into the pathway
+            pathways[0].set_global_score(
+                scores[0]
+            )
+            # Write pathway into file
+            pathways[0].to_rpSBML().write_to_file(
+                args.outfile
+            )
 
 
 if __name__ == '__main__':

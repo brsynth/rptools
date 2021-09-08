@@ -5,6 +5,5 @@ Created on Sep 6 2021
 """
 
 from rptools.rpscore.rpScore import (
-    load_training_data,
     predict_score
 )
