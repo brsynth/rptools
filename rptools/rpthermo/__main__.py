@@ -72,7 +72,7 @@ def print_results(
 ) -> None:
     logger.info(
         "{color}{typo}Results {net_rxn}{rst}".format(
-            net_rxn=pathway.net_reaction(),
+            net_rxn=results['optimized_net_reaction'],
             color=fg('white'),
             typo=attr('bold'),
             rst=attr('reset')
@@ -80,13 +80,12 @@ def print_results(
     )
     print_thermo_results(
         results['net_reaction'],
-        # pathway.get_infos()['thermo'],
         logger
     )
     for rxn_id in pathway.get_reactions_ids():
         logger.info(
             "{color}{typo}Results {rxn}{rst}".format(
-                rxn=pathway.get_reaction(rxn_id),
+                rxn=results['optimized_reactions'][rxn_id],
                 color=fg('white'),
                 typo=attr('bold'),
                 rst=attr('reset')
@@ -94,7 +93,6 @@ def print_results(
         )
         print_thermo_results(
             results['reactions'][rxn_id],
-            # pathway.get_reaction(rxn_id).get_info('thermo'),
             logger
         )
 
