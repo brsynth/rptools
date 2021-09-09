@@ -225,7 +225,7 @@ def runThermo(
 
     ## REACTIONS
     # Compute thermo for each reaction
-    for rxn in reactions:
+    for rxn in pathway.get_list_of_reactions():
         results['reactions'][rxn.get_id()] = eQuilibrator(
             species_stoichio=rxn.get_species(),
             species_ids=species_cc_ids,
