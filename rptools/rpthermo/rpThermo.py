@@ -185,7 +185,12 @@ def runThermo(
     # and for each of the reactions within the pathway
     results = {
         'net_reaction': {},
+        'optimized_net_reaction': Reaction.sum_stoichio(reactions),
         'reactions': {},
+        'optimized_reactions': {
+            rxn.get_id(): rxn
+            for rxn in reactions
+        },
         'species': {},
         'substituted_species': substituted_species
     }
@@ -220,7 +225,7 @@ def runThermo(
 
     ## REACTIONS
     # Compute thermo for each reaction
-    for rxn in pathway.get_list_of_reactions():
+    for rxn in reactions:
         results['reactions'][rxn.get_id()] = eQuilibrator(
             species_stoichio=rxn.get_species(),
             species_ids=species_cc_ids,
@@ -241,6 +246,7 @@ def runThermo(
         cc=cc,
         logger=logger
     )
+
     print_OK(logger)
 
     # Write results into the pathway
@@ -502,6 +508,7 @@ def remove_compounds(
         rxn_target_idx,
         logger
     )
+
     # print(sto_mat)
     # print(f'rxn_target_idx: {rxn_target_idx}')
     # print(unk_compounds)
@@ -539,63 +546,7 @@ def minimize(
     logger: Logger=getLogger(__name__)
 ) -> 'np_ndarray':
 
-#     S = np_array([
-#         [1, -2,
-# 0],
-
-# [1, 
-# 0, -3],
-#     ])
-#     S = np_array([
-#         [-1, 0, 0],
-#         [-1, -1, -1],
-#         [-1, 0, -1],
-#         [-1, 1, 0],
-#         [-3, 2, 0],
-#         [0, 1, 0],
-#         [1, 0, -3],
-#         [1, -2, 0],
-#         [1, 0, 1],
-#         [1, 0, 0],
-#         [1, 0, 1],
-#     ])
-#     S = np_array([
-
-# [1, -2, 0],
-
-# [1, 2, 0],
-
-# [1, 0, -3],
-
-
-
-# ])
-
-# |- rxn_1: 1.0 MNXM188 + 1.0 MNXM4 + 1.0 MNXM6 + 3.0 MNXM1 --> 1.0 CMPD_0000000004 + 1.0 CMPD_0000000003 + 1.0 MNXM13 + 1.0 MNXM15 + 1.0 MNXM5
-
-# |- rxn_2: 1.0 MNXM4 + 2.0 CMPD_0000000003 --> 2.0 MNXM1 + 1.0 TARGET_0000000001
-
-# |- rxn_3: 1.0 MNXM4 + 1.0 MNXM6 + 3.0 CMPD_0000000004 --> 1.0 MNXM13 + 1.0 MNXM5
-
     nb_compounds, nb_reactions = S.shape
-
-    # # Remove unsolvable lines (i.e. with )
-    # _S = []
-    # for row_idx in range(nb_compounds):
-    #     nb_in_left = nb_in_right = 0
-    #     for col_idx in range(nb_reactions):
-    #         if S[row_idx][col_idx] < 0:
-    #             nb_in_left += 1
-    #         elif S[row_idx][col_idx] > 0:
-    #             nb_in_right += 1
-    #     if nb_in_left > 0 and nb_in_right > 0:
-    #         _S += [S[row_idx]]
-    #     print(_S)
-    # _S = np_array(_S)
-    # print(type(S), S)
-    # print(S[0], [S[0]])
-    # print(type(_S), _S)
-    # nb_compounds, nb_reactions = _S.shape
 
     ## S.x = 0
     # Init with zeros
@@ -614,13 +565,8 @@ def minimize(
     c = np_zeros(nb_reactions)
     # Search the rxn ID that
     # maximizes the production of the target
-
     # translate it in the stoichio matrix index
     c[rxn_target_idx] = -1
-    # c[1] = -1
-    # c = [col[1] for col in S]
-    # A_ub = np_array()
-    # print(c)
 
     ## Solve
     res = linprog(
@@ -630,11 +576,7 @@ def minimize(
         bounds=bounds,
         method='revised simplex'
     )
-    # print(b_eq)
-    # print(f'rxn_target_idx: {rxn_target_idx}')
-    # print(S)
-    # print(res)
-    # exit()
+
     return res.x
 
 
