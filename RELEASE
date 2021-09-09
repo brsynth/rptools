@@ -2,8 +2,6 @@
 
 ## 5.4.2
 - fix(rpthermo): add models in MANIFEST
-- fix(rpthermo): compute thermo for optimized reactions
-- chore(rpthermo): print optimized reactions and pseudo-reaction
 
 ## 5.4.1
 - chore(rpscore): take only one single input pathway

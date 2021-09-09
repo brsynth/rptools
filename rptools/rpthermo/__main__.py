@@ -85,7 +85,7 @@ def print_results(
     for rxn_id in pathway.get_reactions_ids():
         logger.info(
             "{color}{typo}Results {rxn}{rst}".format(
-                rxn=results['optimized_reactions'][rxn_id],
+                rxn=pathway.get_reaction(rxn_id),
                 color=fg('white'),
                 typo=attr('bold'),
                 rst=attr('reset')
