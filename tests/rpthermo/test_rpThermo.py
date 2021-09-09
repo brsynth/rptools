@@ -120,7 +120,7 @@ species = {
 
 class Test_rpThermo(TestCase):
 
-    # __test__ = False
+    __test__ = False
 
     def setUp(self):
         self.logger = create_logger(__name__, 'ERROR')
