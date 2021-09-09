@@ -89,7 +89,8 @@ def runThermo(
         compound_substitutes = read_compound_substitutes(
             os_path.join(
                 os_path.dirname(os_path.realpath(__file__)),
-                'data/compound_substitutes.csv'
+                'data',
+                'compound_substitutes.csv'
             )
         )
 
