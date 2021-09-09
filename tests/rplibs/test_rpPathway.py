@@ -289,6 +289,7 @@ class Test_rpPathway(TestCase):
                 'thermo_dG0_prime': self.pathway.get_thermo_dG0_prime(),
                 'thermo_dGm_prime': self.pathway.get_thermo_dGm_prime(),
                 'thermo_dG_prime': self.pathway.get_thermo_dG_prime(),
+                'global_score': -1
             }
         )
 
