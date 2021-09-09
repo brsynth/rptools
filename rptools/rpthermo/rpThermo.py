@@ -79,21 +79,6 @@ def runThermo(
     :return: Pathway updated with thermodynalics values
     """
 
-    ## REACTIONS
-    # reactions = rpsbml.read_reactions(
-    #     pathway_id='rp_pathway',
-    #     logger=logger
-    # )
-
-    if compound_substitutes is None:
-        compound_substitutes = read_compound_substitutes(
-            os_path.join(
-                os_path.dirname(os_path.realpath(__file__)),
-                'data',
-                'compound_substitutes.csv'
-            )
-        )
-
     print_title(
         txt='Pathway Reactions',
         logger=logger,
@@ -104,25 +89,10 @@ def runThermo(
             rxn=rxn,
             logger=logger
         )
-    # logger = getLogger(__name__)
-
-    # ## COMPOUNDS
-    # # Get Compounds objects from eQuilibrator cache
-    # # compound = None if ID does not exist in the cache
-    # print_title(
-    #     txt='Identifying compounds with cache (eQuilibrator)...',
-    #     logger=logger,
-    #     waiting=True
-    # )
-    # species, unk_compounds = get_compounds_from_cache(
-    #     compounds=pathway.get_species(),
-    #     cc=cc,
-    #     logger=logger
-    # )
-    # print_OK(logger)
 
     ## INTERMEDIATE COMPOUNDS
-    # Remove intermediate compounds
+    # Optimise the production of target
+    # and remove (if possible) intermediate compounds
     reactions = remove_compounds(
         compounds=pathway.get_intermediate_species(),
         reactions=pathway.get_list_of_reactions(),
@@ -150,6 +120,14 @@ def runThermo(
     cc_species = {}
     substituted_species = {}
     sep = '__64__'
+    if compound_substitutes is None:
+        compound_substitutes = read_compound_substitutes(
+            os_path.join(
+                os_path.dirname(os_path.realpath(__file__)),
+                'data',
+                'compound_substitutes.csv'
+            )
+        )
     for spe in pathway.get_species():
         spe_split = spe.get_id().split(sep)
         if len(spe_split) > 1:
