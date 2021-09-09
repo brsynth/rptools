@@ -1,5 +1,8 @@
 # Release history
 
+## 5.4.2
+- fix(rpthermo): add models in MANIFEST
+
 ## 5.4.1
 - chore(rpscore): take only one single input pathway
 
