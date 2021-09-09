@@ -6,10 +6,6 @@ from brs_utils import (
 )
 
 from rptools.rpscore import predict_score
-from rptools.rpscore.Args import (
-    __DATA_TRAIN_FILE as DATA_TRAIN_FILE,
-    __MODELS_PATH as MODELS_PATH
-)
 
 
 
@@ -38,8 +34,6 @@ class Test_rpScore(TestCase):
             0.1922311931848526,
             predict_score(
                 pathway=self.pathway,
-                data_train_file=DATA_TRAIN_FILE,
-                models_path=MODELS_PATH,
                 no_of_rxns_thres=10
             )
         )
