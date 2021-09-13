@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 
 
-def add_arguments(parser):
+def add_arguments(parser: ArgumentParser) -> ArgumentParser:
 
     # positional arguments
     parser.add_argument('infile',    type=str, help='pathway as rpSBML file')
