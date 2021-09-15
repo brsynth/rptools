@@ -42,7 +42,7 @@ jobs:
 
       - name: "Set up conda packages in dev mode"
         run: |
-          conda install conda-build
+          conda install -c conda-forge conda-build
           conda develop -n rptools-dev .    
 
       # 3. Installing Python dependencies (Sphinx)
