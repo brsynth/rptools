@@ -67,9 +67,3 @@ conda-create-run_env: ## Make an conda environment to run program
 
 doc-pdoc:
 	cd .. ; rm -rf chemlite/__pycache__ ; pdoc --force --html -o docs chemlite
-
-doc-sphinx:
-	cd .. ; sphinx-apidoc -f -o docs/source chemlite
-	
-doc-sphinx-html:
-	cd ../docs ; make html
