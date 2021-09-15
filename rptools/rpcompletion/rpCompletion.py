@@ -660,6 +660,8 @@ def __build_all_pathways(
 
     res_pathways = {}
 
+    nb_pathways = 0
+
     ## PATHWAYS
     for path_idx, transfos_lst in pathways.items():
 
@@ -776,6 +778,8 @@ def __build_all_pathways(
                 )
             )
 
+            nb_pathways += 1
+
             ## RANK AMONG ALL SUB-PATHWAYS OF THE CURRENT MASTER PATHWAY
             res_pathways[path_idx] = __apply_to_best_pathways(
                 res_pathways[path_idx],
@@ -786,8 +790,12 @@ def __build_all_pathways(
 
     # Transform the list of Item into a list of Pathway
     results = {}
+    nb_sel_pathways = 0
     for res_pathway_idx, res_pathway in res_pathways.items():
         results[res_pathway_idx] = [pathway.object for pathway in res_pathway]
+        nb_sel_pathways += len(results[res_pathway_idx])
+
+    logger.info(f'Pathways selected: {nb_sel_pathways}/{nb_pathways}')
 
     return results
 
