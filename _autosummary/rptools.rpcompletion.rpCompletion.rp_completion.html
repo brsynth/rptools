@@ -40,7 +40,9 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="rptools.rpextractsink" href="rptools.rpextractsink.html" />
+    <link rel="prev" title="rptools.rpcompletion.rpCompletion" href="rptools.rpcompletion.rpCompletion.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -85,10 +87,27 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../readme_shortcut.html">Readme</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rptools.html">API reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="rptools.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="rptools.Args.html">rptools.Args</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="rptools.rpcompletion.html">rptools.rpcompletion</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="rptools.rpcompletion.Args.html">rptools.rpcompletion.Args</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="rptools.rpcompletion.rpCompletion.html">rptools.rpcompletion.rpCompletion</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">rptools.rpcompletion.rpCompletion.rp_completion</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rpextractsink.html">rptools.rpextractsink</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rpfba.html">rptools.rpfba</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rplibs.html">rptools.rplibs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rpranker.html">rptools.rpranker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rpreport.html">rptools.rpreport</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rpscore.html">rptools.rpscore</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -137,6 +156,12 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
+          <li><a href="rptools.html">rptools</a> &raquo;</li>
+        
+          <li><a href="rptools.rpcompletion.html">rptools.rpcompletion</a> &raquo;</li>
+        
+          <li><a href="rptools.rpcompletion.rpCompletion.html">rptools.rpcompletion.rpCompletion</a> &raquo;</li>
+        
       <li>rptools.rpcompletion.rpCompletion.rp_completion</li>
     
     
@@ -158,6 +183,66 @@
             
   <div class="section" id="rptools-rpcompletion-rpcompletion-rp-completion">
 <h1>rptools.rpcompletion.rpCompletion.rp_completion<a class="headerlink" href="#rptools-rpcompletion-rpcompletion-rp-completion" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="rptools.rpcompletion.rpCompletion.rp_completion">
+<span class="sig-prename descclassname"><span class="pre">rptools.rpcompletion.rpCompletion.</span></span><span class="sig-name descname"><span class="pre">rp_completion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">rp2_metnet</span></em>, <em class="sig-param"><span class="pre">sink</span></em>, <em class="sig-param"><span class="pre">rp2paths_compounds</span></em>, <em class="sig-param"><span class="pre">rp2paths_pathways</span></em>, <em class="sig-param"><span class="pre">cache:</span> <span class="pre">Optional[rr_cache.rr_cache.rrCache]</span> <span class="pre">=</span> <span class="pre">None</span></em>, <em class="sig-param"><span class="pre">upper_flux_bound:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">10000</span></em>, <em class="sig-param"><span class="pre">lower_flux_bound:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">-10000</span></em>, <em class="sig-param"><span class="pre">max_subpaths_filter:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">10</span></em>, <em class="sig-param"><span class="pre">logger:</span> <span class="pre">logging.Logger</span> <span class="pre">=</span> <span class="pre">&lt;Logger</span> <span class="pre">rptools.rpcompletion.rpCompletion</span> <span class="pre">(WARNING)&gt;</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">rptools.rplibs.rpPathway.rpPathway</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rptools.rpcompletion.rpCompletion.rp_completion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process to the completion of metabolic pathways
+generated by RetroPath2.0 and rp2paths.
+(1) rp2paths generates a sets of master pathways</p>
+<blockquote>
+<div><blockquote>
+<div><p>which each of them is a set of chemical transformations.</p>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>Each chemical transformation refers to one or
+multiple reaction rule.</p></li>
+</ol>
+<blockquote>
+<div><ol class="arabic simple" start="3">
+<li><p>Each reaction rule comes from one or multiple
+template (original) chemical reaction</p></li>
+</ol>
+</div></blockquote>
+</div></blockquote>
+<p>The completion consists in:
+1. exploring all possible metabolic pathways through</p>
+<blockquote>
+<div><p>steps (2) and (3)</p>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>putting back chemical species removed during reaction
+rules building process</p></li>
+</ol>
+<p>The completion is done for all master pathways of step (1)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rp2_metnet</strong> (<em>str</em>) – Path to the file containing the metabolic network</p></li>
+<li><p><strong>sink</strong> (<em>str</em>) – Path to the file containing the list of
+species in the sink</p></li>
+<li><p><strong>rp2paths_compounds</strong> (<em>str</em>) – Path to the file containing the chemical
+species involved in master metabolic pathways</p></li>
+<li><p><strong>rp2paths_pathways</strong> (<em>str</em>) – Path to the file containing the master metabolic
+pathways</p></li>
+<li><p><strong>cache</strong> (<em>rrCache</em><em>, </em><em>optional</em>) – Cache that contains reaction rules data</p></li>
+<li><p><strong>upper_flux_bound</strong> (<em>float</em><em>, </em><em>optional</em>) – Upper flux bound for all new reactions created
+(default: default_upper_flux_bound from Args file),</p></li>
+<li><p><strong>lower_flux_bound</strong> (<em>float</em><em>, </em><em>optional</em>) – Lower flux bound for all new reactions created
+(default: default_lower_flux_bound from Args file),</p></li>
+<li><p><strong>max_subpaths_filter</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of pathways (best) kept per master pathway
+(default: 10)</p></li>
+<li><p><strong>logger</strong> (<em>Logger</em><em>, </em><em>optional</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List of rpPathway objects</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 
 
@@ -165,6 +250,10 @@
            
           </div>
           <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="rptools.rpextractsink.html" class="btn btn-neutral float-right" title="rptools.rpextractsink" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rptools.rpcompletion.rpCompletion.html" class="btn btn-neutral float-left" title="rptools.rpcompletion.rpCompletion" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
 
   <hr/>
 

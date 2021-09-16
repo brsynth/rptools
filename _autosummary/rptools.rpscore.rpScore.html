@@ -40,7 +40,9 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="rptools.rpscore.rpScore.encode_and_predict" href="rptools.rpscore.rpScore.encode_and_predict.html" />
+    <link rel="prev" title="rptools.rpscore.Args.add_arguments" href="rptools.rpscore.Args.add_arguments.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -85,10 +87,38 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../readme_shortcut.html">Readme</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rptools.html">API reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="rptools.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="rptools.Args.html">rptools.Args</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rpcompletion.html">rptools.rpcompletion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rpextractsink.html">rptools.rpextractsink</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rpfba.html">rptools.rpfba</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rplibs.html">rptools.rplibs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rpranker.html">rptools.rpranker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rpreport.html">rptools.rpreport</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="rptools.rpscore.html">rptools.rpscore</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="rptools.rpscore.Args.html">rptools.rpscore.Args</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rptools.rpscore.rpScore</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rptools.rpscore.rpScore.encode_and_predict.html">rptools.rpscore.rpScore.encode_and_predict</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rptools.rpscore.rpScore.feature_template_df.html">rptools.rpscore.rpScore.feature_template_df</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rptools.rpscore.rpScore.features_encoding.html">rptools.rpscore.rpScore.features_encoding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rptools.rpscore.rpScore.format_files.html">rptools.rpscore.rpScore.format_files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rptools.rpscore.rpScore.load_training_data.html">rptools.rpscore.rpScore.load_training_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rptools.rpscore.rpScore.loading_query.html">rptools.rpscore.rpScore.loading_query</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rptools.rpscore.rpScore.loop.html">rptools.rpscore.rpScore.loop</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rptools.rpscore.rpScore.pathways_index_list.html">rptools.rpscore.rpScore.pathways_index_list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rptools.rpscore.rpScore.predict_score.html">rptools.rpscore.rpScore.predict_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rptools.rpscore.rpScore.score_prediction.html">rptools.rpscore.rpScore.score_prediction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rptools.rpscore.rpScore.transform_into_pathway_features.html">rptools.rpscore.rpScore.transform_into_pathway_features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rptools.rpscore.rpScore.transform_to_matrix.html">rptools.rpscore.rpScore.transform_to_matrix</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
             
@@ -137,6 +167,10 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
+          <li><a href="rptools.html">rptools</a> &raquo;</li>
+        
+          <li><a href="rptools.rpscore.html">rptools.rpscore</a> &raquo;</li>
+        
       <li>rptools.rpscore.rpScore</li>
     
     
@@ -156,8 +190,53 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="rptools-rpscore-rpscore">
-<h1>rptools.rpscore.rpScore<a class="headerlink" href="#rptools-rpscore-rpscore" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-rptools.rpscore.rpScore">
+<span id="rptools-rpscore-rpscore"></span><h1>rptools.rpscore.rpScore<a class="headerlink" href="#module-rptools.rpscore.rpScore" title="Permalink to this headline">¶</a></h1>
+<p class="rubric">Functions</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="rptools.rpscore.rpScore.encode_and_predict.html#rptools.rpscore.rpScore.encode_and_predict" title="rptools.rpscore.rpScore.encode_and_predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">encode_and_predict</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rptools.rpscore.rpScore.feature_template_df.html#rptools.rpscore.rpScore.feature_template_df" title="rptools.rpscore.rpScore.feature_template_df"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_template_df</span></code></a></p></td>
+<td><p>Creates a template dataframe containing all the feature columns</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rptools.rpscore.rpScore.features_encoding.html#rptools.rpscore.rpScore.features_encoding" title="rptools.rpscore.rpScore.features_encoding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">features_encoding</span></code></a></p></td>
+<td><p>Creates a HDF5 file containing all the features Rnx features are encoded in fingerprints</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rptools.rpscore.rpScore.format_files.html#rptools.rpscore.rpScore.format_files" title="rptools.rpscore.rpScore.format_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">format_files</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rptools.rpscore.rpScore.load_training_data.html#rptools.rpscore.rpScore.load_training_data" title="rptools.rpscore.rpScore.load_training_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_training_data</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rptools.rpscore.rpScore.loading_query.html#rptools.rpscore.rpScore.loading_query" title="rptools.rpscore.rpScore.loading_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">loading_query</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rptools.rpscore.rpScore.loop.html#rptools.rpscore.rpScore.loop" title="rptools.rpscore.rpScore.loop"><code class="xref py py-obj docutils literal notranslate"><span class="pre">loop</span></code></a></p></td>
+<td><p>Returns the indices of all the reactions for a pathway in the dataset</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rptools.rpscore.rpScore.pathways_index_list.html#rptools.rpscore.rpScore.pathways_index_list" title="rptools.rpscore.rpScore.pathways_index_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pathways_index_list</span></code></a></p></td>
+<td><p>Returns the indices of all the reactions for each of the pathways in dataset</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rptools.rpscore.rpScore.predict_score.html#rptools.rpscore.rpScore.predict_score" title="rptools.rpscore.rpScore.predict_score"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict_score</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rptools.rpscore.rpScore.score_prediction.html#rptools.rpscore.rpScore.score_prediction" title="rptools.rpscore.rpScore.score_prediction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_prediction</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rptools.rpscore.rpScore.transform_into_pathway_features.html#rptools.rpscore.rpScore.transform_into_pathway_features" title="rptools.rpscore.rpScore.transform_into_pathway_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform_into_pathway_features</span></code></a></p></td>
+<td><p>Generates the dataframe containing all the features.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rptools.rpscore.rpScore.transform_to_matrix.html#rptools.rpscore.rpScore.transform_to_matrix" title="rptools.rpscore.rpScore.transform_to_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform_to_matrix</span></code></a></p></td>
+<td><p>'Transforms the prediction dataset into an appropriate matrix which is suitable for XGBoost</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 
 
@@ -165,6 +244,10 @@
            
           </div>
           <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="rptools.rpscore.rpScore.encode_and_predict.html" class="btn btn-neutral float-right" title="rptools.rpscore.rpScore.encode_and_predict" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rptools.rpscore.Args.add_arguments.html" class="btn btn-neutral float-left" title="rptools.rpscore.Args.add_arguments" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
 
   <hr/>
 

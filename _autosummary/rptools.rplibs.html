@@ -40,7 +40,9 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="rptools.rplibs.inchikeyMIRIAM" href="rptools.rplibs.inchikeyMIRIAM.html" />
+    <link rel="prev" title="rptools.rpfba.rpFBA.write_results_to_rpsbml" href="rptools.rpfba.rpFBA.write_results_to_rpsbml.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -85,10 +87,29 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../readme_shortcut.html">Readme</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rptools.html">API reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="rptools.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="rptools.Args.html">rptools.Args</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rpcompletion.html">rptools.rpcompletion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rpextractsink.html">rptools.rpextractsink</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rpfba.html">rptools.rpfba</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">rptools.rplibs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rptools.rplibs.inchikeyMIRIAM.html">rptools.rplibs.inchikeyMIRIAM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rptools.rplibs.rpCompound.html">rptools.rplibs.rpCompound</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rptools.rplibs.rpGraph.html">rptools.rplibs.rpGraph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rptools.rplibs.rpObject.html">rptools.rplibs.rpObject</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rptools.rplibs.rpPathway.html">rptools.rplibs.rpPathway</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rptools.rplibs.rpReaction.html">rptools.rplibs.rpReaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rptools.rplibs.rpSBML.html">rptools.rplibs.rpSBML</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rpranker.html">rptools.rpranker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rpreport.html">rptools.rpreport</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rptools.rpscore.html">rptools.rpscore</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -137,6 +158,8 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
+          <li><a href="rptools.html">rptools</a> &raquo;</li>
+        
       <li>rptools.rplibs</li>
     
     
@@ -156,14 +179,37 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="rptools-rplibs">
-<h1>rptools.rplibs<a class="headerlink" href="#rptools-rplibs" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-rptools.rplibs">
+<span id="rptools-rplibs"></span><h1>rptools.rplibs<a class="headerlink" href="#module-rptools.rplibs" title="Permalink to this headline">¶</a></h1>
+<p>Created on Sep 09 2020</p>
+<p>&#64;author: Joan Hérisson</p>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="rptools.rplibs.inchikeyMIRIAM.html#module-rptools.rplibs.inchikeyMIRIAM" title="rptools.rplibs.inchikeyMIRIAM"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rptools.rplibs.inchikeyMIRIAM</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rptools.rplibs.rpCompound.html#module-rptools.rplibs.rpCompound" title="rptools.rplibs.rpCompound"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rptools.rplibs.rpCompound</span></code></a>(id, smiles, inchi, ...)</p></td>
+<td><p>A class to implement a chemical species enriched with FBA and thermodynamics informations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rptools.rplibs.rpGraph.html#module-rptools.rplibs.rpGraph" title="rptools.rplibs.rpGraph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rptools.rplibs.rpGraph</span></code></a>(rpsbml, is_gem_sbml, ...)</p></td>
+<td><p>The class that hosts the networkx related functions</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rptools.rplibs.rpObject.html#module-rptools.rplibs.rpObject" title="rptools.rplibs.rpObject"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rptools.rplibs.rpObject</span></code></a></p></td>
+<td><p>A class to represent a chemical species.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rptools.rplibs.rpPathway.html#module-rptools.rplibs.rpPathway" title="rptools.rplibs.rpPathway"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rptools.rplibs.rpPathway</span></code></a>(id, cache, logger)</p></td>
+<td><p>A class to implement a metabolic pathway enriched with both FBA and thermodynamics informations, and with RP informations (from RetroPath2 and rp2paths).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rptools.rplibs.rpReaction.html#module-rptools.rplibs.rpReaction" title="rptools.rplibs.rpReaction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rptools.rplibs.rpReaction</span></code></a>(id, ec_numbers, ...)</p></td>
+<td><p>A class to implement a chemical reaction enriched with both FBA and thermodynamics informations, and with RP informations (from RetroPath2 and rp2paths).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rptools.rplibs.rpSBML.html#module-rptools.rplibs.rpSBML" title="rptools.rplibs.rpSBML"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rptools.rplibs.rpSBML</span></code></a>(inFile, rpsbml, name, ...)</p></td>
+<td><p>This class uses the libSBML object and handles it by adding BRSynth annotation</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -173,6 +219,10 @@
            
           </div>
           <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="rptools.rplibs.inchikeyMIRIAM.html" class="btn btn-neutral float-right" title="rptools.rplibs.inchikeyMIRIAM" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rptools.rpfba.rpFBA.write_results_to_rpsbml.html" class="btn btn-neutral float-left" title="rptools.rpfba.rpFBA.write_results_to_rpsbml" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
 
   <hr/>
 
