@@ -38,6 +38,13 @@ jobs:
           activate-environment: rptools-dev
           environment-file: environment.yaml
 
+      # 2.bis Setting up conda packages in dev mode
+
+      - name: "Set up conda packages in dev mode"
+        run: |
+          conda install -c conda-forge conda-build
+          conda develop .    
+
       # 3. Installing Python dependencies (Sphinx)
 
       - name: "Install Python dependencies"
