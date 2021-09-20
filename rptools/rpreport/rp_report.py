@@ -27,14 +27,18 @@ from typing import(
 )
 from copy import deepcopy
 
-
-def get_reactions_data(reactions: Dict[str, rpReaction]):
+def __get_reactions_data(rxn_dict: dict):
     """Extract, sort and return a dictionary of reactions data
 
-    :param rxn_list: list of reactions from a specific pathway
-    :type rxn_list: list
-    :return: return relevant and sorted reactions data
-    :rtype: dict
+    Parameters
+    ----------
+    rxn_dict : dict
+        data of 'reactions' element of a pathway dictionary
+
+    Returns
+    -------
+    dict
+        relevant and sorted reactions data
     """
 
     # init
@@ -64,9 +68,26 @@ def get_reactions_data(reactions: Dict[str, rpReaction]):
 
     return __reactions
 
-def to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose=False, dev=False):
-    """
-    Return a list of dictionaries parsed from sbml files
+def __to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose: bool=False, dev: bool=False):
+    """Return a list of dictionaries parsed from sbml files
+
+    Parameters
+    ----------
+    sbml_files : list
+        Name(s) of sbml files
+    source_path : str
+        Path pointing to the rpSBML file(s)
+    output_folder : str
+        Path to the directory where report file(s) will be generated.
+    verbose : bool, optional
+        if True, turn on console verbose mode. By default False
+    dev : bool, optional
+        For dev purpose only : create supplementary files into a dev folder. By default False
+
+    Returns
+    -------
+    list
+        Relevant data of sbml file(s) that will be displayed on the report
     """
     # creating list where all necessary elements will be compiled
     rp_list = []
@@ -103,9 +124,20 @@ def to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose=F
     return rp_list
 
 
-def write_to_one_html(templates_dir, data):
-    """
-            Write js, css and data files into a standalone html file
+def __write_to_one_html(templates_dir: str, data: str):
+    """Write js, css and data files into a standalone html file.
+
+    Parameters
+    ----------
+    templates_dir : str
+        Path of the directory containing the html templates
+    data : str
+        All pathways data that will be included in the html templates
+
+    Returns
+    -------
+    str
+        Standalone html file content
     """
 
     # Load the html template file into memory
@@ -149,10 +181,27 @@ def write_to_one_html(templates_dir, data):
     return standalone_html_file
 
 
-def run_report(input_dir:bool, source_path:str, output_folder:str, dev:bool, verbose:bool, standalone:bool):
+def run_report(input_dir: bool, source_path: str, output_folder: str, dev: bool=False, verbose :bool=False, standalone: bool=False):
+    """Converting a bunch of SBML RP files into one web report.
+
+    Parameters
+    ----------
+    input_dir : bool, optional
+        if True, source_path is a folder containing rpSBML file(s)
+        if False, source_path is an archive containing rpSBML file(s). By default False
+    source_path : str
+        Path pointing to the rpSBML file(s) (see above)
+    output_folder : str
+        Path to the directory where report file(s) will be generated.
+    dev : bool
+        For dev purpose only : create supplementary files into a dev folder. By default False
+    verbose : bool, optional
+        if True, turn on console verbose mode. By default False
+    standalone : bool
+        if True will output an autonomous HTML containing all css and js files dependencies. By default False
+
     """
-        Converting SBML RP files into web report.
-    """
+
 
     # Warning & errors logging
     logging.basicConfig(stream=sys.stderr,
