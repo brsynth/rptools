@@ -33,7 +33,7 @@ def __get_reactions_data(rxn_dict: dict):
         relevant and sorted reactions data
     """
 
-    if not isinstance(rxn_dict: dict, dict):
+    if not isinstance(rxn_dict, dict):
         raise AttributeError('get_reactions_data() expects dict as argument.')
 
     # init
@@ -61,7 +61,7 @@ def __get_reactions_data(rxn_dict: dict):
 
     return reaction
 
-def __to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose=False, dev=False):
+def __to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose: bool=False, dev: bool=False):
     """Return a list of dictionaries parsed from sbml files
 
     Parameters
@@ -124,7 +124,7 @@ def __to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose
     return rp_list
 
 
-def __write_to_one_html(templates_dir, data):
+def __write_to_one_html(templates_dir: str, data: str):
     """Write js, css and data files into a standalone html file.
 
     Parameters
@@ -181,7 +181,7 @@ def __write_to_one_html(templates_dir, data):
     return standalone_html_file
 
 
-def run_report(input_dir=False:bool, source_path:str, output_folder:str, dev=False:bool, verbose=False:bool, standalone=False:bool):
+def run_report(input_dir: bool, source_path: str, output_folder: str, dev: bool=False, verbose :bool=False, standalone: bool=False):
     """Converting a bunch of SBML RP files into one web report.
 
     Parameters
