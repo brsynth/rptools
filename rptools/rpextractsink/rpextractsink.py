@@ -1,5 +1,8 @@
 # from rdkit.Chem import MolFromSmiles, MolFromInchi, MolToSmiles, MolToInchi, MolToInchiKey, AddHs
-import logging
+from logging import (
+    Logger,
+    getLogger
+)
 from cobra          import io            as cobra_io
 from cobra          import flux_analysis as cobra_flux_analysis
 from tempfile       import TemporaryDirectory
@@ -14,9 +17,11 @@ TIMEOUT = 5
 #
 # @param input Cobra model object
 #
-def _reduce_model(cobraModel, logger=logging.getLogger(__name__)):
-    """
-    Reduce the model by removing reaction that cannot carry any flux and orphan metabolites
+def _reduce_model(
+    cobraModel,
+    logger: Logger = getLogger(__name__)
+):
+    """Reduces the model by removing reaction that cannot carry any flux and orphan metabolites
 
     :param model: cobra model object
     :return: reduced cobra model object
@@ -59,7 +64,14 @@ def _removeDeadEnd(sbml_path):
 # NOTE: this only works for MNX models, since we are parsing the id
 # TODO: change this to read the annotations and extract the MNX id's
 #
-def genSink(cache, input_sbml, output_sink, remove_dead_end=False, compartment_id='MNXC3', logger=logging.getLogger(__name__)):
+def genSink(
+    cache,
+    input_sbml,
+    output_sink,
+    remove_dead_end=False,
+    compartment_id='MNXC3',
+    logger: Logger = getLogger(__name__)
+):
     
     ### because cobrapy can be terrible and cause infinite loop depending on the input SBML model
     if remove_dead_end:

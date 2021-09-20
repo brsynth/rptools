@@ -1,0 +1,32 @@
+name: rptools-dev
+channels:
+  - bioconda
+  - conda-forge
+  - brsynth
+dependencies:
+  - python
+  - brs_utils # rpcompletion, rpfba, Args
+  - credisdict # rpcompletion, rpfba, rplibs
+  - requests # rpcompletion, rpfba, rplibs
+  - urllib3 # rpcompletion, rpfba
+  - cobra # rpfba, rpextractsink, rplibs
+  - timeout-decorator # rpextractsink
+  - rdkit # rpextractsink, rplibs
+  - python-libsbml # rplibs
+  - numpy # rplibs
+  - pandas # rplibs, rpthermo
+  - scipy # rpthermo
+  - equilibrator-api # rpthermo
+  # - equilibrator-cache # rpthermo
+  - equilibrator-pathway # rpthermo
+  - openbabel # rpthermo (equilibrator-assets)
+  - redis-py # rplibs
+  - colored # rplibs
+  - networkx # rplibs
+  - filetype  # rplibs (conda-forge)
+  - rr_cache # rpcompletion
+  - rxn_rebuild # rpcompletion
+  - chemlite # rpcompletion ,rpfba, rpthermo
+  - h5py # rpscore
+  - xgboost # rpscore
+  - pytest

@@ -28,6 +28,12 @@ pytest -v
 ```
 For further tests and development tools, a CI toolkit is provided in `ci` folder (see [ci/README.md](ci/README.md)).
 
+### Merging
+rpSBML class allows the merging between txo rpSBML objects. We use this method to merge an heterologue pathway and a model.
+
+#### Compartments
+The compartment of the pathway to each compartment of the model. The comparison is done by ID, name or MIRIAM annotations. If a model compartment matches, then we rename the compartment of each species of the pathway to the name of the model matched compartment. Otherwise, the pathway compartment is added to the model.
+
 ## inchikeyMIRIAM
 Uses the rrCache to parse an SBML file to find all the chemical species, and try to recover the inchikey and add it to the MIRIAM annotation.
 

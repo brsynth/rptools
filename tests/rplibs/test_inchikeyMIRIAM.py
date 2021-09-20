@@ -15,6 +15,7 @@ from brs_utils import extract_gz_to_string
 
 class Test_inchikeyMIRIAM(Main_rplibs):
 
+    __test__ = False
 
     # def setUp(self):
     #     super().setUp()

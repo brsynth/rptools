@@ -9,10 +9,10 @@ from tempfile             import TemporaryDirectory
 from rr_cache import rrCache
 from rptools.rplibs       import rpSBML
 from rptools.rpcompletion import rp_completion
-from rptools.rpcompletion.rpCompletion import (
-    build_side_rxn,
-    rp2paths_to_dict
-)
+# from rptools.rpcompletion.rpCompletion import (
+#     # build_side_rxn,
+#     # rp2paths_to_dict
+# )
 from os                   import path  as os_path
 from os                   import (
     stat as os_stat,
@@ -30,6 +30,7 @@ from brs_utils import (
 
 class Test_rpCompletion(TestCase):
 
+    __test__ = False
 
     def setUp(self):
         self.logger = create_logger(__name__, 'ERROR')
@@ -117,35 +118,53 @@ class Test_rpCompletion(TestCase):
     #                                 })
 
 
-    def test_build_side_rxn(self):
-        cid           = 'CMPD_0000000001'
-        index         = 1
-        deprecatedCID = {}
-        self.assertDictEqual(build_side_rxn(str(index)+'.'+cid, deprecatedCID), {cid: index})
+    # def test_build_side_rxn(self):
+    #     cid           = 'CMPD_0000000001'
+    #     index         = 1
+    #     deprecatedCID = {}
+    #     self.assertDictEqual(
+    #         build_side_rxn(
+    #             str(index)+'.'+cid,
+    #             deprecatedCID
+    #         ),
+    #         {cid: index}
+    #     )
 
 
-    def test_build_side_rxn_deprecatedCID_NoMatch(self):
-        cid           = 'CMPD_0000000001'
-        index         = 1
-        deprecatedCID = {'CMPD_000000001': 'FOO'}
-        self.assertDictEqual(build_side_rxn(str(index)+'.'+cid, deprecatedCID), {cid: index})
+    # def test_build_side_rxn_deprecatedCID_NoMatch(self):
+    #     cid           = 'CMPD_0000000001'
+    #     index         = 1
+    #     deprecatedCID = {'CMPD_000000001': 'FOO'}
+    #     self.assertDictEqual(
+    #         build_side_rxn(
+    #             str(index)+'.'+cid,
+    #             deprecatedCID
+    #         ),
+    #         {cid: index}
+    #     )
 
 
-    def test_build_side_rxn_deprecatedCID_Match(self):
-        cid           = 'CMPD_0000000001'
-        index         = 1
-        deprecatedCID = {'CMPD_0000000001': 'FOO'}
-        self.assertDictEqual(build_side_rxn(str(index)+'.'+cid, deprecatedCID), {deprecatedCID[cid]: index})
+    # def test_build_side_rxn_deprecatedCID_Match(self):
+    #     cid           = 'CMPD_0000000001'
+    #     index         = 1
+    #     deprecatedCID = {'CMPD_0000000001': 'FOO'}
+    #     self.assertDictEqual(
+    #         build_side_rxn(
+    #             str(index)+'.'+cid,
+    #             deprecatedCID
+    #         ),
+    #         {deprecatedCID[cid]: index}
+    #     )
 
 
-    def test_rp2paths_to_dict(self):
-        with open(os_path.join(self.data_path, 'refs', 'rp2paths_pathways.json'), 'r') as read_file:
-            # object_hook is used to convert str keys into int keys as stored in rpCompletion functions
-            data = json_load(read_file, object_hook=lambda d: {int(k) if k.lstrip('-').isdigit() else k: v for k, v in d.items()})
-            self.assertDictEqual(
-                rp2paths_to_dict(
-                    self.rp2paths_pathways,
-                    self.cache.get('rr_reactions'), self.cache.get('deprecatedCID_cid')
-                ),
-                data
-            )
+    # def test_rp2paths_to_dict(self):
+    #     with open(os_path.join(self.data_path, 'refs', 'rp2paths_pathways.json'), 'r') as read_file:
+    #         # object_hook is used to convert str keys into int keys as stored in rpCompletion functions
+    #         data = json_load(read_file, object_hook=lambda d: {int(k) if k.lstrip('-').isdigit() else k: v for k, v in d.items()})
+    #         self.assertDictEqual(
+    #             rp2paths_to_dict(
+    #                 self.rp2paths_pathways,
+    #                 self.cache.get('rr_reactions'), self.cache.get('deprecatedCID_cid')
+    #             ),
+    #             data
+    #         )

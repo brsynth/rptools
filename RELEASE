@@ -1,11 +1,115 @@
 # Release history
 
+## 5.4.2
+- chore(rpcompletion): print out nb pathways
+
+## 5.4.1
+- chore(rpscore): take only one single input pathway
+- fix(rpthermo): add models in MANIFEST
+
+## 5.4.0
+- feat(rpscore): add scoring function based on learning
+
+## 5.3.6
+- chore(rplibs): change format for selenzy informations (single score into dictionnary)
+
+## 5.3.5
+- chore(rpthermo): handle __64__ suffix for substituted compounds
+
+## 5.3.4
+- fix(rpthermo): consider species are well-formed (i.e. without __64__)
+
+## 5.3.3
+- fix(rpthermo): handle the case where eQuilibrator cannot find any compound from an inchikey
+
+## 5.3.2
+- fix(rpreport): fit to new rpPathway version
+
+## 5.3.1
+- feat(rplibs): add MIRIAM infos
+- feat(rplibs.rpReaction): add selenzy score
+- feat(rplibs.rpSBML): handle lists in rpSBML files
+
+## 5.3.0
+- chore(rplibs): swap rpPathway methods from rpSBML to rpSBML methods into rpPathway
+
+## 5.2.2
+- fix(rpthermo): fix params naming
+- chore(rpfba): add compartment synonyms for searching
+- feat(rpthermo): when a species has not been found in the eQuilibrator cache, the first part of InChIKey is looked for
+- chore(rplibs): generic methods to add group of species into a rpPathway
+- feat(rpthermo): add 'rp_thermo_substituted_species' group in rpSBML file
+
+## 5.2.1
+- chore(rpfba): change units for fba fraction
+
+## 5.2.0
+- chore(rpfba): remove CLI args
+- chore(rpfba): refactor code, push back 'fba' and 'pfba' sim types
+- chore(rplibs): add fba and pfba methods
+- fix(rpfba): CLI args name
+
+## 5.1.4
+- chore(rpfba): BREAK! make CLI option 'compartment_id' mandatory
+- chore(rpfba): check first if compartment_id exists in the model
+- chore(rpSBML): take compartment_id only from user CLI
+
+## 5.1.3
+- chore(rplibs): rename rpfba_ignored_species into rp_fba_ignored_species
+- test(rpfba): rename rpfba_ignored_species into rp_fba_ignored_species
+
+## 5.1.2
+- chore(rpcompletion): rm compartment_id arg
+- chore(rplibs): make 'c' the default compartment
+- chore(rplibs): handle matched compartments
+- chore(rpfba): add target consumption reaction
+
+## 5.1.1
+- chore(rpcompletion): add flux bounds
+- chore(rpfba): create folder if does not exist
+- chore(rpfba): add CLI args for flux bounds
+- chore(rpfba): set flux bounds
+- chore(rplibs): set flux bounds positive and reactions not reversible
+
+## 5.1.0
+- chore(rpfba): re-write cobra functions
+- chore(rpSBML): re-write merging and add cobra methods
+- chore(rpReaction): add constraints as attributes
+- chore(rpPathway): create attributes for each rpSBML info
+- chore(rpGraph): pass a list of species when searching isolated species
+- feat(rpCompound): add compartment
+- chore(rpfba): re-organize steps
+- doc(README): add ignored species infos
+- style(rpcompletion): do not assign rpCompound creation
+
+## 5.0.0
+- chore(rpthermo):
+    - switch functions I/O from rpSBML to rpPathway
+    - remove intermediate components and compute thermo for the pathway net reaction
+- chore(rpfba):
+    - switch functions I/O from rpSBML to rpPathway
+    - hide metabolites not compliant with Cobra
+- chore(rpObject, rpCompound, rpReaction, rpPathway):
+    - add access methods
+    - rewrite to_dict() methods
+- fix(rpcompletion):
+    - merge sublists of transfos with same ID (multiple identical reactions in a pathway)
+
+## 4.7.0
+- chore(rpcompletion): re-write almost all code
+- feat(rpcompletion): ability to write out pathways as JSON files
+
+## 4.6.0
+- use rxn_rebuild to add cofactors
+- test(rpreport): add tests
+
 ## 4.5.0
 - chore(rplibs): add fields in toDict(): 'central_species', 'rp_sink_species', 'ignored_species_for_FBA', 'rp_target_species'
 - chore(rplibs.rpSBML): make checklibSBML() returns a value rather than exit
 - chore(rplibs.rpSBML): make readGroupMembers() returns None if group not found
 - chore(rplibs.rpSBML): remove default group_id in readGroupMembers()
 - chore(rplibs.rpSBML): BREAK! put 'left' end 'right' keys from 'brsynth' to reaction level
+- refactor: switch from rpCache to rrCache
 
 ## 4.4.5
 - chore(rpcompletion): change out filenames nomenclature
