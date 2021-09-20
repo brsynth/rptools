@@ -1,4 +1,4 @@
-﻿rptools.rpreport.rp\_report
+rptools.rpreport.rp\_report
 ===========================
 
 .. automodule:: rptools.rpreport.rp_report
@@ -15,7 +15,10 @@
       :toctree:
       :nosignatures:
    
+      get_reactions_data
       run_report
+      to_data_js
+      write_to_one_html
    
    
 
