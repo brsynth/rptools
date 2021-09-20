@@ -19,7 +19,7 @@ from rptools.rplibs import rpSBML
 from rptools.rpreport.dictor.dictor import dictor
 
 
-def __get_reactions_data(rxn_dict: dict):
+def get_reactions_data(rxn_dict: dict):
     """Extract, sort and return a dictionary of reactions data
 
     Parameters
@@ -61,7 +61,7 @@ def __get_reactions_data(rxn_dict: dict):
 
     return reaction
 
-def __to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose: bool=False, dev: bool=False):
+def to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose: bool=False, dev: bool=False):
     """Return a list of dictionaries parsed from sbml files
 
     Parameters
@@ -124,7 +124,7 @@ def __to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose
     return rp_list
 
 
-def __write_to_one_html(templates_dir: str, data: str):
+def write_to_one_html(templates_dir: str, data: str):
     """Write js, css and data files into a standalone html file.
 
     Parameters
