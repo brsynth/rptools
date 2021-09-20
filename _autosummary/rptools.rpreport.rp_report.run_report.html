@@ -18,8 +18,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="rptools.rpreport.rp_report.to_data_js" href="rptools.rpreport.rp_report.to_data_js.html" />
-    <link rel="prev" title="rptools.rpreport.rp_report.get_reactions_data" href="rptools.rpreport.rp_report.get_reactions_data.html" /> 
+    <link rel="next" title="rptools.rpscore" href="rptools.rpscore.html" />
+    <link rel="prev" title="rptools.rpreport.rp_report" href="rptools.rpreport.rp_report.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,10 +50,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="rptools.rpreport.html">rptools.rpreport</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="rptools.rpreport.Args.html">rptools.rpreport.Args</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="rptools.rpreport.rp_report.html">rptools.rpreport.rp_report</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="rptools.rpreport.rp_report.get_reactions_data.html">rptools.rpreport.rp_report.get_reactions_data</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">rptools.rpreport.rp_report.run_report</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rptools.rpreport.rp_report.to_data_js.html">rptools.rpreport.rp_report.to_data_js</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rptools.rpreport.rp_report.write_to_one_html.html">rptools.rpreport.rp_report.write_to_one_html</a></li>
 </ul>
 </li>
 </ul>
@@ -94,8 +91,21 @@
 <h1>rptools.rpreport.rp_report.run_report<a class="headerlink" href="#rptools-rpreport-rp-report-run-report" title="Permalink to this headline"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="rptools.rpreport.rp_report.run_report">
-<span class="sig-prename descclassname"><span class="pre">rptools.rpreport.rp_report.</span></span><span class="sig-name descname"><span class="pre">run_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dir</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_folder</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standalone</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rptools.rpreport.rp_report.run_report" title="Permalink to this definition"></a></dt>
-<dd><p>Converting SBML RP files into web report.</p>
+<span class="sig-prename descclassname"><span class="pre">rptools.rpreport.rp_report.</span></span><span class="sig-name descname"><span class="pre">run_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dir</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_folder</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standalone</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rptools.rpreport.rp_report.run_report" title="Permalink to this definition"></a></dt>
+<dd><p>Converting a bunch of SBML RP files into one web report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_dir</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, source_path is a folder containing rpSBML file(s)
+if False, source_path is an archive containing rpSBML file(s). By default False</p></li>
+<li><p><strong>source_path</strong> (<em>str</em>) – Path pointing to the rpSBML file(s) (see above)</p></li>
+<li><p><strong>output_folder</strong> (<em>str</em>) – Path to the directory where report file(s) will be generated.</p></li>
+<li><p><strong>dev</strong> (<em>bool</em>) – For dev purpose only : create supplementary files into a dev folder. By default False</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, turn on console verbose mode. By default False</p></li>
+<li><p><strong>standalone</strong> (<em>bool</em>) – if True will output an autonomous HTML containing all css and js files dependencies. By default False</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -104,8 +114,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="rptools.rpreport.rp_report.get_reactions_data.html" class="btn btn-neutral float-left" title="rptools.rpreport.rp_report.get_reactions_data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="rptools.rpreport.rp_report.to_data_js.html" class="btn btn-neutral float-right" title="rptools.rpreport.rp_report.to_data_js" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rptools.rpreport.rp_report.html" class="btn btn-neutral float-left" title="rptools.rpreport.rp_report" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rptools.rpscore.html" class="btn btn-neutral float-right" title="rptools.rpscore" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
