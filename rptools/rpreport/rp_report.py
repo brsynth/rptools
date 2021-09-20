@@ -44,7 +44,7 @@ def get_reactions_data(rxn_dict: dict):
     # init
     _reactions = {}
 
-    for rxn_id, rxn in reactions.items():
+    for rxn_id, rxn in _reactions.items():
 
         _reactions[rxn_id] = {}
 
