@@ -1,9 +1,9 @@
 """
-Created on June 16 2020
+Created on Sep 6 2021
 
-@author: Joan Hérisson
+@author: Joan Hérisson, Jean_Loup Faulon
 """
 
-from rptools.rpscore.rpScore import compute_globalscore
-
-__all__ = ['compute_globalscore']
+from rptools.rpscore.rpScore import (
+    predict_score
+)

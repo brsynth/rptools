@@ -1,3 +1,6 @@
 include RELEASE
 recursive-include extras *
 include rptools/.env
+graft rptools/rpreport/templates
+graft rptools/rpthermo/data
+graft rptools/rpscore/models

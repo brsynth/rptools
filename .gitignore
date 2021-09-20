@@ -7,4 +7,6 @@ package-lock.json
 node_modules
 *.code-workspace
 .coverage*
-out
+.vscode
+_exclude
+/docsource/_build/

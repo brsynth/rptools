@@ -13,6 +13,7 @@ from main import Main_rplibs
 
 class Test_rpGraph(Main_rplibs):
 
+    __test__ = False
 
     def setUp(self):
         super().setUp()

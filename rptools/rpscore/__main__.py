@@ -1,10 +1,20 @@
-from rptools.rpscore import (
-    compute_globalscore,
+from typing import (
+    Dict,
+    List
 )
+from logging import (
+    Logger,
+    getLogger
+)
+from os import (
+    path as os_path,
+    makedirs
+)
+from tempfile import NamedTemporaryFile
+from rptools.rpscore import predict_score
 from rptools.rpscore.Args import add_arguments
+from rptools.rplibs import rpPathway
 from rptools import build_args_parser
-from rptools.rplibs import rpSBML
-
 
 def entry_point():
   
@@ -18,41 +28,54 @@ def entry_point():
     from rptools.__main__ import init
     logger = init(parser, args)
 
-    rpsbml = rpSBML(
-        inFile = args.pathway_file,
-        logger = logger
+    # if len(args.pathways) == 1:
+    #   if args.outfile is None or args.outfile == '':
+    #     logger.error('Option --outfile has to be set in case of single input pathway, exiting...')
+    #     exit(1)
+
+    # pathways = []
+    # for pathway in args.pathways:
+    #     pathways.append(
+    #         rpPathway.from_rpSBML(
+    #             infile=pathway,
+    #             logger=logger
+    #         )
+    #     )
+
+    pathway = rpPathway.from_rpSBML(
+        infile=args.infile,
+        logger=logger
     )
 
-    rpsbml_dict = compute_globalscore(
-                   rpsbml = rpsbml,
-          weight_rp_steps = args.weight_rp_steps,
-        weight_rule_score = args.weight_rule_score,
-               weight_fba = args.weight_fba,
-            weight_thermo = args.weight_thermo,
-             max_rp_steps = args.max_rp_steps,
-              thermo_ceil = args.thermo_ceil,
-             thermo_floor = args.thermo_floor,
-                 fba_ceil = args.fba_ceil,
-                fba_floor = args.fba_floor,
-               pathway_id = args.pathway_id,
-             objective_id = args.objective_id,
-                thermo_id = args.thermo_id,
-                   logger = logger
+    score = predict_score(
+        pathway=pathway,
+        # data_train_file=args.data_train_file,
+        # models_path=models_path,
+        no_of_rxns_thres=args.no_of_rxns_thres
     )
 
-    score = rpsbml_dict['pathway']['brsynth']['global_score']
-
-    if args.outfile != '':
-        logger.info('Writing into file...')
-        rpsbml.updateBRSynthPathway(rpsbml_dict, args.pathway_id)
-        rpsbml.writeToFile(args.outfile)
-        logger.info('   |--> written in ' + args.outfile)
-
-    if not args.silent:
-        if args.log.lower() in ['critical', 'error', 'warning']:
-            print(score)
-        else:
-            logger.info('\nGlobal Score = ' + str(score))
+    # if len(pathways) > 1:
+    #     if not os_path.exists(args.outdir):
+    #         makedirs(args.outdir)
+    #     for i in range(len(pathways)):
+    #         # Write results into the pathway
+    #         pathways[i].set_global_score(
+    #             scores[i]
+    #         )
+    #         # Write pathway into file
+    #         pathways[i].to_rpSBML().write_to_file(
+    #             os_path.join(
+    #                 args.outdir,
+    #                 os_path.basename(args.pathways[i])
+    #             )
+    #         )
+    #     else:
+    # Write results into the pathway
+    pathway.set_global_score(score)
+    # Write pathway into file
+    pathway.to_rpSBML().write_to_file(
+        args.outfile
+    )
 
 
 if __name__ == '__main__':

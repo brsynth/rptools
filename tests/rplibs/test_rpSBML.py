@@ -19,6 +19,7 @@ from brs_utils         import extract_gz
 
 class Test_rpSBML(Main_rplibs):
 
+    __test__ = False
 
     # To avoid limit in dictionaries comparison
     maxDiff = None
@@ -187,7 +188,7 @@ class Test_rpSBML(Main_rplibs):
 
 
     def test_speciesExists(self):
-        self.assertTrue(self.rpsbml.speciesExists('MNXM89557'))
+        self.assertTrue(self.rpsbml.speciesExists('MNXM89557__64__MNXC3'))
         self.assertFalse(self.rpsbml.speciesExists('test'))
 
 
@@ -324,7 +325,7 @@ class Test_rpSBML(Main_rplibs):
             0
         )
         rpsbml.createGroup('rp_pathway')
-        rpsbml.createGroup('central_species')
+        rpsbml.createGroup('rp_trunk_species')
         with NamedTemporaryFile() as tempf:
             rpsbml.writeToFile(tempf.name)
             self.assertListEqual(

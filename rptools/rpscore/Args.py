@@ -1,90 +1,37 @@
+from os import path as os_path
 from argparse  import ArgumentParser
 from rptools._version import __version__
 
-
 def add_arguments(parser):
     parser.add_argument(
-        'pathway_file',
+        'infile',
         type = str,
-        help = 'Input rpSBML filename with scores (rules, FBA, Thermo...)'
+        # nargs="+",
+        help='Pathway file (rpSBML) with scores (rules, FBA, Thermo...)'
     )
     parser.add_argument(
-        '--outfile',
-        type = str,
-        default = '',
-        help = 'Path to write rpSBML with global score'
+        'outfile',
+        type=str,
+        help='Path to write pathway file (rpSBML) with global score',
     )
+    # parser.add_argument(
+    #     '--outdir',
+    #     type=str,
+    #     help='Path to write pathway files (rpSBML) with global score (default: out)',
+    #     default='out'
+    # )
     parser.add_argument(
-        '--weight_rp_steps',
-        type = float,
-        default = '0.10002239003499142',
-        help = 'The weight associated with the number of steps (Default: 0.10002239003499142)'
+        '--no_of_rxns_thres',
+        type=int,
+        help='Number of reactions above which pathway are not scored (too long) (default: 10)',
+        default=10
     )
-    parser.add_argument(
-        '--weight_rule_score',
-        type = float,
-        default = '0.13346271414277305',
-        help = 'The weight associated with the mean of reaction rule scores (Default: 0.13346271414277305)'
-    )
-    parser.add_argument(
-        '--weight_fba',
-        type = float,
-        default = '0.6348436269211155',
-        help = 'The weight associated with the flux of the target (Default: 0.6348436269211155)'
-    )
-    parser.add_argument(
-        '--weight_thermo',
-        type = float,
-        default = '0.13167126890112002',
-        help = 'The weight associated with the sum of reaction Gibbs free energy (Default: 0.13167126890112002)'
-    )
-    parser.add_argument(
-        '--max_rp_steps',
-        type = int,
-        default = '15',
-        help = 'The maximal number of steps are run in RP2 (Default: 15)'
-    )
-    parser.add_argument(
-        '--thermo_ceil',
-        type = float,
-        default = '5000.0',
-        help = 'The upper limit of Gibbs free energy for each reaction (Default: 5000.0)'
-    )
-    parser.add_argument(
-        '--thermo_floor',
-        type = float,
-        default = '-5000.0',
-        help = 'The lower limit of Gibbs free energy for each reaction (Default: -5000.0)'
-    )
-    parser.add_argument(
-        '--fba_ceil',
-        type = float,
-        default = '5.0',
-        help = 'The upper flux limit of the heterologous pathway (Default: 5.0)'
-    )
-    parser.add_argument(
-        '--fba_floor',
-        type = float,
-        default = '0.0',
-        help = 'The lower flux limit of the heterologous pathway (Default: 5.0)'
-    )
-    parser.add_argument(
-        '--pathway_id',
-        type = str,
-        default = 'rp_pathway',
-        help = 'The ID of the heterologous pathway (Default: rp_pathway)'
-    )
-    parser.add_argument(
-        '--objective_id',
-        type = str,
-        default = 'obj_fraction',
-        help = 'The ID of the FBA objective (Default: obj_fraction)'
-    )
-    parser.add_argument(
-        '--thermo_id',
-        type = str,
-        default = 'dfG_prime_m',
-        help = 'The ID of the Gibbs free energy that may be used. May be either dfG_prime_m or dfG_prime_o (Default: dfG_prime_m)'
-    )
+    # parser.add_argument('-ttdf', '--test_data_file', required=True, type=str)
+    # parser.add_argument('-ttsf', '--test_score_file', required=True, type=str)
+    # parser.add_argument(
+    #     '--data_train_file',
+    #     type=str,
+    #     default=__DATA_TRAIN_FILE
+    # )
 
     return parser

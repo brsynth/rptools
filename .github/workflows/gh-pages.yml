@@ -1,0 +1,68 @@
+# workflow's name
+name: "Build and deploy Github pages"
+
+# This event triggers the workflow
+on:
+  push:         # <- on push
+    branches:
+      - master  # <- ... on the branch "master"
+
+jobs:
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    # Set custom default shell to enable proper activation of conda env
+    #  see: https://github.com/conda-incubator/setup-miniconda#important
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    # Tasks to do:
+    steps:
+
+      # 1. Retrieving repository
+
+      - name: "Checkout"
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      # 2. Setting up conda env
+
+      - name: "Set up conda environment"
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          miniconda-version: "latest"
+          auto-activate-base: false
+          activate-environment: rptools-dev
+          environment-file: environment.yaml
+
+      # 2.bis Setting up conda packages in dev mode
+
+      - name: "Set up conda packages in dev mode"
+        run: |
+          conda install -c conda-forge conda-build
+          conda develop .    
+
+      # 3. Installing Python dependencies (Sphinx)
+
+      - name: "Install Python dependencies"
+        run: |
+          conda install -c conda-forge sphinx sphinx_rtd_theme myst-parser
+
+      # 4. Building doc
+
+      - name: "Build Sphinx Doc"
+        run: |
+          cd docsource
+          make html
+
+      # 5. Deploying doc on Github Pages
+
+      - name: "Deploy Github Pages"
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: docsource/_build/html/

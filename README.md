@@ -29,9 +29,55 @@ cd tests
 pytest -v
 ```
 
-# CI/CD
+## CI/CD
 For further tests and development tools, a CI toolkit is provided in `ci` folder (see [ci/README.md](ci/README.md)).
 
+## For developers
+
+### Development installation
+
+After a git clone:
+
+```sh
+cd <repository>
+conda env create -f environment.yaml -n <dev_env>
+conda develop -n <dev_env> .
+```
+
+Warning: if you do not specify an environment name with `-n <dev_env>`, 
+then 'rptools-dev' will be used.
+
+Test your installation with:
+
+```sh
+conda activate <dev_env>
+python -m rptools
+python -m rptools.rpcompletion -h
+```
+
+To uninstall:
+
+```sh
+conda deactivate
+conda env remove -n <dev_env>
+```
+
+### Development installation (alternative using the ci toolkit)
+
+After a git clone:
+```sh
+cd <repository>/ci
+make test-inconda
+cd ..
+conda develop -n rptools_test .
+```
+
+This will create a `rptools_test` environnement that can be activated to further develop / debug rptools.
+```sh
+conda activate rptools_test
+python -m rptools
+python -m rptools.rpcompletion -h
+```
 
 ## Authors
 

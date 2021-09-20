@@ -2,26 +2,29 @@
 
 Perform FBA on a single or collection of SBML files containing heterologous pathways, as tar.xz archives. The package performs the following steps:
     1) it merges a user defined GEM SBML model to a given heterologous pathway.
-    2) it performs FBA using the [cobrapy](https://opencobra.github.io/cobrapy/) package using a user defined mathod that include, FBA, parsimonious FBA or fraction of optimum of another reaction. For the first two, the user must know the reaction name that the model will optimise to, while the latter the use must provide the target reaction but also another reaction that will be restricted. The first step involves performing FBA using the "source" reaction as the objective. Then the flux of that reaction has its upper and lower bounds set to the same value, determined as a fraction of its FBA flux value. Thereafter the objective is set to the initial target reaction and FBA is performed once again. The tool uses the [FBC](https://co.mbine.org/specifications/sbml.level-3.version-1.fbc.version-2.release-1) package to manage the objective and flux bounds.
+    2) it performs FBA using the [cobrapy](https://opencobra.github.io/cobrapy/) package using a user defined method that includes FBA, parsimonious FBA or fraction of optimum of another reaction. For the first two, the user must know the reaction name that the model will optimise to, while the latter the user must provide the target reaction (default: 'rxn_target') but also another reaction that will be restricted (default: 'biomass'). The first step involves performing FBA using the "source" reaction as the objective. Then the flux of that reaction has its upper and lower bounds set to the same value, determined as a fraction of its FBA flux value. Thereafter the objective is set to the initial target reaction and FBA is performed once again. The tool uses the [FBC](https://co.mbine.org/specifications/sbml.level-3.version-1.fbc.version-2.release-1) package to manage the objective and flux bounds.
+
+NOTE: In order to FBA works correctly, some of chemical species have to be ignored. These species are selected according to the following criteria:
+* pathway species has not been found in the model (neither by its ID nor its InChIKey),
+* the species is not the target, and
+* the species is only consumed or produced with the heterologue pathway.
+
 
 ## Input
 
 Required:
-* **input_sbml**: (string) Path to the input file
-* **gem_sbml**: (string) Path to the GEM SBML model
+* **pathway_file**: (string) Path to the pathway file (rpSBML)
+* **model_file**: (string) Path to the GEM SBML model
+* **compartment_id**: (string, e.g. cytoplasm) ID of the compartment that contains the chemical species involved in the heterologous pathway
+* **out_file**: (string) Path to the ouput upgraded pathway file
 
 Advanced options:
-* **--pathway_id**: (string, default=rp_pathway) ID of the heterologous pathway
-* **--compartment_id**: (string, default=MNXC3 (i.e. cytoplasm)) ID of the compartment ID that contains the heterologous pathway
-* **--sim_type**: (string, default=fraction) Valid options include: fraction, fba, pfba. The type of constraint based modelling method
-* **--source_reaction**: (string, default=biomass) Name of the source reaction that will be restricted in the "fraction" simulation type. This parameter is ignored for "fba" and "pfba"
-* **--target_reaction**: (string, default=RP1_sink) Heterologous pathway flux sink reaction. This parameters is required in all simulation type
-* **--source_coefficient**: (float, default=1.0) Objective coefficient for the source reaction. This parameter is ignored for "fba" and "pfba"
-* **--target_coefficient**: (float, default=1.0) Objective coefficient for the target reaction.
-* **--is_max**: (boolean, default=True) Maximise or minimise the objective function
-* **--fraction_of**: (float, default=0.75) Portion of the maximal flux used to set the maximal and minimal bounds for the source reaction of the "fraction" simulation type
+* **--sim**: (string, default='fraction') Valid options include: 'fraction', 'fba', 'pfba'. The type of constraint based modelling method
+* **--objective_rxn_id**: (string, default=rxn_target) Reaction ID to optimise
+* **--biomass_rxn_id**: (string, default='biomass') Biomass reaction ID. Note: Only for 'fraction' simulation
+* **--fraction_of**: (float, default=0.75) Portion of the maximal flux used to set the maximal and minimal bounds for the source reaction of the 'fraction' simulation type
 * **--merge**: (boolean, default=False) Return the merged GEM+heterologous pathway SBML or only the heterologous pathway SBML files
-* **--log**: (string, default=error) Set the log level, choices are 'debug', 'info', 'warning', 'error', 'critical'
+* **--ignore_orphan_species**: (string, default=True) Ignore metabolites that are only consumed or produced
 
 ## Output
 
@@ -39,32 +42,31 @@ rpFBA is part of rpTools suite:
 ### rpFBA process
 **From Python code**
 ```python
-from rptools.rpfba import runFBA, build_args_parser
+from rptools.rplibs import rpPathway
+from rptools.rpfba import runFBA
 
-parser = build_args_parser()
-args  = parser.parse_args()
+pathway = rpPathway.from_rpSBML(infile='tests/rpfba/data/sets/measured_3/B.xml')
 
-logger = logging.getLogger(__name__)
-logger.setLevel(getattr(logging, args.log.upper()))
-logger.formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s')
+results = runFBA(
+    pathway=pathway,
+    gem_sbml_path='tests/rpfba/data/sets/measured_3/e_coli_iJ01366.xml',
+    compartment_id='MNXC3',
+    biomass_rxn_id='biomass',
+    objective_rxn_id='rxn_target',
+    sim_type='fraction',
+    fraction_coeff=0.75,
+    merge=False,
+    ignore_orphan_species=True
+)
 
-result = runFBA(args.input_sbml, args.gem_sbml, args.outfile,
-                args.sim_type,
-                args.source_reaction, args.target_reaction,
-                args.source_coefficient, args.target_coefficient,
-                args.is_max,
-                args.fraction_of,
-                args.merge,
-                args.pathway_id,
-                args.objective_id,
-                args.compartment_id,
-                args.species_group_id,
-                args.sink_species_group_id,
-                logger)
+pathway.get_fba_biomass().get('value')
+0.7638744755010194
+pathway.get_fba_biomass()
+{'value': 0.7638744755010194, 'units': 'milimole / gDW / hour'}
 ```
 **From CLI**
 ```sh
-python -m rptools.rpfba <input_sbml> <gem_sbml> <outfile>
+python -m rptools.rpfba <pathway_rpsbml> <model_gem_sbml> <compartment_id> <outfile>
 ```
 
 ## Tests
@@ -82,8 +84,8 @@ For further tests and development tools, a CI toolkit is provided in `ci` folder
 
 ## Authors
 
-* **Melchior du Lac**
 * **Joan Hérisson**
+* **Melchior du Lac**
 
 ## Acknowledgments
 
