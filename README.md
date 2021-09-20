@@ -86,4 +86,4 @@ python -m rptools.rpcompletion -h
 * **Thomas Duigou**
 
 ## Licence
-rpTools is released under the MIT licence. See the LICENCE file for details.
+rpTools is released under the MIT licence. See the [LICENCE file](./LICENSE) for details.
