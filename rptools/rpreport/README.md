@@ -1,8 +1,7 @@
 # rpreport
-
-generates HTML pages to explore the main characteristics (thermodynamics,
+Generates HTML pages to explore the main characteristics (thermodynamics,
 fluxes, number of metabolic steps, reaction rule score) of pathways predicted
-with RetroPath suite.
+with RetroPath suite
 
 ## Install
 rpreport is part of rpTools suite. See its README.
@@ -24,4 +23,3 @@ optional arguments:
 * **--dev**: For dev purpose only : create supplementary files into a dev folder
 * **-v, --verbose**: Turn on console verbose mode.
 * **--standalone**: if set will output an autonomous HTML containing all css and js files dependencies.
-

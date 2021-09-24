@@ -10,3 +10,4 @@ node_modules
 .vscode
 _exclude
 /docsource/_build/
+/docsource/_autosummary

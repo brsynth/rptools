@@ -10,8 +10,14 @@ Welcome to rpTools's documentation!
    :hidden:
    
    Home <self>
-   Readme <readme_shortcut>
+   rpTools <readme_shortcut>
+   rpCompletion <readme_rpcompletion_shortcut>
+   rpFBA <readme_rpfba_shortcut>
+   rpThermo <readme_rpthermo_shortcut>
+   rpExtractsink <readme_rpextractsink_shortcut>
+   rpLibs <readme_rplibs_shortcut>
+   rpReport <readme_rpreport_shortcut>
    API reference <_autosummary/rptools>
+   Release <release_shortcut>
 
 This is an example of Sphinx documentation. Use the left column to navigate.
-                                
