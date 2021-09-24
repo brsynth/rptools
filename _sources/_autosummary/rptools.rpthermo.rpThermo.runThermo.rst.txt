@@ -1,0 +1,6 @@
+rptools.rpthermo.rpThermo.runThermo
+===================================
+
+.. currentmodule:: rptools.rpthermo.rpThermo
+
+.. autofunction:: runThermo

@@ -1,0 +1,6 @@
+rptools.rpthermo.rpThermo.search\_equilibrator\_compound
+========================================================
+
+.. currentmodule:: rptools.rpthermo.rpThermo
+
+.. autofunction:: search_equilibrator_compound

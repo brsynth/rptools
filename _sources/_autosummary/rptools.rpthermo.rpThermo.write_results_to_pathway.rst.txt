@@ -1,0 +1,6 @@
+rptools.rpthermo.rpThermo.write\_results\_to\_pathway
+=====================================================
+
+.. currentmodule:: rptools.rpthermo.rpThermo
+
+.. autofunction:: write_results_to_pathway

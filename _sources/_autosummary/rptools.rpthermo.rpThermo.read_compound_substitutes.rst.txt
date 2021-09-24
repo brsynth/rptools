@@ -1,0 +1,6 @@
+rptools.rpthermo.rpThermo.read\_compound\_substitutes
+=====================================================
+
+.. currentmodule:: rptools.rpthermo.rpThermo
+
+.. autofunction:: read_compound_substitutes

@@ -1,0 +1,6 @@
+rptools.rpthermo.rpThermo.remove\_compounds
+===========================================
+
+.. currentmodule:: rptools.rpthermo.rpThermo
+
+.. autofunction:: remove_compounds

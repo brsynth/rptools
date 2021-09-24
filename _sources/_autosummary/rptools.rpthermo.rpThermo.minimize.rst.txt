@@ -1,0 +1,6 @@
+rptools.rpthermo.rpThermo.minimize
+==================================
+
+.. currentmodule:: rptools.rpthermo.rpThermo
+
+.. autofunction:: minimize

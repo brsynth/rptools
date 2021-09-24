@@ -1,0 +1,6 @@
+rptools.rpthermo.rpThermo.initThermo
+====================================
+
+.. currentmodule:: rptools.rpthermo.rpThermo
+
+.. autofunction:: initThermo

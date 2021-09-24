@@ -1,0 +1,6 @@
+rptools.rpthermo.rpThermo.print\_reaction
+=========================================
+
+.. currentmodule:: rptools.rpthermo.rpThermo
+
+.. autofunction:: print_reaction

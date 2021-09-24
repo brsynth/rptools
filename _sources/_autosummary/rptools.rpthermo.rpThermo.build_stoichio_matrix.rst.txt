@@ -1,0 +1,6 @@
+rptools.rpthermo.rpThermo.build\_stoichio\_matrix
+=================================================
+
+.. currentmodule:: rptools.rpthermo.rpThermo
+
+.. autofunction:: build_stoichio_matrix

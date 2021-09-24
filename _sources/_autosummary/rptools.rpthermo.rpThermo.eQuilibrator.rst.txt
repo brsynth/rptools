@@ -1,0 +1,6 @@
+rptools.rpthermo.rpThermo.eQuilibrator
+======================================
+
+.. currentmodule:: rptools.rpthermo.rpThermo
+
+.. autofunction:: eQuilibrator

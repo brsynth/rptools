@@ -1,0 +1,6 @@
+rptools.rpthermo.rpThermo.get\_target\_rxn\_idx
+===============================================
+
+.. currentmodule:: rptools.rpthermo.rpThermo
+
+.. autofunction:: get_target_rxn_idx

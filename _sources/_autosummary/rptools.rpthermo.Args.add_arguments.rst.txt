@@ -1,0 +1,6 @@
+rptools.rpthermo.Args.add\_arguments
+====================================
+
+.. currentmodule:: rptools.rpthermo.Args
+
+.. autofunction:: add_arguments

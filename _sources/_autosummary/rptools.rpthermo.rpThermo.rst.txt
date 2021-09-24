@@ -1,0 +1,42 @@
+rptools.rpthermo.rpThermo
+=========================
+
+.. automodule:: rptools.rpthermo.rpThermo
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      build_stoichio_matrix
+      eQuilibrator
+      get_target_rxn_idx
+      initThermo
+      minimize
+      print_reaction
+      read_compound_substitutes
+      remove_compounds
+      runThermo
+      search_equilibrator_compound
+      write_results_to_pathway
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+
