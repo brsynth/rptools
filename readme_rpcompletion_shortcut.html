@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>rpCompletion &mdash; rpTools 5.4.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> rpTools
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme_shortcut.html">Readme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_autosummary/rptools.html">API reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">rpTools</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>rpCompletion</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/readme_rpcompletion_shortcut.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="rpcompletion">
+<h1>rpCompletion<a class="headerlink" href="#rpcompletion" title="Permalink to this headline"></a></h1>
+<p>Completes mono-component reactions output by RetroPath2.0 with the appropriate cofactors. Creates sub-paths when multiple reaction rules are associated with a single reaction. Input is a single pathways file produced by RP2Paths. It stands on rrCache which store pre-computed data.</p>
+<p>All metabolic pathways will be built as the following:</p>
+<ul class="simple">
+<li><p>In each “master” pathway,</p>
+<ul>
+<li><p>each chemical transformation could be produced by multiple reaction rules, and</p>
+<ul>
+<li><p>each reaction rule could have been produced by multiple template chemical reactions.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>Thus, each different template reaction for each different reaction rule for each different chemical transformation provides one single possible pathway. The algorithm explores the combinatorics of all possible pathways and for each “master pathway” (the one from chemical transformations), keeps only top ones (defined by <code class="docutils literal notranslate"><span class="pre">max_subpaths_filter</span></code> CLI option, default: 10).</p>
+<section id="input">
+<h2>Input<a class="headerlink" href="#input" title="Permalink to this headline"></a></h2>
+<p>Required:</p>
+<ul class="simple">
+<li><p><strong>rp2_metnet</strong>: (string) Path to the metabolic network file built by RetroPath2.0</p></li>
+<li><p><strong>sink</strong>: (string) Path to the rpextractsink file containing infos on molecules in the sink</p></li>
+<li><p><strong>rp2paths_compounds</strong>: (string) Path to the rp2paths compounds file</p></li>
+<li><p><strong>rp2paths_pathways</strong>: (string) Path to the rp2paths pathways file</p></li>
+<li><p><strong>outdir</strong>: (string) Path to the folder where result files are written</p></li>
+</ul>
+<p>Advanced options:</p>
+<ul class="simple">
+<li><p><strong>–upper_flux_bound</strong>: (integer, default=10000) Upper flux bound value for all new reactions created</p></li>
+<li><p><strong>–lower_flux_bound</strong>: (integer, default=-10000) Lower flux bound value for all new reactions created</p></li>
+<li><p><strong>–max_subpaths_filter</strong>: (integer, default=10) Number of subpaths per master pathway</p></li>
+</ul>
+<!-- ## Memory management
+
+### File mode
+This is the default mode. All cache data are stored into files on disk and loaded in memory each time the tool is used. In this mode, fingerprint in memory is equal to the size of cache files loaded in memory multiplied by the number of processes which are running at the same time. Option can be specified by `--store-mode file`.
+
+### DB mode
+In order to save memory space, cache data can be loaded once in a database (redis) so that the memory space taken is equal to one instance of the cache, whatever the number of processes whic are running. Option can be specified by `--store-mode <db_host>`, where `db_host` is the hostname on which redis server is running. -->
+</section>
+<section id="install">
+<h2>Install<a class="headerlink" href="#install" title="Permalink to this headline"></a></h2>
+<p>Please see <code class="docutils literal notranslate"><span class="pre">rptool</span></code> documentation.</p>
+</section>
+<section id="run">
+<h2>Run<a class="headerlink" href="#run" title="Permalink to this headline"></a></h2>
+<section id="rpcompletion-process">
+<h3>rpCompletion process<a class="headerlink" href="#rpcompletion-process" title="Permalink to this headline"></a></h3>
+<p><strong>From Python code</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rptools.rpcompletion</span> <span class="kn">import</span> <span class="n">rp_completion</span>
+
+<span class="n">pathways</span> <span class="o">=</span> <span class="n">rp_completion</span><span class="p">(</span>
+    <span class="n">rp2_metnet_filename</span><span class="p">,</span>
+    <span class="n">sink_filename</span><span class="p">,</span>
+    <span class="n">rp2paths_compounds_filename</span><span class="p">,</span>
+    <span class="n">rp2paths_pathways_filename</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>From CLI</strong></p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m rptools.rpcompletion <span class="se">\</span>
+  rp2_metnet.csv <span class="se">\</span>
+  sink.csv <span class="se">\</span>
+  rp2paths_compounds.csv <span class="se">\</span>
+  rp2paths_pathways.csv <span class="se">\</span>
+  &lt;outdir&gt;
+</pre></div>
+</div>
+</section>
+</section>
+<section id="tests">
+<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline"></a></h2>
+<p>Test can be run with the following commands:</p>
+<section id="natively">
+<h3>Natively<a class="headerlink" href="#natively" title="Permalink to this headline"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> tests
+pytest -v
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="ci-cd">
+<h1>CI/CD<a class="headerlink" href="#ci-cd" title="Permalink to this headline"></a></h1>
+<p>For further tests and development tools, a CI toolkit is provided in <code class="docutils literal notranslate"><span class="pre">ci</span></code> folder (see <span class="xref myst">ci/README.md</span>).</p>
+<section id="authors">
+<h2>Authors<a class="headerlink" href="#authors" title="Permalink to this headline"></a></h2>
+<ul class="simple">
+<li><p><strong>Joan Hérisson</strong></p></li>
+</ul>
+</section>
+<section id="acknowledgments">
+<h2>Acknowledgments<a class="headerlink" href="#acknowledgments" title="Permalink to this headline"></a></h2>
+<ul class="simple">
+<li><p>Thomas Duigou</p></li>
+<li><p>Melchior du Lac</p></li>
+</ul>
+</section>
+<section id="licence">
+<h2>Licence<a class="headerlink" href="#licence" title="Permalink to this headline"></a></h2>
+<p>rpCompletion is released under the MIT licence. See the LICENCE file for details.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Joan Hérisson, Thomas Duigou, Kenza Bazi-Kabbaj, Olivier Telle.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
