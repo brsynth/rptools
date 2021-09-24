@@ -1,77 +1,45 @@
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
-<head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rpThermo &mdash; rpTools 5.4.1 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-    <script src="_static/js/theme.js"></script>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>rpThermo &#8212; rpTools 5.4.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
-</head>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="rpExtractSink" href="readme_rpextractsink_shortcut.html" />
+    <link rel="prev" title="rpCompletion" href="readme_rpfba_shortcut.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> rpTools
-          </a>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme_shortcut.html">Readme</a></li>
-<li class="toctree-l1"><a class="reference internal" href="_autosummary/rptools.html">API reference</a></li>
-</ul>
+  </head><body>
+  
 
-        </div>
-      </div>
-    </nav>
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">rpTools</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>rpThermo</li>
-      <li class="wy-breadcrumbs-aside">
-            <a href="_sources/readme_rpthermo_shortcut.md.txt" rel="nofollow"> View page source</a>
-      </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
+          <div class="body" role="main">
+            
   <section class="tex2jax_ignore mathjax_ignore" id="rpthermo">
-<h1>rpThermo<a class="headerlink" href="#rpthermo" title="Permalink to this headline"></a></h1>
+<h1>rpThermo<a class="headerlink" href="#rpthermo" title="Permalink to this headline">¶</a></h1>
 <p>Calculate the formation energy of chemical species and the Gibbs free energy for each reaction and for the heterologous pathway itself. This tool uses the <a class="reference external" href="https://gitlab.com/elad.noor/component-contribution">component contribution</a> method for determining the formation energy of chemical species that are either not annotated, or cannot be found in the internal database.</p>
 <p>For each species, the challenge is to find the corresponding compound in the eQuilibrator cache. To find the good compound, one tries to exact match species ID, InChIKey, InChI or SMILES and stops with the first hit. Then, if no compound has been found, in the last resort, the first part of species InChIKey is looked for within the cache. If the result (a list) is not empty, the first compound is taken.</p>
-<p>Because we are interested in the thermodynamics of the pathway when the production of the target is optimized, we have modified coefficients of each reaction. We used a linear system solver (from <span class="xref myst">SciPy</span>) by giving the reaction that produces the target as objective and elimination of intermediate species as constraints.</p>
+<p>Because we are interested in the thermodynamics of the pathway when the production of the target is optimized, we have modified coefficients of each reaction. We used a linear system solver (from <a class="reference external" href="https://www.scipy.org">SciPy</a>) by giving the reaction that produces the target as objective and elimination of intermediate species as constraints.</p>
 <section id="input">
-<h2>Input<a class="headerlink" href="#input" title="Permalink to this headline"></a></h2>
+<h2>Input<a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h2>
 <p>Required:</p>
 <ul class="simple">
 <li><p><strong>-input</strong>: (string) Path to the input file</p></li>
@@ -83,22 +51,22 @@
 </ul>
 </section>
 <section id="output">
-<h2>Output<a class="headerlink" href="#output" title="Permalink to this headline"></a></h2>
+<h2>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><strong>-output</strong>: (string) Path to the output file</p></li>
 </ul>
 </section>
 <section id="install">
-<h2>Install<a class="headerlink" href="#install" title="Permalink to this headline"></a></h2>
+<h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
 <p>rpThermo is part of rpTools suite:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="o">[</span>sudo<span class="o">]</span> conda install -c brsynth -c conda-forge -c bioconda rptools
 </pre></div>
 </div>
 </section>
 <section id="run">
-<h2>Run<a class="headerlink" href="#run" title="Permalink to this headline"></a></h2>
+<h2>Run<a class="headerlink" href="#run" title="Permalink to this headline">¶</a></h2>
 <section id="rpthermo-process">
-<h3>rpThermo process<a class="headerlink" href="#rpthermo-process" title="Permalink to this headline"></a></h3>
+<h3>rpThermo process<a class="headerlink" href="#rpthermo-process" title="Permalink to this headline">¶</a></h3>
 <p><strong>From Python code</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rptools.rplibs</span> <span class="kn">import</span> <span class="n">rpSBML</span>
 <span class="kn">from</span> <span class="nn">rptools.rpthermo</span> <span class="kn">import</span> <span class="n">runThermo</span>
@@ -122,65 +90,131 @@
 </section>
 </section>
 <section id="tests">
-<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline"></a></h2>
+<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h2>
 <p>Test can be run with the following commands:</p>
 <section id="natively">
-<h3>Natively<a class="headerlink" href="#natively" title="Permalink to this headline"></a></h3>
+<h3>Natively<a class="headerlink" href="#natively" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> tests
 pytest -v
 </pre></div>
 </div>
 </section>
 </section>
-</section>
-<section class="tex2jax_ignore mathjax_ignore" id="ci-cd">
-<h1>CI/CD<a class="headerlink" href="#ci-cd" title="Permalink to this headline"></a></h1>
+<section id="ci-cd">
+<h2>CI/CD<a class="headerlink" href="#ci-cd" title="Permalink to this headline">¶</a></h2>
 <p>For further tests and development tools, a CI toolkit is provided in <code class="docutils literal notranslate"><span class="pre">ci</span></code> folder (see <span class="xref myst">ci/README.md</span>).</p>
+</section>
 <section id="authors">
-<h2>Authors<a class="headerlink" href="#authors" title="Permalink to this headline"></a></h2>
+<h2>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><strong>Joan Hérisson</strong></p></li>
 <li><p><strong>Melchior du Lac</strong></p></li>
 </ul>
 </section>
 <section id="acknowledgments">
-<h2>Acknowledgments<a class="headerlink" href="#acknowledgments" title="Permalink to this headline"></a></h2>
+<h2>Acknowledgments<a class="headerlink" href="#acknowledgments" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Thomas Duigou</p></li>
 </ul>
 </section>
 <section id="licence">
-<h2>Licence<a class="headerlink" href="#licence" title="Permalink to this headline"></a></h2>
+<h2>Licence<a class="headerlink" href="#licence" title="Permalink to this headline">¶</a></h2>
 <p>rpThermo is released under the MIT licence. See the LICENCE file for details.</p>
 </section>
 </section>
 
 
-           </div>
           </div>
-          <footer>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p>&#169; Copyright 2021, Joan Hérisson, Thomas Duigou, Kenza Bazi-Kabbaj, Olivier Telle.</p>
-  </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
-</footer>
+          
         </div>
       </div>
-    </section>
-  </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">rpTools</a></h1>
 
-</body>
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme_shortcut.html">rpTools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme_rpcompletion_shortcut.html">rpCompletion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme_rpfba_shortcut.html">rpFBA</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">rpThermo</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#input">Input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#output">Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install">Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run">Run</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#rpthermo-process">rpThermo process</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#tests">Tests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#natively">Natively</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ci-cd">CI/CD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#authors">Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acknowledgments">Acknowledgments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#licence">Licence</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="readme_rpextractsink_shortcut.html">rpExtractsink</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme_rplibs_shortcut.html">rpLibs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme_rpreport_shortcut.html">rpReport</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_autosummary/rptools.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_shortcut.html">Release</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="readme_rpfba_shortcut.html" title="previous chapter">rpCompletion</a></li>
+      <li>Next: <a href="readme_rpextractsink_shortcut.html" title="next chapter">rpExtractSink</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Joan Hérisson, Thomas Duigou, Kenza Bazi-Kabbaj, Olivier Telle.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/readme_rpthermo_shortcut.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
 </html>
