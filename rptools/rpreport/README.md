@@ -1,21 +1,30 @@
 # rpreport
+Generates HTML pages to explore the main characteristics (thermodynamics,
+fluxes, number of metabolic steps, reaction rule score) of pathways predicted
+with RetroPath suite
+
 
 ## Installation
-### Local conda environment setup :
-We strongly recommend you to use conda package manager, and follow those steps:  
-`conda create -n rpreport_env python=3`  
-`conda activate rpreport_env`  
-`conda install -c brsynth -c conda-forge -c bioconda rptools`  (rpSBML installation, see https://github.com/brsynth/rpTools)
-`pip install dictor`  (see https://github.com/perfecto25/dictor)
+Please see `rptools` documentation.
 
-### Usage
-In the conda environment
-`python report.py <archive.tar> <outputfolder>`
-where <archive.tar> is an archive containing RPSBML files
+## Usage
+rpreport [-h] [--log ARG] [--log_file LOG_FILE] [--silent] [--version] [-d] [--dev] [-v] [--standalone] source_path output_folder
 
-User `-v` for verbose mode
+Required:
+* **source_path**: (string) Path to a tar archive (default) or folder (using '-d' option) containing rpSBML file(s).
+* **output_folder**: (string) Output folder where report file(s) will be generated.
 
-### Pycharm local settings
-Configuration de PyCharm pour utiliser conda en créant le projet :
-https://www.jetbrains.com/help/pycharm/conda-support-creating-conda-virtual-environment.html
-TODO : configurer git avec projet. Apparement c’est déjà fait, PyCharm lit les infos git du dépôt précédemment créé.
+Optional:
+* **-h, --help**: show this help message and exit
+* **--log ARG, -l ARG**: Adds a console logger for the specified level (default:
+                       error)
+* **--log_file LOG_FILE**: Filename where to put logs
+* **--silent, -s**: run rpreport silently
+* **--version**: show the version number and exit
+* **-d, --input_dir**: source_path is a folder containing standalone rpSBML
+                       file(s).
+* **--dev**: For dev purpose only : create supplementary files into
+                       a dev folder
+* **-v, --verbose**: Turn on console verbose mode.
+* **--standalone**: if set will output an autonomous HTML containing all
+                       css and js files dependencies.

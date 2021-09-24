@@ -4,7 +4,7 @@ Calculate the formation energy of chemical species and the Gibbs free energy for
 
 For each species, the challenge is to find the corresponding compound in the eQuilibrator cache. To find the good compound, one tries to exact match species ID, InChIKey, InChI or SMILES and stops with the first hit. Then, if no compound has been found, in the last resort, the first part of species InChIKey is looked for within the cache. If the result (a list) is not empty, the first compound is taken.
 
-Because we are interested in the thermodynamics of the pathway when the production of the target is optimized, we have modified coefficients of each reaction. We used a linear system solver (from [SciPy](www.scipy.org)) by giving the reaction that produces the target as objective and elimination of intermediate species as constraints.
+Because we are interested in the thermodynamics of the pathway when the production of the target is optimized, we have modified coefficients of each reaction. We used a linear system solver (from [SciPy](https://www.scipy.org)) by giving the reaction that produces the target as objective and elimination of intermediate species as constraints.
 
 ## Input
 
@@ -58,7 +58,7 @@ cd tests
 pytest -v
 ```
 
-# CI/CD
+## CI/CD
 For further tests and development tools, a CI toolkit is provided in `ci` folder (see [ci/README.md](ci/README.md)).
 
 

@@ -59,7 +59,7 @@ cd tests
 pytest -v
 ```
 
-# CI/CD
+## CI/CD
 For further tests and development tools, a CI toolkit is provided in `ci` folder (see [ci/README.md](ci/README.md)).
 
 ## Authors
