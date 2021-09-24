@@ -3,8 +3,8 @@ include ../.env
 
 SHELL := /bin/bash
 
-tmpfile := $(shell mktemp -u)
-tmpdir  := $(shell dirname $(tmpfile))
+# tmpfile := $(shell mktemp -u)
+# tmpdir  := $(shell dirname $(tmpfile))
 
 PLATFORM = $(shell conda info | grep platform | awk '{print $$3}')
 
@@ -32,6 +32,7 @@ clean: conda-clean-build
 #python_versions = $(shell cat ../recipe/conda_build_config.yaml | awk 'NR>1 {print $$2}')
 recipe_channels = $(shell cat ../../recipe/conda_channels.txt)
 conda_channels  = $(shell conda config --show channels | awk '{print $2}')
+
 
 define check
 	$(1) && echo OK
@@ -170,21 +171,24 @@ else
     HAS_PYYAML=True
 endif
 ## Check pyyaml
-check-pyyaml:
-ifeq (False,$(HAS_PYYAML))
-	@$(MAKE_CMD) -f conda.mk conda-install-pyyaml channel=conda-forge
-endif
+#check-pyyaml:
+#ifeq (False,$(HAS_PYYAML))
+#	@$(MAKE_CMD) -f conda.mk conda-install-pyyaml channel=conda-forge
+#endif
+
 
 build_env_file := ../../recipe/conda_build_env.yaml
 check_env_file := ../test/check-environment.yml
-test_env_file  := $(tmpdir)/$(shell mktemp -u XXXXXX-${PACKAGE}_test_env.yml)
-build_env_file:
-	@
-check_env_file:
-	@
-test_env_file: check-pyyaml
-	@python3 ../$(TEST_PATH)/parse_recipe.py req > $(test_env_file)
-check-environment-%: check-conda %_env_file
+# test_env_file  := $(tmpdir)/$(shell mktemp -u XXXXXX-${PACKAGE}_test_env.yml)
+test_env_file  := ../../environment.yaml
+#build_env_file:
+#	@
+#check_env_file:
+#	@
+#test_env_file: check-pyyaml
+#	@
+#	@python3 ../$(TEST_PATH)/parse_recipe.py req > $(test_env_file)
+check-environment-%: check-conda# %_env_file
 ifneq ("$(wildcard $(MY_ENV_DIR))","") # check if the directory is there
 		@$(ECHO) "'$(env)' environment already exists."
 else
@@ -192,7 +196,7 @@ else
 		@conda env create -n $(env) -f $($(*)_env_file) > /dev/null
 		@echo OK
 endif
-		@rm -f $(test_env_file)
+#		@rm -f $(test_env_file)
 
 conda-run-env:
 ifneq ($(strip $(cmd)),)
