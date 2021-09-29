@@ -12,6 +12,7 @@ channels_file = current_folder+'/../../recipe/conda_channels.txt'
 recipe_file   = current_folder+'/../../recipe/meta.yaml'
 bld_cfg_file  = current_folder+'/../../recipe/conda_build_config.yaml'
 
+
 def parse_meta(filename):
 
     recipe = ''
@@ -38,8 +39,6 @@ def parse_meta(filename):
         print(exc)
 
     return requirements, tests
-
-
 
 
 if __name__ == '__main__':
