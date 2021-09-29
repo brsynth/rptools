@@ -33,7 +33,7 @@ class Test_rpReaction(TestCase):
         )
         self.rp2_transfo_id = 'TRS_0_0_0'
         self.rule_id = 'RR-02-a0cc0be463ff412f-16-F'
-        self.tmpl_rxn_id = 'MNXR96458'
+        self.tmpl_rxn_ids = ['MNXR96458']
         self.rule_score = 0.5982208769718989
         self.selenzy = {
             'UniProtID_1': 65.65,
@@ -49,7 +49,7 @@ class Test_rpReaction(TestCase):
             'idx_in_path': -1,
             'rp2_transfo_id': self.rp2_transfo_id,
             'rule_id': self.rule_id,
-            'tmpl_rxn_id': self.tmpl_rxn_id,
+            'tmpl_rxn_ids': self.tmpl_rxn_ids,
             'rule_score': self.rule_score,
             'selenzy': self.selenzy
         }
@@ -69,11 +69,11 @@ class Test_rpReaction(TestCase):
             self.rule_id
         )
 
-    def test_get_tmpl_rxn_id(self):
-        self.rxn.set_tmpl_rxn_id(self.tmpl_rxn_id)
+    def test_get_tmpl_rxn_ids(self):
+        self.rxn.set_tmpl_rxn_ids(self.tmpl_rxn_ids)
         self.assertEqual(
-            self.rxn.get_tmpl_rxn_id(),
-            self.tmpl_rxn_id
+            self.rxn.get_tmpl_rxn_ids(),
+            self.tmpl_rxn_ids
         )
 
     def test_get_rule_score(self):
@@ -86,18 +86,18 @@ class Test_rpReaction(TestCase):
     def test__to_dict(self):
         self.rxn.set_rp2_transfo_id(self.rp2_transfo_id)
         self.rxn.set_rule_id(self.rule_id)
-        self.rxn.set_tmpl_rxn_id(self.tmpl_rxn_id)
+        self.rxn.set_tmpl_rxn_ids(self.tmpl_rxn_ids)
         self.rxn.set_rule_score(self.rule_score)
         self.rxn.set_selenzy(self.selenzy)
         self.assertDictEqual(
-            self.rxn._to_dict(),
+            self.rxn._to_dict(full=True),
             {
                 **self.inherited_dict,
                 **self.specific_dict
             }
         )
         self.assertDictEqual(
-            self.rxn._to_dict(specific=True),
+            self.rxn._to_dict(full=False),
             self.specific_dict
         )
     

@@ -113,7 +113,7 @@ class rpReaction(Reaction, rpObject):
         rpObject.__init__(self)
         self.set_rp2_transfo_id(None)
         self.set_rule_id(None)
-        self.set_tmpl_rxn_id(None)
+        self.set_tmpl_rxn_ids([])
         self.set_rule_score('NaN')
         self.set_idx_in_path(idx_in_path)
         self.set_fbc(
@@ -131,26 +131,27 @@ class rpReaction(Reaction, rpObject):
 
     def _to_dict(
         self,
-        specific: bool = False
+        full: bool = True
     ) -> Dict:
         """Get attributes as a dictionary.
 
         Parameters
         ----------
-        specific: bool, optional
-            If set to True, the returned dictionary will not
-            contain attributes inherited from Reaction class.
+        full: bool, optional
+            If set to False, the returned dictionary will not
+            contain attributes inherited from Reaction class
+            (default: True).
         """
-        if specific:
+        if full:
             return {
-                **self.__to_dict(),
-                **rpObject._to_dict(self)
+                **Reaction._to_dict(self, full),
+                **rpObject._to_dict(self),
+                **self.__to_dict()
             }
         else:
             return {
-                **Reaction._to_dict(self),
-                **rpObject._to_dict(self),
-                **self.__to_dict()
+                **self.__to_dict(),
+                **rpObject._to_dict(self)
             }
 
     def __to_dict(self) -> Dict:
@@ -159,7 +160,7 @@ class rpReaction(Reaction, rpObject):
         return {
             'rp2_transfo_id': self.get_rp2_transfo_id(),
             'rule_id': self.get_rule_id(),
-            'tmpl_rxn_id': self.get_tmpl_rxn_id(),
+            'tmpl_rxn_ids': self.get_tmpl_rxn_ids(),
             'rule_score': self.get_rule_score(),
             'idx_in_path': self.get_idx_in_path(),
             'selenzy': self.get_selenzy()
@@ -192,11 +193,11 @@ class rpReaction(Reaction, rpObject):
         current reaction has been generated from."""
         return self.__rule_id
 
-    def get_tmpl_rxn_id(self) -> str:
-        """Set the ID of the template (original) reaction
-        that the reaction rule of the reaction rule of the
-        current reaction has been generated from."""
-        return self.__tmpl_rxn_id
+    def get_tmpl_rxn_ids(self) -> List[str]:
+        """Get the ID of the template (original) reactions
+        that the reaction rule of the current reaction
+        has been generated from."""
+        return self.__tmpl_rxn_ids
 
     def get_rule_score(self) -> float:
         """Get the score of the reaction rule (from RetroPath2)."""
@@ -269,16 +270,29 @@ class rpReaction(Reaction, rpObject):
         """
         self.__rule_id = id
 
-    def set_tmpl_rxn_id(self, id: str) -> None:
-        """Set the ID of the template (original) reaction
-        that the reaction rule of the reaction rule of the
-        current reaction has been generated from.
+    def set_tmpl_rxn_ids(self, ids: List[str]) -> None:
+        """Set the ID of the template (original) reactions
+        that the reaction rule of the current reaction
+        has been generated from.
         
         Parameters
         ----------
         id: str
         """
-        self.__tmpl_rxn_id = id
+        if not isinstance(ids, list):
+            ids = [ids]
+        self.__tmpl_rxn_ids = deepcopy(ids)
+
+    def add_tmpl_rxn_id(self, id: str) -> None:
+        """Add the ID of the template (original) reaction
+        that the reaction rule of the current reaction
+        has been generated from.
+        
+        Parameters
+        ----------
+        id: str
+        """
+        self.__tmpl_rxn_ids.append(id)
 
     def set_rule_score(self, score: float) -> None:
         """Set the score of the reaction rule of

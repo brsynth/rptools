@@ -138,6 +138,7 @@ def rp_completion(
     pathway_combinatorics = __build_pathway_combinatorics(
         full_transfos,
         pathways,
+        cache=cache,
         logger=logger
     )
 
@@ -159,6 +160,15 @@ def rp_completion(
     #     for sub_pathway in sub_pathways:
     #         print(sub_pathway)
 
+    # from chemlite import Pathway
+    # print(all_pathways)
+    # for sub_pathways in all_pathways.values():
+    #     for i in range(len(sub_pathways)):
+    #         for j in range(i+1, len(sub_pathways)):
+    #             if sub_pathways[i] == sub_pathways[j]:
+    #                 print(f'Equality between {sub_pathways[i].get_id()} and {sub_pathways[j].get_id()}')
+    # print()
+    # print(Pathway._to_dict(all_pathways[1][0]))
     return all_pathways
 
 
@@ -543,6 +553,7 @@ def __check_pathways(df) -> bool:
 def __build_pathway_combinatorics(
     full_transfos: Dict,
     pathways: Dict,
+    cache: rrCache,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
     '''Build all combinations of sub-pathways based on these facts:
@@ -614,7 +625,7 @@ def __build_pathway_combinatorics(
                         {
                             'rp2_transfo_id': transfo_id,
                             'rule_id': rule_id,
-                            'tmpl_rxn_id': tmpl_rxn_id
+                            'tmpl_rxn_ids': tmpl_rxn_id
                         }
                     )
 
@@ -695,7 +706,7 @@ def __build_all_pathways(
                 transfo_id = rxn['rp2_transfo_id']
                 transfo = transfos[transfo_id]
                 rule_id = rxn['rule_id']
-                tmpl_rxn_id = rxn['tmpl_rxn_id']
+                tmpl_rxn_id = rxn['tmpl_rxn_ids']
 
                 ## COMPOUNDS
                 # Template reaction compounds
@@ -887,18 +898,27 @@ def __apply_to_best_pathways(
     # from bisect import insort as bisect_insort
     # bisect_insort(best_rpsbml, sbml_item)
 
-    # Insert pathway in best_pathways list by increasing score
-    pathways = insert_and_or_replace_in_sorted_list(
-        Item(pathway, score),
-        pathways
-    )
+    # Detect if the predicted pathway is not already
+    # in the list. If it is, then only add the template
+    # reaction id in the list of the duplicated reaction(s)
+    pathway_found = False
+    for _pathway in pathways:
+        if pathway == _pathway.object:
+            pathway_found = True
+            # print(f'Equality between {_pathway.object.get_id()} and {pathway.get_id()}')
+            for rxn in pathway.get_list_of_reactions():
+                for _rxn in _pathway.object.get_list_of_reactions():
+                    if rxn == _rxn:
+                        for tmpl_rxn_id in rxn.get_tmpl_rxn_ids():
+                            if tmpl_rxn_id not in _rxn.get_tmpl_rxn_ids():
+                                _rxn.add_tmpl_rxn_id(tmpl_rxn_id)
 
-    # for item in best_rpsbml:
-    #     print(item.rpsbml_obj._get_reactions_with_species_keys())
-    # logger.debug(str([item.rpsbml_obj._get_reactions_with_species_keys() for item in best_rpsbml]))
-
-    # Keep only topX
-    # best_rpsbml = best_rpsbml[-max_subpaths_filter:]
+    if not pathway_found:
+        # Insert pathway in best_pathways list by increasing score
+        pathways = insert_and_or_replace_in_sorted_list(
+            Item(pathway, score),
+            pathways
+        )
 
     return pathways[-max_subpaths_filter:]
 

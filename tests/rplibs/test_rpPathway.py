@@ -187,7 +187,7 @@ class Test_rpPathway(TestCase):
         }
         self.rp2_transfo_id = 'TRS_0_0_0'
         self.rule_id = 'RR-02-a0cc0be463ff412f-16-F'
-        self.tmpl_rxn_id = 'MNXR96458'
+        self.tmpl_rxn_ids = ['MNXR96458']
         self.idx_in_path = 1
         self.rule_score = 0.5982208769718989
         self.id = 'pathway'
@@ -263,7 +263,7 @@ class Test_rpPathway(TestCase):
         self.pathway.set_unit_defs(self.unit_def)
         self.rxn.set_rp2_transfo_id(self.rp2_transfo_id)
         self.rxn.set_rule_id(self.rule_id)
-        self.rxn.set_tmpl_rxn_id(self.tmpl_rxn_id)
+        self.rxn.set_tmpl_rxn_ids(self.tmpl_rxn_ids)
         self.rxn.set_idx_in_path(self.idx_in_path)
         self.rxn.set_rule_score(self.rule_score)
         self.pathway.add_reaction(rxn=self.rxn, target_id=self.target.get_id())
@@ -278,7 +278,7 @@ class Test_rpPathway(TestCase):
     ## READ METHODS
     def test__to_dict(self):
         self.assertDictEqual(
-            self.pathway._to_dict(specific=True),
+            self.pathway._to_dict(full=False),
             {
                 'sink': self.pathway.get_sink(),
                 'target': self.pathway.get_target_id(),
