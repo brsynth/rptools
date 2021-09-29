@@ -47,7 +47,7 @@ class Test_rpCompound(TestCase):
             self.rpcompound._to_dict(),
             {
                 **self.__dict,
-                **self.rpcompound._to_dict(specific=True)
+                **self.rpcompound._to_dict(full=False)
             }
         )
 

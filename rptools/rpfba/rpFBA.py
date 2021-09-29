@@ -318,7 +318,7 @@ def build_rpsbml(
         fbc_units=rxn_target.get_fbc_units(),
         reversible=rxn_target.reversible(),
         reacXref={'ec': rxn_target.get_ec_numbers()},
-        infos=rxn_target._to_dict(specific=True)
+        infos=rxn_target._to_dict(full=False)
     )
     return rpsbml
 
@@ -1059,9 +1059,7 @@ def write_fluxes_to_objectives(
     rpsbml.updateBRSynth(
         obj,
         'flux_value',
-        str(objective_value),
-        'mmol_per_gDW_per_hr',
-        False
+        str(objective_value)
     )
 
     Bigg_Reaction_Prefix = 'R_'
@@ -1087,9 +1085,7 @@ def write_fluxes_to_objectives(
         rpsbml.updateBRSynth(
             flux_obj,
             'flux_value',
-            str(flux),
-            'mmol_per_gDW_per_hr',
-            False
+            str(flux)
         )
 
 
@@ -1139,9 +1135,7 @@ def write_fluxes_to_reactions(
         rpsbml.updateBRSynth(
             rxn,
             'fba_'+str(sim_type),
-            str(flux),
-            'mmol_per_gDW_per_hr',
-            False
+            str(flux)
         )
 
 
@@ -1176,9 +1170,7 @@ def write_objective_to_pathway(
     rpsbml.updateBRSynth(
         rpsbml.getGroup(pathway_id),
         'fba_'+str(sim_type),
-        str(objective_value),
-        'mmol_per_gDW_per_hr',
-        False
+        str(objective_value)
     )
 
 

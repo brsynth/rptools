@@ -78,13 +78,6 @@ class rpObject():
     def _to_dict(self) -> Dict:
         """Get attributes as a dictionary.
         Implemented for compatibility with inherited classes."""
-        return {
-            # **super()._to_dict(),
-            **self.__to_dict()
-        }
-
-    def __to_dict(self) -> Dict:
-        """Get attributes as a dictionary."""
         fba_infos = {
             rpObject.__sep.join([
                 rpObject.__fba_prefix,

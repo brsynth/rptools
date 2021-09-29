@@ -83,26 +83,27 @@ class rpCompound(Compound, rpObject):
 
     def _to_dict(
         self,
-        specific: bool = False
+        full: bool = True
     ) -> Dict:
         """Get attributes as a dictionary.
 
         Parameters
         ----------
-        specific: bool, optional
-            If set to True, the returned dictionary will not
-            contain attributes inherited from Compound class.
+        full: bool, optional
+            If set to False, the returned dictionary will not
+            contain attributes inherited from Compound class
+            (default: True).
         """
-        if specific:
-            return {
-                **self.__to_dict(),
-                **rpObject._to_dict(self)
-            }
-        else:
+        if full:
             return {
                 **Compound._to_dict(self),
                 **rpObject._to_dict(self),
                 **self.__to_dict()
+            }
+        else:
+            return {
+                **self.__to_dict(),
+                **rpObject._to_dict(self)
             }
 
     def __to_dict(self) -> Dict:

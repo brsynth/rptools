@@ -136,27 +136,28 @@ class rpPathway(Pathway, rpObject):
 
     def _to_dict(
         self,
-        specific: bool = False
+        full: bool = True
     ) -> Dict:
         """Get attributes as a dictionary.
 
         Parameters
         ----------
-        specific: bool, optional
-            If set to True, the returned dictionary will not
-            contain attributes inherited from Pathway class.
+        full: bool, optional
+            If set to False, the returned dictionary will not
+            contain attributes inherited from Pathway class
+            (default: True).
         """
-        if specific:
-            return {
-                **self.__to_dict(),
-                **rpObject._to_dict(self),
-                'global_score': self.get_global_score()
-            }
-        else:
+        if full:
             return {
                 **Pathway._to_dict(self),
                 **rpObject._to_dict(self),
                 **self.__to_dict(),
+                'global_score': self.get_global_score()
+            }
+        else:
+            return {
+                **self.__to_dict(),
+                **rpObject._to_dict(self),
                 'global_score': self.get_global_score()
             }
 
@@ -171,21 +172,21 @@ class rpPathway(Pathway, rpObject):
             'compartments': deepcopy(self.get_compartments()),
         }
 
-    def __eq__(self, other) -> bool:
-        """Returns the equality between two rpPathway objects."""
-        if not isinstance(self, other.__class__):
-            return False
-        # Compare with specific keys
-        return all(
-            (
-                self._to_dict().get(key) == other._to_dict().get(key)
-                or self._to_dict().get(key) is other._to_dict().get(key)
-            )
-            for key in [
-                'reactions',
-                'target',
-            ]
-        )
+    # def __eq__(self, other) -> bool:
+    #     """Returns the equality between two rpPathway objects."""
+    #     if not isinstance(self, other.__class__):
+    #         return False
+    #     # Compare with specific keys
+    #     return all(
+    #         (
+    #             self._to_dict().get(key) == other._to_dict().get(key)
+    #             or self._to_dict().get(key) is other._to_dict().get(key)
+    #         )
+    #         for key in [
+    #             'reactions',
+    #             'target',
+    #         ]
+    #     )
 
     ## READ METHODS
     def get_species_groups(self) -> Dict[str, Set]:
@@ -859,7 +860,7 @@ class rpPathway(Pathway, rpObject):
                 inchikey=specie.get_inchikey(),
                 smiles=specie.get_smiles(),
                 compartment=specie.get_compartment(),
-                infos=self.get_specie(specie.get_id())._to_dict(specific=True)
+                infos=self.get_specie(specie.get_id())._to_dict(full=False)
             )
 
         ## Add reactions to the model
@@ -879,7 +880,7 @@ class rpPathway(Pathway, rpObject):
                 fbc_units=rxn.get_fbc_units(),
                 reversible=rxn.reversible(),
                 reacXref=xref,
-                infos=rxn._to_dict(specific=True)
+                infos=rxn._to_dict(full=False)
             )
 
         return rpsbml
