@@ -1,7 +1,10 @@
 # Release history
 
-## 5.4.2
+## 5.5.0
 - chore(rpcompletion): print out nb pathways
+- BREAK! chore: change tmpl_rxn id into list of ids
+- chore(rpSBML): simplify readSBML
+- fix(rpreport): typo
 
 ## 5.4.1
 - chore(rpscore): take only one single input pathway
