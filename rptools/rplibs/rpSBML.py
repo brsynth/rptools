@@ -2821,7 +2821,13 @@ class rpSBML:
         '''
 
 
-    def updateBRSynth(self, sbase_obj, annot_header, value, unit=None, error=None, isAlone=False, isList=False, isSort=True, meta_id=None):
+    def updateBRSynth(
+        self,
+        sbase_obj,
+        annot_header,
+        value,
+        meta_id=None
+    ):
         """Append or update an entry to the BRSynth annotation of the passed libsbml.SBase object.
 
         If the annot_header isn't contained in the annotation it is created. If it already exists it overwrites it
@@ -2847,30 +2853,19 @@ class rpSBML:
         :rtype: bool
         :return: Sucess or failure of the function
         """
-        # self.logger.debug('############### '+str(annot_header)+' ################')
-        #### create the string
-        annotation = f'''
-            <annotation>
-                <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
-                    <rdf:BRSynth rdf:about="# adding">
-                        <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
-                            <brsynth:{str(annot_header)}'''
-        if isList:
-            # annotation = '''
-            #     <annotation>
-            #         <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
-            #             <rdf:BRSynth rdf:about="# adding">
-            #             <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
-            #                 <brsynth:'''+str(annot_header)+'''>
-            # '''
-            # annotation = '''
-            #     <annotation>
-            #         <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
-            #             <rdf:BRSynth rdf:about="# adding">
-            #             <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
-            # '''
-            # annotation += '<brsynth:'+str(annot_header)
-            annotation += '>'
+
+        def __write_list(value, annot_header: str) -> str:
+            annotation = '>'
+            for v in value:
+                annotation += f'''
+                                <brsynth:{v}'''
+                annotation += f'''/>'''
+            annotation += f'''
+                            </brsynth:{str(annot_header)}>'''
+            return annotation
+
+        def __write_dict(value, annot_header: str) -> str:
+            annotation = '>'
             for k, v in value.items():
                 annotation += f'''
                                 <brsynth:{k}'''
@@ -2878,58 +2873,36 @@ class rpSBML:
                     for _k, _v in v.items():
                         annotation += f''' {_k}="{_v}"'''
                 else:
-                    annotation += f'''value="{v}"'''
+                    annotation += f''' value="{v}"'''
                 annotation += f'''/>'''
             annotation += f'''
                             </brsynth:{str(annot_header)}>'''
-            # if isSort:
-            #     for name in sorted(value, key=value.get, reverse=True):
-            #         if isAlone:
-            #             annotation += '<brsynth:'+str(name)+'>'+str(value[name])+'</brsynth:'+str(name)+'>'
-            #         else:
-            #             if unit:
-            #                 annotation += '<brsynth:'+str(name)+' unit="'+str(unit)+'" value="'+str(value[name])+'" />'
-            #             else:
-            #                 annotation += '<brsynth:'+str(name)+' value="'+str(value[name])+'" />'
-            # else:
-            #     for name in value:
-            #         if isAlone:
-            #             annotation += '<brsynth:'+str(name)+'>'+str(value[name])+'</brsynth:'+str(name)+'>'
-            #         else:
-            #             if unit:
-            #                 annotation += '<brsynth:'+str(name)+' unit="'+str(unit)+'" value="'+str(value[name])+'" />'
-            #             else:
-            #                 annotation += '<brsynth:'+str(name)+' value="'+str(value[name])+'" />'
-            # annotation += '''
-            #         </brsynth:'''+str(annot_header)+'''>
-            #         </brsynth:brsynth>
-            #         </rdf:BRSynth>
-            #         </rdf:RDF>
-            #     </annotation>'''
-            # annotation += '''
-            #         </brsynth:brsynth>
-            #         </rdf:BRSynth>
-            #         </rdf:RDF>
-            #     </annotation>'''
+            return annotation
+
+        def __write_header(annot_header: str) -> str:
+            return f'''
+                <annotation>
+                    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                        <rdf:BRSynth rdf:about="# adding">
+                            <brsynth:brsynth xmlns:brsynth="http://brsynth.eu">
+                                <brsynth:{annot_header}'''
+
+        def __write_footer() -> str:
+            return '''
+                            </brsynth:brsynth>
+                        </rdf:BRSynth>
+                    </rdf:RDF>
+                </annotation>'''
+
+        annotation = __write_header(str(annot_header))
+        if isinstance(value, list):
+            annotation += __write_list(value, annot_header)
+        elif isinstance(value, dict):
+            annotation += __write_dict(value, annot_header)
         else:
-            if isinstance(value, dict):
-                for k, v in value.items():
-                    annotation += f' {k}="{v}"'
-            else:
-                annotation += f' value="{str(value)}"'
-            annotation += ' />'
-            #     if unit:
-            #         if error:
-            #             annotation += '<brsynth:'+str(annot_header)+' unit="'+str(unit)+'" value="'+str(value)+'" error="'+str(error)+'" />'
-            #         else:
-            #             annotation += '<brsynth:'+str(annot_header)+' unit="'+str(unit)+'" value="'+str(value)+'" />'
-            #     else:
-            #         annotation += '<brsynth:'+str(annot_header)+' value="'+str(value)+'" />'
-        annotation += '''
-                        </brsynth:brsynth>
-                    </rdf:BRSynth>
-                </rdf:RDF>
-            </annotation>'''
+            annotation += f' value="{str(value)}"/>'
+        annotation += __write_footer()
+
         # self.logger.debug('annotation: {0}'.format(annotation))
         annot_obj = libsbml.XMLNode.convertStringToXMLNode(annotation)
         if not annot_obj:
@@ -3621,45 +3594,6 @@ class rpSBML:
             return {}
 
     @staticmethod
-    def _readBRSYNTHAnnotationToDict(
-        annot: libsbml.XMLNode,
-        values: Dict,
-        logger: Logger = getLogger(__name__)
-    ) -> None:
-        values[annot.getName()] = {}
-        for idx in range(annot.getAttributesLength()):
-            attr = annot.getAttrName(idx)
-            values[annot.getName()][attr] = annot.getAttrValue(attr)
-        #     print(annot.getAttrName(idx))
-        # try:
-        #     values[annot.getName()] = {
-        #         'units': annot.getAttrValue('units'),
-        #         'value': float(annot.getAttrValue('value')),
-        #         'error': float(annot.getAttrValue('error'))
-        #     }
-        # except ValueError:
-        #     logger.warning('Cannot interpret '+str(annot.getName())+': '+str(annot.getAttrValue('value')+' - '+str(annot.getAttrValue('units'))))
-        #     values[annot.getName()] = {
-        #         'units': None,
-        #         'value': None,
-        #         'error': None
-        #     }
-
-
-    @staticmethod
-    def _readBRSYNTHAnnotationToValue(
-        annot: libsbml.XMLNode,
-        values: Dict,
-        type: TypeVar,
-        logger: Logger = getLogger(__name__)
-    ) -> None:
-        try:
-            values[annot.getName()] = type(annot.getAttrValue('value'))
-        except ValueError:
-            values[annot.getName()] = None
-
-
-    @staticmethod
     def readBRSYNTHAnnotation(
         annot: libsbml.XMLNode,
         logger: Logger = getLogger(__name__)
@@ -3674,11 +3608,43 @@ class rpSBML:
         :return: Dictionary of all the BRSynth annotations
         """
 
-        toRet = {}
-
         if not annot:
             # logger.warning('The passed annotation is None')
             return {}
+
+        def _readBRSYNTHAnnotationToDict(
+            annot: libsbml.XMLNode,
+            logger: Logger = getLogger(__name__)
+        ) -> Dict:
+            toRet = {}
+            for i_child in range(annot.getNumChildren()):
+                child = annot.getChild(i_child)
+                toRet[child.getName()] = {
+                    child.getAttributes().getName(i_attr): child.getAttributes().getValue(i_attr)
+                    for i_attr in range(child.getAttributes().getNumAttributes())
+                }
+            return toRet
+
+        def _readBRSYNTHAnnotationToList(
+            annot: libsbml.XMLNode,
+            logger: Logger = getLogger(__name__)
+        ) -> List:
+            toRet = []
+            for i_child in range(annot.getNumChildren()):
+                child = annot.getChild(i_child)
+                toRet.append(child.getName())
+            return toRet
+
+        def _readBRSYNTHAnnotationToValue(
+            annot: libsbml.XMLNode,
+            logger: Logger = getLogger(__name__)
+        ) -> TypeVar:
+            try:
+                return eval(annot.getAttrValue('value'))
+            except:
+                return str(annot.getAttrValue('value'))
+
+        toRet = {}
 
         bag = annot.getChild('RDF').getChild('BRSynth').getChild('brsynth')
 
@@ -3690,76 +3656,48 @@ class rpSBML:
                 logger.warning('This contains no attributes: '+str(ann.toXMLString()))
                 continue
 
-            if ann.getName().startswith('thermo_') or ann.getName().startswith('fba_'):
-                rpSBML._readBRSYNTHAnnotationToDict(
-                    annot = ann,
-                    values = toRet,
-                    logger = logger
+            # Read list
+            if ann.getName().startswith('tmpl_rxn_ids'):
+                toRet[ann.getName()] = _readBRSYNTHAnnotationToList(
+                    annot=ann,
+                    logger=logger
                 )
 
-            elif ann.getName() in [
-                # 'path_base_idx',
-                # 'path_variant_idx',
-                'idx_in_path'
-            ]:
-                rpSBML._readBRSYNTHAnnotationToValue(
-                    annot = ann,
-                    values = toRet,
-                    type = int,
-                    logger = logger
+            # Read dict
+            elif (
+                ann.getName().startswith('thermo_')
+                or ann.getName().startswith('fba_')
+                or ann.getName().startswith('selenzy')
+            ):
+                toRet[ann.getName()] = _readBRSYNTHAnnotationToDict(
+                    annot=ann,
+                    logger=logger
                 )
 
-            elif ann.getName()=='path_id':
-                    toRet[ann.getName()] = str(ann.getAttrValue('value'))
-
-            elif ann.getName() in [
-                'rule_score',
-                'global_score'
-             ] or ann.getName().startswith('norm_'):
-                # read as (float)value
-                rpSBML._readBRSYNTHAnnotationToValue(
-                    annot = ann,
-                    values = toRet,
-                    type = float,
-                    logger = logger
-                )
-
-            elif ann.getName() in [
-                'rule_id',
-                'tmpl_rxn_id',
-                'inchi',
-                'smiles',
-                'inchikey',
-                'rp2_transfo_id'
-            ]:
-                rpSBML._readBRSYNTHAnnotationToValue(
-                    annot = ann,
-                    values = toRet,
-                    type = str,
-                    logger = logger
+            # Read value
+            # elif ann.getName() in [
+            #     'idx_in_path',
+            #     'rule_score',
+            #     'global_score',
+            #     'path_id',
+            #     'rule_id',
+            #     'inchi',
+            #     'smiles',
+            #     'inchikey',
+            #     'rp2_transfo_id'
+            # ] or ann.getName().startswith('norm_'):
+            else:
+                toRet[ann.getName()] = _readBRSYNTHAnnotationToValue(
+                    annot=ann,
+                    logger=logger
                 )
                 if ann.getName() == 'smiles':
                     toRet[ann.getName()] = toRet[ann.getName()].replace('&gt;', '>')
 
-                # toRet[ann.getName()] = ann.getChild(0).toXMLString()
+            # else:
+            #     toRet[ann.getName()] = ann.getChild(0).toXMLString()
 
-            # lists in the annotation
-            # The below is for the pre-new rules organisation of the SBML files
-            elif ann.getName() == 'selenzy':
-                toRet[ann.getName()] = {}
-                for i_child in range(ann.getNumChildren()):
-                    child = ann.getChild(i_child)
-                    toRet[ann.getName()][child.getName()] = {
-                        child.getAttributes().getName(i_attr): child.getAttributes().getValue(i_attr)
-                        for i_attr in range(child.getAttributes().getNumAttributes())
-                    }
-
-            else:
-                toRet[ann.getName()] = ann.getChild(0).toXMLString()
-
-        # to delete empty
         return {k: v for k, v in toRet.items()}
-        # return toRet
 
 
     #####################################################################
@@ -4003,16 +3941,10 @@ class rpSBML:
             group.addMember(member)
 
         for key, value in infos.items():
-            # if isinstance(value, dict):
-            #     isList = True
-            # else:
-            #     isList = False
-            isList = False
             self.updateBRSynth(
                 sbase_obj=self.getGroup('rp_pathway'),
                 annot_header=key,
-                value=value,
-                isList=isList
+                value=value
             )
 
     # def to_json(
@@ -4673,10 +4605,6 @@ class rpSBML:
             sbase_obj=reac,
             annot_header='smiles',
             value=smiles,
-            unit=None,
-            error=True,
-            isAlone=True,
-            isList=False,
             meta_id=meta_id
         )
         # if rxn['rule_id']:
@@ -4695,16 +4623,10 @@ class rpSBML:
         #     if rxn['rxn_idx']:
         #         self.updateBRSynth(reac, 'rxn_idx', rxn['rxn_idx'], None, False, False, False, meta_id)
         for key, value in infos.items():
-            # if isinstance(value, dict):
-            if 'selenzy' in key.lower():
-                isList = True
-            else:
-                isList = False
             self.updateBRSynth(
                 sbase_obj=reac,
                 annot_header=key,
-                value=value,
-                isList=isList
+                value=value
             )
 
     def createSpecies(
@@ -4798,22 +4720,13 @@ class rpSBML:
                 sbase_obj=spe,
                 annot_header='smiles',
                 value=smiles,
-                unit=None,
-                error=True,
-                isAlone=True,
-                isList=False,
                 meta_id=meta_id
             )
-            #                   sbase_obj, annot_header, value, unit=None, isAlone=False, isList=False, isSort=True, meta_id=None)
         if inchi is not None:
             self.updateBRSynth(
                 sbase_obj=spe,
                 annot_header='inchi',
                 value=inchi,
-                unit=None,
-                error=True,
-                isAlone=True,
-                isList=False,
                 meta_id=meta_id
             )
         if inchikey is not None:
@@ -4821,24 +4734,14 @@ class rpSBML:
                 sbase_obj=spe,
                 annot_header='inchikey',
                 value=inchikey,
-                unit=None,
-                error=True,
-                isAlone=True,
-                isList=False,
                 meta_id=meta_id
             )
         for key, value in infos.items():
-            # for k, v in value.items():
-            # if isinstance(value, dict):
-            #     isList = True
-            # else:
-            #     isList = False
-            isList = False
             self.updateBRSynth(
                 sbase_obj=spe,
                 annot_header=key,
                 value=value,
-                isList=isList
+                meta_id=meta_id
             )
         #### GROUPS #####
         # TODO: check that it actually exists
