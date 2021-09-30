@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+
+<!--
+__author__ = 'Thomas Duigou (thomas.duigou@inra.fr)'
+__license__ = 'MIT'
+-->
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1"/>
+
+    <title>Pathway viewer</title>
+
+    <!-- Local libraries -->
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script src="js/cytoscape-3.19.0.min.js"></script>
+    <script src="js/jquery-ui-1.12.1.min.js"></script>
+
+    <!-- Dagre layout -->
+    <script src="js/dagre-0.8.5.min.js"></script>
+    <script src="js/cytoscape-dagre-2.3.2.js"></script>
+
+    <!-- Data -->
+    <script src="network.json"></script>
+
+    <!-- Viewer -->
+    <script src="js/viewer.js"></script>
+
+    <!-- CSS stuff -->
+    <link href="css/viewer.css" rel="stylesheet" type="text/css"/>
+
+    <!-- Testing bootstrap-colorpicker -->
+    <!-- <script src="js/bootstrap-colorpicker-3.2.0.min.js"></script> -->
+    <!-- <script src="js/bootstrap.bundle-4.4.1.min.js"></script> -->
+    <!-- <link href="css/bootstrap-colorpicker-3.2.0.min.css" rel="stylesheet" type="text/css"/> -->
+
+    <!-- Testing chroma.js -->
+    <script src="js/chroma-2.1.0.min.js"></script>
+
+    <!-- Table sorter -->
+    <script src="js/jquery.tablesorter-2.31.3.min.js"></script>
+    <link href="css/jquery.tablesorte.theme.default-2.31.2.min.css" rel="stylesheet" type="text/css"/>
+
+    <!-- Test pickr -->
+    <!-- One of the following themes -->
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css"/> -->
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/monolith.min.css"/> -->
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/> -->
+
+    <!-- Modern or es5 bundle -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.es5.min.js"></script> -->
+
+<!--    <script src="js/cola-1.4.3.js"></script>-->
+<!--    <script src="js/cytoscape-cola-1.4.3.js"></script>-->
+
+</head>
+<body>
+
+    <div id="base">
+
+        <div id="viewer">
+            <div id="interaction" class="interact">
+                <div id="pathway_selection">
+                    <div class="info-title">Pathway selection</div>
+                    <div class="spacer"></div>
+                    <div id="table_choice">
+                        <!-- Will be filled by viewer.js -->
+                    </div>
+                    <input id="view_all_pathways_button" type="button" value="Show all pathways"/>
+                    <input id="hide_all_pathways_button" type="button" value="Hide all pathways"/>
+                    <input id="redraw_pathways_button" type="button" value="Refresh layout"/>
+                </div>
+                <div id="cofacor_handling">
+                    <div class="info-title">Cofactor options</div>
+                    <div class="spacer"></div>
+                    <input id="show_cofactors_button" type="button" value="Show cofactors"/>
+                    <input id="remove_cofactors_button" type="button" value="Hide cofactors"/>
+                </div>
+            </div>
+            <div id="cy"></div>
+            <div id="info">
+                <div id="molecule"></div>
+                <div class="info" id="information">
+                    <!-- Statup legend -->
+                    <div id="panel_startup_legend">
+                        <div class="info-title">Legend</div>
+                        <div class="info-subtitle">How to</div>
+
+                        <div class="help-tip">1/ Pass the mouse hover pathway IDs (the "Pathway" column in the left table) to emphasize a specific path.</div>
+                        <div class="help-tip">2/ Click once on a pathway ID (in the left table) to "pin" a path. When at least one pathway is pinned,
+                            other pathways are faded.Click a second time on a pinned pathway ID to unpin it.</div>
+                        <div class="help-tip">3/ Mark / unmark the checkboxes (the "Show" column in the left table) to select which pathways are visible.</div>
+                        <div class="help-tip">4/ Cofactors are hidden by default. One can use the "Show cofactors" and "Hide cofactors" button to change this display.</div>
+                        <div class="help-tip">5/ Click on the <span class="pathway_info_icon"></span> icon (in the left table) to visualise information about a pathway</div>
+                        <div class="help-tip">6/ Click on a node to visualise information about chemicals and reactions</div>
+                        <div class="info-subtitle">Node shape</div>
+                        <div class="help-content">
+                            <p><span class="symbol-compound">&#9634;</span>&nbsp;Chemical</p>
+                            <p><span class="symbol-transformation">&#9711;</span>&nbsp;Transformation (in/outgoing arrows show direction)</p>
+                        </div>
+                        <div class="info-subtitle">Compound color</div>
+                        <div class="help-content">
+                            <p><span class="symbol-compound symbol-target-color">▢</span>&nbsp;Target</p>
+                            <p><span class="symbol-compound symbol-inter-color">▢</span>&nbsp;Intermediate chemicals</p>
+                            <p><span class="symbol-compound symbol-precursor-color">▢</span>&nbsp;Precursors</p>
+                        </div>
+                    </div>
+                    <!-- Information on a selected chemical -->
+                    <div id="panel_chemical_info">
+                        <div class="info-title">Chemical</div>
+                        <div class="info-name"><span class="chem_info_label"></span></div>
+                        <div class="spacer"></div>
+                        <!-- SVG depiction -->
+                        <div>
+                            <div class="img-box">
+                                <div class="chem_info_svg"></div>
+                            </div>
+                        </div>
+                        <!-- SMILES -->
+                        <div>
+                            <div class="info-subtitle">SMILES</div>
+                            <div class="raw-text"><span class="chem_info_smiles"></span></div>
+                            <div class="link raw-text"><span class="chem_info_smiles_search"></span></div>
+                        </div>
+                        <!-- Inchi -->
+                        <div>
+                            <div class="info-subtitle">InChI</div>
+                            <div class="raw-text"><span class="chem_info_inchi"></span></div>
+                            <div class="link raw-text"><span class="chem_info_inchi_search"></span></div>
+                        </div>
+                        <!-- Inchikey -->
+                        <div>
+                            <div class="info-subtitle">InChIKey</div>
+                            <div class="raw-text"><span class="chem_info_inchikey"></span></div>
+                            <div class="link raw-text"><span class="chem_info_inchikey_search"></span></div>
+                        </div>
+                        <!-- Cofactor -->
+                        <div>
+                            <div class="info-subtitle">Is a cofactor?</div>
+                            <div class="raw-text"><span class="chem_info_iscofactor"></span></div>
+                        </div>
+                        <!-- Precursor -->
+                        <div>
+                            <div class="info-subtitle">Is a precursor?</div>
+                            <div class="raw-text"><span class="chem_info_isprecursor"></span></div>
+                        </div>
+                        <!-- Crosslinks -->
+                        <div>
+                            <div class="info-subtitle">Crosslinks</div>
+                            <div class="raw-text chem_info_xlinks"></div>
+                        </div>
+                        <!-- Pathways involved in -->
+                        <div>
+                            <div class="info-subtitle">Pathways involved in</div>
+                            <div class="raw-text chem_info_pathids"></div>
+                        </div>
+                    </div>
+                    <!-- Information on a selected reaction -->
+                    <div id="panel_reaction_info">
+                        <div class="info-title">Reaction</div>
+                        <div class="info-name"><span class="reaction_info_name"></span></div>
+                        <div class="spacer"></div>
+                        <!-- EC numbers -->
+                        <div>
+                            <div class="info-subtitle">EC number(s)</div>
+                            <div class="raw-text reaction_info_ecnumbers"></div>
+                        </div>
+                        <!-- Crosslinks -->
+                        <div>
+                            <div class="info-subtitle">Crosslinks</div>
+                            <div class="raw-text reaction_info_xlinks"></div>
+                        </div>
+                        <!-- Thermodynamic -->
+                        <div>
+                            <div class="info-subtitle">&#916;<sub>r</sub>G' (kJ/mol)</div>
+                            <div class="raw-text"><span class="reaction_info_thermo"></span></div>
+                        </div>
+                        <!-- Rule score -->
+                        <div>
+                            <div class="info-subtitle">Rule score</div>
+                            <div class="raw-text"><span class="reaction_info_rule_score"></span></div>
+                        </div>
+                        <!-- Reaction SMILES -->
+                        <div>
+                            <div class="info-subtitle">Reaction SMILES</div>
+                            <div class="raw-text"><span class="reaction_info_rsmiles"></span></div>
+                        </div>
+                        <!-- Reaction rule IDs -->
+                        <div>
+                            <div class="info-subtitle">Rule ID(s)</div>
+                            <div class="raw-text reaction_info_ruleids"></div>
+                        </div>
+                        <!-- Reaction template IDs -->
+                        <div>
+                            <div class="info-subtitle">Reaction template ID</div>
+                            <div class="raw-text"><span class="reaction_info_reaction_template_id"></span>
+                        </div>
+                        <!-- Pathways involved in -->
+                        <div>
+                            <div class="info-subtitle">Pathways involved in</div>
+                            <div class="raw-text reaction_info_pathids"></div>
+                        </div>
+                        <!-- UniProt IDs -->
+                        <div>
+                            <div class="info-subtitle">UniProt IDs (Selenzyme score)</div>
+                            <div class="raw-text reaction_info_uniprot_crosslinks"></div>
+                        </div>
+                        <!-- Crosslink to Selenzyme -->
+                        <div>
+                            <div class="info-subtitle">Enzyme selection</div>
+                            <div class="raw-text"><span class="reaction_info_selenzyme_crosslink"></span></div>
+                        </div>
+                    </div>
+                    <!-- Information on a selected pathway -->
+                    <div id="panel_pathway_info">
+                        <div class="info-title">Pathway</div>
+                        <div class="info-name"><span class="pathway_info_path_id"></span></div>
+                        <div class="spacer"></div>
+                        <!-- Pathway ID -->
+                        <div>
+                            <div class="info-subtitle">Pathway ID</div>
+                            <div class="raw-text"><span class="pathway_info_path_id"></span></div>
+                        </div>
+                        <!-- Number of steps -->
+                        <div>
+                            <div class="info-subtitle">Number of steps</div>
+                            <div class="raw-text"><span class="pathway_info_nb_steps"></span></div>
+                        </div>
+                        <!-- Thermodynamic -->
+                        <div>
+                            <div class="info-subtitle">&#916;<sub>r</sub>G' (kJ/mol)</div>
+                            <div class="raw-text"><span class="pathway_info_thermo"></span></div>
+                        </div>
+                        <!-- Rule score -->
+                        <div>
+                            <div class="info-subtitle">Rule score</div>
+                            <div class="raw-text"><span class="pathway_info_rule_score"></span></div>
+                        </div>
+                        <!-- FBA -->
+                        <div>
+                            <div class="info-subtitle">Target's production flux (mmol gDW<sup>-1</sup> hr<sup>-1</sup>)</div>
+                            <div class="raw-text"><span class="pathway_info_target_flux"></span></div>
+                        </div>
+                        <!-- Global score -->
+                        <div>
+                            <div class="info-subtitle">Global score</div>
+                            <div class="raw-text"><span class="pathway_info_global_score"></span></div>
+                        </div>
+                    </div>
+                    <!-- In dev stuff -->
+                    <!-- <div>Information</div>
+                    <div id="react_img" class="pointer"></div>
+                    <div id="reversibility" class='inf2'></div>
+                    <input id="thermo_button" type="button" value="Thermodynamics"/>
+                    <input id="flux_button" type="button" value="Flux"/>
+                    <div id="rule" style="display:none;" class="boxinf">
+                        <div id="sub_rule_score" class="inf2">Rule Score</div>
+                    </div>
+                    <div id="thermo"style="display:none;" class="boxinf"></div>
+                    <div id="flux"style="display:none;" class="boxinf">
+                        <div id="sub_fba" class="inf2">FBA (mmol/gDW/h)</div>
+                        <div id="sub_fba_obj" class="inf1">FBA biomass objective</div>
+                    </div>
+                    <div id="selenzyme-link"></div>
+                    <div id="selenzyme_table"></div> -->
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
