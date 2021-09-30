@@ -218,7 +218,7 @@ def __complete_transformations(
         full_transfos[transfo_id]['complement'] = {}
 
         # MULTIPLE RR FOR ONE TRANSFO
-        for rule_id in transfo['rule_id']:
+        for rule_id in transfo['rule_ids']:
 
             # MULTIPLE TEMPLATE REACTIONS FOR ONE RR
             # If 'tmpl_rxn_id' is not given,
@@ -516,7 +516,7 @@ def __read_pathways(
 
         if transfo_id not in transfos:
             transfos[transfo_id] = {}
-            transfos[transfo_id]['rule_id'] = row['Rule ID'].split(',')
+            transfos[transfo_id]['rule_ids'] = row['Rule ID'].split(',')
             for side in ['left', 'right']:
                 transfos[transfo_id][side] = {}
                 # split compounds
@@ -608,11 +608,11 @@ def __build_pathway_combinatorics(
             # ('pathways_all_reactions[pathway][-1].append(...')
             pathways_all_reactions[pathway].append([])
             # Multiple reaction rules for the current transformation?
-            for rule_id, tmpl_rxns in full_transfos[transfo_id]['complement'].items():
+            for rule_ids, tmpl_rxns in full_transfos[transfo_id]['complement'].items():
 
                 ## ITERATE OVER TEMPLATE REACTIONS
                 # Current reaction rule generated from multiple template reactions?
-                for tmpl_rxn_id, tmpl_rxn in tmpl_rxns.items():
+                for tmpl_rxn_ids, tmpl_rxn in tmpl_rxns.items():
 
                     # Add template reaction compounds
                     compounds = __add_compounds(
@@ -624,8 +624,8 @@ def __build_pathway_combinatorics(
                     pathways_all_reactions[pathway][-1].append(
                         {
                             'rp2_transfo_id': transfo_id,
-                            'rule_id': rule_id,
-                            'tmpl_rxn_ids': tmpl_rxn_id
+                            'rule_ids': rule_ids,
+                            'tmpl_rxn_ids': tmpl_rxn_ids
                         }
                     )
 
@@ -705,12 +705,12 @@ def __build_all_pathways(
                 rxn = sub_pathways[sub_path_idx][rxn_idx]
                 transfo_id = rxn['rp2_transfo_id']
                 transfo = transfos[transfo_id]
-                rule_id = rxn['rule_id']
+                rule_ids = rxn['rule_ids']
                 tmpl_rxn_id = rxn['tmpl_rxn_ids']
 
                 ## COMPOUNDS
                 # Template reaction compounds
-                added_cmpds = transfo['complement'][rule_id][tmpl_rxn_id]['added_cmpds']
+                added_cmpds = transfo['complement'][rule_ids][tmpl_rxn_id]['added_cmpds']
                 # Add missing compounds to the cache
                 for side in added_cmpds.keys():
                     for spe_id in added_cmpds[side].keys():
@@ -750,7 +750,7 @@ def __build_all_pathways(
                 # write infos
                 for info_id, info in sub_pathways[sub_path_idx][rxn_idx].items():
                     getattr(rxn, 'set_'+info_id)(info)
-                rxn.set_rule_score(rr_reactions[rule_id][tmpl_rxn_id]['rule_score'])
+                rxn.set_rule_score(rr_reactions[rule_ids][tmpl_rxn_id]['rule_score'])
                 rxn.set_idx_in_path(rxn_idx_forward)
 
                 # Add at the beginning of the pathway
@@ -909,9 +909,14 @@ def __apply_to_best_pathways(
             for rxn in pathway.get_list_of_reactions():
                 for _rxn in _pathway.object.get_list_of_reactions():
                     if rxn == _rxn:
+                        # Copy template reaction IDs from a reaction to another
                         for tmpl_rxn_id in rxn.get_tmpl_rxn_ids():
                             if tmpl_rxn_id not in _rxn.get_tmpl_rxn_ids():
                                 _rxn.add_tmpl_rxn_id(tmpl_rxn_id)
+                        # Copy reaction rule IDs from a reaction to another
+                        for rule_id in rxn.get_rule_ids():
+                            if rule_id not in _rxn.get_rule_ids():
+                                _rxn.add_rule_id(rule_id)
 
     if not pathway_found:
         # Insert pathway in best_pathways list by increasing score

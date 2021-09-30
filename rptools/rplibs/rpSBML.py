@@ -3462,23 +3462,23 @@ class rpSBML:
         # return members
 
 
-    def readRPrules(self, pathway_id='rp_pathway'):
-        """Return the list of reaction rules contained within a pathway
+    # def readRPrules(self, pathway_id='rp_pathway'):
+    #     """Return the list of reaction rules contained within a pathway
 
-        :param pathway_id: The pathway ID (Default: rp_pathway)
+    #     :param pathway_id: The pathway ID (Default: rp_pathway)
 
-        :type pathway_id: str
+    #     :type pathway_id: str
 
-        :rtype: dict
-        :return: Dictionnary of reaction rules (rule_id as key)
-        """
-        toRet = {}
-        for reacId in self.readGroupMembers(pathway_id):
-            reac = self.getModel().getReaction(reacId)
-            brsynth_annot = self.readBRSYNTHAnnotation(reac.getAnnotation(), self.logger)
-            if not brsynth_annot['rule_id']=='' and not brsynth_annot['smiles']=='':
-                toRet[brsynth_annot['rule_id']] = brsynth_annot['smiles'].replace('&gt;', '>')
-        return toRet
+    #     :rtype: dict
+    #     :return: Dictionnary of reaction rules (rule_id as key)
+    #     """
+    #     toRet = {}
+    #     for reacId in self.readGroupMembers(pathway_id):
+    #         reac = self.getModel().getReaction(reacId)
+    #         brsynth_annot = self.readBRSYNTHAnnotation(reac.getAnnotation(), self.logger)
+    #         if not brsynth_annot['rule_id']=='' and not brsynth_annot['smiles']=='':
+    #             toRet[brsynth_annot['rule_id']] = brsynth_annot['smiles'].replace('&gt;', '>')
+    #     return toRet
 
 
     # TODO: merge with unique species
@@ -3661,7 +3661,10 @@ class rpSBML:
                 continue
 
             # Read list
-            if ann.getName().startswith('tmpl_rxn_ids'):
+            if (
+                ann.getName().startswith('tmpl_rxn_ids')
+                or ann.getName().startswith('rule_ids')
+            ):
                 toRet[ann.getName()] = _readBRSYNTHAnnotationToList(
                     annot=ann,
                     logger=logger
@@ -3960,43 +3963,43 @@ class rpSBML:
     #     return json_dumps(self.toDict(pathway_id))
 
 
-    # def toSBOL(self):
-    #########################################################################
-    ############################# COMPARE MODELS ############################
-    #########################################################################
-    def compareBRSYNTHAnnotations(self, source_annot, target_annot):
-        """Determine if two libsbml species or reactions have members in common in BRSynth annotation
+    # # def toSBOL(self):
+    # #########################################################################
+    # ############################# COMPARE MODELS ############################
+    # #########################################################################
+    # def compareBRSYNTHAnnotations(self, source_annot, target_annot):
+    #     """Determine if two libsbml species or reactions have members in common in BRSynth annotation
 
-        Compare two dictionnaries and if any of the values of any of the same keys are the same then the function return True, and if none are found then return False
+    #     Compare two dictionnaries and if any of the values of any of the same keys are the same then the function return True, and if none are found then return False
 
-        :param source_annot: Source object of libSBML
-        :param target_annot: Target object of libSBML
+    #     :param source_annot: Source object of libSBML
+    #     :param target_annot: Target object of libSBML
 
-        :type source_annot: libsbml.Reaction
-        :type target_annot: libsbml.Reaction
+    #     :type source_annot: libsbml.Reaction
+    #     :type target_annot: libsbml.Reaction
 
-        :rtype: bool
-        :return: True if there is at least one similar and False if none
-        """
-        source_dict = self.readBRSYNTHAnnotation(source_annot, self.logger)
-        target_dict = self.readBRSYNTHAnnotation(target_annot, self.logger)
-        # ignore thse when comparing reactions
-        # for i in ['path_id', 'rxn_idx', 'sub_step', 'rule_score', 'rule_ori_reac']:
-        for i in ['rule_score', 'tmpl_rxn_id', 'rule_id']:
-            try:
-                del source_dict[i]
-            except KeyError:
-                pass
-            try:
-                del target_dict[i]
-            except KeyError:
-                pass
-        # list the common keys between the two
-        for same_key in list(set(list(source_dict.keys())).intersection(list(target_dict.keys()))):
-            if source_dict[same_key] and target_dict[same_key]:
-                if source_dict[same_key]==target_dict[same_key]:
-                    return True
-        return False
+    #     :rtype: bool
+    #     :return: True if there is at least one similar and False if none
+    #     """
+    #     source_dict = self.readBRSYNTHAnnotation(source_annot, self.logger)
+    #     target_dict = self.readBRSYNTHAnnotation(target_annot, self.logger)
+    #     # ignore thse when comparing reactions
+    #     # for i in ['path_id', 'rxn_idx', 'sub_step', 'rule_score', 'rule_ori_reac']:
+    #     for i in ['rule_score', 'tmpl_rxn_ids', 'rule_id']:
+    #         try:
+    #             del source_dict[i]
+    #         except KeyError:
+    #             pass
+    #         try:
+    #             del target_dict[i]
+    #         except KeyError:
+    #             pass
+    #     # list the common keys between the two
+    #     for same_key in list(set(list(source_dict.keys())).intersection(list(target_dict.keys()))):
+    #         if source_dict[same_key] and target_dict[same_key]:
+    #             if source_dict[same_key]==target_dict[same_key]:
+    #                 return True
+    #     return False
 
 
     @staticmethod
@@ -4072,96 +4075,96 @@ class rpSBML:
         return False
 
 
-    def compareRPpathways(self, measured_sbml):
-        """Function to compare two SBML's RP pathways
+    # def compareRPpathways(self, measured_sbml):
+    #     """Function to compare two SBML's RP pathways
 
-        Function that compares the annotations of reactions and if not found, the annotations of all
-        species in that reaction to try to recover the correct ones. Because we are working with
-        intermediate cofactors for the RP generated pathways, the annotation crossreference will
-        not work. Best is to use the cross-reference to the original reaction
+    #     Function that compares the annotations of reactions and if not found, the annotations of all
+    #     species in that reaction to try to recover the correct ones. Because we are working with
+    #     intermediate cofactors for the RP generated pathways, the annotation crossreference will
+    #     not work. Best is to use the cross-reference to the original reaction
 
-        :param measured_sbml: rpSBML object
+    #     :param measured_sbml: rpSBML object
 
-        :type measured_sbml: rpSBML
+    #     :type measured_sbml: rpSBML
 
-        :rtype: bool, dict
-        :return: True if there is at least one similar and return the dict of similarities and False if none with empty dictionary
-        """
-        # return all the species annotations of the RP pathways
-        try:
-            meas_rp_species = measured_sbml.readRPspecies()
-            found_meas_rp_species = measured_sbml.readRPspecies()
-            for meas_step in meas_rp_species:
-                meas_rp_species[meas_step]['annotation'] = measured_sbml.getModel().getReaction(meas_step).getAnnotation()
-                found_meas_rp_species[meas_step]['found'] = False
-                for spe_name in meas_rp_species[meas_step]['reactants']:
-                    meas_rp_species[meas_step]['reactants'][spe_name] = measured_sbml.getModel().getSpecies(spe_name).getAnnotation()
-                    found_meas_rp_species[meas_step]['reactants'][spe_name] = False
-                for spe_name in meas_rp_species[meas_step]['products']:
-                    meas_rp_species[meas_step]['products'][spe_name] = measured_sbml.getModel().getSpecies(spe_name).getAnnotation()
-                    found_meas_rp_species[meas_step]['products'][spe_name] = False
-            rp_rp_species = self.readRPspecies()
-            for rp_step in rp_rp_species:
-                rp_rp_species[rp_step]['annotation'] = self.getModel().getReaction(rp_step).getAnnotation()
-                for spe_name in rp_rp_species[rp_step]['reactants']:
-                    rp_rp_species[rp_step]['reactants'][spe_name] = self.getModel().getSpecies(spe_name).getAnnotation()
-                for spe_name in rp_rp_species[rp_step]['products']:
-                    rp_rp_species[rp_step]['products'][spe_name] = self.getModel().getSpecies(spe_name).getAnnotation()
-        except AttributeError:
-            self.logger.error('TODO: debug, for some reason some are passed as None here')
-            return False, {}
-        # compare the number of steps in the pathway
-        if not len(meas_rp_species)==len(rp_rp_species):
-            self.logger.warning('The pathways are not of the same length')
-            return False, {}
-        ############## compare using the reactions ###################
-        for meas_step in measured_sbml.readGroupMembers('rp_pathway'):
-            for rp_step in rp_rp_species:
-                if self.compareMIRIAMAnnotations(rp_rp_species[rp_step]['annotation'], meas_rp_species[meas_step]['annotation']):
-                    found_meas_rp_species[meas_step]['found'] = True
-                    found_meas_rp_species[meas_step]['rp_step'] = rp_step
-                    break
-        ############## compare using the species ###################
-        for meas_step in measured_sbml.readGroupMembers('rp_pathway'):
-            # if not found_meas_rp_species[meas_step]['found']:
-            for rp_step in rp_rp_species:
-                # We test to see if the meas reaction elements all exist in rp reaction and not the opposite
-                # because the measured pathways may not contain all the elements
-                ########## reactants ##########
-                for meas_spe_id in meas_rp_species[meas_step]['reactants']:
-                    for rp_spe_id in rp_rp_species[rp_step]['reactants']:
-                        if self.compareMIRIAMAnnotations(meas_rp_species[meas_step]['reactants'][meas_spe_id], rp_rp_species[rp_step]['reactants'][rp_spe_id]):
-                            found_meas_rp_species[meas_step]['reactants'][meas_spe_id] = True
-                            break
-                        else:
-                            if self.compareBRSYNTHAnnotations(meas_rp_species[meas_step]['reactants'][meas_spe_id], rp_rp_species[rp_step]['reactants'][rp_spe_id]):
-                                found_meas_rp_species[meas_step]['reactants'][meas_spe_id] = True
-                                break
-                ########### products ###########
-                for meas_spe_id in meas_rp_species[meas_step]['products']:
-                    for rp_spe_id in rp_rp_species[rp_step]['products']:
-                        if self.compareMIRIAMAnnotations(meas_rp_species[meas_step]['products'][meas_spe_id], rp_rp_species[rp_step]['products'][rp_spe_id]):
-                            found_meas_rp_species[meas_step]['products'][meas_spe_id] = True
-                            break
-                        else:
-                            if self.compareBRSYNTHAnnotations(meas_rp_species[meas_step]['products'][meas_spe_id], rp_rp_species[rp_step]['products'][rp_spe_id]):
-                                found_meas_rp_species[meas_step]['products'][meas_spe_id] = True
-                                break
-                ######### test to see the difference
-                pro_found = [found_meas_rp_species[meas_step]['products'][i] for i in found_meas_rp_species[meas_step]['products']]
-                rea_found = [found_meas_rp_species[meas_step]['reactants'][i] for i in found_meas_rp_species[meas_step]['reactants']]
-                if pro_found and rea_found:
-                    if all(pro_found) and all(rea_found):
-                        found_meas_rp_species[meas_step]['found'] = True
-                        found_meas_rp_species[meas_step]['rp_step'] = rp_step
-                        break
-        ################# Now see if all steps have been found ############
-        if all(found_meas_rp_species[i]['found'] for i in found_meas_rp_species):
-            found_meas_rp_species['measured_model_id'] = measured_sbml.getModel().getId()
-            found_meas_rp_species['rp_model_id'] = self.getModel().getId()
-            return True, found_meas_rp_species
-        else:
-            return False, {}
+    #     :rtype: bool, dict
+    #     :return: True if there is at least one similar and return the dict of similarities and False if none with empty dictionary
+    #     """
+    #     # return all the species annotations of the RP pathways
+    #     try:
+    #         meas_rp_species = measured_sbml.readRPspecies()
+    #         found_meas_rp_species = measured_sbml.readRPspecies()
+    #         for meas_step in meas_rp_species:
+    #             meas_rp_species[meas_step]['annotation'] = measured_sbml.getModel().getReaction(meas_step).getAnnotation()
+    #             found_meas_rp_species[meas_step]['found'] = False
+    #             for spe_name in meas_rp_species[meas_step]['reactants']:
+    #                 meas_rp_species[meas_step]['reactants'][spe_name] = measured_sbml.getModel().getSpecies(spe_name).getAnnotation()
+    #                 found_meas_rp_species[meas_step]['reactants'][spe_name] = False
+    #             for spe_name in meas_rp_species[meas_step]['products']:
+    #                 meas_rp_species[meas_step]['products'][spe_name] = measured_sbml.getModel().getSpecies(spe_name).getAnnotation()
+    #                 found_meas_rp_species[meas_step]['products'][spe_name] = False
+    #         rp_rp_species = self.readRPspecies()
+    #         for rp_step in rp_rp_species:
+    #             rp_rp_species[rp_step]['annotation'] = self.getModel().getReaction(rp_step).getAnnotation()
+    #             for spe_name in rp_rp_species[rp_step]['reactants']:
+    #                 rp_rp_species[rp_step]['reactants'][spe_name] = self.getModel().getSpecies(spe_name).getAnnotation()
+    #             for spe_name in rp_rp_species[rp_step]['products']:
+    #                 rp_rp_species[rp_step]['products'][spe_name] = self.getModel().getSpecies(spe_name).getAnnotation()
+    #     except AttributeError:
+    #         self.logger.error('TODO: debug, for some reason some are passed as None here')
+    #         return False, {}
+    #     # compare the number of steps in the pathway
+    #     if not len(meas_rp_species)==len(rp_rp_species):
+    #         self.logger.warning('The pathways are not of the same length')
+    #         return False, {}
+    #     ############## compare using the reactions ###################
+    #     for meas_step in measured_sbml.readGroupMembers('rp_pathway'):
+    #         for rp_step in rp_rp_species:
+    #             if self.compareMIRIAMAnnotations(rp_rp_species[rp_step]['annotation'], meas_rp_species[meas_step]['annotation']):
+    #                 found_meas_rp_species[meas_step]['found'] = True
+    #                 found_meas_rp_species[meas_step]['rp_step'] = rp_step
+    #                 break
+    #     ############## compare using the species ###################
+    #     for meas_step in measured_sbml.readGroupMembers('rp_pathway'):
+    #         # if not found_meas_rp_species[meas_step]['found']:
+    #         for rp_step in rp_rp_species:
+    #             # We test to see if the meas reaction elements all exist in rp reaction and not the opposite
+    #             # because the measured pathways may not contain all the elements
+    #             ########## reactants ##########
+    #             for meas_spe_id in meas_rp_species[meas_step]['reactants']:
+    #                 for rp_spe_id in rp_rp_species[rp_step]['reactants']:
+    #                     if self.compareMIRIAMAnnotations(meas_rp_species[meas_step]['reactants'][meas_spe_id], rp_rp_species[rp_step]['reactants'][rp_spe_id]):
+    #                         found_meas_rp_species[meas_step]['reactants'][meas_spe_id] = True
+    #                         break
+    #                     else:
+    #                         if self.compareBRSYNTHAnnotations(meas_rp_species[meas_step]['reactants'][meas_spe_id], rp_rp_species[rp_step]['reactants'][rp_spe_id]):
+    #                             found_meas_rp_species[meas_step]['reactants'][meas_spe_id] = True
+    #                             break
+    #             ########### products ###########
+    #             for meas_spe_id in meas_rp_species[meas_step]['products']:
+    #                 for rp_spe_id in rp_rp_species[rp_step]['products']:
+    #                     if self.compareMIRIAMAnnotations(meas_rp_species[meas_step]['products'][meas_spe_id], rp_rp_species[rp_step]['products'][rp_spe_id]):
+    #                         found_meas_rp_species[meas_step]['products'][meas_spe_id] = True
+    #                         break
+    #                     else:
+    #                         if self.compareBRSYNTHAnnotations(meas_rp_species[meas_step]['products'][meas_spe_id], rp_rp_species[rp_step]['products'][rp_spe_id]):
+    #                             found_meas_rp_species[meas_step]['products'][meas_spe_id] = True
+    #                             break
+    #             ######### test to see the difference
+    #             pro_found = [found_meas_rp_species[meas_step]['products'][i] for i in found_meas_rp_species[meas_step]['products']]
+    #             rea_found = [found_meas_rp_species[meas_step]['reactants'][i] for i in found_meas_rp_species[meas_step]['reactants']]
+    #             if pro_found and rea_found:
+    #                 if all(pro_found) and all(rea_found):
+    #                     found_meas_rp_species[meas_step]['found'] = True
+    #                     found_meas_rp_species[meas_step]['rp_step'] = rp_step
+    #                     break
+    #     ################# Now see if all steps have been found ############
+    #     if all(found_meas_rp_species[i]['found'] for i in found_meas_rp_species):
+    #         found_meas_rp_species['measured_model_id'] = measured_sbml.getModel().getId()
+    #         found_meas_rp_species['rp_model_id'] = self.getModel().getId()
+    #         return True, found_meas_rp_species
+    #     else:
+    #         return False, {}
 
 
     #########################################################################
@@ -4238,58 +4241,58 @@ class rpSBML:
             'setting '+str(reaction_id)+' lower flux bound')
 
 
-    ##### ADD SOURCE FROM ORPHAN #####
-    # if the heterologous pathway from the self.getModel() contains a sink molecule that is not included in the
-    # original model (we call orhpan species) then add another reaction that creates it
-    # TODO: that transports the reactions that creates the species in the
-    # extracellular matrix and another reaction that transports it from the extracellular matrix to the cytoplasm
-    # TODO: does not work
-    def fillOrphan(self,
-            rpsbml=None,
-            pathway_id='rp_pathway',
-            compartment_id='MNXC3',
-            upper_flux_bound={'value': 999999, 'units': ''},
-            lower_flux_bound={'value': 10, 'units': ''}):
-        """Fill the orgpan
+    # ##### ADD SOURCE FROM ORPHAN #####
+    # # if the heterologous pathway from the self.getModel() contains a sink molecule that is not included in the
+    # # original model (we call orhpan species) then add another reaction that creates it
+    # # TODO: that transports the reactions that creates the species in the
+    # # extracellular matrix and another reaction that transports it from the extracellular matrix to the cytoplasm
+    # # TODO: does not work
+    # def fillOrphan(self,
+    #         rpsbml=None,
+    #         pathway_id='rp_pathway',
+    #         compartment_id='MNXC3',
+    #         upper_flux_bound={'value': 999999, 'units': ''},
+    #         lower_flux_bound={'value': 10, 'units': ''}):
+    #     """Fill the orgpan
 
-        WARNING: in progress
+    #     WARNING: in progress
 
-        :rtype: tuple or bool
-        :return: bool if there is an error and tuple of the lower and upper bound
-        """
-        self.logger.info('Adding the orphan species to the GEM model')
-        # only for rp species
-        rp_pathway = self.getGroup(pathway_id)
-        reaction_id = sorted([(int(''.join(x for x in i.id_ref if x.isdigit())), i.id_ref) for i in rp_pathway.getListOfMembers()], key=lambda tup: tup[0], reverse=True)[0][1]
-        # for reaction_id in [i.getId() for i in self.getModel().getListOfReactions()]:
-        for species_id in set([i.getSpecies() for i in self.getModel().getReaction(reaction_id).getListOfReactants()]+[i.getSpecies() for i in self.getModel().getReaction(reaction_id).getListOfProducts()]):
-            if not rpsbml:
-                isSpePro = self.isSpeciesProduct(species_id, [reaction_id])
-            else:
-                isSpePro = rpsbml.isSpeciesProduct(species_id, [reaction_id])
-            if not isSpePro:
-                # create the step
-                createStep = {'rule_id': None,
-                              'left': {species_id.split('__')[0]: 1},
-                              'right': {},
-                            #   'sub_step': None,
-                            #   'path_id': None,
-                              'transformation_id': None,
-                              'rule_score': None,
-                              'tmpl_rxn_id': None}
-                # create the model in the
-                if not rpsbml:
-                    self.createReaction('create_'+species_id,
-                                        upper_flux_bound,
-                                        lower_flux_bound,
-                                        createStep,
-                                        compartment_id)
-                else:
-                    rpsbml.createReaction('create_'+species_id,
-                                        upper_flux_bound,
-                                        lower_flux_bound,
-                                        createStep,
-                                        compartment_id)
+    #     :rtype: tuple or bool
+    #     :return: bool if there is an error and tuple of the lower and upper bound
+    #     """
+    #     self.logger.info('Adding the orphan species to the GEM model')
+    #     # only for rp species
+    #     rp_pathway = self.getGroup(pathway_id)
+    #     reaction_id = sorted([(int(''.join(x for x in i.id_ref if x.isdigit())), i.id_ref) for i in rp_pathway.getListOfMembers()], key=lambda tup: tup[0], reverse=True)[0][1]
+    #     # for reaction_id in [i.getId() for i in self.getModel().getListOfReactions()]:
+    #     for species_id in set([i.getSpecies() for i in self.getModel().getReaction(reaction_id).getListOfReactants()]+[i.getSpecies() for i in self.getModel().getReaction(reaction_id).getListOfProducts()]):
+    #         if not rpsbml:
+    #             isSpePro = self.isSpeciesProduct(species_id, [reaction_id])
+    #         else:
+    #             isSpePro = rpsbml.isSpeciesProduct(species_id, [reaction_id])
+    #         if not isSpePro:
+    #             # create the step
+    #             createStep = {'rule_id': None,
+    #                           'left': {species_id.split('__')[0]: 1},
+    #                           'right': {},
+    #                         #   'sub_step': None,
+    #                         #   'path_id': None,
+    #                           'transformation_id': None,
+    #                           'rule_score': None,
+    #                           'tmpl_rxn_id': None}
+    #             # create the model in the
+    #             if not rpsbml:
+    #                 self.createReaction('create_'+species_id,
+    #                                     upper_flux_bound,
+    #                                     lower_flux_bound,
+    #                                     createStep,
+    #                                     compartment_id)
+    #             else:
+    #                 rpsbml.createReaction('create_'+species_id,
+    #                                     upper_flux_bound,
+    #                                     lower_flux_bound,
+    #                                     createStep,
+    #                                     compartment_id)
 
 
     #########################################################################
