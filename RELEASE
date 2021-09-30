@@ -10,6 +10,7 @@
 - feat(rpPathway): add get_mean_rule_score() method
 - feat(rpreport): add rule score
 - chore(rpreport): rename norm_rule_score into mean_rule_score
+- BREAK! chore: change rule_id id into list of ids
 
 ## 5.4.1
 - chore(rpscore): take only one single input pathway
