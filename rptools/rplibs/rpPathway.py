@@ -338,6 +338,12 @@ class rpPathway(Pathway, rpObject):
         """Get the global score value."""
         return self.__global_score
 
+    def get_mean_rule_score(self) -> float:
+        """Get the mean of reactions rule score"""
+        return sum(
+            rxn.get_rule_score()
+            for rxn in self.get_list_of_reactions()
+        ) / self.get_nb_reactions()
 
     ## WRITE METHODS
     def set_global_score(self, score: float) -> None:
