@@ -106,12 +106,13 @@ def to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose: 
         fba_obj_fraction = pathway.get_fba_fraction()
         nb_reactions = pathway.get_nb_reactions()
         reactions = pathway.get_reactions()
+        global_score = pathway.get_global_score()
 
         # adding necessary values to the list
         rp_list.append({
             'pathway_name': rp_name,
             'dfG_prime_m': dfG_prime_m.get('value'),
-            # 'global_score': dictor(pathway_dict, "pathway.brsynth.global_score"),
+            'global_score': global_score,
             'fba_obj_fraction': fba_obj_fraction.get('value'),
             # 'norm_rule_score': dictor(pathway_dict, "pathway.brsynth.norm_rule_score"),
             'nb_reactions': nb_reactions,
