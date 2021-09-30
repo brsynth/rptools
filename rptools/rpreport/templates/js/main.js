@@ -77,7 +77,7 @@ function displayCards(event) {
         + "</td><td>"
         + parseFloat(selectedData[i]['dfG_prime_m']).toFixed(3)
         + "</td><td>"
-        + parseFloat(selectedData[i]['norm_rule_score']).toFixed(3)
+        + parseFloat(selectedData[i]['mean_rule_score']).toFixed(3)
         + "</td><td>"
         + selectedData[i]['nb_reactions']
         + "</td></tr>";
@@ -237,7 +237,7 @@ const columnDefs = [
   },
   {
     headerName: "Rule score",
-    field: "norm_rule_score",
+    field: "mean_rule_score",
     type: 'numericColumn',
     cellClassRules: {
       'text-muted': 'x == null',
@@ -478,7 +478,7 @@ document.addEventListener('DOMContentLoaded', function() {
     series: [{
       type: 'column',
       xKey: 'pathway_name',
-      yKeys: ['norm_rule_score'],
+      yKeys: ['mean_rule_score'],
       tooltip: {
         renderer: function (params) {
           return {
