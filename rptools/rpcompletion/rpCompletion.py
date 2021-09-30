@@ -889,12 +889,6 @@ def __apply_to_best_pathways(
     # logger.debug('max_subpaths_filter: ' + str(max_subpaths_filter))
     # logger.debug('pathway:             ' + str(pathway))
 
-    # Compute the score of applicant pathway
-    # sum of rule_scores over reactions
-    score = sum(rxn.get_rule_score() for rxn in pathway.get_list_of_reactions())
-    # normalize
-    score /= pathway.get_nb_reactions()
-
     # from bisect import insort as bisect_insort
     # bisect_insort(best_rpsbml, sbml_item)
 
@@ -905,7 +899,7 @@ def __apply_to_best_pathways(
     for _pathway in pathways:
         if pathway == _pathway.object:
             pathway_found = True
-            # print(f'Equality between {_pathway.object.get_id()} and {pathway.get_id()}')
+            logger.debug(f'Equality between {_pathway.object.get_id()} and {pathway.get_id()}')
             for rxn in pathway.get_list_of_reactions():
                 for _rxn in _pathway.object.get_list_of_reactions():
                     if rxn == _rxn:
@@ -914,6 +908,7 @@ def __apply_to_best_pathways(
                                 _rxn.add_tmpl_rxn_id(tmpl_rxn_id)
 
     if not pathway_found:
+        score = pathway.get_mean_rule_score()
         # Insert pathway in best_pathways list by increasing score
         pathways = insert_and_or_replace_in_sorted_list(
             Item(pathway, score),
