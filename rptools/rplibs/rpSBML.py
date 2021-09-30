@@ -3623,6 +3623,7 @@ class rpSBML:
                     child.getAttributes().getName(i_attr): child.getAttributes().getValue(i_attr)
                     for i_attr in range(child.getAttributes().getNumAttributes())
                 }
+                toRet[child.getName()] = eval_value(toRet[child.getName()]['value'])
             return toRet
 
         def _readBRSYNTHAnnotationToList(
@@ -3639,10 +3640,13 @@ class rpSBML:
             annot: libsbml.XMLNode,
             logger: Logger = getLogger(__name__)
         ) -> TypeVar:
+            return eval_value(annot.getAttrValue('value'))
+
+        def eval_value(value: str) -> TypeVar:
             try:
-                return eval(annot.getAttrValue('value'))
+                return eval(value)
             except:
-                return str(annot.getAttrValue('value'))
+                return str(value)
 
         toRet = {}
 
