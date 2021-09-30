@@ -464,7 +464,7 @@ def format_files(
     data['Pathway Name'] = pathway.get_id()
     data['dfG_prime_m'] = pathway.get_thermo_dGm_prime()['value']
     data['FBA'] = ';'.join(pathway.get_fba().keys())
-    data['FBA Flux'] = ';'.join([v['value'] for v in pathway.get_fba().values()])
+    data['FBA Flux'] = ';'.join([str(v['value']) for v in pathway.get_fba().values()])
     pathways_fp.write(
         ','.join(
         [str(data.get(c, '')) for c in columns]
