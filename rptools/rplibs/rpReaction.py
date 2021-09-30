@@ -112,7 +112,7 @@ class rpReaction(Reaction, rpObject):
         )
         rpObject.__init__(self)
         self.set_rp2_transfo_id(None)
-        self.set_rule_id(None)
+        self.set_rule_ids([])
         self.set_tmpl_rxn_ids([])
         self.set_rule_score('NaN')
         self.set_idx_in_path(idx_in_path)
@@ -159,7 +159,7 @@ class rpReaction(Reaction, rpObject):
         only from rpReaction class excluding inherited ones."""
         return {
             'rp2_transfo_id': self.get_rp2_transfo_id(),
-            'rule_id': self.get_rule_id(),
+            'rule_ids': self.get_rule_ids(),
             'tmpl_rxn_ids': self.get_tmpl_rxn_ids(),
             'rule_score': self.get_rule_score(),
             'idx_in_path': self.get_idx_in_path(),
@@ -187,14 +187,14 @@ class rpReaction(Reaction, rpObject):
         the current reaction has been generated from."""
         return self.__rp2_transfo_id
 
-    def get_rule_id(self) -> str:
-        """Get the ID of reaction rule that
+    def get_rule_ids(self) -> str:
+        """Get the IDs of reaction rule that
         the chemical transformation of the
         current reaction has been generated from."""
-        return self.__rule_id
+        return self.__rule_ids
 
     def get_tmpl_rxn_ids(self) -> List[str]:
-        """Get the ID of the template (original) reactions
+        """Get the IDs of the template (original) reactions
         that the reaction rule of the current reaction
         has been generated from."""
         return self.__tmpl_rxn_ids
@@ -259,8 +259,21 @@ class rpReaction(Reaction, rpObject):
         """
         self.__rp2_transfo_id = id
 
-    def set_rule_id(self, id: str) -> None:
-        """Set the ID of reaction rule that
+    def set_rule_ids(self, ids: List[str]) -> None:
+        """Set the IDs of reaction rule that
+        the chemical transformation of the
+        current reaction has been generated from.
+        
+        Parameters
+        ----------
+        id: List[str]
+        """
+        if not isinstance(ids, list):
+            ids = [ids]
+        self.__rule_ids = deepcopy(ids)
+
+    def add_rule_id(self, id: str) -> None:
+        """Add the ID of the reaction rule that
         the chemical transformation of the
         current reaction has been generated from.
         
@@ -268,16 +281,16 @@ class rpReaction(Reaction, rpObject):
         ----------
         id: str
         """
-        self.__rule_id = id
+        self.__rule_ids.append(id)
 
     def set_tmpl_rxn_ids(self, ids: List[str]) -> None:
-        """Set the ID of the template (original) reactions
+        """Set the IDs of the template (original) reactions
         that the reaction rule of the current reaction
         has been generated from.
         
         Parameters
         ----------
-        id: str
+        id: List[str]
         """
         if not isinstance(ids, list):
             ids = [ids]
