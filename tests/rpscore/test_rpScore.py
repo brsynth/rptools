@@ -31,7 +31,8 @@ class Test_rpScore(TestCase):
 
     def test_score(self):
         self.assertEqual(
-            0.1922311931848526,
+            # 0.1922311931848526,
+            0.9923127055168152,
             predict_score(
                 pathway=self.pathway,
                 no_of_rxns_thres=10
