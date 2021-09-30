@@ -32,7 +32,7 @@ class Test_rpReaction(TestCase):
             products=self.products
         )
         self.rp2_transfo_id = 'TRS_0_0_0'
-        self.rule_id = 'RR-02-a0cc0be463ff412f-16-F'
+        self.rule_ids = ['RR-02-a0cc0be463ff412f-16-F']
         self.tmpl_rxn_ids = ['MNXR96458']
         self.rule_score = 0.5982208769718989
         self.selenzy = {
@@ -48,7 +48,7 @@ class Test_rpReaction(TestCase):
         self.specific_dict = {
             'idx_in_path': -1,
             'rp2_transfo_id': self.rp2_transfo_id,
-            'rule_id': self.rule_id,
+            'rule_ids': self.rule_ids,
             'tmpl_rxn_ids': self.tmpl_rxn_ids,
             'rule_score': self.rule_score,
             'selenzy': self.selenzy
@@ -62,11 +62,11 @@ class Test_rpReaction(TestCase):
             self.rp2_transfo_id
         )
 
-    def test_get_rule_id(self):
-        self.rxn.set_rule_id(self.rule_id)
+    def test_get_rule_ids(self):
+        self.rxn.set_rule_ids(self.rule_ids)
         self.assertEqual(
-            self.rxn.get_rule_id(),
-            self.rule_id
+            self.rxn.get_rule_ids(),
+            self.rule_ids
         )
 
     def test_get_tmpl_rxn_ids(self):
@@ -85,7 +85,7 @@ class Test_rpReaction(TestCase):
 
     def test__to_dict(self):
         self.rxn.set_rp2_transfo_id(self.rp2_transfo_id)
-        self.rxn.set_rule_id(self.rule_id)
+        self.rxn.set_rule_ids(self.rule_ids)
         self.rxn.set_tmpl_rxn_ids(self.tmpl_rxn_ids)
         self.rxn.set_rule_score(self.rule_score)
         self.rxn.set_selenzy(self.selenzy)
