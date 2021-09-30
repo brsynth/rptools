@@ -107,6 +107,7 @@ def to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose: 
         nb_reactions = pathway.get_nb_reactions()
         reactions = pathway.get_reactions()
         global_score = pathway.get_global_score()
+        mean_rule_score = pathway.get_mean_rule_score()
 
         # adding necessary values to the list
         rp_list.append({
@@ -114,7 +115,7 @@ def to_data_js(sbml_files: list, source_path: str, output_folder: str, verbose: 
             'dfG_prime_m': dfG_prime_m.get('value'),
             'global_score': global_score,
             'fba_obj_fraction': fba_obj_fraction.get('value'),
-            # 'norm_rule_score': dictor(pathway_dict, "pathway.brsynth.norm_rule_score"),
+            'mean_rule_score': mean_rule_score,
             'nb_reactions': nb_reactions,
             'reactions': get_reactions_data(reactions)
         })
