@@ -4,7 +4,12 @@
 - chore(rpcompletion): print out nb pathways
 - BREAK! chore: change tmpl_rxn id into list of ids
 - chore(rpSBML): simplify readSBML
+- BREAK! (rpSBML): change the way values, lists, dicts are read/written
 - fix(rpreport): typo
+- feat(rpreport): add global_score
+- feat(rpPathway): add get_mean_rule_score() method
+- feat(rpreport): add rule score
+- chore(rpreport): rename norm_rule_score into mean_rule_score
 
 ## 5.4.1
 - chore(rpscore): take only one single input pathway
