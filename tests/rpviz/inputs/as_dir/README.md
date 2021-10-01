@@ -1,3 +1,3 @@
-20210830
-source: lycopene
+20211001
+source: styrene
 chassis: ecoli
