@@ -531,8 +531,8 @@ def parse_one_pathway(
             'xlinks': _get_reaction_xlinks(rxn),
             # Only for reaction, None for compounds
             'rsmiles': rxn.get_smiles(),
-            'rule_ids': [rxn.get_rule_id(),],
-            'rxn_template_ids': [rxn.get_tmpl_rxn_ids(),],
+            'rule_ids': rxn.get_rule_ids(),
+            'rxn_template_ids': rxn.get_tmpl_rxn_ids(),
             'ec_numbers': rxn.get_ec_numbers(),
             'thermo_dg_m_gibbs': rxn.get_thermo_dGm_prime()['value'],
             'rule_score': rxn.get_rule_score(),
