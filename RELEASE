@@ -1,6 +1,9 @@
 # Release history
 
-## 5.5.0
+## 5.6.1
+- build: rm bioconda channel
+
+## 5.6.0
 - chore(rpcompletion): print out nb pathways
 - BREAK! chore: change tmpl_rxn id into list of ids
 - chore(rpSBML): simplify readSBML
