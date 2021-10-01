@@ -10,7 +10,7 @@ dependencies:
   - cobra # rpfba, rpextractsink, rplibs
   - timeout-decorator # rpextractsink
   - rdkit # rpextractsink, rplibs
-  - bioconda::python-libsbml # rplibs
+  - python-libsbml # rplibs, rpfba
   - numpy # rplibs
   - pandas # rplibs, rpthermo
   - scipy # rpthermo
