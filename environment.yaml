@@ -3,7 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python
-  - brsynth::brs_utils # rpcompletion, rpfba, Args
+  - brs_utils # rpcompletion, rpfba, Args
   - requests # rpcompletion, rpfba, rplibs
   - urllib3 # rpcompletion, rpfba
   - cobra # rpfba, rpextractsink, rplibs
@@ -21,7 +21,7 @@ dependencies:
   - filetype  # rplibs (conda-forge)
   - brsynth::rr_cache # rpcompletion
   - rxn_rebuild # rpcompletion
-  - brsynth::chemlite # rpcompletion ,rpfba, rpthermo
+  - chemlite # rpcompletion ,rpfba, rpthermo
   - h5py # rpscore
   - xgboost # rpscore
   - pytest
