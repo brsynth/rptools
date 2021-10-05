@@ -1,5 +1,8 @@
 # Release history
 
+## 5.7.2
+- fix: fit to new rr_cache release
+
 ## 5.7.1
 - fix(rpviz): allow missing thermo dGm prime value
 
