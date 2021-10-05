@@ -29,7 +29,6 @@ requirements:
     - pandas # rplibs, rpthermo
     - scipy # rpthermo
     - equilibrator-api # rpthermo
-    # - equilibrator-cache # rpthermo
     - equilibrator-pathway # rpthermo
     - openbabel # rpthermo (equilibrator-assets)
     - redis-py # rplibs
@@ -42,6 +41,7 @@ requirements:
     - chemlite # rpcompletion ,rpfba, rpthermo
     - h5py # rpscore
     - xgboost # rpscore
+    - beautifulsoup4 # rpviz
 
 test:
   source_files:
@@ -51,6 +51,7 @@ test:
   requires:
     - pytest
     - pytest-cov
+    - pytest-mock
   commands:
     - python -m {{ name|lower }} --help
     - cd tests ; pytest -v --cov --cov-report term-missing

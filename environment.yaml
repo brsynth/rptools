@@ -28,4 +28,5 @@ dependencies:
   - xgboost # rpscore
   - pytest
   - pytest-cov
+  - pytest-mock
   - pyyaml

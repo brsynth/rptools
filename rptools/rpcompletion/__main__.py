@@ -33,7 +33,6 @@ def _cli():
     )
 
     cache = rrCache(
-        db='file',
         attrs=[
             'rr_reactions',
             'template_reactions',
