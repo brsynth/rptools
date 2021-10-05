@@ -1,0 +1,6 @@
+rptools.rpviz.utils.annotate\_chemical\_svg
+===========================================
+
+.. currentmodule:: rptools.rpviz.utils
+
+.. autofunction:: annotate_chemical_svg

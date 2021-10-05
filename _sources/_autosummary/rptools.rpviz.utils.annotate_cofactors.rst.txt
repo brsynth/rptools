@@ -1,0 +1,6 @@
+rptools.rpviz.utils.annotate\_cofactors
+=======================================
+
+.. currentmodule:: rptools.rpviz.utils
+
+.. autofunction:: annotate_cofactors

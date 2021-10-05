@@ -15,8 +15,6 @@
     <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="rptools.rpreport" href="rptools.rpreport.html" />
-    <link rel="prev" title="rptools.rpranker.rpRanker" href="rptools.rpranker.rpRanker.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -35,26 +33,6 @@
             
   <section id="rptools-rpranker-rpranker-rank">
 <h1>rptools.rpranker.rpRanker.rank<a class="headerlink" href="#rptools-rpranker-rpranker-rank" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="rptools.rpranker.rpRanker.rank">
-<span class="sig-prename descclassname"><span class="pre">rptools.rpranker.rpRanker.</span></span><span class="sig-name descname"><span class="pre">rank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pathways:</span> <span class="pre">List[str],</span> <span class="pre">logger:</span> <span class="pre">logging.Logger</span> <span class="pre">=</span> <span class="pre">&lt;Logger</span> <span class="pre">rptools.rpranker.rpRanker</span> <span class="pre">(WARNING)&gt;</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rptools.rpranker.rpRanker.rank" title="Permalink to this definition">¶</a></dt>
-<dd><p>From a list of pathway (rpsbml) filenames, rank them according to global score.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>pathways</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Pathway (rpSBML) filenames</p></li>
-<li><p><strong>logger</strong> (<em>Logger</em>) – The logger object.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>pathways</strong> – List of tuple (global score, pathway filenames) sorted according to global score</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List[ Tuple[float, str] ]</p>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 
 
@@ -74,7 +52,7 @@
 
 
 <h3>Navigation</h3>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../readme_shortcut.html">rpTools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../readme_rpcompletion_shortcut.html">rpCompletion</a></li>
@@ -83,25 +61,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../readme_rpextractsink_shortcut.html">rpExtractsink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../readme_rplibs_shortcut.html">rpLibs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../readme_rpreport_shortcut.html">rpReport</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="rptools.html">API reference</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="rptools.Args.html">rptools.Args</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rptools.rpcompletion.html">rptools.rpcompletion</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rptools.rpextractsink.html">rptools.rpextractsink</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rptools.rpfba.html">rptools.rpfba</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rptools.rplibs.html">rptools.rplibs</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="rptools.rpranker.html">rptools.rpranker</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rptools.rpranker.Args.html">rptools.rpranker.Args</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="rptools.rpranker.rpRanker.html">rptools.rpranker.rpRanker</a><ul class="current">
-<li class="toctree-l4 current"><a class="current reference internal" href="#">rptools.rpranker.rpRanker.rank</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="rptools.rpreport.html">rptools.rpreport</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rptools.rpscore.html">rptools.rpscore</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rptools.rpthermo.html">rptools.rpthermo</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="rptools.html">API reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../release_shortcut.html">Release</a></li>
 </ul>
 
@@ -109,14 +69,6 @@
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
-  <li><a href="rptools.html">rptools</a><ul>
-  <li><a href="rptools.rpranker.html">rptools.rpranker</a><ul>
-  <li><a href="rptools.rpranker.rpRanker.html">rptools.rpranker.rpRanker</a><ul>
-      <li>Previous: <a href="rptools.rpranker.rpRanker.html" title="previous chapter">rptools.rpranker.rpRanker</a></li>
-      <li>Next: <a href="rptools.rpreport.html" title="next chapter">rptools.rpreport</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

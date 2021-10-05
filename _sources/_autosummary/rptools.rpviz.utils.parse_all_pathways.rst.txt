@@ -1,0 +1,6 @@
+rptools.rpviz.utils.parse\_all\_pathways
+========================================
+
+.. currentmodule:: rptools.rpviz.utils
+
+.. autofunction:: parse_all_pathways

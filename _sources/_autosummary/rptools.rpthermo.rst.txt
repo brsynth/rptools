@@ -1,4 +1,4 @@
-﻿rptools.rpthermo
+rptools.rpthermo
 ================
 
 .. automodule:: rptools.rpthermo

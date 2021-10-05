@@ -1,0 +1,6 @@
+rptools.rpviz.utils.get\_autonomous\_html
+=========================================
+
+.. currentmodule:: rptools.rpviz.utils
+
+.. autofunction:: get_autonomous_html

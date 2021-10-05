@@ -31,9 +31,9 @@
    rptools.rpextractsink
    rptools.rpfba
    rptools.rplibs
-   rptools.rpranker
    rptools.rpreport
    rptools.rpscore
    rptools.rpthermo
+   rptools.rpviz
 
 
