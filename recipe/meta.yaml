@@ -18,7 +18,6 @@ requirements:
   run:
     - python {{ python }}
     - brs_utils # rpcompletion, rpfba, Args
-    - credisdict # rpcompletion, rpfba, rplibs
     - requests # rpcompletion, rpfba, rplibs
     - urllib3 # rpcompletion, rpfba
     - cobra # rpfba, rpextractsink, rplibs
@@ -31,7 +30,6 @@ requirements:
     - equilibrator-api # rpthermo
     - equilibrator-pathway # rpthermo
     - openbabel # rpthermo (equilibrator-assets)
-    - redis-py # rplibs
     - colored # rplibs
     - networkx # rplibs
     - networkx >=2.5 # [py==39]

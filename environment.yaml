@@ -4,7 +4,6 @@ channels:
 dependencies:
   - python
   - brsynth::brs_utils # rpcompletion, rpfba, Args
-  - brsynth::credisdict # rpcompletion, rpfba, rplibs
   - requests # rpcompletion, rpfba, rplibs
   - urllib3 # rpcompletion, rpfba
   - cobra # rpfba, rpextractsink, rplibs
@@ -17,7 +16,6 @@ dependencies:
   - equilibrator-api # rpthermo
   - equilibrator-pathway # rpthermo
   - openbabel # rpthermo (equilibrator-assets)
-  - redis-py # rplibs
   - colored # rplibs
   - networkx # rplibs
   - filetype  # rplibs (conda-forge)
