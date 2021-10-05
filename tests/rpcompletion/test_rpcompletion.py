@@ -70,7 +70,7 @@ class Test_rpCompletion(TestCase):
     #             # self.assertEqual(os_stat(os_path.join(temp_d, file)).st_size, size)
          
 
-    cache            = rrCache('file')
+    cache            = rrCache()
     data_path          = os_path.join(os_path.dirname(__file__), 'data' , 'lycopene')
     rp2_pathways       = os_path.join(data_path, '1-rp2_pathways.csv')
     rp2paths_compounds = os_path.join(data_path, '2-rp2paths_compounds.tsv')
