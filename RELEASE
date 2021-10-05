@@ -1,5 +1,8 @@
 # Release history
 
+## 5.7.0
+- BREAK! feat: remove redis dependencies
+
 ## 5.6.1
 - build: rm bioconda channel
 
