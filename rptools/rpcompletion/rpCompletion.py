@@ -95,7 +95,6 @@ def rp_completion(
 
     if cache is None:
         cache = rrCache(
-            db='file',
             attrs=[
                 'rr_reactions',
                 'template_reactions',
