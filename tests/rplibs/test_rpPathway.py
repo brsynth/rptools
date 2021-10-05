@@ -192,7 +192,6 @@ class Test_rpPathway(TestCase):
         self.rule_score = 0.5982208769718989
         self.id = 'pathway'
         cache = rrCache(
-            db='file',
             attrs=[
                 'comp_xref',
                 'deprecatedCompID_compid',

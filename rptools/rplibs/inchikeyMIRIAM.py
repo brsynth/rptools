@@ -22,7 +22,7 @@ class inchikeyMIRIAM:
 
         self.logger.info('Started instance of inchikeyMIRIAM')
 
-        self.cache           = rrCache('file', ['deprecatedCID_cid', 'cid_strc', 'chebi_cid'], logger=self.logger)
+        self.cache           = rrCache(['deprecatedCID_cid', 'cid_strc', 'chebi_cid'], logger=self.logger)
         self.deprecatedCID_cid = self.cache.get('deprecatedCID_cid')
         self.cid_strc          = self.cache.get('cid_strc')
         self.chebi_cid         = self.cache.get('chebi_cid')

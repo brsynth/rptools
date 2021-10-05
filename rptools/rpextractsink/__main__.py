@@ -17,7 +17,7 @@ def _cli():
     from rptools.__main__ import init
     logger = init(parser, args)
 
-    cache = rrCache('file', ['cid_strc'], logger=logger)
+    cache = rrCache(['cid_strc'], logger=logger)
     genSink(cache,
             args.input_sbml,
             args.output_sink,

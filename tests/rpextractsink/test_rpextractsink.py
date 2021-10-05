@@ -40,7 +40,6 @@ class Test_rpExtractSink(TestCase):
     )
 
     cache = rrCache(
-        'file',
         ['cid_strc']
     )
 
