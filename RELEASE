@@ -1,5 +1,8 @@
 # Release history
 
+## 5.7.1
+- fix(rpviz): allow missing thermo dGm prime value
+
 ## 5.7.0
 - BREAK! feat: remove redis dependencies
 
