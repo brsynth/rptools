@@ -121,13 +121,21 @@ def _get_pathway_score(
         rscores.append(rp_pathway.get_reaction(rxn).get_rule_score())
     rscore = sum(rscores) / len(rscores)
     # 
-    return {
+    scores = {
         'rule_score': rscore,
         'steps': rp_pathway.get_nb_reactions(),
-        'thermo_dg_m_gibbs': rp_pathway.get_thermo_dGm_prime()['value'],
-        'fba_target_flux': rp_pathway.get_fba_fraction()['value'],
         'global_score': _get_pathway_global_score(rp_pathway)
     }
+    try:
+        scores['thermo_dg_m_gibbs'] = rp_pathway.get_thermo_dGm_prime()['value']
+    except TypeError:
+        pass
+    try:
+        scores['fba_target_flux'] = rp_pathway.get_fba_fraction()['value']
+    except TypeError:
+        pass
+
+    return scores
 
 
 def _get_pathway_global_score(
@@ -534,7 +542,7 @@ def parse_one_pathway(
             'rule_ids': rxn.get_rule_ids(),
             'rxn_template_ids': rxn.get_tmpl_rxn_ids(),
             'ec_numbers': rxn.get_ec_numbers(),
-            'thermo_dg_m_gibbs': rxn.get_thermo_dGm_prime()['value'],
+            'thermo_dg_m_gibbs': rxn.get_thermo_dGm_prime(),
             'rule_score': rxn.get_rule_score(),
             'uniprot_ids': rxn.get_selenzy_infos(),
             # Only for compounds
@@ -546,6 +554,11 @@ def parse_one_pathway(
             'thermo_dg_m_formation': None,
             'cofactor': None,
         }
+        # Refine if needed
+        try:
+            node['thermo_dg_m_gibbs'] = node['thermo_dg_m_gibbs']['value']
+        except TypeError:
+            pass
         # Collect
         if node['id'] not in nodes:
             nodes[node['id']] = node
