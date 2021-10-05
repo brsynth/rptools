@@ -5,7 +5,7 @@ name: "Build and deploy Github pages"
 on:
   push:         # <- on push
     branches:
-      - master  # <- ... on the branch "master"
+      - stable  # <- ... on the branch "master"
 
 jobs:
 
