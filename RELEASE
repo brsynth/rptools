@@ -1,5 +1,8 @@
 # Release history
 
+## 5.7.3 # UNPUBLISHED
+- chore(rpSBML): change spec of speciesMatchWith()
+
 ## 5.7.2
 - fix: fit to new rr_cache release
 
