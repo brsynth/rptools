@@ -989,7 +989,7 @@ class rpSBML:
         # 'corr_species' is the dictionary of correspondace
         # between species both in pathway and model.
         corr_species, miss_species = rpSBML.speciesMatchWith(
-            source_sbml,
+            source_sbml.getModel().getListOfSpecies(),
             self,
             compartment_id=compartment_id,
             logger=self.logger
@@ -2226,7 +2226,7 @@ class rpSBML:
     # simulated species from potentially matching with another
     @staticmethod
     def speciesMatchWith(
-        source_sbml: 'rpSBML',
+        species: List[str],
         target_sbml: 'rpSBML',
         compartment_id: str,
         logger: Logger = getLogger(__name__)
@@ -2262,7 +2262,7 @@ class rpSBML:
         class MatchSpecies(Exception):
             pass
 
-        for source_species in source_sbml.getModel().getListOfSpecies():
+        for source_species in species:
 
             # self.logger.debug('--- Trying to match chemical species: '+str(source_species.getId())+' ---')
             # source_target[source_species.getId()] = {}
