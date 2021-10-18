@@ -1,6 +1,7 @@
 # Release history
 
-## 5.7.3 # UNPUBLISHED
+## 5.7.3
+- test(rpextractsink): modify temp file
 - chore(rpSBML): change spec of speciesMatchWith()
 
 ## 5.7.2

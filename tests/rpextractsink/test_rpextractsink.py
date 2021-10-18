@@ -15,7 +15,10 @@ from rr_cache import rrCache
 from pathlib  import Path
 from tempfile import NamedTemporaryFile
 from filecmp  import cmp
-from os       import path as os_path
+from os import (
+    path as os_path,
+    remove
+)
 from brs_utils import (
     create_logger,
     extract_gz
@@ -64,7 +67,7 @@ class Test_rpExtractSink(TestCase):
 
 
     def test_genSink(self):
-        outfile = NamedTemporaryFile(delete=True)
+        outfile = NamedTemporaryFile(delete=False)
         genSink(
             self.cache,
             input_sbml = self.e_coli_model_path,
@@ -81,11 +84,11 @@ class Test_rpExtractSink(TestCase):
                 )
             )
         )
-        outfile.close()
+        remove(outfile.name)
 
 
     def test_genSink_rmDE(self):
-        outfile = NamedTemporaryFile(delete=True)
+        outfile = NamedTemporaryFile(delete=False)
         genSink(
             self.cache,
             input_sbml = self.e_coli_model_path,
@@ -101,4 +104,4 @@ class Test_rpExtractSink(TestCase):
                 )
             )
         )
-        outfile.close()
+        remove(outfile.name)
