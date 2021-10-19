@@ -156,14 +156,15 @@ def features_encoding (df, flag):
     if flag == "train":
         sys_exit('Encoding feature for training data not available file data_train.h5 must be present in models folder')
     elif flag == "predict":
-        f_path = NamedTemporaryFile()
+        f_path = NamedTemporaryFile(delete=False)
+        f_path.close()
         # path = data_predict_file
         print("Encodining features for the Test set......")
     # if os_path.exists(path):
     #     os_remove(path)
     f = h5py_File(f_path.name, "w")
     dset = f.create_dataset('data', (  0, (rxn_len*no_of_rxns + pathway_len + y_len)),dtype='i2',maxshape=(None,(rxn_len*no_of_rxns + pathway_len + y_len)), compression='gzip')
-    f_path.close()
+    remove(f_path)
 
     for row in tqdm(range(len(df))):
         pathway_rxns = np.array([]).reshape(0, rxn_len * no_of_rxns)
