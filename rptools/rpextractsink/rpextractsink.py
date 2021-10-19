@@ -9,9 +9,9 @@ from tempfile       import TemporaryDirectory
 from rptools.rplibs import rpSBML
 from os             import path          as os_path
 # because cobrapy is terrible
-from timeout_decorator import timeout           as timeout_decorator_timeout
-from timeout_decorator import timeout_decorator as timeout_decorator_timeout_decorator
-TIMEOUT = 5
+# from timeout_decorator import timeout           as timeout_decorator_timeout
+# from timeout_decorator import timeout_decorator as timeout_decorator_timeout_decorator
+__TIMEOUT = 5
 
 ## Taken from Thomas Duigou's code
 #
@@ -44,7 +44,7 @@ def _reduce_model(
 ##
 #
 #
-@timeout_decorator_timeout(TIMEOUT*60.0)
+@timeout(__TIMEOUT*60.0)
 def _removeDeadEnd(sbml_path):
     cobraModel = cobra_io.read_sbml_model(sbml_path, use_fbc_package=True)
     cobraModel = _reduce_model(cobraModel)
@@ -77,7 +77,7 @@ def genSink(
     if remove_dead_end:
         try:
             rpsbml = _removeDeadEnd(input_sbml)
-        except timeout_decorator_timeout_decorator.TimeoutError:
+        except TimeoutError:
             logger.warning('removeDeadEnd reached its timeout... parsing the whole model')
             rpsbml = rpSBML(input_sbml)
     else:
