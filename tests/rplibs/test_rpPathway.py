@@ -6,6 +6,7 @@ Created on May 28 2021
 
 from tempfile import NamedTemporaryFile
 from unittest import TestCase
+from os import remove
 from copy import deepcopy
 from rr_cache import rrCache
 from rptools.rplibs import (
@@ -419,14 +420,17 @@ class Test_rpPathway(TestCase):
         )
 
     def test_rpSBML_file(self):
-        with NamedTemporaryFile() as tempf:
+        with NamedTemporaryFile(delete=False) as tempf:
             self.pathway.to_rpSBML().write_to_file(tempf.name)
+            tempf.close()
             self.assertEqual(
                 self.pathway,
                 rpPathway.from_rpSBML(
                     infile=tempf.name
                 )
             )
+            tempf.close()
+            remove(tempf.name)
 
     def test_rpSBML_file_rpsbml(self):
         with NamedTemporaryFile() as tempf:
