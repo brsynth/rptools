@@ -4,7 +4,6 @@ from os import(
 )
 from sys import exit as sys_exit
 from tempfile import NamedTemporaryFile
-from typing import List
 from pandas import (
     DataFrame as pd_DataFrame,
     read_csv as pd_read_csv
@@ -155,17 +154,22 @@ def features_encoding (df, flag):
 
     if flag == "train":
         sys_exit('Encoding feature for training data not available file data_train.h5 must be present in models folder')
-    elif flag == "predict":
-        f_path = NamedTemporaryFile(delete=False)
-        f_path.close()
-        # path = data_predict_file
-        print("Encodining features for the Test set......")
-    # if os_path.exists(path):
-    #     os_remove(path)
-    f = h5py_File(f_path.name, "w")
-    dset = f.create_dataset('data', (  0, (rxn_len*no_of_rxns + pathway_len + y_len)),dtype='i2',maxshape=(None,(rxn_len*no_of_rxns + pathway_len + y_len)), compression='gzip')
-    f_path.close()
-    remove(f_path.name)
+    # elif flag == "predict":
+
+    print("Encodining features for the Test set......")
+    # temp_f_name = str(uuid4())
+    f = h5py_File(
+        NamedTemporaryFile(delete=True),
+        'w'
+    )
+    number = rxn_len * no_of_rxns + pathway_len + y_len
+    dset = f.create_dataset(
+        'data',
+        (0, number),
+        dtype='i2',
+        maxshape=(None, number),
+        compression='gzip'
+    )
 
     for row in tqdm(range(len(df))):
         pathway_rxns = np.array([]).reshape(0, rxn_len * no_of_rxns)
@@ -202,7 +206,7 @@ def features_encoding (df, flag):
                     rxn_fp = np.concatenate([sub_fp , pro_fp]).reshape(1, -1)
 
                 elif len(rxn_smiles_list) < 2:
-                     
+                    
                     pro_smiles = rxn_smiles_list[0]
                     #print(pro_smiles)
                     pro_m= Chem.MolFromSmiles(pro_smiles)
