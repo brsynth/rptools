@@ -433,8 +433,9 @@ class Test_rpPathway(TestCase):
             remove(tempf.name)
 
     def test_rpSBML_file_rpsbml(self):
-        with NamedTemporaryFile() as tempf:
+        with NamedTemporaryFile(delete=False) as tempf:
             self.pathway.to_rpSBML().write_to_file(tempf.name)
+            tempf.close()
             self.assertEqual(
                 self.pathway,
                 rpPathway.from_rpSBML(
@@ -442,6 +443,8 @@ class Test_rpPathway(TestCase):
                     rpsbml=None
                 )
             )
+            tempf.close()
+            remove(tempf.name)
 
     def test_rename_compound(self):
         for spe_id in ['CMPD_0000000003', 'TARGET_0000000001']:

@@ -1,6 +1,6 @@
 from os import(
     path as os_path,
-    remove as os_remove
+    remove as remove
 )
 from sys import exit as sys_exit
 from tempfile import NamedTemporaryFile
@@ -393,27 +393,28 @@ def predict_score(
 ) -> float:
 # ) -> List[float]:
 
-    with NamedTemporaryFile() as rf:
-        with NamedTemporaryFile() as pf:
-            reactions_fp = open(rf.name, 'w')
-            pathways_fp = open(pf.name, 'w')
+    with NamedTemporaryFile(delete=False) as rf:
+        with NamedTemporaryFile(delete=False) as pf:
             format_files(
                 pathway=pathway,
-                reactions_fp=reactions_fp,
-                pathways_fp=pathways_fp
+                reactions_fp=rf,
+                pathways_fp=pf
             )
-            reactions_fp.close()
-            pathways_fp.close()
+            rf.close()
+            pf.close()
             features_dset_train = load_training_data(
                 __DATA_TRAIN_FILE
             )
-            return _predict_score(
+            score = _predict_score(
                 rf.name,
                 pf.name,
                 __MODELS_PATH,
                 features_dset_train,
                 no_of_rxns_thres
             )[0]
+            remove(rf.name)
+            remove(pf.name)
+            return score
 
 def format_files(
 #   pathways: List[rpPathway],
