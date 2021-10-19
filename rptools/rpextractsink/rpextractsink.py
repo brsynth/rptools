@@ -9,6 +9,7 @@ from tempfile       import TemporaryDirectory
 from rptools.rplibs import rpSBML
 from os             import path          as os_path
 # because cobrapy is terrible
+from brs_utils import timeout
 # from timeout_decorator import timeout           as timeout_decorator_timeout
 # from timeout_decorator import timeout_decorator as timeout_decorator_timeout_decorator
 __TIMEOUT = 5
