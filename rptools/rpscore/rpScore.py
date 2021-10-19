@@ -164,6 +164,7 @@ def features_encoding (df, flag):
     #     os_remove(path)
     f = h5py_File(f_path.name, "w")
     dset = f.create_dataset('data', (  0, (rxn_len*no_of_rxns + pathway_len + y_len)),dtype='i2',maxshape=(None,(rxn_len*no_of_rxns + pathway_len + y_len)), compression='gzip')
+    f_path.close()
     remove(f_path.name)
 
     for row in tqdm(range(len(df))):
