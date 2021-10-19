@@ -164,7 +164,7 @@ def features_encoding (df, flag):
     #     os_remove(path)
     f = h5py_File(f_path.name, "w")
     dset = f.create_dataset('data', (  0, (rxn_len*no_of_rxns + pathway_len + y_len)),dtype='i2',maxshape=(None,(rxn_len*no_of_rxns + pathway_len + y_len)), compression='gzip')
-    remove(f_path)
+    remove(f_path.name)
 
     for row in tqdm(range(len(df))):
         pathway_rxns = np.array([]).reshape(0, rxn_len * no_of_rxns)
@@ -372,7 +372,7 @@ def _predict_score(
       test_score_file
     )
 
-    with NamedTemporaryFile() as out_f:
+    with NamedTemporaryFile(delete=False) as out_f:
         encode_and_predict(
             data_test,
             scores_test,
@@ -381,7 +381,9 @@ def _predict_score(
             no_of_rxns_thres,
             out_f.name
         )
+        out_f.close()
         score_df = pd_read_csv(out_f.name)
+        remove(out_f.name)
 
     return list(score_df.to_dict()['Prob1_mean'].values())
 
