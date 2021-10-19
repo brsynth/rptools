@@ -84,6 +84,7 @@ class Test_rpExtractSink(TestCase):
                 )
             )
         )
+        outfile.close()
         remove(outfile.name)
 
 
@@ -104,4 +105,5 @@ class Test_rpExtractSink(TestCase):
                 )
             )
         )
+        outfile.close()
         remove(outfile.name)

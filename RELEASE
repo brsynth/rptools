@@ -1,7 +1,8 @@
 # Release history
 
-## 5.7.4 UNPUBLISHED
+## 5.7.4
 - chore(rpSBML): fit speciesMatchWith() with specs
+- fix(tests/rpextractsink): put back close() for temp files
 
 ## 5.7.3
 - test(rpextractsink): modify temp file
