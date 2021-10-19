@@ -988,9 +988,15 @@ class rpSBML:
 
         # 'corr_species' is the dictionary of correspondace
         # between species both in pathway and model.
+        species_ids = [
+            spe.getId()
+            for spe in list(
+                source_sbml.getModel().getListOfSpecies()
+            )
+        ]
         corr_species, miss_species = rpSBML.speciesMatchWith(
-            source_sbml.getModel().getListOfSpecies(),
-            self,
+            species_ids=species_ids,
+            target_sbml=self,
             compartment_id=compartment_id,
             logger=self.logger
         )
@@ -2226,7 +2232,7 @@ class rpSBML:
     # simulated species from potentially matching with another
     @staticmethod
     def speciesMatchWith(
-        species: List[str],
+        species_ids: List[str],
         target_sbml: 'rpSBML',
         compartment_id: str,
         logger: Logger = getLogger(__name__)
@@ -2262,7 +2268,7 @@ class rpSBML:
         class MatchSpecies(Exception):
             pass
 
-        for source_species in species:
+        for source_species_id in species_ids:
 
             # self.logger.debug('--- Trying to match chemical species: '+str(source_species.getId())+' ---')
             # source_target[source_species.getId()] = {}
@@ -2315,8 +2321,8 @@ class rpSBML:
                 # print()
 
                 # Look if the specie in source has the same ID as in the target
-                if source_species.getId() == target_species.getId():
-                    corr_species[source_species.getId()] = target_species.getId()
+                if source_species_id == target_species.getId():
+                    corr_species[source_species_id] = target_species.getId()
                 #### MIRIAM ####
                 # Else look if the specie in source has the same ID
                 # # as one ID among MIRIAM annotations
@@ -2326,15 +2332,15 @@ class rpSBML:
                         for cross_refs in target_miriam_annot.values():
                             # For all single cross ref in a DB list
                             for cross_ref in cross_refs:
-                                if source_species.getId() == cross_ref:
-                                    corr_species[source_species.getId()] = target_species.getId()
+                                if source_species_id == cross_ref:
+                                    corr_species[source_species_id] = target_species.getId()
                                     raise MatchSpecies
                     except MatchSpecies:
                         pass
 
             # If species not found in the model, add it to missing species list
-            if source_species.getId() not in corr_species:
-                miss_species.add(source_species.getId())
+            if source_species_id not in corr_species:
+                miss_species.add(source_species_id)
 
         #         if source_species.getId() in corr_species:
         #         # if rpSBML.compareMIRIAMAnnotations(
