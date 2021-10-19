@@ -393,8 +393,8 @@ def predict_score(
 ) -> float:
 # ) -> List[float]:
 
-    with NamedTemporaryFile(delete=False) as rf:
-        with NamedTemporaryFile(delete=False) as pf:
+    with NamedTemporaryFile(mode='w', delete=False) as rf:
+        with NamedTemporaryFile(mode='w', delete=False) as pf:
             format_files(
                 pathway=pathway,
                 reactions_fp=rf,
@@ -419,8 +419,8 @@ def predict_score(
 def format_files(
 #   pathways: List[rpPathway],
     pathway: rpPathway,
-    reactions_fp: str,
-    pathways_fp: str
+    reactions_fp,
+    pathways_fp
 ) -> None:
 
     # PATHWAYS FILE
