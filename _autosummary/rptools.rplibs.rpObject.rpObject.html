@@ -47,6 +47,12 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.add_fba_info" title="rptools.rplibs.rpObject.rpObject.add_fba_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_fba_info</span></code></a></p></td>
+<td><p>Set a specific flux balance analysis (FBA) value within a dictionary object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.add_thermo_info" title="rptools.rplibs.rpObject.rpObject.add_thermo_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_thermo_info</span></code></a></p></td>
+<td><p>Set a specific thermodynamics value within a dictionary object.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_fba" title="rptools.rplibs.rpObject.rpObject.get_fba"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_fba</span></code></a></p></td>
 <td><p>Get flux balance values.</p></td>
 </tr>
@@ -62,32 +68,38 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_fba_info" title="rptools.rplibs.rpObject.rpObject.get_fba_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_fba_info</span></code></a></p></td>
 <td><p>Get a specific flux balance analysis (FBA) value.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_fba_pfba" title="rptools.rplibs.rpObject.rpObject.get_fba_pfba"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_fba_pfba</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_fba_infos" title="rptools.rplibs.rpObject.rpObject.get_fba_infos"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_fba_infos</span></code></a></p></td>
+<td><p>Same as get_fba()</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_fba_pfba" title="rptools.rplibs.rpObject.rpObject.get_fba_pfba"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_fba_pfba</span></code></a></p></td>
 <td><p>Get flux balance values concerning the parcimonious fba analysis.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_fba_prefix" title="rptools.rplibs.rpObject.rpObject.get_fba_prefix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_fba_prefix</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_fba_prefix" title="rptools.rplibs.rpObject.rpObject.get_fba_prefix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_fba_prefix</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_sep" title="rptools.rplibs.rpObject.rpObject.get_sep"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_sep</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_sep" title="rptools.rplibs.rpObject.rpObject.get_sep"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_sep</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_thermo" title="rptools.rplibs.rpObject.rpObject.get_thermo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_thermo</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_thermo" title="rptools.rplibs.rpObject.rpObject.get_thermo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_thermo</span></code></a></p></td>
 <td><p>Get thermodynamics values.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_thermo_dG" title="rptools.rplibs.rpObject.rpObject.get_thermo_dG"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_thermo_dG</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_thermo_dG" title="rptools.rplibs.rpObject.rpObject.get_thermo_dG"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_thermo_dG</span></code></a></p></td>
 <td><p>Get thermodynamics dG prime values.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_thermo_dG0_prime" title="rptools.rplibs.rpObject.rpObject.get_thermo_dG0_prime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_thermo_dG0_prime</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_thermo_dG0_prime" title="rptools.rplibs.rpObject.rpObject.get_thermo_dG0_prime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_thermo_dG0_prime</span></code></a></p></td>
 <td><p>Get thermodynamics dG0 prime values.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_thermo_dG_prime" title="rptools.rplibs.rpObject.rpObject.get_thermo_dG_prime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_thermo_dG_prime</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_thermo_dG_prime" title="rptools.rplibs.rpObject.rpObject.get_thermo_dG_prime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_thermo_dG_prime</span></code></a></p></td>
 <td><p>Get thermodynamics dG prime values.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_thermo_dGm_prime" title="rptools.rplibs.rpObject.rpObject.get_thermo_dGm_prime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_thermo_dGm_prime</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_thermo_dGm_prime" title="rptools.rplibs.rpObject.rpObject.get_thermo_dGm_prime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_thermo_dGm_prime</span></code></a></p></td>
 <td><p>Get thermodynamics dGm prime values.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_thermo_info" title="rptools.rplibs.rpObject.rpObject.get_thermo_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_thermo_info</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_thermo_info" title="rptools.rplibs.rpObject.rpObject.get_thermo_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_thermo_info</span></code></a></p></td>
 <td><p>Get a specific thermodynamics value.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_thermo_infos" title="rptools.rplibs.rpObject.rpObject.get_thermo_infos"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_thermo_infos</span></code></a></p></td>
+<td><p>Same as get_thermo()</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.get_thermo_prefix" title="rptools.rplibs.rpObject.rpObject.get_thermo_prefix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_thermo_prefix</span></code></a></p></td>
 <td><p></p></td>
@@ -101,8 +113,8 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.set_fba_fraction" title="rptools.rplibs.rpObject.rpObject.set_fba_fraction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_fba_fraction</span></code></a></p></td>
 <td><p>Set flux balance value for fraction of reaction analysis.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.set_fba_info" title="rptools.rplibs.rpObject.rpObject.set_fba_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_fba_info</span></code></a></p></td>
-<td><p>Set a specific flux balance analysis (FBA) value within a dictionary object.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.set_fba_infos" title="rptools.rplibs.rpObject.rpObject.set_fba_infos"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_fba_infos</span></code></a></p></td>
+<td><p>Set the FBA infos.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.set_fba_pfba" title="rptools.rplibs.rpObject.rpObject.set_fba_pfba"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_fba_pfba</span></code></a></p></td>
 <td><p>Set flux balance value for parcimonious fba analysis.</p></td>
@@ -119,11 +131,41 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.set_thermo_dGm_prime" title="rptools.rplibs.rpObject.rpObject.set_thermo_dGm_prime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_thermo_dGm_prime</span></code></a></p></td>
 <td><p>Set dGm prime thermodynamics value within a dictionary object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.set_thermo_info" title="rptools.rplibs.rpObject.rpObject.set_thermo_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_thermo_info</span></code></a></p></td>
-<td><p>Set a specific thermodynamics value within a dictionary object.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#rptools.rplibs.rpObject.rpObject.set_thermo_infos" title="rptools.rplibs.rpObject.rpObject.set_thermo_infos"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_thermo_infos</span></code></a></p></td>
+<td><p>Set the thermodynamics infos.</p></td>
 </tr>
 </tbody>
 </table>
+<dl class="py method">
+<dt class="sig sig-object py" id="rptools.rplibs.rpObject.rpObject.add_fba_info">
+<span class="sig-name descname"><span class="pre">add_fba_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">TypeVar</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#rptools.rplibs.rpObject.rpObject.add_fba_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a specific flux balance analysis (FBA)
+value within a dictionary object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – Key to retrieve value later on.</p></li>
+<li><p><strong>value</strong> (<em>TypeVar</em>) – FBA information to store.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rptools.rplibs.rpObject.rpObject.add_thermo_info">
+<span class="sig-name descname"><span class="pre">add_thermo_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">TypeVar</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#rptools.rplibs.rpObject.rpObject.add_thermo_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a specific thermodynamics value
+within a dictionary object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – Key to retrieve value later on.</p></li>
+<li><p><strong>value</strong> (<em>TypeVar</em>) – Thermodynamics information to store.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="rptools.rplibs.rpObject.rpObject.get_fba">
 <span class="sig-name descname"><span class="pre">get_fba</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TypeVar</span></span></span><a class="headerlink" href="#rptools.rplibs.rpObject.rpObject.get_fba" title="Permalink to this definition">¶</a></dt>
@@ -157,6 +199,12 @@
 <dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – A key to return the FBA value of</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rptools.rplibs.rpObject.rpObject.get_fba_infos">
+<span class="sig-name descname"><span class="pre">get_fba_infos</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TypeVar</span></span></span><a class="headerlink" href="#rptools.rplibs.rpObject.rpObject.get_fba_infos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Same as get_fba()</p>
 </dd></dl>
 
 <dl class="py method">
@@ -217,6 +265,12 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="rptools.rplibs.rpObject.rpObject.get_thermo_infos">
+<span class="sig-name descname"><span class="pre">get_thermo_infos</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TypeVar</span></span></span><a class="headerlink" href="#rptools.rplibs.rpObject.rpObject.get_thermo_infos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Same as get_thermo()</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="rptools.rplibs.rpObject.rpObject.get_thermo_prefix">
 <em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">get_thermo_prefix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#rptools.rplibs.rpObject.rpObject.get_thermo_prefix" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -258,16 +312,12 @@ fraction of reaction analysis.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="rptools.rplibs.rpObject.rpObject.set_fba_info">
-<span class="sig-name descname"><span class="pre">set_fba_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">TypeVar</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#rptools.rplibs.rpObject.rpObject.set_fba_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set a specific flux balance analysis (FBA)
-value within a dictionary object.</p>
+<dt class="sig sig-object py" id="rptools.rplibs.rpObject.rpObject.set_fba_infos">
+<span class="sig-name descname"><span class="pre">set_fba_infos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infos</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">TypeVar</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#rptools.rplibs.rpObject.rpObject.set_fba_infos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the FBA infos.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>key</strong> (<em>str</em>) – Key to retrieve value later on.</p></li>
-<li><p><strong>value</strong> (<em>TypeVar</em>) – FBA information to store.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>infos</strong> (<em>Dict</em>) – A dictionary which contains FBA infos</p>
 </dd>
 </dl>
 </dd></dl>
@@ -333,16 +383,12 @@ within a dictionary object.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="rptools.rplibs.rpObject.rpObject.set_thermo_info">
-<span class="sig-name descname"><span class="pre">set_thermo_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">TypeVar</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#rptools.rplibs.rpObject.rpObject.set_thermo_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set a specific thermodynamics value
-within a dictionary object.</p>
+<dt class="sig sig-object py" id="rptools.rplibs.rpObject.rpObject.set_thermo_infos">
+<span class="sig-name descname"><span class="pre">set_thermo_infos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infos</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">TypeVar</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#rptools.rplibs.rpObject.rpObject.set_thermo_infos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the thermodynamics infos.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>key</strong> (<em>str</em>) – Key to retrieve value later on.</p></li>
-<li><p><strong>value</strong> (<em>TypeVar</em>) – Thermodynamics information to store.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>infos</strong> (<em>Dict</em>) – A dictionary which contains thermodynamics infos</p>
 </dd>
 </dl>
 </dd></dl>

@@ -1,4 +1,4 @@
-rptools.rplibs.rpObject.rpObject
+﻿rptools.rplibs.rpObject.rpObject
 ================================
 
 .. currentmodule:: rptools.rplibs.rpObject
@@ -16,11 +16,14 @@ rptools.rplibs.rpObject.rpObject
    .. autosummary::
       :nosignatures:
    
+      ~rpObject.add_fba_info
+      ~rpObject.add_thermo_info
       ~rpObject.get_fba
       ~rpObject.get_fba_biomass
       ~rpObject.get_fba_fba
       ~rpObject.get_fba_fraction
       ~rpObject.get_fba_info
+      ~rpObject.get_fba_infos
       ~rpObject.get_fba_pfba
       ~rpObject.get_fba_prefix
       ~rpObject.get_sep
@@ -30,17 +33,18 @@ rptools.rplibs.rpObject.rpObject
       ~rpObject.get_thermo_dG_prime
       ~rpObject.get_thermo_dGm_prime
       ~rpObject.get_thermo_info
+      ~rpObject.get_thermo_infos
       ~rpObject.get_thermo_prefix
       ~rpObject.set_fba_biomass
       ~rpObject.set_fba_fba
       ~rpObject.set_fba_fraction
-      ~rpObject.set_fba_info
+      ~rpObject.set_fba_infos
       ~rpObject.set_fba_pfba
       ~rpObject.set_thermo_dG
       ~rpObject.set_thermo_dG0_prime
       ~rpObject.set_thermo_dG_prime
       ~rpObject.set_thermo_dGm_prime
-      ~rpObject.set_thermo_info
+      ~rpObject.set_thermo_infos
    
    
 
