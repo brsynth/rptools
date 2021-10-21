@@ -51,7 +51,10 @@ class Test_rpReaction(TestCase):
             'rule_ids': self.rule_ids,
             'tmpl_rxn_ids': self.tmpl_rxn_ids,
             'rule_score': self.rule_score,
-            'selenzy': self.selenzy
+            **{
+                'selenzy_'+id: self.selenzy[id]
+                for id in self.selenzy
+            }
         }
 
     ## READ METHODS
@@ -156,7 +159,7 @@ class Test_rpReaction(TestCase):
             self.rxn.get_selenzy(),
             self.selenzy
         )
-        id = 'UniProtID_1'
+        id = 'selenzy_UniProtID_1'
         self.assertEqual(
             self.rxn.get_selenzy_infos_fromID(id),
             self.selenzy[id]
