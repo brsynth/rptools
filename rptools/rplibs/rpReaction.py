@@ -163,7 +163,10 @@ class rpReaction(Reaction, rpObject):
             'tmpl_rxn_ids': self.get_tmpl_rxn_ids(),
             'rule_score': self.get_rule_score(),
             'idx_in_path': self.get_idx_in_path(),
-            'selenzy': self.get_selenzy()
+            **{
+                'selenzy_'+id: self.get_selenzy_infos_fromID(id)
+                for id in self.get_selenzy()
+            }
             # 'fbc': deepcopy(self.get_fbc())
         }
 

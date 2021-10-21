@@ -3534,35 +3534,35 @@ class rpSBML:
         # return set(set(ori_rp_path['products'].keys())|set(ori_rp_path['reactants'].keys()))
 
 
-    def readTaxonAnnotation(self, annot):
-        """Return he taxonomy ID from an annotation
+    # def readTaxonAnnotation(self, annot):
+    #     """Return he taxonomy ID from an annotation
 
-        :param annot: The annotation object of libSBML
+    #     :param annot: The annotation object of libSBML
 
-        :type annot: libsbml.XMLNode
+    #     :type annot: libsbml.XMLNode
 
-        :rtype: dict
-        :return: Dictionary of all taxonomy id's
-        """
-        try:
-            toRet = {}
-            bag = annot.getChild('RDF').getChild('Description').getChild('hasTaxon').getChild('Bag')
-            for i in range(bag.getNumChildren()):
-                str_annot = bag.getChild(i).getAttrValue(0)
-                if str_annot=='':
-                    self.logger.warning('This contains no attributes: '+str(bag.getChild(i).toXMLString()))
-                    continue
-                dbid = str_annot.split('/')[-2].split('.')[0]
-                if len(str_annot.split('/')[-1].split(':'))==2:
-                    cid = str_annot.split('/')[-1].split(':')[1]
-                else:
-                    cid = str_annot.split('/')[-1]
-                if dbid not in toRet:
-                    toRet[dbid] = []
-                toRet[dbid].append(cid)
-            return toRet
-        except AttributeError:
-            return {}
+    #     :rtype: dict
+    #     :return: Dictionary of all taxonomy id's
+    #     """
+    #     try:
+    #         toRet = {}
+    #         bag = annot.getChild('RDF').getChild('Description').getChild('hasTaxon').getChild('Bag')
+    #         for i in range(bag.getNumChildren()):
+    #             str_annot = bag.getChild(i).getAttrValue(0)
+    #             if str_annot=='':
+    #                 self.logger.warning('This contains no attributes: '+str(bag.getChild(i).toXMLString()))
+    #                 continue
+    #             dbid = str_annot.split('/')[-2].split('.')[0]
+    #             if len(str_annot.split('/')[-1].split(':'))==2:
+    #                 cid = str_annot.split('/')[-1].split(':')[1]
+    #             else:
+    #                 cid = str_annot.split('/')[-1]
+    #             if dbid not in toRet:
+    #                 toRet[dbid] = []
+    #             toRet[dbid].append(cid)
+    #         return toRet
+    #     except AttributeError:
+    #         return {}
 
 
     @staticmethod
@@ -3680,7 +3680,7 @@ class rpSBML:
             elif (
                 ann.getName().startswith('thermo_')
                 or ann.getName().startswith('fba_')
-                or ann.getName().startswith('selenzy')
+                or ann.getName().startswith('selenzy_')
             ):
                 toRet[ann.getName()] = _readBRSYNTHAnnotationToDict(
                     annot=ann,
