@@ -1,5 +1,8 @@
 # Release history
 
+## 5.8.1
+- chore(rplibs): make generic attributes reading
+
 ## 5.8.0
 - fix(rplibs): change dict struct for selenzy infos
 
