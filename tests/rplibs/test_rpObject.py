@@ -18,8 +18,8 @@ class Test_rpSBML(TestCase):
     def setUp(self):
         self.rpobject_empty = rpObject()
         self.rpobject = rpObject()
-        self.rpobject.set_fba_info(self.__key, self.__fba)
-        self.rpobject.set_thermo_info(self.__key, self.__thermo)
+        self.rpobject.add_fba_info(self.__key, self.__fba)
+        self.rpobject.add_thermo_info(self.__key, self.__thermo)
 
     def test__to_dict_empty(self):
         self.assertDictEqual(
@@ -58,14 +58,14 @@ class Test_rpSBML(TestCase):
         rpobject = deepcopy(self.rpobject)
         fba = deepcopy(self.__fba)
         fba['value'] += 1
-        rpobject.set_fba_info(self.__key, fba)
+        rpobject.add_fba_info(self.__key, fba)
         self.assertNotEqual(
             self.rpobject,
             rpobject
         )
         # test by modifying a key
         rpobject = deepcopy(self.rpobject)
-        rpobject.set_fba_info(self.__key*2, fba)
+        rpobject.add_fba_info(self.__key*2, fba)
         self.assertNotEqual(
             self.rpobject,
             rpobject

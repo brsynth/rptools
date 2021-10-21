@@ -148,7 +148,7 @@ class rpCompound(Compound, rpObject):
         ----------
         value: float
         """
-        self.set_thermo_info(rpCompound.__thermo_str, value)
+        self.add_thermo_info(rpCompound.__thermo_str, value)
 
     def set_fba_biomass_shadow_price(self, value: float) -> None:
         """Set flux shadow price during biomass production.
@@ -157,7 +157,7 @@ class rpCompound(Compound, rpObject):
         ----------
         value: float
         """
-        self.set_fba_info(f'biomass_{rpCompound.__fba_str}', value)
+        self.add_fba_info(f'biomass_{rpCompound.__fba_str}', value)
 
     def set_fba_fraction_shadow_price(self, value: float) -> None:
         """Set flux shadow price during fraction of reaction analysis.
@@ -166,7 +166,7 @@ class rpCompound(Compound, rpObject):
         ----------
         value: float
         """
-        self.set_fba_info(f'fraction_{rpCompound.__fba_str}', value)
+        self.add_fba_info(f'fraction_{rpCompound.__fba_str}', value)
 
     def set_fba_fba_shadow_price(self, value: float) -> None:
         """Set flux shadow price during balance analysis..
@@ -175,7 +175,7 @@ class rpCompound(Compound, rpObject):
         ----------
         value: float
         """
-        self.set_fba_info(f'fba_{rpCompound.__fba_str}', value)
+        self.add_fba_info(f'fba_{rpCompound.__fba_str}', value)
 
     def set_fba_pfba_shadow_price(self, value: float) -> None:
         """Set flux shadow price during parcimonious balance analysis.
@@ -184,7 +184,7 @@ class rpCompound(Compound, rpObject):
         ----------
         value: float
         """
-        self.set_fba_info(f'pfba_{rpCompound.__fba_str}', value)
+        self.add_fba_info(f'pfba_{rpCompound.__fba_str}', value)
 
     def set_compartment(self, compartment: str) -> None:
         """Set compartment ID of the compound.

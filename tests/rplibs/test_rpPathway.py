@@ -272,7 +272,7 @@ class Test_rpPathway(TestCase):
         self.sink = ['MNXM23', 'MNXM6', 'MNXM13']
         self.pathway.set_sink(self.sink)
         for key, value in self.thermo.items():
-            self.pathway.set_thermo_info(key, value)
+            self.pathway.add_thermo_info(key, value)
         self.pathway.set_fba_fraction(self.fba)
 
     ## READ METHODS

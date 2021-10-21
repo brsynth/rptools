@@ -676,18 +676,16 @@ class rpPathway(Pathway, rpObject):
                     value = None
                 elif str(value) == 'nan':
                     value = 'NaN'
-                fba_offset = len(rpObject.get_fba_prefix()) + len(rpObject.get_sep())
-                thermo_offset = len(rpObject.get_thermo_prefix()) + len(rpObject.get_sep())
-                if key.startswith(rpObject.get_thermo_prefix()):
-                    object.set_thermo_info(
-                        key[thermo_offset:],
-                        value
+                if isinstance(value, dict):
+                    keyword = key.split(rpObject.get_sep())[0]
+                    offset = (
+                        len(keyword)
+                        + len(rpObject.get_sep())
                     )
-                elif key.startswith(rpObject.get_fba_prefix()):
-                    object.set_fba_info(
-                        key[fba_offset:],
-                        value
-                    )
+                    getattr(
+                        object,
+                        'add_'+keyword.replace('rp_', '')+'_info'
+                    )(key[offset:], value)
                 else:
                     try:
                         getattr(

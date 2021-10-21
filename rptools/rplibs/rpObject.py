@@ -79,14 +79,14 @@ class rpObject():
         """Get attributes as a dictionary.
         Implemented for compatibility with inherited classes."""
         fba_infos = {
-            rpObject.__sep.join([
-                rpObject.__fba_prefix,
+            rpObject.get_sep().join([
+                rpObject.get_fba_prefix(),
                 k
             ]):v for k,v in self.get_fba().items()
         }
         thermo_infos = {
-            rpObject.__sep.join([
-                rpObject.__thermo_prefix,
+            rpObject.get_sep().join([
+                rpObject.get_thermo_prefix(),
                 k
             ]):v for k,v in self.get_thermo().items()
         }
@@ -103,6 +103,10 @@ class rpObject():
 
     ## READ METHODS
     ### THERMO ###
+    def get_thermo_infos(self) -> TypeVar:
+        """Same as get_thermo()"""
+        return self.get_thermo()
+
     def get_thermo(self) -> TypeVar:
         """Get thermodynamics values."""
         return self.__thermo
@@ -159,6 +163,10 @@ class rpObject():
     #     """Get flux balance values concerning the parcimonious fba analysis."""
     #     return self.get_fba_info(rpObject.__pfba_str)
 
+    def get_fba_infos(self) -> TypeVar:
+        """Same as get_fba()"""
+        return self.get_fba()
+
     def get_fba(self) -> TypeVar:
         """Get flux balance values."""
         return self.__fba
@@ -203,7 +211,22 @@ class rpObject():
         """
         self.__thermo = deepcopy(thermo)
 
-    def set_thermo_info(
+    def set_thermo_infos(
+        self,
+        infos: Dict[str, TypeVar]
+    ) -> None:
+        """Set the thermodynamics infos.
+        
+        Parameters
+        ----------
+        infos: Dict
+            A dictionary which contains thermodynamics infos
+        """
+        self.__thermo = {}
+        for key, value in infos:
+            self.add_thermo_info(key, value)
+
+    def add_thermo_info(
         self,
         key: str,
         value: TypeVar
@@ -231,7 +254,22 @@ class rpObject():
         """
         self.__fba = deepcopy(fba)
 
-    def set_fba_info(
+    def set_fba_infos(
+        self,
+        infos: Dict[str, TypeVar]
+    ) -> None:
+        """Set the FBA infos.
+        
+        Parameters
+        ----------
+        infos: Dict
+            A dictionary which contains FBA infos
+        """
+        self.__fba = {}
+        for key, value in infos:
+            self.add_fba_info(key, value)
+
+    def add_fba_info(
         self,
         key: str,
         value: TypeVar
@@ -257,7 +295,7 @@ class rpObject():
         value: TypeVar
             dG0 prime value
         """
-        self.set_thermo_info(rpObject.__dG0_prime_str, value)
+        self.add_thermo_info(rpObject.__dG0_prime_str, value)
 
     def set_thermo_dGm_prime(self, value: float) -> None:
         """Set dGm prime thermodynamics value
@@ -268,7 +306,7 @@ class rpObject():
         value: TypeVar
             dGm prime value
         """
-        self.set_thermo_info(rpObject.__dGm_prime_str, value)
+        self.add_thermo_info(rpObject.__dGm_prime_str, value)
 
     def set_thermo_dG_prime(self, value: float) -> None:
         """Set dG prime thermodynamics value
@@ -279,7 +317,7 @@ class rpObject():
         value: TypeVar
             dG prime value
         """
-        self.set_thermo_info(rpObject.__dG_prime_str, value)
+        self.add_thermo_info(rpObject.__dG_prime_str, value)
 
     def set_thermo_dG(self, value: float) -> None:
         """Set dG thermodynamics value
@@ -290,7 +328,7 @@ class rpObject():
         value: TypeVar
             dG value
         """
-        self.set_thermo_info(rpObject.__dG_str, value)
+        self.add_thermo_info(rpObject.__dG_str, value)
 
     def set_fba_biomass(self, value: float) -> None:
         """Set flux balance analysis value for
@@ -301,7 +339,7 @@ class rpObject():
         value: float
             Flux value
         """
-        self.set_fba_info(rpObject.__biomass_str, value)
+        self.add_fba_info(rpObject.__biomass_str, value)
 
     def set_fba_fraction(self, value: float) -> None:
         """Set flux balance value for
@@ -312,7 +350,7 @@ class rpObject():
         value: float
             Flux value
         """
-        self.set_fba_info(rpObject.__fraction_str, value)
+        self.add_fba_info(rpObject.__fraction_str, value)
 
     def set_fba_fba(self, value: float) -> None:
         """Set flux balance value for
@@ -323,7 +361,7 @@ class rpObject():
         value: float
             Flux value
         """
-        self.set_fba_info(rpObject.__fba_str, value)
+        self.add_fba_info(rpObject.__fba_str, value)
 
     def set_fba_pfba(self, value: float) -> None:
         """Set flux balance value for
@@ -334,4 +372,4 @@ class rpObject():
         value: float
             Flux value
         """
-        self.set_fba_info(rpObject.__pfba_str, value)
+        self.add_fba_info(rpObject.__pfba_str, value)

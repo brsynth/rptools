@@ -48,7 +48,10 @@ class rpReaction(Reaction, rpObject):
     __default_fbc_lower = -10000
     __default_fbc_upper = 10000
     __default_fbc_units = 'mmol_per_gDW_per_hr'
+    __selenzy_prefix = 'selenzy'
 
+    @staticmethod
+    def get_selenzy_prefix() -> str: return rpReaction.__selenzy_prefix
     @staticmethod
     def get_default_fbc_units() -> str:
         return rpReaction.__default_fbc_units
@@ -157,16 +160,19 @@ class rpReaction(Reaction, rpObject):
     def __to_dict(self) -> Dict:
         """Returns a dictionary which contains attributes
         only from rpReaction class excluding inherited ones."""
+        selenzy_infos = {
+            rpObject.get_sep().join([
+                rpReaction.__selenzy_prefix,
+                k
+            ]):v for k,v in self.get_selenzy().items()
+        }
         return {
             'rp2_transfo_id': self.get_rp2_transfo_id(),
             'rule_ids': self.get_rule_ids(),
             'tmpl_rxn_ids': self.get_tmpl_rxn_ids(),
             'rule_score': self.get_rule_score(),
             'idx_in_path': self.get_idx_in_path(),
-            **{
-                'selenzy_'+id: self.get_selenzy_infos_fromID(id)
-                for id in self.get_selenzy()
-            }
+            **selenzy_infos
             # 'fbc': deepcopy(self.get_fbc())
         }
 
@@ -412,12 +418,12 @@ class rpReaction(Reaction, rpObject):
         """
         self.__selenzy = {}
         for uniprot_id, _infos in infos.items():
-            self.add_selenzy_infos(
+            self.add_selenzy_info(
                 id=uniprot_id,
                 infos=_infos
             )
 
-    def add_selenzy_infos(
+    def add_selenzy_info(
         self,
         id: str,
         infos: Dict
