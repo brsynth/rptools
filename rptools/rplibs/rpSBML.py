@@ -150,7 +150,7 @@ class rpSBML:
                 'reactome': 'reactome/',
                 'bigg': 'bigg.reaction/',
                 'sabiork': 'sabiork.reaction/',
-                'ec': 'ec-code/',
+                'ec-code': 'ec-code/',
                 'biocyc': 'biocyc/',
                 'lipidmaps': 'lipidmaps/',
                 'uniprot': 'uniprot/'
@@ -184,7 +184,7 @@ class rpSBML:
                 'reactome': 'reactome',
                 'bigg.reaction': 'bigg',
                 'sabiork.reaction': 'sabiork',
-                'ec-code': 'ec',
+                'ec-code': 'ec-code',
                 'biocyc': 'biocyc',
                 'lipidmaps': 'lipidmaps',
                 'uniprot': 'uniprot'
