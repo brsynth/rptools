@@ -9,7 +9,7 @@ from rptools.rplibs import inchikeyMIRIAM
 from os             import path as os_path
 from io             import open as io_open
 from pathlib        import Path
-from main import Main_rplibs
+from main_rplibs import Main_rplibs
 from brs_utils import extract_gz_to_string
 
 
