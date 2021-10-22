@@ -2242,16 +2242,18 @@ class rpSBML:
     ]:
         """Match all the measured chemical species to the simulated chemical species between two SBML
 
-        :param comp_source_target: The comparison dictionary between the compartment of two SBML files
-        :param source_rpsbml: The source rpSBML
+        :param species_ids: Compounds to search in the target rpSBML
         :param target_rpsbml: The target rpSBML
+        :param compartment_id: The id of the compartment into perform the search
+        :param logger: A logging object to output information
 
-        :type species_source_target: dict
-        :type source_rpsbml: rpSBML
+        :type species_ids: List[str]
         :type target_rpsbml: rpSBML
+        :type compartment_id: str
+        :type logger: logging
 
-        :return: The compartment match dictionary
-        :rtype: dict
+        :return: A tuple corresponding to the dictionnary correspondance between species provided and specie in the model and a list of species not find in the model
+        :rtype: Tuple[Dict[str,str], List[str]]
         """
         
         ############## compare species ###################
@@ -2414,7 +2416,7 @@ class rpSBML:
         # # self.logger.debug(species_match)
         # # self.logger.debug('-----------------------')
 
-        return corr_species, miss_species
+        return corr_species, list(miss_species)
 
 
     ######################################################################################################################
