@@ -18,8 +18,13 @@ class Main_rplibs(TestCase):
     #)
     rpsbml_lycopene_path = os_path.join(
         data_path,
-        'lycopene.xml'
+        'lycopene.sbml'
     )
+    rpsbml_ecoli_path = os_path.join(
+        data_path,
+        'e_coli_iML1515.sbml'
+    )
+ 
     #merged_path_gz = os_path.join(
     #    data_path,
     #    'merged_sbml.xml.gz'

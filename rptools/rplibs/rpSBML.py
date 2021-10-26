@@ -1,14 +1,22 @@
 import libsbml
 import numpy as np
+
+from copy import deepcopy
+from filetype import guess
 from hashlib import sha256
+from math import isnan
+from pandas import DataFrame  as pd_DataFrame
+
 from os import (
         path as os_path,
 )
-from copy import deepcopy
-from pandas import DataFrame  as pd_DataFrame
+from json import (
+    load as json_load,
+    dump as json_dump
+)
 from inspect import (
     getmembers as inspect_getmembers,
-      ismethod as inspect_ismethod
+    ismethod as inspect_ismethod
 )
 from logging import (
     Logger,
@@ -21,17 +29,17 @@ from typing import (
     TypeVar,
     Union
 )
-from json import (
-    load as json_load,
-    dump as json_dump
-)
-from filetype import guess
 from tempfile import (
     NamedTemporaryFile,
     TemporaryDirectory,
     gettempdir,
 )
-from math import isnan
+
+from cobra.medium.annotations import (
+    excludes,
+    sbo_terms
+)
+
 from brs_utils import(
     extract_gz
 )
@@ -2418,6 +2426,74 @@ class rpSBML:
 
         return corr_species, list(miss_species)
 
+    def is_boundary_type(
+        self,
+        reaction: libsbml.Reaction, 
+        boundary_type: str, 
+        external_compartment: str
+    ) -> bool:
+        '''Check whether a reaction is an exchange reaction.
+        Adapted from "is_boundary_type" available at cobra.medium.boudary_types to fit with libsbml.Reaction.
+
+        :param reaction: a reaction to check if it belongs to the boundary_type
+        :param boundary_type: 'exchange', 'demand' or 'sink'
+        :param external_compartment: id used for the external compartment in the model
+
+        :type reaction: libsbml.Reaction
+        :type boundary_type: str
+        :type external_compartment: str
+
+        :return: True if the reaction corresponds to the boundary_type filled, False otherwise
+        :rtype: bool
+        '''
+        # Check if the reaction has an annotation. Annotations dominate everything.
+        sbo_term = reaction.getSBOTerm()
+        if sbo_term > -1:
+            sbo_term = str(sbo_term)
+            while len(sbo_term) < 7:
+                sbo_term = '0' + sbo_term
+            sbo_term = 'SBO:' + sbo_term
+
+            if sbo_term == sbo_terms[boundary_type]:
+                return True
+            if sbo_term in [sbo_terms[k] for k in sbo_terms if k != boundary_type]:
+                return False
+        
+        # Check if the reaction is in the correct compartment (exterior or inside)
+        reaction_compartment = reaction.getCompartment()
+        if reaction_compartment is None or reaction_compartment == '':
+            reactants = reaction.getListOfReactants()
+            if len(reactants) == 1:
+                reactant = reactants[0]
+                specie_id = reactants[0].getSpecies()
+                reaction_compartment = self.getModel().getSpecies(specie_id).getCompartment()
+        correct_compartment = external_compartment == reaction_compartment
+        if boundary_type != "exchange":
+            correct_compartment = not correct_compartment
+
+        # Check if the reaction has the correct reversibility
+        rev_type = True
+        if boundary_type == "demand":
+            rev_type = not reaction.getReversible()
+        elif boundary_type == "sink":
+            rev_type = reaction.getReversible()
+
+        # Determine if reaction is "boundary"
+        is_boundary = False
+        if boundary_type == "exchange":
+            if ((len(reaction.getListOfProducts()) == 0 and len(reaction.getListOfReactants()) == 1)
+                or (len(reaction.getListOfProducts()) == 1 and len(reaction.getListOfReactants()) == 0)):
+                is_boundary = True
+
+        # In exclude fields ?
+        to_exclude = not any(ex in reaction.getId() for ex in excludes[boundary_type])
+        
+        return (
+            is_boundary 
+            and to_exclude
+            and correct_compartment
+            and rev_type
+        )
 
     ######################################################################################################################
     ############################################### EC NUMBER ############################################################

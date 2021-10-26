@@ -13,6 +13,7 @@ from typing import (
     List,
     Tuple
 )
+from cobra import io as cobra_io
 from           pathlib import Path
 from                os import path  as os_path
 from              json import load  as json_load
@@ -45,11 +46,11 @@ class Test_rpSBML(Main_rplibs):
         # objects below have to be created for each test instance
         # since some tests can modified them
 
+        self.rpsbml_none = rpSBML()
         self.rpsbml_lycopene  = rpSBML(
             inFile = self.rpsbml_lycopene_path,
             logger = self.logger
         )
-        self.rpsbml_none = rpSBML()
 
         #self.gem = rpSBML(
         #    inFile = extract_gz(
@@ -144,6 +145,51 @@ class Test_rpSBML(Main_rplibs):
             species_match_with[1]
         )
 
+    def test_is_boundary_type(self):
+        # TODO: implement test which doesn't account abount SBO terms, to see how compartment_id ... are managed
+        # Load.
+        self.rpsbml_ecoli  = rpSBML(
+            inFile = self.rpsbml_ecoli_path,
+            logger = self.logger
+        )
+        reactions = self.rpsbml_ecoli.getModel().getListOfReactions()
+        cobra_model = cobra_io.read_sbml_model(
+            self.rpsbml_ecoli_path, 
+            use_fbs_package=True
+        )
+        # Return type.
+        self.assertIsInstance(
+            self.rpsbml_ecoli.is_boundary_type(
+                reactions[0],
+                'exchange',
+                ''
+            ),
+            bool
+        )
+        # Exchange.
+        rpsbml_exchange = [x for x in reactions if self.rpsbml_ecoli.is_boundary_type(x, 'exchange', 'e')]
+        self.assertEqual(
+            len(cobra_model.exchanges),
+            len(rpsbml_exchange)
+        )
+        rpsbml_exchange = [x for x in reactions if self.rpsbml_ecoli.is_boundary_type(x, 'exchange', '')]
+        self.assertEqual(
+            len(cobra_model.exchanges),
+            len(rpsbml_exchange)
+        )
+        # Demand.
+        rpsbml_demands = [x for x in reactions if self.rpsbml_ecoli.is_boundary_type(x, 'demand', '')]
+        self.assertEqual(
+            len(cobra_model.demands),
+            len(rpsbml_demands)
+        )
+        # Sinks.
+        rpsbml_sinks = [x for x in reactions if self.rpsbml_ecoli.is_boundary_type(x, 'sink', '')]
+        self.assertEqual(
+            len(cobra_model.sinks),
+            len(rpsbml_sinks)
+        )
+ 
     def test_createSpecies(self):
         # Init.
         nb_species = self.rpsbml_lycopene.read_species()
