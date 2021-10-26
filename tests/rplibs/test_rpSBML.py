@@ -144,6 +144,97 @@ class Test_rpSBML(Main_rplibs):
             species_match_with[1]
         )
 
+    def test_createSpecies(self):
+        # Init.
+        nb_species = self.rpsbml_lycopene.read_species()
+        rt = self.rpsbml_lycopene.createSpecies(
+            species_id='M_ipdp_y'
+        )
+        # Return type.
+        self.assertIs(rt, None)
+        # Values.
+        species = [x for x in self.rpsbml_lycopene.read_species()]
+        self.assertEqual(
+            len(species),
+            1 + len(nb_species)
+        )
+        # Challenge - create
+        species_id='M_ipdp_c'
+        species_name='Isopentenyl diphosphate'
+        chemXref = {
+            'bigg': ['ipdp'], 
+            'biocyc': ['TUNGSTATE'], 
+            'chebi': ['128769', '6037']
+            #'metanetx': ['MNXM83']
+        }
+        inchi="InChI=1S/C5H12O7P2/c1-5(2)3-4-11-14(9,10)12-13(6,7)8/h1,3-4H2,2H3,(H,9,10)(H2,6,7,8)/p-3"
+        inchikey="NUHSROFQTUXZQQ-UHFFFAOYSA-K"
+        smiles="C=C(C)CCOP(=O)([O-])OP(=O)([O-])[O-]"
+        compartment="MNXC3"
+        metaid="M_ipdp_c"
+        is_boundary=True
+        self.rpsbml_lycopene.createSpecies(
+            species_id=species_id,
+            species_name=species_name,
+            chemXref=chemXref,
+            inchi=inchi,
+            inchikey=inchikey,
+            smiles=smiles,
+            compartment=compartment,
+            meta_id=metaid,
+            infos={'smiles_infos':smiles},
+            is_boundary=is_boundary
+        )
+        brsynth_annot = {
+            'inchi': inchi,
+            'inchikey': inchikey,
+            'smiles':smiles,
+            'smiles_infos':smiles
+        }
+        specie = self.rpsbml_lycopene.getModel().getSpecies(species_id)
+        self.assertEqual(
+            species_name,
+            specie.getName()
+        )
+        self.assertTrue(
+            self.rpsbml_lycopene.compareAnnotations_annot_dict(
+                specie.getAnnotation(),
+                chemXref
+            )
+        )
+        self.assertTrue(
+            self.rpsbml_lycopene.compareAnnotations_dict_dict(
+                self.rpsbml_lycopene.readBRSYNTHAnnotation(specie.getAnnotation()),
+                brsynth_annot
+            )
+        )
+        self.assertEqual(
+            compartment,
+            specie.getCompartment()
+        )
+        self.assertEqual(
+            metaid,
+            specie.getMetaId()
+        )
+        self.assertTrue(specie.getBoundaryCondition())
+        # Challenge - update
+        species_id='M_ipdp_c'
+        species_name='Isopentenyl diphos'
+        self.rpsbml_lycopene.createSpecies(
+            species_id=species_id,
+            species_name=species_name
+        )
+        species = [x for x in self.rpsbml_lycopene.getModel().getListOfSpecies() if x.getId() == species_id]
+        self.assertEqual(
+            len(species),
+            2
+        )
+        specie = [x for x in species if x.getName() == species_name][0]
+        self.assertEqual(
+            {},
+            self.rpsbml_lycopene.readBRSYNTHAnnotation(specie.getAnnotation())
+        )
+ 
     #def test_initEmpty(self):002_0001
     #    rpSBML(name='rpSBML_test', logger=self.logger)
 

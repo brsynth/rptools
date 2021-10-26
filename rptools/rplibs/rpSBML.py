@@ -150,7 +150,7 @@ class rpSBML:
                 'reactome': 'reactome/',
                 'bigg': 'bigg.reaction/',
                 'sabiork': 'sabiork.reaction/',
-                'ec': 'ec-code/',
+                'ec-code': 'ec-code/',
                 'biocyc': 'biocyc/',
                 'lipidmaps': 'lipidmaps/',
                 'uniprot': 'uniprot/'
@@ -184,7 +184,7 @@ class rpSBML:
                 'reactome': 'reactome',
                 'bigg.reaction': 'bigg',
                 'sabiork.reaction': 'sabiork',
-                'ec-code': 'ec',
+                'ec-code': 'ec-code',
                 'biocyc': 'biocyc',
                 'lipidmaps': 'lipidmaps',
                 'uniprot': 'uniprot'
@@ -2828,7 +2828,6 @@ class rpSBML:
             </annotation>
         '''
 
-
     def updateBRSynth(
         self,
         sbase_obj,
@@ -4646,56 +4645,51 @@ class rpSBML:
 
     def createSpecies(
         self,
-        species_id,
-        species_name=None,
-        chemXref={},
-        inchi=None,
-        inchikey=None,
-        smiles=None,
-        compartment=None,
-        # species_group_id=None,
-        # in_sink_group_id=None,
-        meta_id=None,
-        infos: Dict = None
-    ):
-                      # TODO: add these at some point -- not very important
-                      # charge=0,
-                      # chemForm=''):
+        species_id:str,
+        species_name: str=None,
+        chemXref: Dict={},
+        inchi: str=None,
+        inchikey: str=None,
+        smiles: str=None,
+        compartment: str=None,
+        # species_group_id=None, :param species_group_id: The Groups id to add the species (Default: None)
+        # in_sink_group_id=None, :param in_sink_group_id: The Groups id sink species to add the species (Default: None)
+        meta_id: str=None,
+        infos: Dict={},
+        is_boundary: bool=False
+    ) -> None:
         """Create libSBML species
 
         Create a species that is added to self.model
 
         :param species_id: The id of the created species
-        :param compartment_id: The id of the compartment to add the reaction
         :param species_name: Overwrite the default name of the created species (Default: None)
         :param chemXref: The dict containing the MIRIAM annotation (Default: {})
         :param inchi: The InChI string to be added to BRSynth annotation (Default: None)
         :param inchikey: The InChIkey string to be added to BRSynth annotation (Default: None)
         :param smiles: The SMLIES string to be added to BRSynth annotation (Default: None)
-        :param species_group_id: The Groups id to add the species (Default: None)
-        :param in_sink_group_id: The Groups id sink species to add the species (Default: None)
+        :param compartment: The id of the compartment to add the reaction
         :param meta_id: Meta id (Default: None)
+        :param infos: Supplemental informations to be added to BRSynth annotation (Default: None)
+        :param is_boundary: Set if the specie is boundary (Default: False)
 
-        :type species_id: str
-        :type compartment_id: str
+        :type species_id: str 
         :type species_name: str
-        :type chemXref: dict
-        :type inchi: str
+        :type chemXref: Dict
         :type inchikey: str
         :type smiles: str
-        :type species_group_id: str
-        :type in_sink_group_id: str
+        :type compartment: str 
         :type meta_id: str
+        :type infos: Dict
+        :type is_boundary: bool 
 
         :rtype: None
         :return: None
         """
-        # if not species_id.endswith('__64__'+compartment_id):
-        #     species_id += '__64__'+compartment_id
         spe = self.getModel().createSpecies()
         rpSBML.checklibSBML(spe, 'create species')
 
-        ##### FBC #####
+        # FBC.
         spe_fbc = spe.getPlugin('fbc')
         rpSBML.checklibSBML(spe_fbc, 'creating this species as an instance of FBC')
         # spe_fbc.setCharge(charge) #### These are not required for FBA
@@ -4708,7 +4702,7 @@ class rpSBML:
         # ID same structure as cobrapy
         # TODO: determine if this is always the case or it will change
         rpSBML.checklibSBML(spe.setHasOnlySubstanceUnits(False), 'set substance unit')
-        rpSBML.checklibSBML(spe.setBoundaryCondition(False), 'set boundary conditions')
+        rpSBML.checklibSBML(spe.setBoundaryCondition(is_boundary), 'set boundary conditions')
         rpSBML.checklibSBML(spe.setConstant(False), 'set constant')
         # useless for FBA (usefull for ODE) but makes Copasi stop complaining
         rpSBML.checklibSBML(spe.setInitialConcentration(1.0), 'set an initial concentration')
@@ -4722,14 +4716,14 @@ class rpSBML:
             rpSBML.checklibSBML(spe.setName(species_id), 'setting name for the metabolite '+str(species_id))
         else:
             rpSBML.checklibSBML(spe.setName(species_name), 'setting name for the metabolite '+str(species_name))
-        rpSBML.checklibSBML(spe.setCompartment(compartment), 'setting compartment')
+        if compartment:
+            rpSBML.checklibSBML(spe.setCompartment(compartment), 'setting compartment')
         # this is setting MNX id as the name
         # this is setting the name as the input name
         # rpSBML.checklibSBML(spe.setAnnotation(self._defaultBRSynthAnnot(meta_id)), 'creating annotation')
         rpSBML.checklibSBML(spe.setAnnotation(self._defaultBothAnnot(meta_id)), 'creating annotation')
-        ###### annotation ###
+        # Annotations.
         self.addUpdateMIRIAM(spe, 'species', chemXref, meta_id)
-        ###### BRSYNTH additional information ########
         if smiles is not None:
             self.updateBRSynth(
                 sbase_obj=spe,
