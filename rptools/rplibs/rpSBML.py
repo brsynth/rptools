@@ -2495,6 +2495,62 @@ class rpSBML:
             and rev_type
         )
 
+    def build_exchange_reaction(
+        model: 'rpSBML',
+        compartment_id: str,
+        logger: Logger = getLogger(__name__)
+    ) -> pd_DataFrame:
+        '''Select exchange reactions in a model.
+
+        :param model: a model into perform searching
+        :param compartment_id: id used for the external compartment in the model
+        :param logger: a logger object
+
+        :type model: rpSBML
+        :type compartment_id: str
+        :type logger: Logger
+
+        :return: a dataframe with two columns "model_id" supporting id of the specie implied in the reaction and "libsbml_reaction" the exchange reaction
+        :rtype: pd.DataFrame
+        '''
+
+        def _specie_id_from_exchange(
+            reaction: libsbml.Reaction,
+            logger: Logger= getLogger(__name__)
+        ) -> str:
+
+            products = reaction.getListOfProducts()
+            reactants = reaction.getListOfReactants()
+            if sum([len(products), len(reactants)]) != 1:
+                logger.warning('Unexpected reaction format')
+                return None
+            specie_id = None
+            if len(products) > 0:
+                specie_id = products[0].getSpecies()
+            else:
+                specie_id = reactants[0].getSpecies()
+            return specie_id
+
+
+        df = pd_DataFrame(columns=['model_id', 'libsbml_reaction'])
+
+        # Create list of exchange reactions
+        for reaction in model.getModel().getListOfReactions():
+            if model.is_boundary_type(reaction, "exchange", compartment_id):
+                compound = dict(
+                    model_id=_specie_id_from_exchange(
+                        reaction,
+                        logger
+                    ),
+                    libsbml_reaction=reaction
+                )
+                df = df.append(compound, ignore_index=True)
+        # Fmg
+        df.sort_values('model_id', inplace=True)
+        df.reset_index(inplace=True, drop=True)
+        return df
+
+
     ######################################################################################################################
     ############################################### EC NUMBER ############################################################
     ######################################################################################################################

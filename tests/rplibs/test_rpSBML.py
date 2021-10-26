@@ -190,6 +190,30 @@ class Test_rpSBML(Main_rplibs):
             len(rpsbml_sinks)
         )
  
+    def test_build_exchange_reaction(self):
+        # Load.
+        df = self.rpsbml_ecoli.build_exchange_reaction('c')
+        # Return type.
+        self.assertIsInstance(
+            df,
+            pd.DataFrame
+        )
+        # Fmt dataframe.
+        self.assertEqual(
+            df.shape, 
+            (331,2)
+        )
+        self.assertIn('model_id', df.columns)
+        self.assertIn('libsbml_reaction', df.columns)
+        self.assertEqual(
+            df.loc[0, 'model_id'],
+            'M_12ppd__R_e'
+        )
+        self.assertIsInstance(
+            df.loc[0, 'libsbml_reaction'],
+            libsbml.Reaction
+        )
+
     def test_createSpecies(self):
         # Init.
         nb_species = self.rpsbml_lycopene.read_species()
