@@ -389,7 +389,6 @@ def add_missing_specie(
         if pd.isna(df.loc[ix, 'libsbml_reaction']):
             rp_compound = df.loc[ix, 'rp_compound']
             if pd.isna(rp_compound):
-                logger.warning('Specie not found in rr_cache, missing in the model, so it will be skipped: %s'%(compound_id,))
                 continue
             model.createSpecies(
                 species_id=rp_compound.get_id(),
