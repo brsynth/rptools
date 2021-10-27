@@ -1,8 +1,16 @@
-from argparse  import ArgumentParser
+from argparse import ArgumentParser
+from typing import (
+    List,
+)
 from rptools._version import __version__
+from rptools.rpfba.medium import (
+    __MEDIUM_DEFAULT_ID,
+    __MEDIUM_PATH,
+    read_medium_ids
+)
 
-
-def add_arguments(parser):
+def add_arguments(
+    parser: ArgumentParser):
     parser.add_argument(
         'pathway_file',
         type=str,
@@ -60,4 +68,25 @@ def add_arguments(parser):
         default=True,
         help='ignore metabolites that are only consumed or produced (default: True)'
     )
+
+    parser_medium = parser.add_argument_group('Medium', 'Medium modifications')
+    parser_medium.add_argument('--medium_compartment_id',
+        type=str,
+        default='MNXC2',
+        help='Model compartiment id corresponding to the extra-cellular compartment'
+    )
+    parser_medium.add_argument(
+        '--medium_file',
+        type=str,
+        help='Provide a csv file with an header as <coumpond_id>,<upper_bound>. \
+                This file provides information about metabolites (Metanetx Id) to add or remove (giving upper bound value)'
+    )
+    parser_medium.add_argument(
+        '--medium_id',
+        type=str,
+        default=__MEDIUM_DEFAULT_ID,
+        choices=[__MEDIUM_DEFAULT_ID] + read_medium_ids(__MEDIUM_PATH),
+        help='Use a base medium composition. Data can be add with the option --medium_file'
+    )
+
     return parser

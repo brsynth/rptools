@@ -1,9 +1,16 @@
+import csv
+import pickle
+import sys
+
+import pandas as pd
 from copy import deepcopy
 from logging import (
     Logger,
     getLogger
 )
-from os import path
+from os import (
+    path as os_path
+)
 from pandas.core.series  import Series    as np_series
 from typing import (
     List,
@@ -22,6 +29,16 @@ from cobra.io.sbml       import (
 )
 from cobra.core.model    import Model     as cobra_model
 from cobra.core.solution import Solution  as cobra_solution
+ 
+from rptools.rpfba.medium import (
+    add_missing_specie,
+    crossref_medium_id,
+    df_to_medium,
+    is_df_medium_defined,
+    merge_medium,
+    merge_medium_exchange
+)
+from rptools.rplibs.rpCompound import rpCompound
 from rptools.rplibs.rpSBML import rpSBML
 from rptools.rplibs.rpPathway import rpPathway
 from rptools.rplibs.rpReaction import rpReaction
@@ -31,7 +48,6 @@ from .cobra_format import (
     cobra_suffix,
     to_cobra
 )
-
 
 __COMPARTMENTS = [
     ['c', 'mnxc3', 'cytosol', 'cytoplasm'],
@@ -51,6 +67,9 @@ def runFBA(
     fraction_coeff: float = 0.75,
     merge: bool = False,
     ignore_orphan_species: bool = True,
+    medium_compartment_id: str = 'MNXC2',
+    df_medium_base: pd.DataFrame = None,
+    df_medium_user: pd.DataFrame = None,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
     """Single rpSBML simulation
@@ -63,7 +82,7 @@ def runFBA(
     :param target_reaction: The reaction id of the target reaction. Note that if fba or rpfba options are used, then these are ignored
     :param source_coefficient: The source coefficient
     :param target_coefficient: The target coefficient
-    :param is_max: Maximise or minimise the objective
+    :param is_max: Maximise or minimise the objective'last', i
     :param fraction_of: The fraction of the optimum. Note that this value is ignored is fba is used
     :param tmpOutputFolder: The path to the output document
     :param merge: Output the merged model (Default: False)
@@ -73,8 +92,8 @@ def runFBA(
     :param fill_orphan_species: Add pseudo reactions that consume/produce single parent species. Note in development
     :param species_group_id: The id of the central species (Default: central_species)
     :param sink_species_group_id: The id of the sink species (Default: rp_sink_species)
-
-    :type inputTar: str
+ not 
+    :type inputTar: strrunCobra
     :type gem_sbml_path: str
     :type sim_type: str
     :type src_rxn_id: str
@@ -163,6 +182,56 @@ def runFBA(
     logger.debug('reactions_in_both: ' + str(reactions_in_both))
     cobra_rpsbml_merged = rpSBML.cobraize(rpsbml_merged)
 
+    ## MEDIUM
+    df_medium = pd.DataFrame()
+    if is_df_medium_defined(df_medium_base) or is_df_medium_defined(df_medium_user): 
+        # Check medium compartment id.
+        medium_compartment_id = check_SBML_compartment(
+          rpsbml=cobra_rpsbml_merged,
+          compartment_id=medium_compartment_id,
+          logger=logger
+        )
+        if medium_compartment_id is None:
+            logger.warning('Medium id not find in the model -> ignore modifications')
+        else:
+            # CrossRef ids
+            df_medium_base = crossref_medium_id(
+                df=df_medium_base,
+                model=cobra_rpsbml_merged,
+                compartment_id=medium_compartment_id,
+                logger=logger
+            )            
+            df_medium_user = crossref_medium_id(
+                df=df_medium_user,
+                model=cobra_rpsbml_merged,
+                compartment_id=medium_compartment_id,
+                logger=logger
+            )
+            # Merge coumponds.
+            df_medium = merge_medium(
+                first=df_medium_base, 
+                second=df_medium_user
+            )
+
+            # Select exchange reaction
+            df_exchange_reaction = cobra_rpsbml_merged.build_exchange_reaction(
+                compartment_id=medium_compartment_id
+            )
+
+            # Merge df medium with exchange reactions
+            df_medium = merge_medium_exchange(
+                medium=df_medium,
+                exchange_reaction=df_exchange_reaction
+            )
+
+            # Add specie missing in the model
+            cobra_rpsbml_merged = add_missing_specie(
+                model=cobra_rpsbml_merged,
+                df=df_medium,
+                compartment_id=medium_compartment_id,
+                logger=logger
+            )
+
     # Detect orphan species among missing ones in the model,
     # i.e. that are only consumed or produced
     if ignore_orphan_species:
@@ -198,6 +267,7 @@ def runFBA(
             hidden_species=hidden_species,
             objective_id=objective_id,
             fraction_coeff=fraction_coeff,
+            medium=df_medium,
             logger=logger
         )
     else:
@@ -211,6 +281,7 @@ def runFBA(
             biomass_rxn_id=biomass_rxn_id,
             hidden_species=hidden_species,
             fraction_coeff=fraction_coeff,
+            medium=df_medium,
             logger=logger
         )
         results['biomass'] = results_biomass
@@ -460,20 +531,20 @@ def write_results_to_pathway(
     # Write species results
     for spe_id, score in results['species'].items():
         for k, v in score.items():
-            pathway.get_specie(spe_id).set_fba_info(
+            pathway.get_specie(spe_id).add_fba_info(
                 key=k,
                 value=v
             )
     # Write reactions results
     for rxn_id, score in results['reactions'].items():
         for k, v in score.items():
-            pathway.get_reaction(rxn_id).set_fba_info(
+            pathway.get_reaction(rxn_id).add_fba_info(
                 key=k,
                 value=v
             )
     # Write pathway result
     for k, v in results['pathway'].items():
-        pathway.set_fba_info(
+        pathway.add_fba_info(
             key=k,
             value=v
         )
@@ -652,7 +723,6 @@ def complete_heterologous_pathway(
 #     :param is_max: Maximise or minimise the objective (Default: True)
 #     :param pathway_id: The id of the heterologous pathway (Default: rp_pathway)
 #     :param objective_id: Overwrite the default id (Default: None)
-
 #     :type reaction_id: str
 #     :type coefficient: float
 #     :type fraction_of_optimum: float
@@ -682,12 +752,13 @@ def complete_heterologous_pathway(
 
 
 def rp_fraction(
-          rpsbml: rpSBML,
+    rpsbml: rpSBML,
     objective_rxn_id: str,
     biomass_rxn_id: str,
- hidden_species: List[str],
-     fraction_coeff:  float = 0.75,
-          logger: Logger = getLogger(__name__)
+    hidden_species: List[str],
+    fraction_coeff:  float = 0.75,
+    medium: pd.DataFrame=None,
+    logger: Logger = getLogger(__name__)
 ) -> cobra_solution:
     """Optimise for a target reaction while fixing a source reaction to the fraction of its optimum
 
@@ -765,6 +836,7 @@ def rp_fraction(
             rpsbml=rpsbml,
             hidden_species=hidden_species,
             objective_id=biomass_objective_id,
+            medium=medium,
             logger=logger
         )
 
@@ -841,6 +913,7 @@ def rp_fraction(
         hidden_species=hidden_species,
         objective_id=objective_id,
         fraction_coeff=fraction_coeff,
+        medium=medium,
         logger=logger
     )
     if cobra_results is None:
@@ -883,6 +956,7 @@ def runCobra(
     objective_id: str,
     hidden_species: List[str] = [],
     fraction_coeff: float = 0.95,
+    medium: pd.DataFrame=None,
     logger: Logger = getLogger(__name__)
 ) -> cobra_solution:
     """
@@ -900,7 +974,7 @@ def runCobra(
         Logger object
     """
 
-    cobraModel = cobra_model(
+    cobraModel = build_cobra_model(
         rpsbml=rpsbml,
         objective_id=objective_id,
         hidden_species=hidden_species,
@@ -908,6 +982,11 @@ def runCobra(
     )
     if not cobraModel:
         return None
+
+    if is_df_medium_defined(medium):
+        cobraModel.medium = df_to_medium(medium)
+        logger.debug('Medium modify')
+        logger.debug(cobraModel.medium)
 
     if sim_type.lower() == 'pfba':
         cobra_results = pfba(cobraModel, fraction_coeff)
@@ -921,8 +1000,7 @@ def runCobra(
 
     return cobra_results
 
-
-def cobra_model(
+def build_cobra_model(
     rpsbml: rpSBML,
     objective_id: str,
     hidden_species: List[str] = [],
@@ -949,7 +1027,6 @@ def cobra_model(
             (model, errors) = validate_sbml_model(temp_f.name)
             logger.error(str(json_dumps(errors, indent=4)))
             return None
-
     # Hide to Cobra species that are isolated
     cobraModel.remove_metabolites(
         [
@@ -1213,11 +1290,6 @@ def create_ignored_species_group(
     #     value=str(missing_species),
     #     isList=True
     # )
-
-
-
-
-
 
 ########################################################################
 ############################### FBA pathway ranking ####################

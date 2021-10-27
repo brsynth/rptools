@@ -1,3 +1,5 @@
+import pandas as pd
+
 from os import (
   path as os_path,
   makedirs as os_makedirs
@@ -17,10 +19,17 @@ from typing import(
 from copy import deepcopy
 from rptools import build_args_parser
 from rptools.rpfba.Args import add_arguments
-from rptools.rpfba import runFBA
+from rptools.rpfba.medium import (
+    __MEDIUM_PATH,
+    load_compounds,
+)
+from rptools.rpfba import (
+    runFBA
+)
 from rptools.rplibs.rpPathway import rpPathway
 
 def entry_point():
+    # Args.
     parser = build_args_parser(
         prog = 'rpfba',
         description='Process to Flux Balance Analysis',
@@ -36,6 +45,14 @@ def entry_point():
       logger=logger
     )
 
+    # Load compounds.
+    df_medium_base, df_medium_user = load_compounds(
+        medium_id=args.medium_id,
+        file_base=__MEDIUM_PATH,
+        file_user=args.medium_file,
+        logger=logger
+    )
+
     results = runFBA(
       pathway=pathway,
       gem_sbml_path=args.model_file,
@@ -46,6 +63,9 @@ def entry_point():
       fraction_coeff=args.fraction_of,
       merge=args.merge,
       ignore_orphan_species=args.ignore_orphan_species,
+      medium_compartment_id=args.medium_compartment_id,
+      df_medium_base=df_medium_base,
+      df_medium_user=df_medium_user,
       logger=logger
     )
 
