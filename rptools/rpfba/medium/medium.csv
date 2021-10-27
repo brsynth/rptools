@@ -1,0 +1,54 @@
+compound_id,compound_annotation,compound_group,upper_bound,medium_name
+MNXM9,pi,ion,1000,m9
+MNXM196,fe3,ion,1000,m9
+MNXM1,h,ion,1000,m9
+MNXM2255,mn2,ion,1000,m9
+MNXM111,fe2,ion,1000,m9
+MNXM149,zn2,ion,1000,m9
+MNXM653,mg2,ion,1000,m9
+MNXM128,ca2,ion,1000,m9
+MNXM3673,ni2,ion,1000,m9
+MNXM632,cu2,ion,1000,m9
+MNXM2282,sel,ion,1000,m9
+MNXM90960,cobalt2,ion,1000,m9
+MNXM2,h2o,ion,1000,m9
+MNXM1026,mobd,ion,1000,m9
+MNXM58,so4,ion,1000,m9
+MNXM15,nh4,ion,1000,m9
+MNXM95,k,ion,1000,m9
+MNXM27,na1,ion,1000,m9
+MNXM43,cl,ion,1000,m9
+MNXM88308,tungs,ion,1000,m9
+MNXM1157,slnt,ion,1000,m9
+MNXM134,his__L,amino acid,1000,lb
+MNXM140,leu__L,amino acid,1000,lb
+MNXM97,phe__L,amino acid,1000,lb
+MNXM78,lys__L,amino acid,1000,lb
+MNXM76,tyr__L,amino acid,1000,lb
+MNXM199,val__L,amino acid,1000,lb
+MNXM42,asp__L,amino acid,1000,lb
+MNXM61,met__L,amino acid,1000,lb
+MNXM231,ile__L,amino acid,1000,lb
+MNXM37,gln__L,amino acid,1000,lb
+MNXM55,cyc__L,amino acid,1000,lb
+MNXM53,ser__L,amino acid,1000,lb
+MNXM32,ala__L,amino acid,1000,lb
+MNXM94,trp__L,amino acid,1000,lb
+MNXM147,asn__L,amino acid,1000,lb
+MNXM114,pro__L,amino acid,1000,lb
+MNXM142,thr__L,amino acid,1000,lb
+MNXM29,gly__L,amino acid,1000,lb
+MNXM70,arg__L,amino acid,1000,lb
+MNXM89557,glu__L,amino acid,1000,lb
+MNXM41,glc__D,energy,1000,lb
+MNXM4,o2,gaz,1000,gaz
+MNXM13,co2,gaz,1000,gaz
+MNXM8340,melib,carbon,1000,carbon
+MNXM167,sucr,carbon,1000,carbon
+MNXM198,tre,carbon,1000,carbon
+MNXM362,lcts,carbon,1000,carbon
+MNXM26,ac,carbon,1000,carbon
+MNXM23,pyr,carbon,1000,carbon
+MNXM131,cit,carbon,1000,carbon
+MNXM89612,glyc,carbon,1000,carbon
+MNXM91126,arab__L,carbon,1000,carbon

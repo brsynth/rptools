@@ -1,14 +1,22 @@
 import libsbml
 import numpy as np
+
+from copy import deepcopy
+from filetype import guess
 from hashlib import sha256
+from math import isnan
+from pandas import DataFrame  as pd_DataFrame
+
 from os import (
         path as os_path,
 )
-from copy import deepcopy
-from pandas import DataFrame  as pd_DataFrame
+from json import (
+    load as json_load,
+    dump as json_dump
+)
 from inspect import (
     getmembers as inspect_getmembers,
-      ismethod as inspect_ismethod
+    ismethod as inspect_ismethod
 )
 from logging import (
     Logger,
@@ -21,17 +29,17 @@ from typing import (
     TypeVar,
     Union
 )
-from json import (
-    load as json_load,
-    dump as json_dump
-)
-from filetype import guess
 from tempfile import (
     NamedTemporaryFile,
     TemporaryDirectory,
     gettempdir,
 )
-from math import isnan
+
+from cobra.medium.annotations import (
+    excludes,
+    sbo_terms
+)
+
 from brs_utils import(
     extract_gz
 )
@@ -2418,6 +2426,130 @@ class rpSBML:
 
         return corr_species, list(miss_species)
 
+    def is_boundary_type(
+        self,
+        reaction: libsbml.Reaction, 
+        boundary_type: str, 
+        external_compartment: str
+    ) -> bool:
+        '''Check whether a reaction is an exchange reaction.
+        Adapted from "is_boundary_type" available at cobra.medium.boudary_types to fit with libsbml.Reaction.
+
+        :param reaction: a reaction to check if it belongs to the boundary_type
+        :param boundary_type: 'exchange', 'demand' or 'sink'
+        :param external_compartment: id used for the external compartment in the model
+
+        :type reaction: libsbml.Reaction
+        :type boundary_type: str
+        :type external_compartment: str
+
+        :return: True if the reaction corresponds to the boundary_type filled, False otherwise
+        :rtype: bool
+        '''
+        # Check if the reaction has an annotation. Annotations dominate everything.
+        sbo_term = reaction.getSBOTerm()
+        if sbo_term > -1:
+            sbo_term = str(sbo_term)
+            while len(sbo_term) < 7:
+                sbo_term = '0' + sbo_term
+            sbo_term = 'SBO:' + sbo_term
+
+            if sbo_term == sbo_terms[boundary_type]:
+                return True
+            if sbo_term in [sbo_terms[k] for k in sbo_terms if k != boundary_type]:
+                return False
+        
+        # Check if the reaction is in the correct compartment (exterior or inside)
+        reaction_compartment = reaction.getCompartment()
+        if reaction_compartment is None or reaction_compartment == '':
+            reactants = reaction.getListOfReactants()
+            if len(reactants) == 1:
+                reactant = reactants[0]
+                specie_id = reactants[0].getSpecies()
+                reaction_compartment = self.getModel().getSpecies(specie_id).getCompartment()
+        correct_compartment = external_compartment == reaction_compartment
+        if boundary_type != "exchange":
+            correct_compartment = not correct_compartment
+
+        # Check if the reaction has the correct reversibility
+        rev_type = True
+        if boundary_type == "demand":
+            rev_type = not reaction.getReversible()
+        elif boundary_type == "sink":
+            rev_type = reaction.getReversible()
+
+        # Determine if reaction is "boundary"
+        is_boundary = False
+        if boundary_type == "exchange":
+            if ((len(reaction.getListOfProducts()) == 0 and len(reaction.getListOfReactants()) == 1)
+                or (len(reaction.getListOfProducts()) == 1 and len(reaction.getListOfReactants()) == 0)):
+                is_boundary = True
+
+        # In exclude fields ?
+        to_exclude = not any(ex in reaction.getId() for ex in excludes[boundary_type])
+        
+        return (
+            is_boundary 
+            and to_exclude
+            and correct_compartment
+            and rev_type
+        )
+
+    def build_exchange_reaction(
+        model: 'rpSBML',
+        compartment_id: str,
+        logger: Logger = getLogger(__name__)
+    ) -> pd_DataFrame:
+        '''Select exchange reactions in a model.
+
+        :param model: a model into perform searching
+        :param compartment_id: id used for the external compartment in the model
+        :param logger: a logger object
+
+        :type model: rpSBML
+        :type compartment_id: str
+        :type logger: Logger
+
+        :return: a dataframe with two columns "model_id" supporting id of the specie implied in the reaction and "libsbml_reaction" the exchange reaction
+        :rtype: pd.DataFrame
+        '''
+
+        def _specie_id_from_exchange(
+            reaction: libsbml.Reaction,
+            logger: Logger= getLogger(__name__)
+        ) -> str:
+
+            products = reaction.getListOfProducts()
+            reactants = reaction.getListOfReactants()
+            if sum([len(products), len(reactants)]) != 1:
+                logger.warning('Unexpected reaction format')
+                return None
+            specie_id = None
+            if len(products) > 0:
+                specie_id = products[0].getSpecies()
+            else:
+                specie_id = reactants[0].getSpecies()
+            return specie_id
+
+
+        df = pd_DataFrame(columns=['model_id', 'libsbml_reaction'])
+
+        # Create list of exchange reactions
+        for reaction in model.getModel().getListOfReactions():
+            if model.is_boundary_type(reaction, "exchange", compartment_id):
+                compound = dict(
+                    model_id=_specie_id_from_exchange(
+                        reaction,
+                        logger
+                    ),
+                    libsbml_reaction=reaction
+                )
+                df = df.append(compound, ignore_index=True)
+        # Fmg
+        df.sort_values('model_id', inplace=True)
+        df.reset_index(inplace=True, drop=True)
+        return df
+
 
     ######################################################################################################################
     ############################################### EC NUMBER ############################################################
@@ -2827,7 +2959,6 @@ class rpSBML:
                 </rdf:RDF>
             </annotation>
         '''
-
 
     def updateBRSynth(
         self,
@@ -4646,56 +4777,51 @@ class rpSBML:
 
     def createSpecies(
         self,
-        species_id,
-        species_name=None,
-        chemXref={},
-        inchi=None,
-        inchikey=None,
-        smiles=None,
-        compartment=None,
-        # species_group_id=None,
-        # in_sink_group_id=None,
-        meta_id=None,
-        infos: Dict = None
-    ):
-                      # TODO: add these at some point -- not very important
-                      # charge=0,
-                      # chemForm=''):
+        species_id:str,
+        species_name: str=None,
+        chemXref: Dict={},
+        inchi: str=None,
+        inchikey: str=None,
+        smiles: str=None,
+        compartment: str=None,
+        # species_group_id=None, :param species_group_id: The Groups id to add the species (Default: None)
+        # in_sink_group_id=None, :param in_sink_group_id: The Groups id sink species to add the species (Default: None)
+        meta_id: str=None,
+        infos: Dict={},
+        is_boundary: bool=False
+    ) -> None:
         """Create libSBML species
 
         Create a species that is added to self.model
 
         :param species_id: The id of the created species
-        :param compartment_id: The id of the compartment to add the reaction
         :param species_name: Overwrite the default name of the created species (Default: None)
         :param chemXref: The dict containing the MIRIAM annotation (Default: {})
         :param inchi: The InChI string to be added to BRSynth annotation (Default: None)
         :param inchikey: The InChIkey string to be added to BRSynth annotation (Default: None)
         :param smiles: The SMLIES string to be added to BRSynth annotation (Default: None)
-        :param species_group_id: The Groups id to add the species (Default: None)
-        :param in_sink_group_id: The Groups id sink species to add the species (Default: None)
+        :param compartment: The id of the compartment to add the reaction
         :param meta_id: Meta id (Default: None)
+        :param infos: Supplemental informations to be added to BRSynth annotation (Default: None)
+        :param is_boundary: Set if the specie is boundary (Default: False)
 
-        :type species_id: str
-        :type compartment_id: str
+        :type species_id: str 
         :type species_name: str
-        :type chemXref: dict
-        :type inchi: str
+        :type chemXref: Dict
         :type inchikey: str
         :type smiles: str
-        :type species_group_id: str
-        :type in_sink_group_id: str
+        :type compartment: str 
         :type meta_id: str
+        :type infos: Dict
+        :type is_boundary: bool 
 
         :rtype: None
         :return: None
         """
-        # if not species_id.endswith('__64__'+compartment_id):
-        #     species_id += '__64__'+compartment_id
         spe = self.getModel().createSpecies()
         rpSBML.checklibSBML(spe, 'create species')
 
-        ##### FBC #####
+        # FBC.
         spe_fbc = spe.getPlugin('fbc')
         rpSBML.checklibSBML(spe_fbc, 'creating this species as an instance of FBC')
         # spe_fbc.setCharge(charge) #### These are not required for FBA
@@ -4708,7 +4834,7 @@ class rpSBML:
         # ID same structure as cobrapy
         # TODO: determine if this is always the case or it will change
         rpSBML.checklibSBML(spe.setHasOnlySubstanceUnits(False), 'set substance unit')
-        rpSBML.checklibSBML(spe.setBoundaryCondition(False), 'set boundary conditions')
+        rpSBML.checklibSBML(spe.setBoundaryCondition(is_boundary), 'set boundary conditions')
         rpSBML.checklibSBML(spe.setConstant(False), 'set constant')
         # useless for FBA (usefull for ODE) but makes Copasi stop complaining
         rpSBML.checklibSBML(spe.setInitialConcentration(1.0), 'set an initial concentration')
@@ -4722,14 +4848,14 @@ class rpSBML:
             rpSBML.checklibSBML(spe.setName(species_id), 'setting name for the metabolite '+str(species_id))
         else:
             rpSBML.checklibSBML(spe.setName(species_name), 'setting name for the metabolite '+str(species_name))
-        rpSBML.checklibSBML(spe.setCompartment(compartment), 'setting compartment')
+        if compartment:
+            rpSBML.checklibSBML(spe.setCompartment(compartment), 'setting compartment')
         # this is setting MNX id as the name
         # this is setting the name as the input name
         # rpSBML.checklibSBML(spe.setAnnotation(self._defaultBRSynthAnnot(meta_id)), 'creating annotation')
         rpSBML.checklibSBML(spe.setAnnotation(self._defaultBothAnnot(meta_id)), 'creating annotation')
-        ###### annotation ###
+        # Annotations.
         self.addUpdateMIRIAM(spe, 'species', chemXref, meta_id)
-        ###### BRSYNTH additional information ########
         if smiles is not None:
             self.updateBRSynth(
                 sbase_obj=spe,

@@ -4,6 +4,7 @@ Created on June 17 2020
 @author: Joan Hérisson
 """
 import libsbml
+import pandas as pd
 from    rptools.rplibs import rpSBML
 from          tempfile import (
     NamedTemporaryFile
@@ -13,6 +14,7 @@ from typing import (
     List,
     Tuple
 )
+from cobra import io as cobra_io
 from           pathlib import Path
 from                os import path  as os_path
 from              json import load  as json_load
@@ -45,11 +47,11 @@ class Test_rpSBML(Main_rplibs):
         # objects below have to be created for each test instance
         # since some tests can modified them
 
+        self.rpsbml_none = rpSBML()
         self.rpsbml_lycopene  = rpSBML(
             inFile = self.rpsbml_lycopene_path,
             logger = self.logger
         )
-        self.rpsbml_none = rpSBML()
 
         #self.gem = rpSBML(
         #    inFile = extract_gz(
@@ -144,6 +146,170 @@ class Test_rpSBML(Main_rplibs):
             species_match_with[1]
         )
 
+    def test_is_boundary_type(self):
+        # TODO: implement test which doesn't account abount SBO terms, to see how compartment_id ... are managed
+        # Load.
+        rpsbml_ecoli  = rpSBML(
+            inFile = self.rpsbml_ecoli_path,
+            logger = self.logger
+        )
+        reactions = rpsbml_ecoli.getModel().getListOfReactions()
+        cobra_model = cobra_io.read_sbml_model(
+            self.rpsbml_ecoli_path, 
+            use_fbs_package=True
+        )
+        # Return type.
+        self.assertIsInstance(
+            rpsbml_ecoli.is_boundary_type(
+                reactions[0],
+                'exchange',
+                ''
+            ),
+            bool
+        )
+        # Exchange.
+        rpsbml_exchange = [x for x in reactions if rpsbml_ecoli.is_boundary_type(x, 'exchange', 'e')]
+        self.assertEqual(
+            len(cobra_model.exchanges),
+            len(rpsbml_exchange)
+        )
+        rpsbml_exchange = [x for x in reactions if rpsbml_ecoli.is_boundary_type(x, 'exchange', '')]
+        self.assertEqual(
+            len(cobra_model.exchanges),
+            len(rpsbml_exchange)
+        )
+        # Demand.
+        rpsbml_demands = [x for x in reactions if rpsbml_ecoli.is_boundary_type(x, 'demand', '')]
+        self.assertEqual(
+            len(cobra_model.demands),
+            len(rpsbml_demands)
+        )
+        # Sinks.
+        rpsbml_sinks = [x for x in reactions if rpsbml_ecoli.is_boundary_type(x, 'sink', '')]
+        self.assertEqual(
+            len(cobra_model.sinks),
+            len(rpsbml_sinks)
+        )
+ 
+    def test_build_exchange_reaction(self):
+        # Load.
+        rpsbml_ecoli  = rpSBML(
+            inFile = self.rpsbml_ecoli_path,
+            logger = self.logger
+        )
+        df = rpsbml_ecoli.build_exchange_reaction('c')
+        # Return type.
+        self.assertIsInstance(
+            df,
+            pd.DataFrame
+        )
+        # Fmt dataframe.
+        self.assertEqual(
+            df.shape, 
+            (331,2)
+        )
+        self.assertIn('model_id', df.columns)
+        self.assertIn('libsbml_reaction', df.columns)
+        self.assertEqual(
+            df.loc[0, 'model_id'],
+            'M_12ppd__R_e'
+        )
+        self.assertIsInstance(
+            df.loc[0, 'libsbml_reaction'],
+            libsbml.Reaction
+        )
+
+    def test_createSpecies(self):
+        # Init.
+        nb_species = self.rpsbml_lycopene.read_species()
+        rt = self.rpsbml_lycopene.createSpecies(
+            species_id='M_ipdp_y'
+        )
+        # Return type.
+        self.assertIs(rt, None)
+        # Values.
+        species = [x for x in self.rpsbml_lycopene.read_species()]
+        self.assertEqual(
+            len(species),
+            1 + len(nb_species)
+        )
+        # Challenge - create
+        species_id='M_ipdp_c'
+        species_name='Isopentenyl diphosphate'
+        chemXref = {
+            'bigg': ['ipdp'], 
+            'biocyc': ['TUNGSTATE'], 
+            'chebi': ['128769', '6037']
+            #'metanetx': ['MNXM83']
+        }
+        inchi="InChI=1S/C5H12O7P2/c1-5(2)3-4-11-14(9,10)12-13(6,7)8/h1,3-4H2,2H3,(H,9,10)(H2,6,7,8)/p-3"
+        inchikey="NUHSROFQTUXZQQ-UHFFFAOYSA-K"
+        smiles="C=C(C)CCOP(=O)([O-])OP(=O)([O-])[O-]"
+        compartment="MNXC3"
+        metaid="M_ipdp_c"
+        is_boundary=True
+        self.rpsbml_lycopene.createSpecies(
+            species_id=species_id,
+            species_name=species_name,
+            chemXref=chemXref,
+            inchi=inchi,
+            inchikey=inchikey,
+            smiles=smiles,
+            compartment=compartment,
+            meta_id=metaid,
+            infos={'smiles_infos':smiles},
+            is_boundary=is_boundary
+        )
+        brsynth_annot = {
+            'inchi': inchi,
+            'inchikey': inchikey,
+            'smiles':smiles,
+            'smiles_infos':smiles
+        }
+        specie = self.rpsbml_lycopene.getModel().getSpecies(species_id)
+        self.assertEqual(
+            species_name,
+            specie.getName()
+        )
+        self.assertTrue(
+            self.rpsbml_lycopene.compareAnnotations_annot_dict(
+                specie.getAnnotation(),
+                chemXref
+            )
+        )
+        self.assertTrue(
+            self.rpsbml_lycopene.compareAnnotations_dict_dict(
+                self.rpsbml_lycopene.readBRSYNTHAnnotation(specie.getAnnotation()),
+                brsynth_annot
+            )
+        )
+        self.assertEqual(
+            compartment,
+            specie.getCompartment()
+        )
+        self.assertEqual(
+            metaid,
+            specie.getMetaId()
+        )
+        self.assertTrue(specie.getBoundaryCondition())
+        # Challenge - update
+        species_id='M_ipdp_c'
+        species_name='Isopentenyl diphos'
+        self.rpsbml_lycopene.createSpecies(
+            species_id=species_id,
+            species_name=species_name
+        )
+        species = [x for x in self.rpsbml_lycopene.getModel().getListOfSpecies() if x.getId() == species_id]
+        self.assertEqual(
+            len(species),
+            2
+        )
+        specie = [x for x in species if x.getName() == species_name][0]
+        self.assertEqual(
+            {},
+            self.rpsbml_lycopene.readBRSYNTHAnnotation(specie.getAnnotation())
+        )
+ 
     #def test_initEmpty(self):002_0001
     #    rpSBML(name='rpSBML_test', logger=self.logger)
 
