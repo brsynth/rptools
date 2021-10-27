@@ -4,6 +4,7 @@ Created on June 17 2020
 @author: Joan Hérisson
 """
 import libsbml
+import pandas as pd
 from    rptools.rplibs import rpSBML
 from          tempfile import (
     NamedTemporaryFile
@@ -148,18 +149,18 @@ class Test_rpSBML(Main_rplibs):
     def test_is_boundary_type(self):
         # TODO: implement test which doesn't account abount SBO terms, to see how compartment_id ... are managed
         # Load.
-        self.rpsbml_ecoli  = rpSBML(
+        rpsbml_ecoli  = rpSBML(
             inFile = self.rpsbml_ecoli_path,
             logger = self.logger
         )
-        reactions = self.rpsbml_ecoli.getModel().getListOfReactions()
+        reactions = rpsbml_ecoli.getModel().getListOfReactions()
         cobra_model = cobra_io.read_sbml_model(
             self.rpsbml_ecoli_path, 
             use_fbs_package=True
         )
         # Return type.
         self.assertIsInstance(
-            self.rpsbml_ecoli.is_boundary_type(
+            rpsbml_ecoli.is_boundary_type(
                 reactions[0],
                 'exchange',
                 ''
@@ -167,24 +168,24 @@ class Test_rpSBML(Main_rplibs):
             bool
         )
         # Exchange.
-        rpsbml_exchange = [x for x in reactions if self.rpsbml_ecoli.is_boundary_type(x, 'exchange', 'e')]
+        rpsbml_exchange = [x for x in reactions if rpsbml_ecoli.is_boundary_type(x, 'exchange', 'e')]
         self.assertEqual(
             len(cobra_model.exchanges),
             len(rpsbml_exchange)
         )
-        rpsbml_exchange = [x for x in reactions if self.rpsbml_ecoli.is_boundary_type(x, 'exchange', '')]
+        rpsbml_exchange = [x for x in reactions if rpsbml_ecoli.is_boundary_type(x, 'exchange', '')]
         self.assertEqual(
             len(cobra_model.exchanges),
             len(rpsbml_exchange)
         )
         # Demand.
-        rpsbml_demands = [x for x in reactions if self.rpsbml_ecoli.is_boundary_type(x, 'demand', '')]
+        rpsbml_demands = [x for x in reactions if rpsbml_ecoli.is_boundary_type(x, 'demand', '')]
         self.assertEqual(
             len(cobra_model.demands),
             len(rpsbml_demands)
         )
         # Sinks.
-        rpsbml_sinks = [x for x in reactions if self.rpsbml_ecoli.is_boundary_type(x, 'sink', '')]
+        rpsbml_sinks = [x for x in reactions if rpsbml_ecoli.is_boundary_type(x, 'sink', '')]
         self.assertEqual(
             len(cobra_model.sinks),
             len(rpsbml_sinks)
@@ -192,7 +193,11 @@ class Test_rpSBML(Main_rplibs):
  
     def test_build_exchange_reaction(self):
         # Load.
-        df = self.rpsbml_ecoli.build_exchange_reaction('c')
+        rpsbml_ecoli  = rpSBML(
+            inFile = self.rpsbml_ecoli_path,
+            logger = self.logger
+        )
+        df = rpsbml_ecoli.build_exchange_reaction('c')
         # Return type.
         self.assertIsInstance(
             df,
