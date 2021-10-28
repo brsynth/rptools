@@ -1,9 +1,10 @@
 # Release history
 
-## 5.8.2 UNPUBLISHED
+## 5.8.2
+- fix(tests): fix issues with test on Windows
+- fix(rpthermo): add_thermo_info()
 - chore(rplibs): make generic attributes reading
 - chore(rplibs): 'ec' -> 'ec-code
-- fix(rpthermo): add_thermo_info()
 
 ## 5.8.1
 - chore(rplibs): make generic attributes reading
