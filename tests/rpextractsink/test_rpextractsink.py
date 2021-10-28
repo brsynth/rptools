@@ -68,6 +68,7 @@ class Test_rpExtractSink(TestCase):
 
     def test_genSink(self):
         outfile = NamedTemporaryFile(delete=False)
+        outfile.close()
         genSink(
             self.cache,
             input_sbml = self.e_coli_model_path,
@@ -75,35 +76,40 @@ class Test_rpExtractSink(TestCase):
             remove_dead_end = False,
             logger = self.logger
         )
-        self.assertTrue(
-            cmp(
-                Path(outfile.name),
+        outfile.close()
+        with open(outfile.name, 'r') as test_f:
+            test_content = test_f.read()
+            with open(
                 os_path.join(
                     self.data_path,
                     'output_sink.csv'
-                )
-            )
-        )
-        outfile.close()
+                ),
+                'r'
+            ) as ref_f:
+                ref_content = ref_f.read()
+                self.assertEqual(test_content, ref_content)
         remove(outfile.name)
 
 
     def test_genSink_rmDE(self):
         outfile = NamedTemporaryFile(delete=False)
+        outfile.close()
         genSink(
             self.cache,
             input_sbml = self.e_coli_model_path,
             output_sink = outfile.name,
             remove_dead_end = True
         )
-        self.assertTrue(
-            cmp(
-                Path(outfile.name),
+        outfile.close()
+        with open(outfile.name, 'r') as test_f:
+            test_content = test_f.read()
+            with open(
                 os_path.join(
                     self.data_path,
                     'output_sink_woDE.csv'
-                )
-            )
-        )
-        outfile.close()
+                ),
+                'r'
+            ) as ref_f:
+                ref_content = ref_f.read()
+                self.assertEqual(test_content, ref_content)
         remove(outfile.name)

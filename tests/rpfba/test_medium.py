@@ -12,7 +12,8 @@ from logging import (
     getLogger
 )
 from os import (
-    path as os_path
+    path as os_path,
+    remove
 )
 from tempfile import NamedTemporaryFile
 from typing import (
@@ -106,7 +107,8 @@ class Test_medium(Main_rpfba):
         )
         tmp_file = tempfile.NamedTemporaryFile(
                 suffix='.csv', 
-                dir=self.temp_d
+                dir=self.temp_d,
+                delete=False
         )
         for ix in range(len(self.__MEDIUM_HEADER)):
             tmp_header = deepcopy(self.__MEDIUM_HEADER)
@@ -118,6 +120,8 @@ class Test_medium(Main_rpfba):
             )
             df_tmp = load_medium_file(tmp_file.name)
             self.assertFalse(is_df_medium_defined(df_tmp))
+            tmp_file.close()
+            remove(tmp_file.name)
 
     def test_read_medium_ids(self):
         ids = read_medium_ids(os_path.join(self.medium_path, 'medium.io.b.csv'))
@@ -404,7 +408,7 @@ class Test_medium(Main_rpfba):
             'c'
         )
         cobra_model = None
-        with NamedTemporaryFile(dir=self.temp_d) as tempf:
+        with NamedTemporaryFile(dir=self.temp_d, delete=False) as tempf:
             rpsbml.write_to_file(tempf.name)
             cobra_model=cobra_io.read_sbml_model(tempf.name, use_fbc_package=True)
         cobra_model.medium = df_to_medium(df)
@@ -412,3 +416,5 @@ class Test_medium(Main_rpfba):
             cobra_model.medium,
             expected_medium
         )
+        tempf.close()
+        remove(tempf.name)

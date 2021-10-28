@@ -46,8 +46,13 @@ def test_run_report_standalone_from_dir():
         tested_output_single_file_html = os.path.join(
             tmp_folder,
             'index.html'
-        )    
-        assert filecmp.cmp(tested_output_single_file_html, data_output_standalone_file, shallow=False)
+        )
+        with open(tested_output_single_file_html, 'r') as test_f:
+            test_content = test_f.read()
+            with open(data_output_standalone_file, 'r') as ref_f:
+                ref_content = ref_f.read()
+                assert test_content == ref_content
+        # assert filecmp.cmp(tested_output_single_file_html, data_output_standalone_file, shallow=False)
 
 
 def test_run_report_standalone():
@@ -58,7 +63,12 @@ def test_run_report_standalone():
             tmp_folder,
             'index.html'
         )    
-        assert filecmp.cmp(tested_output_single_file_html, data_output_standalone_file, shallow=False)
+        with open(tested_output_single_file_html, 'r') as test_f:
+            test_content = test_f.read()
+            with open(data_output_standalone_file, 'r') as ref_f:
+                ref_content = ref_f.read()
+                assert test_content == ref_content
+        # assert filecmp.cmp(tested_output_single_file_html, data_output_standalone_file, shallow=False)
 
 def test_run_report():
     # testing files output from tar file
