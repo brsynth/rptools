@@ -1,0 +1,6 @@
+rptools.rpfba.medium.is\_df\_medium\_defined
+============================================
+
+.. currentmodule:: rptools.rpfba.medium
+
+.. autofunction:: is_df_medium_defined

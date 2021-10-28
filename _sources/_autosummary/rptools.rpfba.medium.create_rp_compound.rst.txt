@@ -1,0 +1,6 @@
+rptools.rpfba.medium.create\_rp\_compound
+=========================================
+
+.. currentmodule:: rptools.rpfba.medium
+
+.. autofunction:: create_rp_compound

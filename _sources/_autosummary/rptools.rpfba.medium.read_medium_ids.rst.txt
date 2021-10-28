@@ -1,0 +1,6 @@
+rptools.rpfba.medium.read\_medium\_ids
+======================================
+
+.. currentmodule:: rptools.rpfba.medium
+
+.. autofunction:: read_medium_ids

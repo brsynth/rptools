@@ -1,0 +1,6 @@
+rptools.rpfba.medium.crossref\_medium\_id
+=========================================
+
+.. currentmodule:: rptools.rpfba.medium
+
+.. autofunction:: crossref_medium_id

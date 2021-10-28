@@ -1,0 +1,6 @@
+rptools.rpfba.medium.df\_to\_medium
+===================================
+
+.. currentmodule:: rptools.rpfba.medium
+
+.. autofunction:: df_to_medium

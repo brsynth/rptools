@@ -4,8 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>rpThermo &#8212; rpTools 5.4.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
@@ -33,12 +32,12 @@
 
           <div class="body" role="main">
             
-  <section class="tex2jax_ignore mathjax_ignore" id="rpthermo">
+  <div class="tex2jax_ignore mathjax_ignore section" id="rpthermo">
 <h1>rpThermo<a class="headerlink" href="#rpthermo" title="Permalink to this headline">¶</a></h1>
 <p>Calculate the formation energy of chemical species and the Gibbs free energy for each reaction and for the heterologous pathway itself. This tool uses the <a class="reference external" href="https://gitlab.com/elad.noor/component-contribution">component contribution</a> method for determining the formation energy of chemical species that are either not annotated, or cannot be found in the internal database.</p>
 <p>For each species, the challenge is to find the corresponding compound in the eQuilibrator cache. To find the good compound, one tries to exact match species ID, InChIKey, InChI or SMILES and stops with the first hit. Then, if no compound has been found, in the last resort, the first part of species InChIKey is looked for within the cache. If the result (a list) is not empty, the first compound is taken.</p>
 <p>Because we are interested in the thermodynamics of the pathway when the production of the target is optimized, we have modified coefficients of each reaction. We used a linear system solver (from <a class="reference external" href="https://www.scipy.org">SciPy</a>) by giving the reaction that produces the target as objective and elimination of intermediate species as constraints.</p>
-<section id="input">
+<div class="section" id="input">
 <h2>Input<a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h2>
 <p>Required:</p>
 <ul class="simple">
@@ -49,23 +48,23 @@
 <ul class="simple">
 <li><p><strong>-pathway_id</strong>: (string, default=rp_pathway) ID of the heterologous pathway</p></li>
 </ul>
-</section>
-<section id="output">
+</div>
+<div class="section" id="output">
 <h2>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><strong>-output</strong>: (string) Path to the output file</p></li>
 </ul>
-</section>
-<section id="install">
+</div>
+<div class="section" id="install">
 <h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
 <p>rpThermo is part of rpTools suite:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="o">[</span>sudo<span class="o">]</span> conda install -c brsynth -c conda-forge -c bioconda rptools
 </pre></div>
 </div>
-</section>
-<section id="run">
+</div>
+<div class="section" id="run">
 <h2>Run<a class="headerlink" href="#run" title="Permalink to this headline">¶</a></h2>
-<section id="rpthermo-process">
+<div class="section" id="rpthermo-process">
 <h3>rpThermo process<a class="headerlink" href="#rpthermo-process" title="Permalink to this headline">¶</a></h3>
 <p><strong>From Python code</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rptools.rplibs</span> <span class="kn">import</span> <span class="n">rpSBML</span>
@@ -87,41 +86,41 @@
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m rptools.rpthermo &lt;input_sbml&gt; &lt;outfile&gt;
 </pre></div>
 </div>
-</section>
-</section>
-<section id="tests">
+</div>
+</div>
+<div class="section" id="tests">
 <h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h2>
 <p>Test can be run with the following commands:</p>
-<section id="natively">
+<div class="section" id="natively">
 <h3>Natively<a class="headerlink" href="#natively" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> tests
 pytest -v
 </pre></div>
 </div>
-</section>
-</section>
-<section id="ci-cd">
+</div>
+</div>
+<div class="section" id="ci-cd">
 <h2>CI/CD<a class="headerlink" href="#ci-cd" title="Permalink to this headline">¶</a></h2>
 <p>For further tests and development tools, a CI toolkit is provided in <code class="docutils literal notranslate"><span class="pre">ci</span></code> folder (see <span class="xref myst">ci/README.md</span>).</p>
-</section>
-<section id="authors">
+</div>
+<div class="section" id="authors">
 <h2>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><strong>Joan Hérisson</strong></p></li>
 <li><p><strong>Melchior du Lac</strong></p></li>
 </ul>
-</section>
-<section id="acknowledgments">
+</div>
+<div class="section" id="acknowledgments">
 <h2>Acknowledgments<a class="headerlink" href="#acknowledgments" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Thomas Duigou</p></li>
 </ul>
-</section>
-<section id="licence">
+</div>
+<div class="section" id="licence">
 <h2>Licence<a class="headerlink" href="#licence" title="Permalink to this headline">¶</a></h2>
 <p>rpThermo is released under the MIT licence. See the LICENCE file for details.</p>
-</section>
-</section>
+</div>
+</div>
 
 
           </div>

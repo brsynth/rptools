@@ -1,6 +1,61 @@
-rptools.rpfba.rpFBA.cobra\_model
+﻿rptools.rpfba.rpFBA.cobra\_model
 ================================
 
 .. currentmodule:: rptools.rpfba.rpFBA
 
-.. autofunction:: cobra_model
+.. autoclass:: cobra_model
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~cobra_model.__init__
+      ~cobra_model.add_boundary
+      ~cobra_model.add_cons_vars
+      ~cobra_model.add_groups
+      ~cobra_model.add_metabolites
+      ~cobra_model.add_reaction
+      ~cobra_model.add_reactions
+      ~cobra_model.copy
+      ~cobra_model.get_associated_groups
+      ~cobra_model.get_metabolite_compartments
+      ~cobra_model.merge
+      ~cobra_model.optimize
+      ~cobra_model.remove_cons_vars
+      ~cobra_model.remove_groups
+      ~cobra_model.remove_metabolites
+      ~cobra_model.remove_reactions
+      ~cobra_model.repair
+      ~cobra_model.slim_optimize
+      ~cobra_model.summary
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~cobra_model.annotation
+      ~cobra_model.boundary
+      ~cobra_model.compartments
+      ~cobra_model.constraints
+      ~cobra_model.demands
+      ~cobra_model.description
+      ~cobra_model.exchanges
+      ~cobra_model.id
+      ~cobra_model.medium
+      ~cobra_model.objective
+      ~cobra_model.objective_direction
+      ~cobra_model.problem
+      ~cobra_model.sinks
+      ~cobra_model.solver
+      ~cobra_model.tolerance
+      ~cobra_model.variables
+   
+   

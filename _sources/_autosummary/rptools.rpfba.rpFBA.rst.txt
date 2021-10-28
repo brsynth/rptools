@@ -15,12 +15,12 @@ rptools.rpfba.rpFBA
       :toctree:
       :nosignatures:
    
+      build_cobra_model
       build_hidden_species
       build_results
       build_rpsbml
       check_SBML_compartment
       check_SBML_rxnid
-      cobra_model
       complete_heterologous_pathway
       create_ignored_species_group
       create_target_consumption_reaction

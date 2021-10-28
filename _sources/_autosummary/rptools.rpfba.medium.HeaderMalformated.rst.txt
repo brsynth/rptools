@@ -1,0 +1,6 @@
+rptools.rpfba.medium.HeaderMalformated
+======================================
+
+.. currentmodule:: rptools.rpfba.medium
+
+.. autoexception:: HeaderMalformated

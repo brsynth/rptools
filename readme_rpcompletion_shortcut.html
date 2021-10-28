@@ -4,8 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>rpCompletion &#8212; rpTools 5.4.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
@@ -33,7 +32,7 @@
 
           <div class="body" role="main">
             
-  <section class="tex2jax_ignore mathjax_ignore" id="rpcompletion">
+  <div class="tex2jax_ignore mathjax_ignore section" id="rpcompletion">
 <h1>rpCompletion<a class="headerlink" href="#rpcompletion" title="Permalink to this headline">¶</a></h1>
 <p>Completes mono-component reactions output by RetroPath2.0 with the appropriate cofactors. Creates sub-paths when multiple reaction rules are associated with a single reaction. Input is a single pathways file produced by RP2Paths. It stands on rrCache which store pre-computed data.</p>
 <p>All metabolic pathways will be built as the following:</p>
@@ -49,7 +48,7 @@
 </li>
 </ul>
 <p>Thus, each different template reaction for each different reaction rule for each different chemical transformation provides one single possible pathway. The algorithm explores the combinatorics of all possible pathways and for each “master pathway” (the one from chemical transformations), keeps only top ones (defined by <code class="docutils literal notranslate"><span class="pre">max_subpaths_filter</span></code> CLI option, default: 10).</p>
-<section id="input">
+<div class="section" id="input">
 <h2>Input<a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h2>
 <p>Required:</p>
 <ul class="simple">
@@ -72,14 +71,14 @@ This is the default mode. All cache data are stored into files on disk and loade
 
 ### DB mode
 In order to save memory space, cache data can be loaded once in a database (redis) so that the memory space taken is equal to one instance of the cache, whatever the number of processes whic are running. Option can be specified by `--store-mode <db_host>`, where `db_host` is the hostname on which redis server is running. -->
-</section>
-<section id="install">
+</div>
+<div class="section" id="install">
 <h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
 <p>Please see <code class="docutils literal notranslate"><span class="pre">rptool</span></code> documentation.</p>
-</section>
-<section id="run">
+</div>
+<div class="section" id="run">
 <h2>Run<a class="headerlink" href="#run" title="Permalink to this headline">¶</a></h2>
-<section id="rpcompletion-process">
+<div class="section" id="rpcompletion-process">
 <h3>rpCompletion process<a class="headerlink" href="#rpcompletion-process" title="Permalink to this headline">¶</a></h3>
 <p><strong>From Python code</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rptools.rpcompletion</span> <span class="kn">import</span> <span class="n">rp_completion</span>
@@ -101,41 +100,41 @@ In order to save memory space, cache data can be loaded once in a database (redi
   &lt;outdir&gt;
 </pre></div>
 </div>
-</section>
-</section>
-<section id="tests">
+</div>
+</div>
+<div class="section" id="tests">
 <h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h2>
 <p>Test can be run with the following commands:</p>
-<section id="natively">
+<div class="section" id="natively">
 <h3>Natively<a class="headerlink" href="#natively" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> tests
 pytest -v
 </pre></div>
 </div>
-</section>
-</section>
-<section id="ci-cd">
+</div>
+</div>
+<div class="section" id="ci-cd">
 <h2>CI/CD<a class="headerlink" href="#ci-cd" title="Permalink to this headline">¶</a></h2>
 <p>For further tests and development tools, a CI toolkit is provided in <code class="docutils literal notranslate"><span class="pre">ci</span></code> folder (see <span class="xref myst">ci/README.md</span>).</p>
-</section>
-<section id="authors">
+</div>
+<div class="section" id="authors">
 <h2>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><strong>Joan Hérisson</strong></p></li>
 </ul>
-</section>
-<section id="acknowledgments">
+</div>
+<div class="section" id="acknowledgments">
 <h2>Acknowledgments<a class="headerlink" href="#acknowledgments" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Thomas Duigou</p></li>
 <li><p>Melchior du Lac</p></li>
 </ul>
-</section>
-<section id="licence">
+</div>
+<div class="section" id="licence">
 <h2>Licence<a class="headerlink" href="#licence" title="Permalink to this headline">¶</a></h2>
 <p>rpCompletion is released under the MIT licence. See the LICENCE file for details.</p>
-</section>
-</section>
+</div>
+</div>
 
 
           </div>

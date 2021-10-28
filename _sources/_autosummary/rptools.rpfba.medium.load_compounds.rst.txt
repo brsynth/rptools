@@ -1,0 +1,6 @@
+rptools.rpfba.medium.load\_compounds
+====================================
+
+.. currentmodule:: rptools.rpfba.medium
+
+.. autofunction:: load_compounds

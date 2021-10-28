@@ -1,0 +1,6 @@
+rptools.rpfba.medium.add\_missing\_specie
+=========================================
+
+.. currentmodule:: rptools.rpfba.medium
+
+.. autofunction:: add_missing_specie

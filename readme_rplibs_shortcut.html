@@ -4,8 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>rplibs &#8212; rpTools 5.4.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
@@ -33,31 +32,31 @@
 
           <div class="body" role="main">
             
-  <section class="tex2jax_ignore mathjax_ignore" id="rplibs">
+  <div class="tex2jax_ignore mathjax_ignore section" id="rplibs">
 <h1>rplibs<a class="headerlink" href="#rplibs" title="Permalink to this headline">¶</a></h1>
 <p>Libraries for rpTools, contains:</p>
 <ul class="simple">
 <li><p>rpSBML</p></li>
 <li><p>inchikeyMIRIAM</p></li>
 </ul>
-<section id="rpsbml">
+<div class="section" id="rpsbml">
 <h2>rpSBML<a class="headerlink" href="#rpsbml" title="Permalink to this headline">¶</a></h2>
 <p>Defines SBML structure with additional fields relative to <a class="reference external" href="https://github.com/brsynth/RetroPath2-wrapper">RetroPath2</a> objects.</p>
 <!-- ### Prerequisites
 * Python 3 with the following modules:
     * python-libsbml
     * [RDKit](https://www.RDKit.org) -->
-<section id="install">
+<div class="section" id="install">
 <h3>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h3>
 <p>rpLibs is part of rpTools suite:</p>
-<section id="from-conda">
+<div class="section" id="from-conda">
 <h4>From Conda<a class="headerlink" href="#from-conda" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="o">[</span>sudo<span class="o">]</span> conda install -c brsynth -c conda-forge -c bioconda rptools
 </pre></div>
 </div>
-</section>
-</section>
-<section id="test">
+</div>
+</div>
+<div class="section" id="test">
 <h3>Test<a class="headerlink" href="#test" title="Permalink to this headline">¶</a></h3>
 <p>Please follow instructions below ti run tests:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">tests</span>
@@ -65,38 +64,38 @@
 </pre></div>
 </div>
 <p>For further tests and development tools, a CI toolkit is provided in <code class="docutils literal notranslate"><span class="pre">ci</span></code> folder (see <span class="xref myst">ci/README.md</span>).</p>
-</section>
-<section id="merging">
+</div>
+<div class="section" id="merging">
 <h3>Merging<a class="headerlink" href="#merging" title="Permalink to this headline">¶</a></h3>
 <p>rpSBML class allows the merging between txo rpSBML objects. We use this method to merge an heterologue pathway and a model.</p>
-<section id="compartments">
+<div class="section" id="compartments">
 <h4>Compartments<a class="headerlink" href="#compartments" title="Permalink to this headline">¶</a></h4>
 <p>The compartment of the pathway to each compartment of the model. The comparison is done by ID, name or MIRIAM annotations. If a model compartment matches, then we rename the compartment of each species of the pathway to the name of the model matched compartment. Otherwise, the pathway compartment is added to the model.</p>
-</section>
-</section>
-</section>
-<section id="inchikeymiriam">
+</div>
+</div>
+</div>
+<div class="section" id="inchikeymiriam">
 <h2>inchikeyMIRIAM<a class="headerlink" href="#inchikeymiriam" title="Permalink to this headline">¶</a></h2>
 <p>Uses the rrCache to parse an SBML file to find all the chemical species, and try to recover the inchikey and add it to the MIRIAM annotation.</p>
-</section>
-<section id="authors">
+</div>
+<div class="section" id="authors">
 <h2>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><strong>Melchior du Lac</strong></p></li>
 <li><p><strong>Joan Hérisson</strong></p></li>
 </ul>
-</section>
-<section id="acknowledgments">
+</div>
+<div class="section" id="acknowledgments">
 <h2>Acknowledgments<a class="headerlink" href="#acknowledgments" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Thomas Duigou</p></li>
 </ul>
-</section>
-<section id="licence">
+</div>
+<div class="section" id="licence">
 <h2>Licence<a class="headerlink" href="#licence" title="Permalink to this headline">¶</a></h2>
 <p>brs_libs is released under the MIT licence. See the LICENCE file for details.</p>
-</section>
-</section>
+</div>
+</div>
 
 
           </div>

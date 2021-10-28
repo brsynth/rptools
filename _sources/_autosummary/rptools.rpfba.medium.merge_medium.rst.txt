@@ -1,0 +1,6 @@
+rptools.rpfba.medium.merge\_medium
+==================================
+
+.. currentmodule:: rptools.rpfba.medium
+
+.. autofunction:: merge_medium

@@ -1,0 +1,6 @@
+rptools.rpfba.rpFBA.build\_cobra\_model
+=======================================
+
+.. currentmodule:: rptools.rpfba.rpFBA
+
+.. autofunction:: build_cobra_model

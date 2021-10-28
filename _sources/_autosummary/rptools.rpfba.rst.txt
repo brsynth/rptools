@@ -28,6 +28,7 @@ rptools.rpfba
 
    rptools.rpfba.Args
    rptools.rpfba.cobra_format
+   rptools.rpfba.medium
    rptools.rpfba.rpFBA
 
 
