@@ -320,20 +320,20 @@ def write_results_to_pathway(
     # Write species results
     for spe_id, score in results['species'].items():
         for k, v in score.items():
-            pathway.get_specie(spe_id).set_thermo_info(
+            pathway.get_specie(spe_id).add_thermo_info(
                 key=k,
                 value=v
             )
     # Write reactions results
     for rxn_id, score in results['reactions'].items():
         for k, v in score.items():
-            pathway.get_reaction(rxn_id).set_thermo_info(
+            pathway.get_reaction(rxn_id).add_thermo_info(
                 key=k,
                 value=v
             )
     # Write pathway result
     for k, v in results['net_reaction'].items():
-        pathway.set_thermo_info(
+        pathway.add_thermo_info(
         key=k,
         value=v
         )
