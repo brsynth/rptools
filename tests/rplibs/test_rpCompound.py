@@ -6,6 +6,7 @@ Created on July 22 2021
 
 from unittest import TestCase
 from copy import deepcopy
+from chemlite import Compound
 from rptools.rplibs.rpCompound import rpCompound
 
 
@@ -84,4 +85,42 @@ class Test_rpCompound(TestCase):
         self.assertEqual(
             self.rpcompound_empty.get_compartment(),
             comp_id
+        )    
+    def test_from_compound(self):
+        # Load.
+        cid = "MNXM23"
+        smiles = "CC(=O)C(=O)O]"
+        inchi = "InChI=1S/C3H4O3/c1-2(4)3(5)6/h1H3,(H,5,6)"
+        inchikey = "LCTONWCANYUPML-UHFFFAOYSA-N"
+        name = "target"
+        formula = "C3H3O3"
+        compound = Compound(
+            id=cid,
+            smiles=smiles,
+            inchi=inchi,
+            inchikey=inchikey,
+            name=name,
+            formula=formula
+        )
+        rp_compound = rpCompound.from_compound(
+            compound=compound
+        )
+        # Return type.
+        self.assertIsInstance(
+            rp_compound,
+            rpCompound
+        )
+        # Challenge - 1
+        self.assertEqual(
+            compound._Compound__to_dict(),
+            rp_compound._Compound__to_dict()
+        )
+        # Challenge - 2
+        rp_compound = rpCompound.from_compound(
+            compound=compound,
+            compartment_id='e'
+        )
+        self.assertEqual(
+            rp_compound.get_compartment(),
+            'e'
         )
