@@ -1,5 +1,10 @@
 # Release history
 
+## 5.8.2 UNPUBLISHED
+- chore(rplibs): make generic attributes reading
+- chore(rplibs): 'ec' -> 'ec-code
+- fix(rpthermo): add_thermo_info()
+
 ## 5.8.1
 - chore(rplibs): make generic attributes reading
 

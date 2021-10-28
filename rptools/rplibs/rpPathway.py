@@ -857,6 +857,8 @@ class rpPathway(Pathway, rpObject):
 
         ## Add species to the model
         for specie in self.get_species():
+            if isinstance(specie, Compound):
+                specie = rpCompound.from_compound(specie)
             rpsbml.createSpecies(
                 species_id=specie.get_id(),
                 species_name=specie.get_name(),
@@ -869,6 +871,10 @@ class rpPathway(Pathway, rpObject):
 
         ## Add reactions to the model
         for rxn in self.get_list_of_reactions():
+            xref = {
+                'ec-code': rxn.get_ec_numbers(),
+                **rxn.get_miriam()
+            }
             # Add the reaction in the model
             rpsbml.createReaction(
                 id=rxn.get_id(),
@@ -879,7 +885,7 @@ class rpPathway(Pathway, rpObject):
                 fbc_lower=rxn.get_fbc_lower(),
                 fbc_units=rxn.get_fbc_units(),
                 reversible=rxn.reversible(),
-                reacXref=rxn.get_miriam(),
+                reacXref=xref, 
                 infos=rxn._to_dict(full=False)
             )
 

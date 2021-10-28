@@ -194,3 +194,33 @@ class rpCompound(Compound, rpObject):
         compartment: str
         """
         self.__compartment = compartment
+
+    @staticmethod
+    def from_compound(
+        compound:Compound,
+        compartment_id:str='c',
+        logger: Logger = getLogger(__name__)
+    ) -> 'rpCompound':
+        '''Create a rpCompound object from a Compound object
+        
+        :param compound: A Compound object
+        :param compartment_id: A compartment id (Default: 'c')
+        :param logger: A logging object (Default: create one)
+        
+        :type compound: Compound
+        :type compartment_id: str
+        :type logger: logging
+
+        :return: An rpCompound object
+        :rtype: rpCompound
+        '''
+        return rpCompound(
+            id=compound.get_id(),
+            smiles=compound.get_smiles(),
+            inchi=compound.get_inchi(),
+            inchikey=compound.get_inchikey(),
+            formula=compound.get_formula(),
+            name=compound.get_name(),
+            compartment_id=compartment_id,
+            logger=logger
+        )
