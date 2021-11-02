@@ -412,7 +412,7 @@ def add_missing_specie(
 ######################
 
 def build_minimal_medium(
-    model: cobra_model=None,
+    model: cobra_model,
     solution: cobra_solution=None,
     logger: Logger=getLogger(__name__)
 ) -> pd.DataFrame:
@@ -433,8 +433,6 @@ def build_minimal_medium(
 
     # Init.
     df = pd.DataFrame()
-    if model is None:
-        return data
     objective_value = 0.1
     if solution:
         objective_value = solution.objective_value
