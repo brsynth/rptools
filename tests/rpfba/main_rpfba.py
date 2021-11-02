@@ -14,26 +14,28 @@ class Main_rpfba(TestCase):
         os_path.dirname(__file__),
         'data'
     )
-    e_coli_model_path_gz = os_path.join(
-        data_path,
-        'e_coli_model.sbml.gz'
-    )
+    # Model.
     e_coli_model_path = os_path.join(
         data_path,
         'e_coli_iML1515.sbml'
     )
- 
-    pathway_path = os_path.join(
+    # Output.
+    fba_path = os_path.join(
         data_path,
-        'pathway.json'
+        'lycopene_fba.zip'
     )
+    cr_path = os_path.join(
+        data_path,
+        'lycopene_iML1515_completereactions.zip'
+    )
+    rpsbml = None
+
+    # Medium.
     medium_path = os_path.join(
         data_path,
         'medium'
     )
-
-    rpsbml = None
-
+ 
     def setUp(self):
         self.logger = create_logger(__name__, 'ERROR')
         # Create persistent temp folder
