@@ -1,267 +1,197 @@
+from glob import glob
 from unittest import TestCase
-from os import path as os_path
+from shutil import rmtree
 from tempfile import (
     TemporaryDirectory,
     mkdtemp
 )
-from shutil import rmtree
-from cobra.core.solution import Solution  as cobra_solution
+from zipfile import ZipFile
+
 from json import load as json_load
+from os import path as os_path
+
+from cobra.core.solution import Solution  as cobra_solution
+
 from brs_utils import (
     create_logger,
     extract_gz
 )
 from rptools.rpfba.rpFBA import (
+    check_SBML_compartment,
+    check_SBML_rxnid,
     runFBA
 )
-from rptools.rplibs import rpSBML
+from rptools.rplibs import (
+    rpPathway,
+    rpSBML
+)
+from main_rpfba import Main_rpfba
+
+class Test_rpFBA(Main_rpfba):
 
 
-class Test_rpFBA(TestCase):
-
-    __test__ = False
-
-    data_path = os_path.join(
-        os_path.dirname(__file__),
-        'data'
-    )
-    e_coli_model_path_gz = os_path.join(
-        data_path,
-        'e_coli_model.sbml.gz'
-    )
-    pathway_path = os_path.join(
-        data_path,
-        'pathway.json'
-    )
-
-    def test(self):
-        with open(self.pathway_path, 'r') as fp:
-            pathway = json_load(fp)
-        results = runFBA(
-            pathway=pathway,
-            gem_sbml_path=self.e_coli_model_path_gz,
-            sim_type='fraction'
+    def setUp(self):
+        super().setUp()
+        input_zip = ZipFile(self.cr_path)
+        input_zip.extractall(
+            path=os_path.join(
+                self.temp_d,
+                'cr_fba'
+            )
         )
-        self.assertDictEqual(
-            results,
-            {
-                "reactions": {
-                    "rxn_1": 1.3648925522849882,
-                    "rxn_2": 1.3648925522849882,
-                    "rxn_3": 1.3648925522849882,
-                    "rxn_4": 1.3648925522849882
-                },
-                "pathway": {
-                    "biomass": 0.57290585662576
-                }
-            }
+        output_zip = ZipFile(self.fba_path)
+        output_zip.extractall(
+            path=os_path.join(
+                self.temp_d,
+                'lycopene_fba'
+            )
+        )
+    def tearDown(self):
+        super().tearDown()
+
+    def test_runFBA(self):
+        #TODO: taking accound extra args, like medium
+        def _extract_var(dirname):
+            files = glob(
+                os_path.join(
+                    dirname, 
+                    '*xml'
+                )
+            )
+            basenames = [os_path.basename(x) for x in files]
+            names = [x.split('.')[0] for x in basenames]
+            sims = [x.split('.')[1] for x in basenames]
+            assert len(files) == len(names) == len(sims)
+            return (files, names, sims)
+
+        def _extract_res_from_file(filename):
+            rp_pathway = rpPathway.from_rpSBML(
+                infile=filename
+            )
+            res = {}
+            res['pathway'] = rp_pathway.get_fba()
+            res['reactions'] = {}
+            for rid in rp_pathway.get_reactions():
+                res['reactions'][rid] = rp_pathway.get_reaction(rid).get_fba()
+            return res
+       
+        def _format_dict(old, new={}):
+            print('old', old, 'new', new)
+            for k, v in old.items():
+                if isinstance(v, dict):
+                    new[k] = _format_dict(old.get(k, {}), v)
+                else:
+                    if isinstance(v, str):
+                        new[k] = v
+                    else:
+                        new[k] = round(float(v), 2)
+            return new
+
+        files, names, sims = _extract_var(os_path.join(self.temp_d, 'lycopene_fba'))
+
+        for ix in range(len(files)):
+            pathway_cr = rpPathway.from_rpSBML(
+                infile=os_path.join(
+                    self.temp_d,
+                    'cr_fba',
+                    names[ix]+'.xml'
+                )
+            )
+            res = runFBA(
+                pathway=pathway_cr,
+                gem_sbml_path=self.e_coli_model_path,
+                compartment_id='c',
+                objective_rxn_id='rxn_target',
+                biomass_rxn_id='biomass',
+                sim_type=sims[ix]
+            )
+
+            res_previous = _format_dict(
+                _extract_res_from_file(
+                    files[ix]
+                )
+            )
+            res_run_fba = _format_dict(
+                {x:y for x,y in res.items() if x in ['pathway', 'reactions']}
+            )
+
+            self.assertDictEqual(
+                res_previous,
+                res_run_fba
+            )
+
+    def test_check_SBML_compartment(self):
+        rpsbml = rpSBML(self.e_coli_model_path)
+        # Return types.
+        res = check_SBML_compartment(
+            rpsbml=rpsbml,
+            compartment_id='cytosol'
+        )
+        self.assertIsInstance(
+            res,
+            str
+        )
+        # Values
+        self.assertEqual(
+            res,
+            'MNXC3'
+        )
+        # Challenge - 1
+        res = check_SBML_compartment(
+            rpsbml=rpsbml,
+            compartment_id='periplasm'
+        )
+        self.assertEqual(
+            res,
+            'MNXC19'
+        )
+        # Challenge - 2
+        res = check_SBML_compartment(
+            rpsbml=rpsbml,
+            compartment_id='x'
+        )
+        self.assertIs(
+            res,
+            None
         )
 
-
-    # merged_path_gz = os_path.join(
-    #     data_path,
-    #     'merged.xml.gz'
-    # )
-    # nb_rpsbml_paths = 2
-    # # rxn_tgt = 'rxn_target'
-    # # pathway_id = 'rp_pathway'
-    # fraction_scores = [
-    #     [
-    #         2.3076923076923888,
-    #         3.6794124272706443,
-    #         3.6794124272706443
-    #     ],
-    #     [
-    #         1.3296695186776557,
-    #         0.7638744755010182,
-    #         0.7638744755010182
-    #     ]
-    # ]
-    # fba_scores = [
-    #         9.230769230769237,
-    #         5.144315545243618,
-    #         3.398422535211268
-    #     ]
-    # pfba_scores = [
-    #         859.3846153846168,
-    #         471.6390839533362,
-    #         382.1106535211269
-    #     ]
-
-    # def setUp(self):
-    #     self.logger = create_logger(__name__, 'ERROR')
-
-    #     self.rpsbml_paths = [
-    #         os_path.join(
-    #             self.data_path,
-    #             'rpsbml_'+str(i+1)+'.xml'
-    #         ) for i in range(self.nb_rpsbml_paths)
-    #     ]
-
-    #     self.rpsbmls = [
-    #         rpSBML(
-    #             inFile = self.rpsbml_paths[i],
-    #             logger = self.logger
-    #         ) for i in range(self.nb_rpsbml_paths)
-    #     ]
-
-    #     with TemporaryDirectory() as temp_d:
-    #         self.e_coli_model_path = extract_gz(
-    #             self.e_coli_model_path_gz,
-    #             temp_d
-    #         )
-    #         self.merged_path = extract_gz(
-    #             self.merged_path_gz,
-    #             temp_d
-    #         )
-    #         self.rpsbml_model = rpSBML(
-    #             inFile = self.e_coli_model_path,
-    #             logger = self.logger
-    #         )
-    #         self.merged_rpsbml_1 = rpSBML(
-    #             inFile = self.merged_path,
-    #             logger = self.logger
-    #         )
-    #         self.merged_rpsbml_2, reactions_in_both = rpSBML.mergeModels(
-    #             source_rpsbml = self.rpsbmls[0],
-    #             target_rpsbml = self.rpsbml_model,
-    #             logger = self.logger
-    #         )
-    #         self.merged_rpsbml_3, reactions_in_both = rpSBML.mergeModels(
-    #             source_rpsbml = self.rpsbmls[1],
-    #             target_rpsbml = self.rpsbml_model,
-    #             logger = self.logger
-    #         )
-
-    # def test_fba(self):
-    #     objective_id = 'obj_' + self.rxn_tgt
-    #     for i in range(len(self.fba_scores)):
-    #         with self.subTest(
-    #             i = i
-    #         ):
-    #             ref_score = self.fba_scores[i]
-    #             rpsbml = getattr(
-    #                 self,
-    #                 'merged_rpsbml_' + str(i+1)
-    #             )
-
-    #             objective_id = rpsbml.find_or_create_objective(
-    #                 reactions = [self.rxn_tgt],
-    #                 coefficients = [1.0],
-    #                 is_max = True,
-    #                 objective_id = objective_id
-    #             )
-
-    #             rpsbml.search_isolated_species()
-
-    #             cobra_solution = rp_fba(
-    #                     rpsbml = rpsbml,
-    #                     objective_id = objective_id,
-    #                     logger = self.logger
-    #             )
-
-    #             self._test(
-    #                 ref_score,
-    #                 rpsbml,
-    #                 cobra_solution,
-    #                 objective_id
-    #             )
-
-    # def test_pfba(self):
-    #     objective_id = 'obj_' + self.rxn_tgt
-    #     for i in range(len(self.pfba_scores)):
-    #         with self.subTest(
-    #             i = i
-    #         ):
-    #             ref_score = self.pfba_scores[i]
-    #             rpsbml = getattr(
-    #                 self,
-    #                 'merged_rpsbml_' + str(i+1)
-    #             )
-
-    #             objective_id = rpsbml.find_or_create_objective(
-    #                 reactions = [self.rxn_tgt],
-    #                 coefficients = [1.0],
-    #                 is_max = True,
-    #                 objective_id = objective_id
-    #             )
-
-    #             rpsbml.search_isolated_species()
-
-    #             cobra_solution = rp_pfba(
-    #                     rpsbml = rpsbml,
-    #                     objective_id = objective_id,
-    #                     logger = self.logger
-    #             )
-
-    #             self._test(
-    #                 ref_score,
-    #                 rpsbml,
-    #                 cobra_solution,
-    #                 objective_id
-    #             )
-
-    # def _test(
-    #     self,
-    #     ref_score: float,
-    #     rpsbml: rpSBML,
-    #     cobra_solution: cobra_solution,
-    #     objective_id: str
-    # ) -> None:
-    #     self.assertTrue(rpsbml)
-    #     self.assertAlmostEqual(
-    #         cobra_solution.objective_value,
-    #         ref_score
-    #     )
-
-    #     write_results(
-    #         rpsbml = rpsbml,
-    #         objective_id = objective_id,
-    #         cobra_results = cobra_solution,
-    #         pathway_id = self.pathway_id,
-    #         logger = self.logger
-    #     )
-    #     # make sure that the results are written to the file
-    #     pathway = rpsbml.toDict()['pathway']['brsynth']
-    #     self.assertAlmostEqual(
-    #         pathway['fba_obj_'+self.rxn_tgt]['value'],
-    #         ref_score
-    #     )
-
-    # def test_fraction(self):
-    #     for i in range(len(self.fraction_scores)):
-    #         scores = self.fraction_scores[i]
-    #         rpsbml = getattr(
-    #             self,
-    #             'merged_rpsbml_' + str(i+1)
-    #         )
-    #         rpsbml.search_isolated_species()
-    #         cobra_results, rpsbml = rp_fraction(
-    #                 rpsbml = rpsbml,
-    #             src_rxn_id = 'biomass',
-    #             src_coeff = 1.0,
-    #             tgt_rxn_id = self.rxn_tgt,
-    #             tgt_coeff = 1.0,
-    #             frac_of_src = 0.75,
-    #                 is_max = True,
-    #             pathway_id = self.pathway_id,
-    #             objective_id = None,
-    #                 logger = self.logger
-    #         )
-
-    #         self.assertTrue(rpsbml)
-    #         self.assertAlmostEqual(
-    #             cobra_results.objective_value,
-    #             scores[0]
-    #         )
-
-    #         # make sure that the results are written to the file
-    #         pathway = rpsbml.toDict()['pathway']['brsynth']
-    #         self.assertAlmostEqual(
-    #             pathway['fba_obj_'+self.rxn_tgt+'__restricted_biomass']['value'],
-    #             scores[0]
-    #         )
-    #         self.assertAlmostEqual(
-    #             pathway['fba_obj_biomass']['value'],
-    #             scores[1]
-    #         )
+    def test_check_SBML_rxnid(self):
+        rpsbml = rpSBML(self.e_coli_model_path)
+        # Return types.
+        res = check_SBML_rxnid(
+            rpsbml=rpsbml,
+            rxn_id='biomass'
+        )
+        self.assertIsInstance(
+            res,
+            str
+        )
+        # Values
+        self.assertEqual(
+            res,
+            'biomass'
+        )
+        # Challenge - 1
+        res = check_SBML_rxnid(
+            rpsbml=rpsbml,
+            rxn_id='undefined'
+        )
+        self.assertIs(
+            res,
+            None
+        )
+ 
+#def build_rpsbml(
+#def build_hidden_species(
+#def build_results(
+#def create_target_consumption_reaction(
+#def write_results_to_pathway(
+#def complete_heterologous_pathway(
+#def rp_fraction(
+#def runCobra(
+#def build_cobra_model(
+#def write_results_to_rpsbml(
+#def write_fluxes_to_objectives(
+#def write_fluxes_to_reactions(
+#def write_objective_to_pathway(
+#def create_ignored_species_group(
