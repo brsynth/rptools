@@ -30,6 +30,7 @@ from rptools.rplibs.rpCompound import rpCompound
 from rptools.rplibs.rpSBML import rpSBML
 from rptools.rpfba import medium
 from rptools.rpfba.medium import (
+    build_minimal_medium,
     is_df_medium_defined,
     load_medium_file,
     read_medium_ids,
@@ -416,5 +417,34 @@ class Test_medium(Main_rpfba):
             cobra_model.medium,
             expected_medium
         )
+        tempf.close()
+        remove(tempf.name)
+
+    def test_build_minimal_medium(self):
+        # Load regular data
+        cobra_model = None
+        with NamedTemporaryFile(dir=self.temp_d, delete=False) as tempf:
+            self.rpsbml.write_to_file(tempf.name)
+            cobra_model=cobra_io.read_sbml_model(tempf.name, use_fbc_package=True)
+        cobra_solution = cobra_model.optimize()
+
+        df1 = build_minimal_medium(
+            model=cobra_model,
+            solution=cobra_solution
+        )
+        df2 = build_minimal_medium(
+            model=cobra_model
+        )
+        # Return values.
+        self.assertIsInstance(
+            df1,
+            pd.DataFrame
+        )
+        # Values
+        self.assertEqual(
+            df2.shape[1],
+            2
+        )
+        # Close.
         tempf.close()
         remove(tempf.name)
