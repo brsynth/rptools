@@ -93,7 +93,7 @@ def runFBA(
     :param species_group_id: The id of the central species (Default: central_species)
     :param sink_species_group_id: The id of the sink species (Default: rp_sink_species)
  not 
-    :type inputTar: strrunCobra
+    :type inputTar: str
     :type gem_sbml_path: str
     :type sim_type: str
     :type src_rxn_id: str
@@ -959,19 +959,26 @@ def runCobra(
     medium: pd.DataFrame=None,
     logger: Logger = getLogger(__name__)
 ) -> cobra_solution:
-    """
-    Run Cobra and write results to the rpsbml object.
+    """Run Cobra to optimize model.
 
-    Parameters
-    ----------
-    rpsbml: rpSBML
-        rpSBML object of which reactions will be updated with results
-    objective_id: str
-        The id of the objective to optimise
-    pathway_id: str
-        The id of the pathway within reactions will be updated
-    logger
-        Logger object
+    :param sim_type: The type of simulation to use. Available simulation types include: fraction, fba, rpfba
+    :param rpsbml: The model to analyse.
+    :param objective_id: Overwrite the auto-generated id of the results (Default: None)
+    :param hidden_species: List of species to mask (Optional).
+    :param fraction_coeff: The fraction of the optimum. Used in pfba simulation (Default: 0.95).
+    :param medium: A DataFrame describing medium composition (Optional).
+    :param logger: A logger (Optional).
+
+    :type sim_type: str
+    :type rpsbml: rpSBML
+    :type objective_id: str
+    :type hidden_species: List[str]
+    :type fraction_coeff: float
+    :type medium: pd.DataFrame
+    :type logger: Logger
+
+    :return: Results of the simulation.
+    :rtype: cobra.Solution
     """
 
     cobraModel = build_cobra_model(
