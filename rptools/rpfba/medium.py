@@ -20,7 +20,13 @@ from typing import (
     List,
     Tuple
 )
+from cobra import (
+    Model as cobra_model,
+    Solution as cobra_solution
+)
 from cobra.io.sbml import _f_reaction
+from cobra.medium import minimal_medium as cobra_minimal_medium
+
 from rptools.rplibs.rpCompound import rpCompound
 from rptools.rplibs.rpSBML import rpSBML
 
@@ -55,7 +61,7 @@ def is_df_medium_defined(
     :return: True if the dataframe exists and is not empty, False otherwise
     :rtype: bool
     '''
-    if isinstance(df, pd.DataFrame):
+    if isinstance(df, pd.DataFrame): 
         if not df.empty:
             return True
     return False
@@ -400,3 +406,61 @@ def add_missing_specie(
                 is_boundary=True
             )
     return model
+
+######################
+##  Minimal Medium  ##
+######################
+
+def build_minimal_medium(
+    model: cobra_model=None,
+    solution: cobra_solution=None,
+    logger: Logger=getLogger(__name__)
+) -> pd.DataFrame:
+    '''Finds the minimal growth medium for the `model` which allows for
+    model as well as individual growth. Here, a minimal medium can either
+    be the medium requiring the smallest total import flux and the medium
+    requiring the least components (ergo ingredients).
+
+    :param model: The model into perform search
+    :param solution: The minimum growth rate (Optional: default as minimal_medium used by cobra)
+
+    :type model: cobra.Model
+    :type solution: cobra.Solution
+
+    :return: Values for compounds which minimize the smallest total import flux and the minimial components
+    :rtype: pd.DataFrame
+    '''
+
+    # Init.
+    df = pd.DataFrame()
+    if model is None:
+        return data
+    objective_value = 0.1
+    if solution:
+        objective_value = solution.objective_value
+    # Minimize flux.
+    df_flux = cobra_minimal_medium(
+        model=model,
+        min_objective_value=objective_value,
+        exports=False,
+        minimize_components=False,
+        open_exchanges=False
+    )
+    # Minimize components.
+    df_component = cobra_minimal_medium(
+        model=model,
+        min_objective_value=objective_value,
+        exports=False,
+        minimize_components=True,
+        open_exchanges=False
+    )
+    # Concatenate results.
+    if (not df_flux is None
+        and isinstance(df_flux, pd.Series)):
+        df = df_flux.to_frame('minimize_flux')
+    if (not df_component is None
+        and isinstance(df_component, pd.Series)):
+        df_component = df_component.to_frame('minimize_component')
+        df = pd.concat([df, df_component], axis=1)
+
+    return df
