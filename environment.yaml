@@ -1,4 +1,4 @@
-name: rptools-dev
+name: rptools
 channels:
   - conda-forge
 dependencies:
@@ -24,7 +24,3 @@ dependencies:
   - chemlite # rpcompletion ,rpfba, rpthermo
   - h5py # rpscore
   - xgboost # rpscore
-  - pytest
-  - pytest-cov
-  - pytest-mock
-  - pyyaml

@@ -11,3 +11,4 @@ node_modules
 _exclude
 /docsource/_build/
 /docsource/_autosummary
+cicd-toolkit
