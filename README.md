@@ -66,8 +66,9 @@ conda env remove -n <dev_env>
 
 After a git clone:
 ```sh
-cd <repository>/ci
-make test-inconda
+git clone https://github.com/breakthewall/cicd-toolkit.git
+cd cicd-toolkit
+make test
 cd ..
 conda develop -n rptools_test .
 ```
