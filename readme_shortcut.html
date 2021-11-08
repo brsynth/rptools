@@ -97,8 +97,9 @@ conda env remove -n &lt;dev_env&gt;
 <div class="section" id="development-installation-alternative-using-the-ci-toolkit">
 <h3>Development installation (alternative using the ci toolkit)<a class="headerlink" href="#development-installation-alternative-using-the-ci-toolkit" title="Permalink to this headline">¶</a></h3>
 <p>After a git clone:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> &lt;repository&gt;/ci
-make test-inconda
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/breakthewall/cicd-toolkit.git
+<span class="nb">cd</span> cicd-toolkit
+make <span class="nb">test</span>
 <span class="nb">cd</span> ..
 conda develop -n rptools_test .
 </pre></div>

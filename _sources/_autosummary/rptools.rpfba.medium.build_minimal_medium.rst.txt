@@ -1,0 +1,6 @@
+rptools.rpfba.medium.build\_minimal\_medium
+===========================================
+
+.. currentmodule:: rptools.rpfba.medium
+
+.. autofunction:: build_minimal_medium

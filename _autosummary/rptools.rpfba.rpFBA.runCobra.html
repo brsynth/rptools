@@ -36,16 +36,25 @@
 <h1>rptools.rpfba.rpFBA.runCobra<a class="headerlink" href="#rptools-rpfba-rpfba-runcobra" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="rptools.rpfba.rpFBA.runCobra">
-<span class="sig-prename descclassname"><span class="pre">rptools.rpfba.rpFBA.</span></span><span class="sig-name descname"><span class="pre">runCobra</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">sim_type:</span> <span class="pre">str</span></em>, <em class="sig-param"><span class="pre">rpsbml:</span> <span class="pre">rptools.rplibs.rpSBML.rpSBML</span></em>, <em class="sig-param"><span class="pre">objective_id:</span> <span class="pre">str</span></em>, <em class="sig-param"><span class="pre">hidden_species:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">[]</span></em>, <em class="sig-param"><span class="pre">fraction_coeff:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.95</span></em>, <em class="sig-param"><span class="pre">medium:</span> <span class="pre">Optional[pandas.core.frame.DataFrame]</span> <span class="pre">=</span> <span class="pre">None</span></em>, <em class="sig-param"><span class="pre">logger:</span> <span class="pre">logging.Logger</span> <span class="pre">=</span> <span class="pre">&lt;Logger</span> <span class="pre">rptools.rpfba.rpFBA</span> <span class="pre">(WARNING)&gt;</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">cobra.core.solution.Solution</span></span></span><a class="headerlink" href="#rptools.rpfba.rpFBA.runCobra" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run Cobra and write results to the rpsbml object.</p>
+<span class="sig-prename descclassname"><span class="pre">rptools.rpfba.rpFBA.</span></span><span class="sig-name descname"><span class="pre">runCobra</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">sim_type:</span> <span class="pre">str</span></em>, <em class="sig-param"><span class="pre">rpsbml:</span> <span class="pre">rptools.rplibs.rpSBML.rpSBML</span></em>, <em class="sig-param"><span class="pre">objective_id:</span> <span class="pre">str</span></em>, <em class="sig-param"><span class="pre">hidden_species:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">[]</span></em>, <em class="sig-param"><span class="pre">fraction_coeff:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.95</span></em>, <em class="sig-param"><span class="pre">medium:</span> <span class="pre">Optional[pandas.core.frame.DataFrame]</span> <span class="pre">=</span> <span class="pre">None</span></em>, <em class="sig-param"><span class="pre">logger:</span> <span class="pre">logging.Logger</span> <span class="pre">=</span> <span class="pre">&lt;Logger</span> <span class="pre">rptools.rpfba.rpFBA</span> <span class="pre">(WARNING)&gt;</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">cobra.core.solution.Solution</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rptools.rpfba.rpFBA.runCobra" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run Cobra to optimize model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>rpsbml</strong> (<em>rpSBML</em>) – rpSBML object of which reactions will be updated with results</p></li>
-<li><p><strong>objective_id</strong> (<em>str</em>) – The id of the objective to optimise</p></li>
-<li><p><strong>pathway_id</strong> (<em>str</em>) – The id of the pathway within reactions will be updated</p></li>
-<li><p><strong>logger</strong> – Logger object</p></li>
+<li><p><strong>sim_type</strong> (<em>str</em>) – The type of simulation to use. Available simulation types include: fraction, fba, rpfba</p></li>
+<li><p><strong>rpsbml</strong> (<em>rpSBML</em>) – The model to analyse.</p></li>
+<li><p><strong>objective_id</strong> (<em>str</em>) – Overwrite the auto-generated id of the results (Default: None)</p></li>
+<li><p><strong>hidden_species</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of species to mask (Optional).</p></li>
+<li><p><strong>fraction_coeff</strong> (<em>float</em>) – The fraction of the optimum. Used in pfba simulation (Default: 0.95).</p></li>
+<li><p><strong>medium</strong> (<em>pd.DataFrame</em>) – A DataFrame describing medium composition (Optional).</p></li>
+<li><p><strong>logger</strong> (<em>Logger</em>) – A logger (Optional).</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Results of the simulation.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>cobra.Solution</p>
 </dd>
 </dl>
 </dd></dl>

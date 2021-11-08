@@ -16,6 +16,7 @@ rptools.rpfba.medium
       :nosignatures:
    
       add_missing_specie
+      build_minimal_medium
       create_rp_compound
       crossref_medium_id
       df_to_medium

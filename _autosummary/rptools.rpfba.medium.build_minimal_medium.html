@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>rptools.rpfba.medium.HeaderMalformated &#8212; rpTools 5.4.1 documentation</title>
+    <title>rptools.rpfba.medium.build_minimal_medium &#8212; rpTools 5.4.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
@@ -14,8 +14,8 @@
     <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="rptools.rpfba.rpFBA" href="rptools.rpfba.rpFBA.html" />
-    <link rel="prev" title="rptools.rpfba.medium.read_medium_ids" href="rptools.rpfba.medium.read_medium_ids.html" />
+    <link rel="next" title="rptools.rpfba.medium.create_rp_compound" href="rptools.rpfba.medium.create_rp_compound.html" />
+    <link rel="prev" title="rptools.rpfba.medium.add_missing_specie" href="rptools.rpfba.medium.add_missing_specie.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -32,12 +32,29 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="rptools-rpfba-medium-headermalformated">
-<h1>rptools.rpfba.medium.HeaderMalformated<a class="headerlink" href="#rptools-rpfba-medium-headermalformated" title="Permalink to this headline">¶</a></h1>
-<dl class="py exception">
-<dt class="sig sig-object py" id="rptools.rpfba.medium.HeaderMalformated">
-<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">rptools.rpfba.medium.</span></span><span class="sig-name descname"><span class="pre">HeaderMalformated</span></span><a class="headerlink" href="#rptools.rpfba.medium.HeaderMalformated" title="Permalink to this definition">¶</a></dt>
-<dd><p>A simple Exception when header of a medium file is not properly set.</p>
+  <div class="section" id="rptools-rpfba-medium-build-minimal-medium">
+<h1>rptools.rpfba.medium.build_minimal_medium<a class="headerlink" href="#rptools-rpfba-medium-build-minimal-medium" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="rptools.rpfba.medium.build_minimal_medium">
+<span class="sig-prename descclassname"><span class="pre">rptools.rpfba.medium.</span></span><span class="sig-name descname"><span class="pre">build_minimal_medium</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">model:</span> <span class="pre">cobra.core.model.Model</span></em>, <em class="sig-param"><span class="pre">solution:</span> <span class="pre">Optional[cobra.core.solution.Solution]</span> <span class="pre">=</span> <span class="pre">None</span></em>, <em class="sig-param"><span class="pre">logger:</span> <span class="pre">logging.Logger</span> <span class="pre">=</span> <span class="pre">&lt;Logger</span> <span class="pre">rptools.rpfba.medium</span> <span class="pre">(WARNING)&gt;</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.core.frame.DataFrame</span></span></span><a class="headerlink" href="#rptools.rpfba.medium.build_minimal_medium" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the minimal growth medium for the <cite>model</cite> which allows for
+model as well as individual growth. Here, a minimal medium can either
+be the medium requiring the smallest total import flux and the medium
+requiring the least components (ergo ingredients).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>cobra.Model</em>) – The model into perform search</p></li>
+<li><p><strong>solution</strong> (<em>cobra.Solution</em>) – The minimum growth rate (Optional: default as minimal_medium used by cobra)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Values for compounds which minimize the smallest total import flux and the minimial components</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -77,7 +94,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rptools.rpfba.cobra_format.html">rptools.rpfba.cobra_format</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="rptools.rpfba.medium.html">rptools.rpfba.medium</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="rptools.rpfba.medium.add_missing_specie.html">rptools.rpfba.medium.add_missing_specie</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rptools.rpfba.medium.build_minimal_medium.html">rptools.rpfba.medium.build_minimal_medium</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">rptools.rpfba.medium.build_minimal_medium</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rptools.rpfba.medium.create_rp_compound.html">rptools.rpfba.medium.create_rp_compound</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rptools.rpfba.medium.crossref_medium_id.html">rptools.rpfba.medium.crossref_medium_id</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rptools.rpfba.medium.df_to_medium.html">rptools.rpfba.medium.df_to_medium</a></li>
@@ -87,7 +104,7 @@
 <li class="toctree-l4"><a class="reference internal" href="rptools.rpfba.medium.merge_medium.html">rptools.rpfba.medium.merge_medium</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rptools.rpfba.medium.merge_medium_exchange.html">rptools.rpfba.medium.merge_medium_exchange</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rptools.rpfba.medium.read_medium_ids.html">rptools.rpfba.medium.read_medium_ids</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">rptools.rpfba.medium.HeaderMalformated</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rptools.rpfba.medium.HeaderMalformated.html">rptools.rpfba.medium.HeaderMalformated</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="rptools.rpfba.rpFBA.html">rptools.rpfba.rpFBA</a></li>
@@ -110,8 +127,8 @@
   <li><a href="rptools.html">rptools</a><ul>
   <li><a href="rptools.rpfba.html">rptools.rpfba</a><ul>
   <li><a href="rptools.rpfba.medium.html">rptools.rpfba.medium</a><ul>
-      <li>Previous: <a href="rptools.rpfba.medium.read_medium_ids.html" title="previous chapter">rptools.rpfba.medium.read_medium_ids</a></li>
-      <li>Next: <a href="rptools.rpfba.rpFBA.html" title="next chapter">rptools.rpfba.rpFBA</a></li>
+      <li>Previous: <a href="rptools.rpfba.medium.add_missing_specie.html" title="previous chapter">rptools.rpfba.medium.add_missing_specie</a></li>
+      <li>Next: <a href="rptools.rpfba.medium.create_rp_compound.html" title="next chapter">rptools.rpfba.medium.create_rp_compound</a></li>
   </ul></li>
   </ul></li>
   </ul></li>
@@ -148,7 +165,7 @@
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
-      <a href="../_sources/_autosummary/rptools.rpfba.medium.HeaderMalformated.rst.txt"
+      <a href="../_sources/_autosummary/rptools.rpfba.medium.build_minimal_medium.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 
