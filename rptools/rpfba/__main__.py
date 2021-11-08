@@ -28,7 +28,16 @@ from rptools.rpfba import (
 )
 from rptools.rplibs.rpPathway import rpPathway
 
+
 def entry_point():
+    def _make_dir(filename):
+        dirname = os_path.dirname(filename)
+        if dirname != '' and not os_path.exists(dirname):
+            try:
+                os_makedirs(dirname)
+            except OSError as exc: # Guard against race condition
+                if exc.errno != errno_EEXIST:
+                    raise
     # Args.
     parser = build_args_parser(
         prog = 'rpfba',
@@ -41,8 +50,8 @@ def entry_point():
     logger = init(parser, args)
 
     pathway = rpPathway.from_rpSBML(
-      infile=args.pathway_file,
-      logger=logger
+        infile=args.pathway_file,
+        logger=logger
     )
 
     # Load compounds.
@@ -54,35 +63,37 @@ def entry_point():
     )
 
     results = runFBA(
-      pathway=pathway,
-      gem_sbml_path=args.model_file,
-      compartment_id=args.compartment_id,
-      biomass_rxn_id=args.biomass_rxn_id,
-      objective_rxn_id=args.objective_rxn_id,
-      sim_type=args.sim,
-      fraction_coeff=args.fraction_of,
-      merge=args.merge,
-      ignore_orphan_species=args.ignore_orphan_species,
-      medium_compartment_id=args.medium_compartment_id,
-      df_medium_base=df_medium_base,
-      df_medium_user=df_medium_user,
-      logger=logger
+        pathway=pathway,
+        gem_sbml_path=args.model_file,
+        compartment_id=args.compartment_id,
+        biomass_rxn_id=args.biomass_rxn_id,
+        objective_rxn_id=args.objective_rxn_id,
+        sim_type=args.sim,
+        fraction_coeff=args.fraction_of,
+        merge=args.merge,
+        ignore_orphan_species=args.ignore_orphan_species,
+        medium_compartment_id=args.medium_compartment_id,
+        df_medium_base=df_medium_base,
+        df_medium_user=df_medium_user,
+        logger=logger
     )
 
     if results is None:
-      logger.info('No results written. Exiting...')
+        logger.info('No results written. Exiting...')
     else:
-      logger.info('Writing into file...')
-      dirname = os_path.dirname(args.outfile)
-      if dirname != '' and not os_path.exists(dirname):
-          try:
-              os_makedirs(dirname)
-          except OSError as exc: # Guard against race condition
-              if exc.errno != errno_EEXIST:
-                  raise
-      pathway.to_rpSBML().write_to_file(args.outfile)
-      logger.info('   |--> written in ' + args.outfile)
+        logger.info('Writing into file...')
+        _make_dir(args.outfile)
+        pathway.to_rpSBML().write_to_file(args.outfile)
+        logger.info('   |--> written in ' + args.outfile)
 
+        if args.minimal_medium_file:
+            minimal_medium = results.get(
+                'minimal_medium',
+                pd.DataFrame()
+            )
+            _make_dir(args.minimal_medium_file)
+            minimal_medium.to_csv(args.minimal_medium_file)
+            logger.info('   |--> written in ' + args.minimal_medium_file)
 
 if __name__ == '__main__':
     entry_point()

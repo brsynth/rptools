@@ -32,6 +32,7 @@ from cobra.core.solution import Solution  as cobra_solution
  
 from rptools.rpfba.medium import (
     add_missing_specie,
+    build_minimal_medium,
     crossref_medium_id,
     df_to_medium,
     is_df_medium_defined,
@@ -93,7 +94,7 @@ def runFBA(
     :param species_group_id: The id of the central species (Default: central_species)
     :param sink_species_group_id: The id of the sink species (Default: rp_sink_species)
  not 
-    :type inputTar: strrunCobra
+    :type inputTar: str
     :type gem_sbml_path: str
     :type sim_type: str
     :type src_rxn_id: str
@@ -261,7 +262,7 @@ def runFBA(
             rxn_id=objective_rxn_id,
             obj_id=f'brs_obj_{objective_rxn_id}',
         )
-        cobra_results = runCobra(
+        cobra_results, minimal_medium = runCobra(
             sim_type=sim_type,
             rpsbml=cobra_rpsbml_merged,
             hidden_species=hidden_species,
@@ -274,7 +275,8 @@ def runFBA(
         (
             cobra_results,
             results_biomass,
-            objective_id
+            objective_id,
+            minimal_medium
         ) = rp_fraction(
             rpsbml=cobra_rpsbml_merged,
             objective_rxn_id=objective_rxn_id,
@@ -323,6 +325,7 @@ def runFBA(
         logger
     )
 
+    _results['minimal_medium'] = minimal_medium
     return _results
 
     # if cobra_results is None:
@@ -831,7 +834,7 @@ def rp_fraction(
         # logger.info('Running the FBA (fraction of reaction)...')
         # rpsbml.runFBA(source_reaction, source_coefficient, is_max, pathway_id)
         logger.info('Processing FBA (biomass)...')
-        cobra_results = runCobra(
+        cobra_results, minimal_medium = runCobra(
             sim_type='biomass',
             rpsbml=rpsbml,
             hidden_species=hidden_species,
@@ -843,7 +846,7 @@ def rp_fraction(
         # rxn>scores>fba>biomass = cobra_results.fluxes('rxn_X')
         # scores>fba>biomass = cobra_results.objective_value
         if cobra_results is None:
-            return None, None, biomass_objective_id
+            return None, None, biomass_objective_id, minimal_medium
 
         results_biomass = cobra_results
 
@@ -907,7 +910,7 @@ def rp_fraction(
 
     logger.info('Processing FBA (fraction)...')
     sim_type = 'fraction'
-    cobra_results = runCobra(
+    cobra_results, minimal_medium = runCobra(
         sim_type=sim_type,
         rpsbml=rpsbml,
         hidden_species=hidden_species,
@@ -917,7 +920,7 @@ def rp_fraction(
         logger=logger
     )
     if cobra_results is None:
-        return results_biomass, None, objective_id
+        return results_biomass, None, objective_id, minimal_medium
 
     # # rxn>scores>fba>fraction = cobra_results.fluxes('rxn_X')
     # # scores>fba>fraction = cobra_results.objective_value
@@ -947,7 +950,7 @@ def rp_fraction(
 
     logger.debug('The objective '+str(objective_id)+' results '+str(cobra_results.objective_value))
 
-    return cobra_results, results_biomass, objective_id
+    return cobra_results, results_biomass, objective_id, minimal_medium
 
 
 def runCobra(
@@ -958,20 +961,27 @@ def runCobra(
     fraction_coeff: float = 0.95,
     medium: pd.DataFrame=None,
     logger: Logger = getLogger(__name__)
-) -> cobra_solution:
-    """
-    Run Cobra and write results to the rpsbml object.
+) -> Tuple[cobra_solution, pd.DataFrame]:
+    """Run Cobra to optimize model.
 
-    Parameters
-    ----------
-    rpsbml: rpSBML
-        rpSBML object of which reactions will be updated with results
-    objective_id: str
-        The id of the objective to optimise
-    pathway_id: str
-        The id of the pathway within reactions will be updated
-    logger
-        Logger object
+    :param sim_type: The type of simulation to use. Available simulation types include: fraction, fba, rpfba
+    :param rpsbml: The model to analyse.
+    :param objective_id: Overwrite the auto-generated id of the results (Default: None)
+    :param hidden_species: List of species to mask (Optional).
+    :param fraction_coeff: The fraction of the optimum. Used in pfba simulation (Default: 0.95).
+    :param medium: A DataFrame describing medium composition (Optional).
+    :param logger: A logger (Optional).
+
+    :type sim_type: str
+    :type rpsbml: rpSBML
+    :type objective_id: str
+    :type hidden_species: List[str]
+    :type fraction_coeff: float
+    :type medium: pd.DataFrame
+    :type logger: Logger
+
+    :return: Results of the simulation.
+    :rtype: cobra.Solution
     """
 
     cobraModel = build_cobra_model(
@@ -988,6 +998,7 @@ def runCobra(
         logger.debug('Medium modify')
         logger.debug(cobraModel.medium)
 
+    cobra_results = None
     if sim_type.lower() == 'pfba':
         cobra_results = pfba(cobraModel, fraction_coeff)
     else:
@@ -998,7 +1009,15 @@ def runCobra(
 
     logger.debug(cobra_results)
 
-    return cobra_results
+    # Minimal medium.
+    logger.debug('Minimal medium')
+    minimal_medium = build_minimal_medium(
+        model=cobraModel,
+        solution=cobra_results
+    )
+    logger.debug(minimal_medium)
+
+    return cobra_results, minimal_medium
 
 def build_cobra_model(
     rpsbml: rpSBML,

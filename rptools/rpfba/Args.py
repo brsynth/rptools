@@ -88,5 +88,10 @@ def add_arguments(
         choices=[__MEDIUM_DEFAULT_ID] + read_medium_ids(__MEDIUM_PATH),
         help='Use a base medium composition. Data can be add with the option --medium_file'
     )
-
+    parser_medium.add_argument(
+        '--minimal_medium_file',
+        type=str,
+        help='Provide a path of a CSV file to output information about minimal medium'
+    )
+ 
     return parser
