@@ -1,4 +1,7 @@
-from setuptools import setup
+from setuptools import (
+    setup,
+    find_packages
+)
 from re import search as re_search
 from os import path as os_path
 
@@ -46,7 +49,7 @@ setup(
     long_description              = long_description,
     long_description_content_type = 'text/markdown',
     url                           = url,
-    packages                      = [package],
+    packages                      = find_packages(),
     package_dir                   = {package: package},
     include_package_data          = True,
     test_suite                    = 'pytest',
