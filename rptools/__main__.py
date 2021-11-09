@@ -1,9 +1,11 @@
+from glob import glob
 from os import path as os_path
 from argparse import (
     ArgumentParser,
     Namespace
 )
 from logging import Logger
+from typing import List
 from rptools.Args import build_args_parser
 from colored import fg, bg, attr
 
@@ -34,13 +36,28 @@ def init(
 
     return logger
 
+def get_modules(path: str) -> List[str]:
+    paths = [
+        os_path.abspath(
+            os_path.join(f + os_path.pardir)
+        ) for f
+        in glob(
+            os_path.join(
+                path,
+                '*',
+                '__init__.py'
+            )
+        )
+    ]
+    return [
+        os_path.basename(
+            os_path.dirname(f)
+        ) for f in paths
+    ]
 
 def entry_point():
   
-    with open(os_path.join(os_path.dirname(os_path.abspath(__file__)), '.env'), 'r', encoding='utf-8') as f:
-        for line in f:
-            if line.startswith('MODULES='):
-                modules = line.splitlines()[0].split('=')[1].lower().split(',')
+    modules = get_modules(os_path.dirname(os_path.abspath(__file__)))
 
     description = '\nWelcome to rpTools!\n'
     description += '\n\'rptools\' is a package to process rpSBML files but cannot be directly run. Runnable tools are:\n'
