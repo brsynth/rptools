@@ -9,6 +9,7 @@ from pandas import DataFrame  as pd_DataFrame
 
 from os import (
         path as os_path,
+        remove
 )
 from json import (
     load as json_load,
@@ -562,16 +563,20 @@ class rpSBML:
         rpsbml: 'rpSBML',
         transl_dict_species: Dict[str, str]
     ) -> None:
-        with NamedTemporaryFile() as tempf:
+        with NamedTemporaryFile(delete=False) as tempf:
             rpsbml.write_to_file(tempf.name)
+            tempf.close()
             with open(tempf.name, 'r') as in_f:
                 text = in_f.read()
                 for speID, speID_transl in transl_dict_species.items():
                     text = text.replace(speID+'"', speID_transl+'"')
-                with NamedTemporaryFile() as out_tempf:
-                    with open(out_tempf.name, 'w') as out_f:
-                        out_f.write(text)
-                        return rpSBML(inFile=out_f.name)
+                with NamedTemporaryFile(mode='w', delete=False) as out_tempf:
+                    out_tempf.write(text)
+                    out_tempf.close()
+                    rpsbml = rpSBML(inFile=out_tempf.name)
+        remove(tempf.name)
+        remove(out_tempf.name)
+        return rpsbml
 
     @staticmethod
     def cobraize(rpsbml: 'rpSBML') -> 'rpSBML':

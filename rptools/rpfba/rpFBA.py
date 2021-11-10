@@ -8,9 +8,7 @@ from logging import (
     Logger,
     getLogger
 )
-from os import (
-    path as os_path
-)
+from os import remove
 from pandas.core.series  import Series    as np_series
 from typing import (
     List,
@@ -1037,15 +1035,25 @@ def build_cobra_model(
         objective_id = objective_id,
         plugin = 'fbc'
     )
-    with NamedTemporaryFile() as temp_f:
+
+    # To handle file removing (Windows)
+    error = False
+    with NamedTemporaryFile(delete=False) as temp_f:
         rpsbml.write_to_file(temp_f.name)
+        temp_f.close()
         try:
             cobraModel = cobra_io.read_sbml_model(temp_f.name, use_fbc_package=True)
         except CobraSBMLError:
             logger.error('Something went wrong reading the SBML model')
             (model, errors) = validate_sbml_model(temp_f.name)
             logger.error(str(json_dumps(errors, indent=4)))
-            return None
+            error = True
+
+    # To handle file removing (Windows)
+    remove(temp_f.name)
+    if error:
+        return None
+
     # Hide to Cobra species that are isolated
     cobraModel.remove_metabolites(
         [
