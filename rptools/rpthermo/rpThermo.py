@@ -101,11 +101,6 @@ def runThermo(
     )
 
     ## eQuilibrator
-    print_title(
-        txt='Initialising eQuilibrator...',
-        logger=logger,
-        waiting=True
-    )
     if cc is None:
         cc = initThermo(
             ph,
@@ -114,7 +109,6 @@ def runThermo(
             temp_k,
             logger
         )
-    print_OK(logger)
 
     # Search for the key ID known by eQuilibrator
     cc_species = {}
@@ -360,28 +354,15 @@ def eQuilibrator(
     reactants = {spe_id: -spe_sto for (spe_id, spe_sto) in species_stoichio.items() if spe_sto < 0}
     products = {spe_id: spe_sto for (spe_id, spe_sto) in species_stoichio.items() if spe_sto > 0}
 
-    # try:
     # For both sides left and right
     for cmpd_id, cmpd_sto in reactants.items():
-        # # if inchi_key from equilibrator is None
-        # spe_str = species_ids[cmpd_id]
-        # # then, take the compound ID
-        # if spe_str is None or spe_str == '':
-        #     spe_str = cmpd_id
         compounds[SIDES[0]['name']] += [
             f'{cmpd_sto} {species_ids[cmpd_id]}'
         ]
     for cmpd_id, cmpd_sto in products.items():
-        # # if inchi_key from equilibrator is None
-        # spe_str = species_ids[cmpd_id]
-        # # then, take the compound ID
-        # if spe_str is None or spe_str == '':
-        #     spe_str = cmpd_id
         compounds[SIDES[1]['name']] += [
             f'{cmpd_sto} {species_ids[cmpd_id]}'
         ]
-    # except KeyError:  # the compound is unknown
-    #     return thermo
 
     # Join both sides
     rxn_str = '{left} = {right}'.format(
@@ -417,23 +398,6 @@ def eQuilibrator(
         logger.debug(e)
 
     return results
-    # {
-    #     'dG0_prime': {
-    #         'value': float(str(dG0_prime.value).split()[0]),
-    #         'error': float(str(dG0_prime.error).split()[0]),
-    #         'units': str(dG0_prime.units),
-    #     },
-    #     'dGm_prime': {
-    #         'value': float(str(dGm_prime.value).split()[0]),
-    #         'error': float(str(dGm_prime.error).split()[0]),
-    #         'units': str(dGm_prime.units),
-    #     },
-    #     'dG_prime': {
-    #         'value': float(str(dG_prime.value).split()[0]),
-    #         'error': float(str(dG_prime.error).split()[0]),
-    #         'units': str(dG_prime.units),
-    #     }
-    # }
 
 
 def remove_compounds(
@@ -447,25 +411,11 @@ def remove_compounds(
     Then, try to solve as a linear equations system and apply new coeffs to reactions
     '''
 
-    # # From compounds from cache, get those which are None (unknown)
-    # unk_compounds = list(
-    #     dict(
-    #         filter(
-    #             lambda elem: elem[1] is None,
-    #             compounds.items()
-    #         )
-    #     ).keys()
-    # )
-
     # unk_compounds = ['CMPD_0000000003', 'CMPD_0000000010', 'CMPD_0000000025']
 
     if not compounds:
         return reactions
 
-    # # If the target is unknown in eQuilibrator cache,
-    # # then stop the thermo
-    # result = filter(lambda x: x.startswith('TARGET'), unk_compounds)
-    # print(list(result))
     logger.debug(compounds)
     # Build the stoichio matrix for unknown compounds
     ## S
@@ -490,7 +440,6 @@ def remove_compounds(
 
     # print(sto_mat)
     # print(f'rxn_target_idx: {rxn_target_idx}')
-    # print(unk_compounds)
     # print(coeffs)
     # exit()
     _reactions = []
@@ -611,77 +560,6 @@ def build_stoichio_matrix(
     return sto_mat
 
 
-# def get_compounds_from_cache(
-#     compounds: List[Compound],
-#     cc: ComponentContribution,
-#     logger: Logger=getLogger(__name__)
-# ) -> Dict:
-#     """Get compounds accession from the cache
-#     Compounds are None if not found
-
-#     Parameters
-#     ----------
-#     compounds : Dict
-#         Compounds to check the existence in the cache
-#     cc : ComponentContribution
-#         ComponentContribution
-#     logger : Logger
-
-#     Returns
-#     -------
-#     Dictionary of compounds
-
-#     """
-#     compounds_dict = {}
-#     unknown_compounds = []
-
-#     for cmpd in compounds:
-
-#         # print(cmpd._to_dict())
-
-#         logger.debug(f'Searching {cmpd.to_string()}...')
-#         compound = cc.get_compound(cmpd.get_id())
-#         logger.debug(f'Found {compound.__repr__()}')
-
-#         if compound is not None:
-#             compounds_dict[cmpd.get_id()] = compound
-#         # If ID not found,
-#         # then search with inchikey
-#         else:
-#             try:
-#                 logger.debug(f'id: {cmpd.get_id()} ; inchi: {cmpd.get_inchi()} ; inchikey: {cmpd.get_inchikey()}')
-#                 if cmpd.get_inchikey() is not None:
-#                     logger.debug(f'Searching {cmpd.get_inchikey()}...')
-#                     compound = cc.search_compound(cmpd.get_inchikey())
-#                     logger.debug(f'Found {compound.__repr__()}')
-#                     # If the first level of inchikeys are the same,
-#                     # then substitute
-#                     if compound.inchi_key.split('-')[0] == cmpd.get_inchikey().split('-')[0]:
-#                         compounds_dict[cmpd.get_id()] = compound
-#                     else:
-#                         # search by inchikey
-#                         try:
-#                             compounds_dict[cmpd.get_id()] = cc.search_compound_by_inchi_key(cmpd.get_inchikey())[0]
-#                         except IndexError:  # the compound is considered as unknown
-#                             unknown_compounds += [cmpd.get_id()]
-#                 # else:
-#                 #     logger.debug(f'Searching {cmpd.to_string()}...')
-#                 #     compound = cc.get_compound(cmpd.get_id())
-#                 #     logger.debug(f'Found {compound.__repr__()}')
-#                 #     if compound is not None:
-#                 #         compounds_dict[cmpd.get_id()] = compound
-#             except (AttributeError, ValueError):
-#                 try:
-#                     logger.debug(f'Searching {cmpd.get_inchi()}...')
-#                     compounds_dict[cmpd.get_id()] = cc.get_compound_by_inchi(cmpd.get_inchi())
-#                     logger.debug(f'Found {compound.__repr__()}')
-#                 except ValueError:
-#                     unknown_compounds += [cmpd.get_id()]
-
-#     exit()
-#     return compounds_dict, unknown_compounds
-
-
 def print_reaction(
     rxn: Reaction,
     logger: Logger=getLogger(__name__)
@@ -719,13 +597,13 @@ def initThermo(
     logger: Logger=getLogger(__name__)
 ) -> ComponentContribution:
 
-    # cc = None
-    # while cc is None:
-        # try:
+    print_title(
+        txt='Initialising eQuilibrator...',
+        logger=logger,
+        waiting=True
+    )
+
     cc = ComponentContribution()
-        # except JSONDecodeError:
-        #     logger.warning('Waiting for zenodo.org... Retrying in 5s')
-        #     sleep(5)
 
     if ph is not None:
         cc.p_h = Q_(ph)
@@ -736,117 +614,6 @@ def initThermo(
     if temp_k is not None:
         cc.temperature = Q_(str(temp_k)+' K')
 
+    print_OK(logger)
+
     return cc
-
-
-# def runMDF_hdd(inputTar, outputTar, pathway_id='rp_pathway', thermo_id='dfG_prime_o', fba_id='fba_obj_fraction', ph=7.0, ionic_strength=200, pMg=10.0, temp_k=298.15, stdev_factor=1.96):
-#     """Given a tar input file, perform MDF analysis for each rpSBML file.
-
-#     :param inputTar: The path to the input TAR file
-#     :param outputTar: The path to the output TAR file
-#     :param pathway_id: The id of the heterologous pathway of interest (Default: rp_pathway)
-#     :param thermo_id: The id of the thermodynamics id (Default: dfG_prime_o)
-#     :param fba_id: The id of the FBA value (Default: fba_obj_fraction)
-#     :param ph: The pH of the host organism (Default: 7.0)
-#     :param ionic_strength: Ionic strenght of the host organism (Default: 200.0)
-#     :param pMg: The pMg of the host organism (Default: 10.0)
-#     :param temp_k: The temperature of the host organism in Kelvin (Default: 298.15)
-#     :param stdev_factor: The standard deviation factor to calculate MDF (Default: 1.96)
-
-#     :type inputTar: str
-#     :type outputTar: str
-#     :type pathway_id: str
-#     :type tmpOutputFolder: str
-#     :type ph: float
-#     :type ionic_strength: float
-#     :type pMg: float
-#     :type temp_k: float
-#     :type stdev_factor: float
-
-#     :rtype: bool
-#     :return: Success or failure of the function
-#     """
-#     rpequilibrator = rpEquilibrator.rpEquilibrator(ph=ph, ionic_strength=ionic_strength, pMg=pMg, temp_k=temp_k)
-#     with tempfile.TemporaryDirectory() as tmpInputFolder:
-#         with tempfile.TemporaryDirectory() as tmpOutputFolder:
-#             tar = tarfile.open(inputTar, mode='r')
-#             tar.extractall(path=tmpInputFolder)
-#             tar.close()
-#             if len(glob.glob(tmpInputFolder+'/*'))==0:
-#                 logging.error('Input file is empty')
-#                 return False
-#             for sbml_path in glob.glob(tmpInputFolder+'/*'):
-#                 logging.debug('=========== '+str(sbml_path)+' ============')
-#                 fileName = sbml_path.split('/')[-1].replace('.sbml', '').replace('.xml', '').replace('.rpsbml', '').replace('_rpsbml', '') 
-#                 rpsbml = rpSBML.rpSBML(fileName, path=sbml_path)
-#                 rpequilibrator.rpsbml = rpsbml
-#                 res = rpequilibrator.MDF(pathway_id, thermo_id, fba_id, stdev_factor, True) #ignore the results since written to SBML file
-#                 #ignore res since we are passing write to SBML
-#                 rpsbml.writeSBML(tmpOutputFolder)
-#                 rpsbml = None
-#             if len(glob.glob(tmpOutputFolder+'/*'))==0:
-#                 logging.error('rpThermo has not produced any results')
-#                 return False
-#             with tarfile.open(outputTar, mode='w:gz') as ot:
-#                 for sbml_path in glob.glob(tmpOutputFolder+'/*'):
-#                     fileName = str(sbml_path.split('/')[-1].replace('.sbml', '').replace('.xml', '').replace('.rpsbml', '').replace('_rpsbml', ''))
-#                     fileName += '.sbml.xml'
-#                     info = tarfile.TarInfo(fileName)
-#                     info.size = os.path.getsize(sbml_path)
-#                     ot.addfile(tarinfo=info, fileobj=open(sbml_path, 'rb'))
-#     return True
-
-
-# def runEqSBtab_hdd(inputTar, outputTar, pathway_id='rp_pathway', fba_id=None, thermo_id='dfG_prime_o', ph=7.0, ionic_strength=200, pMg=10.0, temp_k=298.15, stdev_factor=1.96):
-#     """Given a tar input file, perform MDF analysis for each rpSBML file.
-
-#     :param inputTar: The path to the input TAR file
-#     :param outputTar: The path to the output TAR file
-#     :param pathway_id: The id of the heterologous pathway of interest (Default: rp_pathway)
-#     :param fba_id: The id of the FBA value. Default sets all FBA values to 1.0 and if specified (Default: None)
-#     :param thermo_id: The id of the thermodynamics id (Default: dfG_prime_o)
-#     :param ph: The pH of the host organism (Default: 7.0)
-#     :param ionic_strength: Ionic strenght of the host organism (Default: 200.0)
-#     :param pMg: The pMg of the host organism (Default: 10.0)
-#     :param temp_k: The temperature of the host organism in Kelvin (Default: 298.15)
-#     :param stdev_factor: The standard deviation factor to calculate MDF (Default: 1.96)
-
-#     :type inputTar: str
-#     :type outputTar: str
-#     :type pathway_id: str
-#     :type tmpOutputFolder: str
-#     :type ph: float
-#     :type ionic_strength: float
-#     :type pMg: float
-#     :type temp_k: float
-#     :type stdev_factor: float
-
-#     :rtype: bool
-#     :return: Success or failure of the function
-#     """
-#     rpequilibrator = rpEquilibrator.rpEquilibrator(ph=ph, ionic_strength=ionic_strength, pMg=pMg, temp_k=temp_k)
-#     with tempfile.TemporaryDirectory() as tmpInputFolder:
-#         with tempfile.TemporaryDirectory() as tmpOutputFolder:
-#             tar = tarfile.open(inputTar, mode='r')
-#             tar.extractall(path=tmpInputFolder)
-#             tar.close()
-#             if len(glob.glob(tmpInputFolder+'/*'))==0:
-#                 logging.error('Input file is empty')
-#                 return False
-#             for sbml_path in glob.glob(tmpInputFolder+'/*'):
-#                 logging.debug('=========== '+str(sbml_path)+' ============')
-#                 fileName = sbml_path.split('/')[-1].replace('.sbml', '').replace('.xml', '').replace('.rpsbml', '').replace('_rpsbml', '') 
-#                 rpsbml = rpSBML.rpSBML(fileName, path=sbml_path)
-#                 rpequilibrator.rpsbml = rpsbml
-#                 status = rpequilibrator.toNetworkSBtab(os.path.join(tmpOutputFolder, fileName+'.tsv'), pathway_id, thermo_id, fba_id, stdev_factor)
-#                 rpsbml = None
-#             if len(glob.glob(tmpOutputFolder+'/*'))==0:
-#                 logging.error('rpThermo has not produced any results')
-#                 return False
-#             with tarfile.open(outputTar, mode='w:gz') as ot:
-#                 for sbml_path in glob.glob(tmpOutputFolder+'/*'):
-#                     fileName = str(sbml_path.split('/')[-1])
-#                     info = tarfile.TarInfo(fileName)
-#                     info.size = os.path.getsize(sbml_path)
-#                     ot.addfile(tarinfo=info, fileobj=open(sbml_path, 'rb'))
-#     return True
