@@ -54,7 +54,7 @@ class Test_rpRank(TestCase):
         name_list = list(computed_scores.values())
 
         with open(expected_result_file, mode='r') as infile:
-            reader = csv_reader(infile, delimiter=' ')
+            reader = csv_reader(infile)
             next(reader)
             expected_scores = {}
             for row in reader:
