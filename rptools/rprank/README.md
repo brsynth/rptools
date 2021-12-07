@@ -8,6 +8,9 @@ Rank a list of pathways according their global score.
 Positional arguments:
 * **pathways**: (list of string) Paths to pathway (rpSBML) files
 
+Optipna arguments:
+* **delimiter**: (string) CSV delimiter character
+
 ## Install
 Please see `rptool` documentation.
 
