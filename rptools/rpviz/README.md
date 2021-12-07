@@ -1,13 +1,7 @@
 # rpviz -- Visualize pathways from the RetroPath Suite
 
-## Installation
-
-```sh
-conda create --name <myenv>
-conda activate <myenv>
-conda install -c brsynth -c conda-forge -c bioconda rpviz
-``` 
-`<myenv>` has to be replaced by whatever meaningful name that will pleased the user.
+## Install
+Please see `rptool` documentation.
 
 ## Usage
 

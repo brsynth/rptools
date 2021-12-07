@@ -11,10 +11,14 @@ rpTools are dedicated to work around rpSBML data structure. Tools are the follow
 * rpThermo: [README.md](rptools/rpthermo/README.md)
 * rpExtractSink: [README.md](rptools/rpextractsink/README.md)
 * rpLibs: [README.md](rptools/rplibs/README.md)
+* rpScore: [README.md](rptools/rpscore/README.md)
+* rpRank: [README.md](rptools/rprank/README.md)
+* rpViz: [README.md](rptools/rpviz/README.md)
+* rpReport: [README.md](rptools/rpreport/README.md)
 
 ## Install
 ```sh
-[sudo] conda install -c brsynth -c conda-forge -c bioconda rptools
+[sudo] conda install -c conda-forge rptools
 ```
 
 ## Run

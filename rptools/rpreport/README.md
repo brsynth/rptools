@@ -4,7 +4,7 @@ fluxes, number of metabolic steps, reaction rule score) of pathways predicted
 with RetroPath suite
 
 ## Install
-rpreport is part of rpTools suite. See its README.
+Please see `rptool` documentation.
 
 ### Usage
 rpreport [-h] [--log ARG] [--log_file LOG_FILE] [--silent] [--version] [-d] [--dev]  [-v] [--standalone] source_path output_folder

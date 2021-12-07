@@ -20,10 +20,7 @@ Advanced Options:
 * **-output**: (string) Path to the output file 
 
 ## Install
-rpThermo is part of rpTools suite:
-```sh
-[sudo] conda install -c brsynth -c conda-forge -c bioconda rptools
-```
+Please see `rptool` documentation.
 
 ## Run
 

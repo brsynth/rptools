@@ -13,12 +13,8 @@ Defines SBML structure with additional fields relative to [RetroPath2](https://g
     * [RDKit](https://www.RDKit.org) -->
 
 
-### Install
-rpLibs is part of rpTools suite:
-#### From Conda
-```sh
-[sudo] conda install -c brsynth -c conda-forge -c bioconda rptools
-```
+## Install
+Please see `rptool` documentation.
 
 ### Test
 Please follow instructions below ti run tests:
