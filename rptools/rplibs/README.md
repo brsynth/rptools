@@ -33,7 +33,11 @@ The compartment of the pathway to each compartment of the model. The comparison 
 ## inchikeyMIRIAM
 Uses the rrCache to parse an SBML file to find all the chemical species, and try to recover the inchikey and add it to the MIRIAM annotation.
 
-
+## Statisticis
+To print statistics on pathways, type:
+```
+python -m rptools.rplibs.stats --pathways <Pathway_1> <Pathway_2>
+```
 
 ## Authors
 
