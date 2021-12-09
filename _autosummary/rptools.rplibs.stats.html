@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>rptools.rplibs.rpGraph &#8212; rpTools 5.4.1 documentation</title>
+    <title>rptools.rplibs.stats &#8212; rpTools 5.4.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
@@ -14,8 +14,8 @@
     <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="rptools.rplibs.rpObject" href="rptools.rplibs.rpObject.html" />
-    <link rel="prev" title="rptools.rplibs.rpCompound" href="rptools.rplibs.rpCompound.html" />
+    <link rel="next" title="rptools.rplibs.stats.counts" href="rptools.rplibs.stats.counts.html" />
+    <link rel="prev" title="rptools.rplibs.rpSBML" href="rptools.rplibs.rpSBML.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -32,8 +32,26 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-rptools.rplibs.rpGraph">
-<span id="rptools-rplibs-rpgraph"></span><h1>rptools.rplibs.rpGraph<a class="headerlink" href="#module-rptools.rplibs.rpGraph" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-rptools.rplibs.stats">
+<span id="rptools-rplibs-stats"></span><h1>rptools.rplibs.stats<a class="headerlink" href="#module-rptools.rplibs.stats" title="Permalink to this headline">¶</a></h1>
+<p class="rubric">Functions</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="rptools.rplibs.stats.counts.html#rptools.rplibs.stats.counts" title="rptools.rplibs.stats.counts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">counts</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rptools.rplibs.stats.entry_point.html#rptools.rplibs.stats.entry_point" title="rptools.rplibs.stats.entry_point"><code class="xref py py-obj docutils literal notranslate"><span class="pre">entry_point</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rptools.rplibs.stats.print_stats.html#rptools.rplibs.stats.print_stats" title="rptools.rplibs.stats.print_stats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_stats</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
 </div>
 
 
@@ -71,12 +89,17 @@
 <li class="toctree-l3"><a class="reference internal" href="rptools.rplibs.Args.html">rptools.rplibs.Args</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rptools.rplibs.inchikeyMIRIAM.html">rptools.rplibs.inchikeyMIRIAM</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rptools.rplibs.rpCompound.html">rptools.rplibs.rpCompound</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rptools.rplibs.rpGraph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rptools.rplibs.rpGraph.html">rptools.rplibs.rpGraph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rptools.rplibs.rpObject.html">rptools.rplibs.rpObject</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rptools.rplibs.rpPathway.html">rptools.rplibs.rpPathway</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rptools.rplibs.rpReaction.html">rptools.rplibs.rpReaction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rptools.rplibs.rpSBML.html">rptools.rplibs.rpSBML</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rptools.rplibs.stats.html">rptools.rplibs.stats</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rptools.rplibs.stats</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rptools.rplibs.stats.counts.html">rptools.rplibs.stats.counts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rptools.rplibs.stats.entry_point.html">rptools.rplibs.stats.entry_point</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rptools.rplibs.stats.print_stats.html">rptools.rplibs.stats.print_stats</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rptools.rprank.html">rptools.rprank</a></li>
@@ -95,8 +118,8 @@
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="rptools.html">rptools</a><ul>
   <li><a href="rptools.rplibs.html">rptools.rplibs</a><ul>
-      <li>Previous: <a href="rptools.rplibs.rpCompound.html" title="previous chapter">rptools.rplibs.rpCompound</a></li>
-      <li>Next: <a href="rptools.rplibs.rpObject.html" title="next chapter">rptools.rplibs.rpObject</a></li>
+      <li>Previous: <a href="rptools.rplibs.rpSBML.html" title="previous chapter">rptools.rplibs.rpSBML</a></li>
+      <li>Next: <a href="rptools.rplibs.stats.counts.html" title="next chapter">rptools.rplibs.stats.counts</a></li>
   </ul></li>
   </ul></li>
   </ul></li>
@@ -132,7 +155,7 @@
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
-      <a href="../_sources/_autosummary/rptools.rplibs.rpGraph.rst.txt"
+      <a href="../_sources/_autosummary/rptools.rplibs.stats.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 

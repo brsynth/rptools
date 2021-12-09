@@ -1,0 +1,6 @@
+rptools.rplibs.stats.print\_stats
+=================================
+
+.. currentmodule:: rptools.rplibs.stats
+
+.. autofunction:: print_stats

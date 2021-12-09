@@ -1,0 +1,6 @@
+rptools.rplibs.stats.counts
+===========================
+
+.. currentmodule:: rptools.rplibs.stats
+
+.. autofunction:: counts

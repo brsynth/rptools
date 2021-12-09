@@ -1,0 +1,6 @@
+rptools.rplibs.stats.entry\_point
+=================================
+
+.. currentmodule:: rptools.rplibs.stats
+
+.. autofunction:: entry_point
