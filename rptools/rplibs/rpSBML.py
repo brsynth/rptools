@@ -46,6 +46,7 @@ from brs_utils import(
     extract_gz
 )
 from .rpGraph import rpGraph
+from .rpReaction import rpReaction
 
 ## @package RetroPath SBML writer
 # Documentation for SBML representation of the different model
@@ -365,6 +366,10 @@ class rpSBML:
     #     #                 unit = None
     #     #             self.updateBRSynth(reaction, bd_id, value, unit, False)
 
+    ##########################################################################
+    ############################ QUERY #######################################
+    ##########################################################################
+
     def has_compartment(
         self,
         compartment: str,
@@ -409,6 +414,40 @@ class rpSBML:
                     or comp_synonym == comp_model.getName().lower():
                     return True, comp_model.getId()
         return False, ''
+
+    def has_reaction(
+        self,
+        reaction: Union[str, rpReaction, libsbml.Reaction]
+    ) -> Tuple[bool, libsbml.Reaction]:
+        """Search in model if a reaction exists.
+
+        :param reaction: A reaction to extract its id
+
+        :type reaction: Union[str, rpReaction, libsml.Reaction]
+
+        :return: Success or Failure and mapping if needed, reaction returned \
+            is None if reaction not found in the model
+        :rtype: Tuple[bool, libsbml.Reaction]
+        """
+        # TODO: add strict mode, to search in species product/reactant
+        # Structure data.
+        reaction_id = ''
+        if isinstance(reaction, str):
+            reaction_id = reaction
+        elif isinstance(reaction, rpReaction):
+            reaction_id = reaction.get_id()
+        elif isinstance(reaction, libsbml.Reaction):
+            reaction_id = reaction.getId()
+        else:
+            return False, None
+        # Search in model.
+        if self.getModel() is None:
+            return False, None
+        for rxn in self.getModel().getListOfReactions():
+            if reaction_id == rxn.getId():
+                return True, rxn
+        return False, None
+
 
     #############################################################################################################
     ############################################ MERGE ##########################################################

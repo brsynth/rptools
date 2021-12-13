@@ -5,7 +5,10 @@ Created on June 17 2020
 """
 import libsbml
 import pandas as pd
-from    rptools.rplibs import rpSBML
+from    rptools.rplibs import (
+    rpReaction,
+    rpSBML
+)
 from          tempfile import (
     NamedTemporaryFile
 )
@@ -82,7 +85,7 @@ class Test_rpSBML(Main_rplibs):
         self.assertEqual(self.rpsbml_lycopene.getName(), 'dummy')
         self.assertEqual(self.rpsbml_none.getName(), self.rpsbml_lycopene_name)
 
-    def test_has_compartment_id(self):
+    def test_has_compartment(self):
         # Strict.
         res = self.rpsbml_lycopene.has_compartment(
             compartment='c',
@@ -132,6 +135,61 @@ class Test_rpSBML(Main_rplibs):
         self.assertEqual(
             res[1],
             ''
+        )
+
+    def test_has_reaction(self):
+        res = self.rpsbml_lycopene.has_reaction(
+            reaction='rxn_1'
+        )
+        # Get libsbml.Reaction & rpReaction
+        r_libsbml = self.rpsbml_lycopene.getModel().getReaction('rxn_1')
+        r_rpreaction = rpReaction('rxn_1')
+        # Return type.
+        self.assertIsInstance(
+            res,
+            Tuple
+        )
+        # Values.
+        self.assertTrue(res[0])
+        self.assertEqual(
+            res[1],
+            r_libsbml
+        )
+        # Test - 2.
+        res = self.rpsbml_lycopene.has_reaction(
+            reaction=r_libsbml
+        )
+        self.assertTrue(res[0])
+        self.assertEqual(
+            res[1],
+            r_libsbml
+        )
+        # Test - 3
+        res = self.rpsbml_lycopene.has_reaction(
+            reaction=r_rpreaction
+        )
+        self.assertTrue(res[0])
+        self.assertEqual(
+            res[1],
+            r_libsbml
+        )
+        # Test - 4
+        res = self.rpsbml_lycopene.has_reaction(
+            reaction=self.rpsbml_none
+        )
+        self.assertFalse(res[0])
+        self.assertIs(
+            res[1],
+            None
+        )
+        # Test - 5
+        res = self.rpsbml_lycopene.has_reaction(
+            reaction='rxn_4'
+        )
+        self.assertFalse(res[0])
+        self.assertIs(
+            res[1],
+            None
         )
 
     def test_speciesMatchWith(self):
