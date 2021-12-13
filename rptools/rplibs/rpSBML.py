@@ -37,6 +37,7 @@ from tempfile import (
 )
 
 from cobra.medium.annotations import (
+    compartment_shortlist,
     excludes,
     sbo_terms
 )
@@ -364,14 +365,50 @@ class rpSBML:
     #     #                 unit = None
     #     #             self.updateBRSynth(reaction, bd_id, value, unit, False)
 
-    def search_compartment_id(self, compartment_id: str):
-        for group in self.getModel().getListOfCompartments():
-            if (
-                compartment_id.lower() == group.getId().lower()
-                or compartment_id.lower() == group.getName().lower()
-            ):
-                return group.getId()
-        return None
+    def has_compartment(
+        self,
+        compartment: str,
+        strict: bool=False
+    ) -> Tuple[bool, str]:
+        """Search in model if a compartment id exists.
+
+        :param compartment: An id (or name if not strict mode) \
+            to search in the model
+        :param strict: Perform research with the exact id provided \
+            without mapping (optional: false)
+
+        :type compartment: str
+        :param strict: bool
+
+        :return: Success or Failure and mapping if needed
+        :rtype: Tuple[bool, str]
+        """
+        # Build data.
+        comp_models = self.getModel().getListOfCompartments()
+        # Strict
+        if strict:
+            for comp_model in comp_models:
+                if compartment == comp_model.getId():
+                    return True, comp_model.getId()
+                else:
+                    return False, ''
+        # Find synonyms
+        comp_synonyms = []
+        for c_short, c_long in compartment_shortlist.items():
+            c_long.append(c_short)
+            c_long = [x.lower() for x in c_long]
+            if compartment.lower() in c_long:
+                comp_synonyms = c_long
+                break
+        if len(comp_synonyms) == 0:
+            comp_synonyms.append(compartment.lower())
+        # Not strict
+        for comp_synonym in comp_synonyms:
+            for comp_model in comp_models:
+                if comp_synonym == comp_model.getId().lower() \
+                    or comp_synonym == comp_model.getName().lower():
+                    return True, comp_model.getId()
+        return False, ''
 
     #############################################################################################################
     ############################################ MERGE ##########################################################

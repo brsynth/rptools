@@ -82,6 +82,58 @@ class Test_rpSBML(Main_rplibs):
         self.assertEqual(self.rpsbml_lycopene.getName(), 'dummy')
         self.assertEqual(self.rpsbml_none.getName(), self.rpsbml_lycopene_name)
 
+    def test_has_compartment_id(self):
+        # Strict.
+        res = self.rpsbml_lycopene.has_compartment(
+            compartment='c',
+            strict=True
+        )
+        # Return type.
+        self.assertIsInstance(
+            res,
+            Tuple
+        )
+        # Values.
+        self.assertTrue(res[0])
+        self.assertEqual(
+            res[1],
+            'c'
+        )
+        res = self.rpsbml_lycopene.has_compartment(
+            compartment='cytosol',
+            strict=True
+        )
+        self.assertFalse(res[0])
+        self.assertEqual(
+            res[1],
+            ''
+        )
+        # Not strict - 1.
+        res = self.rpsbml_lycopene.has_compartment(
+            compartment='cytosol'
+        )
+        self.assertTrue(res[0])
+        self.assertEqual(
+            res[1],
+            'c'
+        )
+        res = self.rpsbml_lycopene.has_compartment(
+            compartment='intracellular space'
+        )
+        self.assertTrue(res[0])
+        self.assertEqual(
+            res[1],
+            'c'
+        )
+        res = self.rpsbml_lycopene.has_compartment(
+            compartment='out'
+        )
+        self.assertFalse(res[0])
+        self.assertEqual(
+            res[1],
+            ''
+        )
+
     def test_speciesMatchWith(self):
         # Return type.
         species_match_with = rpSBML.speciesMatchWith(
@@ -92,7 +144,7 @@ class Test_rpSBML(Main_rplibs):
         self.assertIsInstance(species_match_with, Tuple)
         self.assertIsInstance(species_match_with[0], Dict)
         self.assertIsInstance(species_match_with[1], List)
-        # Basic 
+        # Basic
         self.assertEqual(
             sorted(self.rpsbml_lycopene_specie_id),
             sorted(rpSBML.speciesMatchWith(
@@ -103,8 +155,8 @@ class Test_rpSBML(Main_rplibs):
         )
         # Challenge - 1
         species_match_with = rpSBML.speciesMatchWith(
-            ['HMDB00250', '13420'], 
-            self.rpsbml_lycopene, 
+            ['HMDB00250', '13420'],
+            self.rpsbml_lycopene,
             'c'
         )
         self.assertEqual(
@@ -120,10 +172,10 @@ class Test_rpSBML(Main_rplibs):
             species_match_with[0].values()
         )
         self.assertFalse(species_match_with[1])
-        # Challenge - 2 
+        # Challenge - 2
         species_match_with = rpSBML.speciesMatchWith(
-            ['HMDB00250', '13420'], 
-            self.rpsbml_lycopene, 
+            ['HMDB00250', '13420'],
+            self.rpsbml_lycopene,
             ''
         )
         self.assertFalse(species_match_with[0])
@@ -131,14 +183,14 @@ class Test_rpSBML(Main_rplibs):
             len(species_match_with[1]),
             2
         )
-        # Challenge - 3 
+        # Challenge - 3
         species_match_with = rpSBML.speciesMatchWith(
-            ['MNXM24', '13421'], 
-            self.rpsbml_lycopene, 
+            ['MNXM24', '13421'],
+            self.rpsbml_lycopene,
             'c'
         )
         self.assertEqual(
-            ['MNXM24'], 
+            ['MNXM24'],
             list(species_match_with[0].values())
         )
         self.assertEqual(
@@ -155,7 +207,7 @@ class Test_rpSBML(Main_rplibs):
         )
         reactions = rpsbml_ecoli.getModel().getListOfReactions()
         cobra_model = cobra_io.read_sbml_model(
-            self.rpsbml_ecoli_path, 
+            self.rpsbml_ecoli_path,
             use_fbs_package=True
         )
         # Return type.
@@ -190,7 +242,7 @@ class Test_rpSBML(Main_rplibs):
             len(cobra_model.sinks),
             len(rpsbml_sinks)
         )
- 
+
     def test_build_exchange_reaction(self):
         # Load.
         rpsbml_ecoli  = rpSBML(
@@ -205,7 +257,7 @@ class Test_rpSBML(Main_rplibs):
         )
         # Fmt dataframe.
         self.assertEqual(
-            df.shape, 
+            df.shape,
             (331,2)
         )
         self.assertIn('model_id', df.columns)
@@ -237,8 +289,8 @@ class Test_rpSBML(Main_rplibs):
         species_id='M_ipdp_c'
         species_name='Isopentenyl diphosphate'
         chemXref = {
-            'bigg': ['ipdp'], 
-            'biocyc': ['TUNGSTATE'], 
+            'bigg': ['ipdp'],
+            'biocyc': ['TUNGSTATE'],
             'chebi': ['128769', '6037']
             #'metanetx': ['MNXM83']
         }
@@ -309,7 +361,7 @@ class Test_rpSBML(Main_rplibs):
             {},
             self.rpsbml_lycopene.readBRSYNTHAnnotation(specie.getAnnotation())
         )
- 
+
     #def test_initEmpty(self):002_0001
     #    rpSBML(name='rpSBML_test', logger=self.logger)
 
