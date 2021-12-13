@@ -6,6 +6,7 @@ Created on June 17 2020
 import libsbml
 import pandas as pd
 from    rptools.rplibs import (
+    rpCompound,
     rpReaction,
     rpSBML
 )
@@ -135,6 +136,61 @@ class Test_rpSBML(Main_rplibs):
         self.assertEqual(
             res[1],
             ''
+        )
+
+    def test_has_specie(self):
+        res = self.rpsbml_lycopene.has_specie(
+            specie='MNXM8975'
+        )
+        # Get libsbml.Specie & rpCompound
+        s_libsbml = self.rpsbml_lycopene.getModel().getSpecies('MNXM8975')
+        s_rpcompound = rpCompound('MNXM8975')
+        # Return type.
+        self.assertIsInstance(
+            res,
+            Tuple
+        )
+        # Values.
+        self.assertTrue(res[0])
+        self.assertEqual(
+            res[1],
+            s_libsbml
+        )
+        # Test - 2.
+        res = self.rpsbml_lycopene.has_specie(
+            specie=s_libsbml
+        )
+        self.assertTrue(res[0])
+        self.assertEqual(
+            res[1],
+            s_libsbml
+        )
+        # Test - 3
+        res = self.rpsbml_lycopene.has_specie(
+            specie=s_rpcompound
+        )
+        self.assertTrue(res[0])
+        self.assertEqual(
+            res[1],
+            s_libsbml
+        )
+        # Test - 4
+        res = self.rpsbml_lycopene.has_specie(
+            specie=self.rpsbml_none
+        )
+        self.assertFalse(res[0])
+        self.assertIs(
+            res[1],
+            None
+        )
+        # Test - 5
+        res = self.rpsbml_lycopene.has_specie(
+            specie='rxn_4'
+        )
+        self.assertFalse(res[0])
+        self.assertIs(
+            res[1],
+            None
         )
 
     def test_has_reaction(self):

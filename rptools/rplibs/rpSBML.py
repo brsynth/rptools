@@ -45,6 +45,7 @@ from cobra.medium.annotations import (
 from brs_utils import(
     extract_gz
 )
+from .rpCompound import rpCompound
 from .rpGraph import rpGraph
 from .rpReaction import rpReaction
 
@@ -415,6 +416,39 @@ class rpSBML:
                     return True, comp_model.getId()
         return False, ''
 
+    def has_specie(
+        self,
+        specie: Union[str, rpCompound, libsbml.Species]
+    ) -> Tuple[bool, libsbml.Species]:
+        """Search in model if a specie exists.
+
+        :param specie: A specie to extract its id
+
+        :type specie: Union[str, rpCompound, libsml.Specie]
+
+        :return: Success or Failure and mapping if needed, compound returned \
+            is None if specie not found in the model
+        :rtype: Tuple[bool, libsbml.Specie]
+        """
+        # TODO: add strict mode, to search in species attributes
+        # Structure data.
+        specie_id = ''
+        if isinstance(specie, str):
+            specie_id = specie
+        elif isinstance(specie, rpCompound):
+            specie_id = specie.get_id()
+        elif isinstance(specie, libsbml.Species):
+            specie_id = specie.getId()
+        else:
+            return False, None
+        # Search in model.
+        if self.getModel() is None:
+            return False, None
+        for spe in self.getModel().getListOfSpecies():
+            if specie_id == spe.getId():
+                return True, spe
+        return False, None
+
     def has_reaction(
         self,
         reaction: Union[str, rpReaction, libsbml.Reaction]
@@ -447,7 +481,6 @@ class rpSBML:
             if reaction_id == rxn.getId():
                 return True, rxn
         return False, None
-
 
     #############################################################################################################
     ############################################ MERGE ##########################################################
