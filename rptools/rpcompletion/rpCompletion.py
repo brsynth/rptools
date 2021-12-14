@@ -26,7 +26,8 @@ from rptools.rplibs import (
 )
 from .Args import (
     default_upper_flux_bound,
-    default_lower_flux_bound
+    default_lower_flux_bound,
+    default_max_subpaths_filter
 )
 
 def rp_completion(
@@ -37,7 +38,7 @@ def rp_completion(
     cache: rrCache = None,
     upper_flux_bound: float = default_upper_flux_bound,
     lower_flux_bound: float = default_lower_flux_bound,
-    max_subpaths_filter: int = 10,
+    max_subpaths_filter: int = default_max_subpaths_filter,
     logger: Logger = getLogger(__name__)
 ) -> List[rpPathway]:
     """Process to the completion of metabolic pathways 
