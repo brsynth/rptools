@@ -13,7 +13,8 @@ from os import (
 )
 from json import (
     load as json_load,
-    dump as json_dump
+    dump as json_dump,
+    dumps as json_dumps
 )
 from inspect import (
     getmembers as inspect_getmembers,
@@ -35,7 +36,14 @@ from tempfile import (
     TemporaryDirectory,
     gettempdir,
 )
-
+import cobra
+from cobra import (
+    io as cobra_io
+)
+from cobra.io.sbml import (
+    CobraSBMLError,
+    validate_sbml_model
+)
 from cobra.medium.annotations import (
     compartment_shortlist,
     excludes,
@@ -4206,6 +4214,36 @@ class rpSBML:
                 annot_header=key,
                 value=value
             )
+
+    def to_cobra(
+        self,
+        logger: Logger = getLogger(__name__)
+    ) -> cobra.Model:
+        """Convert rpSBML to a cobra Model
+
+        :param logger: a logger object
+
+        :type logger: Logger
+
+        :return : A cobra Model
+        :rtype: cobra.Model
+        """
+        # To handle file removing (Windows)
+        cobra_model = None
+        with NamedTemporaryFile(delete=False) as temp_f:
+            self.write_to_file(temp_f.name)
+            temp_f.close()
+            try:
+                cobra_model = cobra_io.read_sbml_model(temp_f.name, use_fbc_package=True)
+            except CobraSBMLError:
+                logger.error('Something went wrong reading the SBML model')
+                (model, errors) = validate_sbml_model(temp_f.name)
+                logger.error(str(json_dumps(errors, indent=4)))
+
+        # To handle file removing (Windows)
+        remove(temp_f.name)
+
+        return cobra_model
 
     # def to_json(
     #     self,

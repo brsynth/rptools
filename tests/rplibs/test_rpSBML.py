@@ -18,6 +18,7 @@ from typing import (
     List,
     Tuple
 )
+import cobra
 from cobra import io as cobra_io
 from           pathlib import Path
 from                os import path  as os_path
@@ -476,6 +477,16 @@ class Test_rpSBML(Main_rplibs):
             self.rpsbml_lycopene.readBRSYNTHAnnotation(specie.getAnnotation())
         )
 
+    def test_to_cobra(self):
+        rpsbml_ecoli  = rpSBML(
+            inFile = self.rpsbml_ecoli_path,
+            logger = self.logger
+        )
+        model = rpsbml_ecoli.to_cobra()
+        self.assertIsInstance(
+            model,
+            cobra.Model
+        )
     #def test_initEmpty(self):002_0001
     #    rpSBML(name='rpSBML_test', logger=self.logger)
 
