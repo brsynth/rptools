@@ -422,11 +422,11 @@ def check_SBML_compartment(
         # Check model compartment ID
         # Set new compartment ID in case it exists under another ID
         _compartment_id = rpsbml.has_compartment(comp_id)
-        if _compartment_id[0] is False:
+        if _compartment_id is False:
             logger.debug(f'Compartment \'{comp_id}\' not found in the model \'{rpsbml.getName()}\'')
         else:
             logger.debug(f'Compartment \'{comp_id}\' found in the model \'{rpsbml.getName()}\'')
-            return _compartment_id[1]
+            return rpsbml.search_compartment(comp_id).getId()
 
     logger.error(f'Compartment(s) \'{comp_ids}\' not found in the model \'{rpsbml.getName()}\'')
     logger.error(
