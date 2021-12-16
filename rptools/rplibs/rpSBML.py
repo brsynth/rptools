@@ -1,4 +1,5 @@
 import libsbml
+import re
 import numpy as np
 
 from copy import deepcopy
@@ -378,34 +379,24 @@ class rpSBML:
     ##########################################################################
     ############################ QUERY #######################################
     ##########################################################################
-
-    def has_compartment(
+    def search_compartment(
         self,
-        compartment: str,
-        strict: bool=False
-    ) -> Tuple[bool, str]:
-        """Search in model if a compartment id exists.
+        compartment: str
+    ) -> libsbml.Compartment:
+        """Search in the model if a compartment id exists.
 
-        :param compartment: An id (or name if not strict mode) \
-            to search in the model
-        :param strict: Perform research with the exact id provided \
-            without mapping (optional: false)
+        :param compartment: An id or a name to search in the model
 
         :type compartment: str
-        :param strict: bool
 
-        :return: Success or Failure and mapping if needed
-        :rtype: Tuple[bool, str]
+        :return: Return a compartment if the specie is in the model, None otherwise
+        :rtype: libsbml.Compartment
         """
+        # Search in model.
+        if self.getModel() is None:
+            return None
         # Build data.
         comp_models = self.getModel().getListOfCompartments()
-        # Strict
-        if strict:
-            for comp_model in comp_models:
-                if compartment == comp_model.getId():
-                    return True, comp_model.getId()
-                else:
-                    return False, ''
         # Find synonyms
         comp_synonyms = []
         for c_short, c_long in compartment_shortlist.items():
@@ -421,24 +412,99 @@ class rpSBML:
             for comp_model in comp_models:
                 if comp_synonym == comp_model.getId().lower() \
                     or comp_synonym == comp_model.getName().lower():
-                    return True, comp_model.getId()
-        return False, ''
+                    return comp_model
+        return None
+
+    def search_specie(
+        self,
+        specie: str
+    ) -> libsbml.Species:
+        """Search in model if a specie exists.
+
+        :param specie: A specie id to search in the model
+
+        :type specie: str
+
+        :return: Return a specie if the specie is in the model, None otherwise
+        :rtype: libsbml.Specie
+        """
+        # Search in model.
+        if self.getModel() is None:
+            return None
+        for spe in self.getModel().getListOfSpecies():
+            if re.search(specie, spe.getId(), re.IGNORECASE) \
+                or re.search(specie, spe.getName(), re.IGNORECASE):
+                return spe
+        return None
+
+    def search_reaction(
+        self,
+        reaction: str
+    ) -> libsbml.Reaction:
+        """Search in model if a reaction exists.
+
+        :param reaction: A reaction id to search in the model
+
+        :type reaction: str
+
+        :return: Return a reaction if the reaction is in the model, None otherwise
+        :rtype: libsbml.Reaction
+        """
+        # Search in model.
+        if self.getModel() is None:
+            return None
+        for rxn in self.getModel().getListOfReactions():
+            if re.search(reaction, rxn.getId(), re.IGNORECASE) \
+                or re.search(reaction, rxn.getName(), re.IGNORECASE):
+                return rxn
+        return None
+
+    def has_compartment(
+        self,
+        compartment: str,
+        strict: bool=False
+    ) -> bool:
+        """Check in the model if a compartment id exists.
+
+        :param compartment: An id (or name if not strict mode) \
+            to search in the model
+        :param strict: Perform research with the exact id provided \
+            without mapping (optional: false)
+
+        :type compartment: str
+        :type strict: bool
+
+        :return: Success or Failure if the compartment is in the model
+        :rtype: bool
+        """
+        if self.getModel() is None:
+            return False
+        if strict:
+            if self.getModel().getCompartment(compartment) is None:
+                return False
+            return True
+        else:
+            if self.search_compartment(compartment) is None:
+                return False
+            return True
 
     def has_specie(
         self,
-        specie: Union[str, rpCompound, libsbml.Species]
-    ) -> Tuple[bool, libsbml.Species]:
-        """Search in model if a specie exists.
+        specie: Union[str, rpCompound, libsbml.Species],
+        strict: bool=False
+    ) -> bool:
+        """Check in the model if a specie exists.
 
         :param specie: A specie to extract its id
+        :param strict: Perform research with the exact id provided \
+            without mapping (optional: false)
 
         :type specie: Union[str, rpCompound, libsml.Specie]
+        :type strict: bool
 
-        :return: Success or Failure and mapping if needed, compound returned \
-            is None if specie not found in the model
-        :rtype: Tuple[bool, libsbml.Specie]
+        :return: Success or Failure if the specie is in the model
+        :rtype: bool
         """
-        # TODO: add strict mode, to search in species attributes
         # Structure data.
         specie_id = ''
         if isinstance(specie, str):
@@ -448,30 +514,36 @@ class rpSBML:
         elif isinstance(specie, libsbml.Species):
             specie_id = specie.getId()
         else:
-            return False, None
-        # Search in model.
+            return False
+        # Check
         if self.getModel() is None:
-            return False, None
-        for spe in self.getModel().getListOfSpecies():
-            if specie_id == spe.getId():
-                return True, spe
-        return False, None
+            return False
+        if strict:
+            if self.getModel().getSpecies(specie_id) is None:
+                return False
+            return True
+        else:
+            if self.search_specie(specie_id) is None:
+                return False
+            return True
 
     def has_reaction(
         self,
-        reaction: Union[str, rpReaction, libsbml.Reaction]
-    ) -> Tuple[bool, libsbml.Reaction]:
-        """Search in model if a reaction exists.
+        reaction: Union[str, rpReaction, libsbml.Reaction],
+        strict: bool=False
+    ) -> bool:
+        """Check in the model if a reaction exists.
 
         :param reaction: A reaction to extract its id
+        :param strict: Perform research with the exact id provided \
+            without mapping (optional: false)
 
         :type reaction: Union[str, rpReaction, libsml.Reaction]
+        :type strict: bool
 
-        :return: Success or Failure and mapping if needed, reaction returned \
-            is None if reaction not found in the model
-        :rtype: Tuple[bool, libsbml.Reaction]
+        :return: Success or Failure if the reaction is in the model
+        :rtype: bool
         """
-        # TODO: add strict mode, to search in species product/reactant
         # Structure data.
         reaction_id = ''
         if isinstance(reaction, str):
@@ -481,14 +553,18 @@ class rpSBML:
         elif isinstance(reaction, libsbml.Reaction):
             reaction_id = reaction.getId()
         else:
-            return False, None
-        # Search in model.
+            return False
+        # Check
         if self.getModel() is None:
-            return False, None
-        for rxn in self.getModel().getListOfReactions():
-            if reaction_id == rxn.getId():
-                return True, rxn
-        return False, None
+            return False
+        if strict:
+            if self.getModel().getReactions(reaction_id) is None:
+                return False
+            return True
+        else:
+            if self.search_reaction(reaction_id) is None:
+                return False
+            return True
 
     #############################################################################################################
     ############################################ MERGE ##########################################################
