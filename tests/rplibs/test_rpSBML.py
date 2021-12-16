@@ -87,167 +87,238 @@ class Test_rpSBML(Main_rplibs):
         self.assertEqual(self.rpsbml_lycopene.getName(), 'dummy')
         self.assertEqual(self.rpsbml_none.getName(), self.rpsbml_lycopene_name)
 
+    #############
+    ##  Query  ##
+    #############
+    def test_search_compartment(self):
+        res = self.rpsbml_lycopene.search_compartment(
+            compartment='c'
+        )
+        # Test - 1.
+        self.assertIsInstance(
+            res,
+            libsbml.Compartment
+        )
+        self.assertEqual(
+            res.getId(),
+            'c'
+        )
+        # Test - 2
+        res = self.rpsbml_lycopene.search_compartment(
+            compartment='cytosol'
+        )
+        self.assertIsInstance(
+            res,
+            libsbml.Compartment
+        )
+        self.assertEqual(
+            res.getId(),
+            'c'
+        )
+        # Test - 3
+        res = self.rpsbml_lycopene.search_compartment(
+            compartment='cyxosol'
+        )
+        self.assertIs(
+            res,
+            None
+        )
+        # Test - 4
+        res = self.rpsbml_lycopene.search_compartment(
+            compartment='CYTOSOL'
+        )
+        self.assertEqual(
+            res.getId(),
+            'c'
+        )
+
     def test_has_compartment(self):
-        # Strict.
+        # Test - 1
         res = self.rpsbml_lycopene.has_compartment(
             compartment='c',
             strict=True
         )
-        # Return type.
         self.assertIsInstance(
             res,
-            Tuple
+            bool
         )
-        # Values.
-        self.assertTrue(res[0])
-        self.assertEqual(
-            res[1],
-            'c'
-        )
+        self.assertTrue(res)
+        # Test - 2
         res = self.rpsbml_lycopene.has_compartment(
-            compartment='cytosol',
+            compartment='C',
             strict=True
         )
-        self.assertFalse(res[0])
-        self.assertEqual(
-            res[1],
-            ''
+        self.assertIsInstance(
+            res,
+            bool
         )
-        # Not strict - 1.
+        self.assertFalse(res)
+        # Test - 3
         res = self.rpsbml_lycopene.has_compartment(
-            compartment='cytosol'
+            compartment='c'
         )
-        self.assertTrue(res[0])
-        self.assertEqual(
-            res[1],
-            'c'
+        self.assertIsInstance(
+            res,
+            bool
         )
+        self.assertTrue(res)
+        # Test - 4
+        res = self.rpsbml_lycopene.has_compartment(
+            compartment='C',
+        )
+        self.assertIsInstance(
+            res,
+            bool
+        )
+        self.assertTrue(res)
+        # Test - 5
         res = self.rpsbml_lycopene.has_compartment(
             compartment='intracellular space'
         )
-        self.assertTrue(res[0])
-        self.assertEqual(
-            res[1],
-            'c'
-        )
-        res = self.rpsbml_lycopene.has_compartment(
-            compartment='out'
-        )
-        self.assertFalse(res[0])
-        self.assertEqual(
-            res[1],
-            ''
-        )
+        self.assertTrue(res)
 
-    def test_has_specie(self):
-        res = self.rpsbml_lycopene.has_specie(
+    def test_search_specie(self):
+        # Test - 1
+        res = self.rpsbml_lycopene.search_specie(
             specie='MNXM8975'
         )
+        self.assertIsInstance(
+            res,
+            libsbml.Species
+        )
+        self.assertEqual(
+            res.getId(),
+            'MNXM8975'
+        )
+        # Test - 2
+        res = self.rpsbml_lycopene.search_specie(
+            specie='MNTM8975'
+        )
+        self.assertIs(
+            res,
+            None
+        )
+        # Test - 3
+        res = self.rpsbml_lycopene.search_specie(
+            specie='mnxm8975'
+        )
+        self.assertEqual(
+            res.getId(),
+            'MNXM8975'
+        )
+
+
+    def test_has_specie(self):
         # Get libsbml.Specie & rpCompound
         s_libsbml = self.rpsbml_lycopene.getModel().getSpecies('MNXM8975')
         s_rpcompound = rpCompound('MNXM8975')
-        # Return type.
+        # Test - 1
+        res = self.rpsbml_lycopene.has_specie(
+            specie='MNXM8975'
+        )
         self.assertIsInstance(
             res,
-            Tuple
+            bool
         )
-        # Values.
-        self.assertTrue(res[0])
-        self.assertEqual(
-            res[1],
-            s_libsbml
-        )
-        # Test - 2.
+        self.assertTrue(res)
+        # Test - 2
         res = self.rpsbml_lycopene.has_specie(
             specie=s_libsbml
         )
-        self.assertTrue(res[0])
-        self.assertEqual(
-            res[1],
-            s_libsbml
+        self.assertIsInstance(
+            res,
+            bool
         )
+        self.assertTrue(res)
         # Test - 3
         res = self.rpsbml_lycopene.has_specie(
             specie=s_rpcompound
         )
-        self.assertTrue(res[0])
-        self.assertEqual(
-            res[1],
-            s_libsbml
+        self.assertIsInstance(
+            res,
+            bool
         )
+        self.assertTrue(res)
         # Test - 4
         res = self.rpsbml_lycopene.has_specie(
-            specie=self.rpsbml_none
+            specie='NMXM000'
         )
-        self.assertFalse(res[0])
+        self.assertIsInstance(
+            res,
+            bool
+        )
+        self.assertFalse(res)
+
+    def test_search_reaction(self):
+        # Test - 1
+        res = self.rpsbml_lycopene.search_reaction(
+            reaction = 'rxn_1'
+        )
+        self.assertIsInstance(
+            res,
+            libsbml.Reaction
+        )
+        self.assertEqual(
+            res.getId(),
+            'rxn_1'
+        )
+        # Test - 2
+        res = self.rpsbml_lycopene.search_reaction(
+            reaction='rtn'
+        )
         self.assertIs(
-            res[1],
+            res,
             None
         )
-        # Test - 5
-        res = self.rpsbml_lycopene.has_specie(
-            specie='rxn_4'
+        # Test - 3
+        res = self.rpsbml_lycopene.search_reaction(
+            reaction='RXN_1'
         )
-        self.assertFalse(res[0])
-        self.assertIs(
-            res[1],
-            None
+        self.assertEqual(
+            res.getId(),
+            'rxn_1'
         )
 
     def test_has_reaction(self):
-        res = self.rpsbml_lycopene.has_reaction(
-            reaction='rxn_1'
-        )
         # Get libsbml.Reaction & rpReaction
         r_libsbml = self.rpsbml_lycopene.getModel().getReaction('rxn_1')
         r_rpreaction = rpReaction('rxn_1')
-        # Return type.
+        # Test - 1
+        res = self.rpsbml_lycopene.has_reaction(
+            reaction='rxn_1'
+        )
         self.assertIsInstance(
             res,
-            Tuple
+            bool
         )
-        # Values.
-        self.assertTrue(res[0])
-        self.assertEqual(
-            res[1],
-            r_libsbml
-        )
-        # Test - 2.
+        self.assertTrue(res)
+        # Test - 2
         res = self.rpsbml_lycopene.has_reaction(
             reaction=r_libsbml
         )
-        self.assertTrue(res[0])
-        self.assertEqual(
-            res[1],
-            r_libsbml
+        self.assertIsInstance(
+            res,
+            bool
         )
+        self.assertTrue(res)
         # Test - 3
         res = self.rpsbml_lycopene.has_reaction(
             reaction=r_rpreaction
         )
-        self.assertTrue(res[0])
-        self.assertEqual(
-            res[1],
-            r_libsbml
+        self.assertIsInstance(
+            res,
+            bool
         )
+        self.assertTrue(res)
         # Test - 4
         res = self.rpsbml_lycopene.has_reaction(
-            reaction=self.rpsbml_none
+            reaction='rtn'
         )
-        self.assertFalse(res[0])
-        self.assertIs(
-            res[1],
-            None
+        self.assertIsInstance(
+            res,
+            bool
         )
-        # Test - 5
-        res = self.rpsbml_lycopene.has_reaction(
-            reaction='rxn_4'
-        )
-        self.assertFalse(res[0])
-        self.assertIs(
-            res[1],
-            None
-        )
+        self.assertFalse(res)
 
     def test_speciesMatchWith(self):
         # Return type.
