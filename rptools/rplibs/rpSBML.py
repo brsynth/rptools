@@ -54,9 +54,7 @@ from cobra.medium.annotations import (
 from brs_utils import(
     extract_gz
 )
-from .rpCompound import rpCompound
 from .rpGraph import rpGraph
-from .rpReaction import rpReaction
 
 ## @package RetroPath SBML writer
 # Documentation for SBML representation of the different model
@@ -490,7 +488,7 @@ class rpSBML:
 
     def has_specie(
         self,
-        specie: Union[str, rpCompound, libsbml.Species],
+        specie: str,
         strict: bool=False
     ) -> bool:
         """Check in the model if a specie exists.
@@ -499,37 +497,27 @@ class rpSBML:
         :param strict: Perform research with the exact id provided \
             without mapping (optional: false)
 
-        :type specie: Union[str, rpCompound, libsml.Specie]
+        :type specie: str
         :type strict: bool
 
         :return: Success or Failure if the specie is in the model
         :rtype: bool
         """
-        # Structure data.
-        specie_id = ''
-        if isinstance(specie, str):
-            specie_id = specie
-        elif isinstance(specie, rpCompound):
-            specie_id = specie.get_id()
-        elif isinstance(specie, libsbml.Species):
-            specie_id = specie.getId()
-        else:
-            return False
         # Check
         if self.getModel() is None:
             return False
         if strict:
-            if self.getModel().getSpecies(specie_id) is None:
+            if self.getModel().getSpecies(specie) is None:
                 return False
             return True
         else:
-            if self.search_specie(specie_id) is None:
+            if self.search_specie(specie) is None:
                 return False
             return True
 
     def has_reaction(
         self,
-        reaction: Union[str, rpReaction, libsbml.Reaction],
+        reaction: str,
         strict: bool=False
     ) -> bool:
         """Check in the model if a reaction exists.
@@ -538,31 +526,21 @@ class rpSBML:
         :param strict: Perform research with the exact id provided \
             without mapping (optional: false)
 
-        :type reaction: Union[str, rpReaction, libsml.Reaction]
+        :type reaction: str
         :type strict: bool
 
         :return: Success or Failure if the reaction is in the model
         :rtype: bool
         """
-        # Structure data.
-        reaction_id = ''
-        if isinstance(reaction, str):
-            reaction_id = reaction
-        elif isinstance(reaction, rpReaction):
-            reaction_id = reaction.get_id()
-        elif isinstance(reaction, libsbml.Reaction):
-            reaction_id = reaction.getId()
-        else:
-            return False
         # Check
         if self.getModel() is None:
             return False
         if strict:
-            if self.getModel().getReactions(reaction_id) is None:
+            if self.getModel().getReactions(reaction) is None:
                 return False
             return True
         else:
-            if self.search_reaction(reaction_id) is None:
+            if self.search_reaction(reaction) is None:
                 return False
             return True
 

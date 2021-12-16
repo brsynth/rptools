@@ -6,8 +6,6 @@ Created on June 17 2020
 import libsbml
 import pandas as pd
 from    rptools.rplibs import (
-    rpCompound,
-    rpReaction,
     rpSBML
 )
 from          tempfile import (
@@ -207,11 +205,7 @@ class Test_rpSBML(Main_rplibs):
             'MNXM8975'
         )
 
-
     def test_has_specie(self):
-        # Get libsbml.Specie & rpCompound
-        s_libsbml = self.rpsbml_lycopene.getModel().getSpecies('MNXM8975')
-        s_rpcompound = rpCompound('MNXM8975')
         # Test - 1
         res = self.rpsbml_lycopene.has_specie(
             specie='MNXM8975'
@@ -223,7 +217,7 @@ class Test_rpSBML(Main_rplibs):
         self.assertTrue(res)
         # Test - 2
         res = self.rpsbml_lycopene.has_specie(
-            specie=s_libsbml
+            specie='mnxm8975'
         )
         self.assertIsInstance(
             res,
@@ -231,15 +225,6 @@ class Test_rpSBML(Main_rplibs):
         )
         self.assertTrue(res)
         # Test - 3
-        res = self.rpsbml_lycopene.has_specie(
-            specie=s_rpcompound
-        )
-        self.assertIsInstance(
-            res,
-            bool
-        )
-        self.assertTrue(res)
-        # Test - 4
         res = self.rpsbml_lycopene.has_specie(
             specie='NMXM000'
         )
@@ -280,9 +265,6 @@ class Test_rpSBML(Main_rplibs):
         )
 
     def test_has_reaction(self):
-        # Get libsbml.Reaction & rpReaction
-        r_libsbml = self.rpsbml_lycopene.getModel().getReaction('rxn_1')
-        r_rpreaction = rpReaction('rxn_1')
         # Test - 1
         res = self.rpsbml_lycopene.has_reaction(
             reaction='rxn_1'
@@ -294,7 +276,7 @@ class Test_rpSBML(Main_rplibs):
         self.assertTrue(res)
         # Test - 2
         res = self.rpsbml_lycopene.has_reaction(
-            reaction=r_libsbml
+            reaction='XN_1'
         )
         self.assertIsInstance(
             res,
@@ -302,15 +284,6 @@ class Test_rpSBML(Main_rplibs):
         )
         self.assertTrue(res)
         # Test - 3
-        res = self.rpsbml_lycopene.has_reaction(
-            reaction=r_rpreaction
-        )
-        self.assertIsInstance(
-            res,
-            bool
-        )
-        self.assertTrue(res)
-        # Test - 4
         res = self.rpsbml_lycopene.has_reaction(
             reaction='rtn'
         )
