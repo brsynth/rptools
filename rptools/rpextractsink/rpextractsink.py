@@ -7,6 +7,7 @@ from cobra          import io            as cobra_io
 from cobra          import flux_analysis as cobra_flux_analysis
 from tempfile       import TemporaryDirectory
 from rptools.rplibs import rpSBML
+from .Args import default_comp
 from os             import path          as os_path
 # because cobrapy is terrible
 from brs_utils import timeout
@@ -41,7 +42,6 @@ def _reduce_model(
         exit()
     return cobraModel
 
-
 ##
 #
 #
@@ -70,10 +70,9 @@ def genSink(
     input_sbml,
     output_sink,
     remove_dead_end=False,
-    compartment_id='MNXC3',
+    compartment_id=default_comp,
     logger: Logger = getLogger(__name__)
 ):
-    
     ### because cobrapy can be terrible and cause infinite loop depending on the input SBML model
     if remove_dead_end:
         try:
@@ -84,11 +83,11 @@ def genSink(
     else:
         rpsbml = rpSBML(input_sbml)
     ### open the cache ###
-    cytoplasm_species = []
+    species = []
     for i in rpsbml.getModel().getListOfSpecies():
         if i.getCompartment() == compartment_id:
-            cytoplasm_species.append(i)
-    if not cytoplasm_species:
+            species.append(i)
+    if not species:
         logger.error('Could not retreive any species in the compartment: '+str(compartment_id))
         logger.error('Is the right compartment set?')
         return False
@@ -96,7 +95,7 @@ def genSink(
         # writer = csv_writer(outS, delimiter=',', quotechar='"', quoting=QUOTE_NONNUMERIC)
         # writer.writerow(['Name','InChI'])
         write(outS, ['Name', 'InChI'])
-        for i in cytoplasm_species:
+        for i in species:
             res = rpsbml.readMIRIAMAnnotation(i.getAnnotation())
             # extract the MNX id's
             try:
