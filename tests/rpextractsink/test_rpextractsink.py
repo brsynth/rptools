@@ -74,6 +74,7 @@ class Test_rpExtractSink(TestCase):
             input_sbml = self.e_coli_model_path,
             output_sink = outfile.name,
             remove_dead_end = False,
+            compartment_id = 'MNXC3',
             logger = self.logger
         )
         outfile.close()
@@ -98,7 +99,8 @@ class Test_rpExtractSink(TestCase):
             self.cache,
             input_sbml = self.e_coli_model_path,
             output_sink = outfile.name,
-            remove_dead_end = True
+            remove_dead_end = True,
+            compartment_id = 'MNXC3'
         )
         outfile.close()
         with open(outfile.name, 'r') as test_f:
