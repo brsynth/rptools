@@ -4299,6 +4299,41 @@ class rpSBML:
 
         return cobra_model
 
+    @staticmethod
+    def from_cobra(
+        model: cobra.Model,
+        logger: Logger = getLogger(__name__)
+    ) -> 'rpSBML':
+        """Convert a cobra Model to an rpSBML object
+        BE CAREFUL: some data will be lost during conversion
+
+        :param model: a model to convert
+        :param logger: a logger object
+
+        :type model: cobra.Model
+        :type logger: Logger
+
+        :return : An rpSBML object
+        :rtype: rpSBML
+        """
+        # To handle file removing (Windows)
+        cobra_model = None
+        with NamedTemporaryFile(delete=False) as temp_f:
+            cobra.io.write_sbml_model(
+                model,
+                temp_f.name
+            )
+            temp_f.close()
+
+        rpsbml = rpSBML(
+            inFile=temp_f.name,
+            logger=logger
+        )
+        # To handle file removing (Windows)
+        remove(temp_f.name)
+
+        return rpsbml
+
     # def to_json(
     #     self,
     #     pathway_id: str='rp_pathway',

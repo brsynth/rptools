@@ -531,6 +531,21 @@ class Test_rpSBML(Main_rplibs):
             model,
             cobra.Model
         )
+
+    def test_from_cobra(self):
+        rpsbml_ecoli  = rpSBML(
+            inFile = self.rpsbml_ecoli_path,
+            logger = self.logger
+        )
+        rpsbml = rpSBML.from_cobra(
+            rpsbml_ecoli.to_cobra()
+        )
+
+        self.assertIsInstance(
+            rpsbml,
+            rpSBML
+        )
+
     #def test_initEmpty(self):002_0001
     #    rpSBML(name='rpSBML_test', logger=self.logger)
 
