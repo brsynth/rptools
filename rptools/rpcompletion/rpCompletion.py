@@ -26,7 +26,8 @@ from rptools.rplibs import (
 )
 from .Args import (
     default_upper_flux_bound,
-    default_lower_flux_bound
+    default_lower_flux_bound,
+    default_max_subpaths_filter
 )
 
 def rp_completion(
@@ -37,7 +38,7 @@ def rp_completion(
     cache: rrCache = None,
     upper_flux_bound: float = default_upper_flux_bound,
     lower_flux_bound: float = default_lower_flux_bound,
-    max_subpaths_filter: int = 10,
+    max_subpaths_filter: int = default_max_subpaths_filter,
     logger: Logger = getLogger(__name__)
 ) -> List[rpPathway]:
     """Process to the completion of metabolic pathways 
@@ -155,6 +156,15 @@ def rp_completion(
         logger=logger
     )
 
+    # # Return flat list of overall topX pathways
+    # return sum(
+    #     [
+    #         pathways
+    #         for pathways in all_pathways.values()
+    #     ], [])[:max_subpaths_filter]
+
+    return all_pathways
+
     # for sub_pathways in all_pathways.values():
     #     for sub_pathway in sub_pathways:
     #         print(sub_pathway)
@@ -168,7 +178,6 @@ def rp_completion(
     #                 print(f'Equality between {sub_pathways[i].get_id()} and {sub_pathways[j].get_id()}')
     # print()
     # print(Pathway._to_dict(all_pathways[1][0]))
-    return all_pathways
 
 
 def __complete_transformations(
@@ -678,6 +687,7 @@ def __build_all_pathways(
     res_pathways = {}
 
     nb_pathways = 0
+    nb_unique_pathways = 0
 
     ## PATHWAYS
     for path_idx, transfos_lst in pathways.items():
@@ -798,12 +808,35 @@ def __build_all_pathways(
             nb_pathways += 1
 
             ## RANK AMONG ALL SUB-PATHWAYS OF THE CURRENT MASTER PATHWAY
-            res_pathways[path_idx] = __apply_to_best_pathways(
+            res_pathways[path_idx] = __keep_unique_pathways(
                 res_pathways[path_idx],
                 pathway,
-                max_subpaths_filter,
                 logger
             )
+
+        nb_unique_pathways += len(res_pathways[path_idx])
+
+    # Flatten lists of pathways
+    pathways = sum(
+        [
+            pathways
+            for pathways in res_pathways.values()
+        ], [])
+
+    # Globally sort pathways
+    pathways = sorted(pathways)[-max_subpaths_filter:]
+
+    logger.info(f'Pathways statistics')
+    logger.info(f'-------------------')
+    logger.info(f'   pathways: {nb_pathways}')
+    logger.info(f'   unique pathways: {nb_unique_pathways}')
+    logger.info(f'   selected pathways: {len(pathways)} (topX filter = {max_subpaths_filter})')
+
+    # Return topX pathway objects
+    return [
+        pathway.object
+        for pathway in pathways
+    ]
 
     # Transform the list of Item into a list of Pathway
     results = {}
@@ -855,11 +888,9 @@ def __add_compounds(
                 _compounds[side][cmpd_id] = cmpd['stoichio']
     return _compounds
 
-
-def __apply_to_best_pathways(
+def __keep_unique_pathways(
     pathways: List[Dict],
     pathway: rpPathway,
-    max_subpaths_filter: int,
     logger: Logger = getLogger(__name__)
 ) -> List[Dict]:
     '''
@@ -871,8 +902,6 @@ def __apply_to_best_pathways(
     ----------
     pathways: List[Dict]
         List of pathways sorted by increasing scores
-    max_subpaths_filter: int
-        Number of top elements to return
     pathway: Dict
         Pathway to insert
     logger : Logger, optional
@@ -899,6 +928,8 @@ def __apply_to_best_pathways(
         if pathway == _pathway.object:
             pathway_found = True
             logger.debug(f'Equality between {_pathway.object.get_id()} and {pathway.get_id()}')
+            logger.debug(pathway)
+            logger.debug(_pathway.object)
             for rxn in pathway.get_list_of_reactions():
                 for _rxn in _pathway.object.get_list_of_reactions():
                     if rxn == _rxn:
@@ -919,5 +950,4 @@ def __apply_to_best_pathways(
             pathways
         )
 
-    return pathways[-max_subpaths_filter:]
-
+    return pathways

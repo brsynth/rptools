@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 
+default_comp = 'c'
 
 def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument('input_sbml',
@@ -10,8 +11,8 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
                         help="output sink file")
     parser.add_argument('--compartment_id',
                         type=str,
-                        default='MNXC3',
-                        help='SBML compartment id from which to extract the chemical species')
+                        default=default_comp,
+                        help=f'SBML compartment id from which to extract the chemical species (default: {default_comp})')
     parser.add_argument('--remove_dead_end',
                         action='store_true',
                         help='upon FVA evaluation, ignore chemical species that do not have any flux')
