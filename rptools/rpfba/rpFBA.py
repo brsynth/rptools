@@ -27,7 +27,7 @@ from cobra.io.sbml       import (
 )
 from cobra.core.model    import Model     as cobra_model
 from cobra.core.solution import Solution  as cobra_solution
- 
+
 from rptools.rpfba.medium import (
     add_missing_specie,
     build_minimal_medium,
@@ -421,12 +421,12 @@ def check_SBML_compartment(
     for comp_id in comp_ids:
         # Check model compartment ID
         # Set new compartment ID in case it exists under another ID
-        _compartment_id = rpsbml.search_compartment_id(comp_id)
-        if _compartment_id is None:
+        _compartment_id = rpsbml.has_compartment(comp_id)
+        if _compartment_id is False:
             logger.debug(f'Compartment \'{comp_id}\' not found in the model \'{rpsbml.getName()}\'')
         else:
             logger.debug(f'Compartment \'{comp_id}\' found in the model \'{rpsbml.getName()}\'')
-            return _compartment_id
+            return rpsbml.search_compartment(comp_id).getId()
 
     logger.error(f'Compartment(s) \'{comp_ids}\' not found in the model \'{rpsbml.getName()}\'')
     logger.error(

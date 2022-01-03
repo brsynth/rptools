@@ -1,4 +1,5 @@
 import libsbml
+import re
 import numpy as np
 
 from copy import deepcopy
@@ -13,7 +14,8 @@ from os import (
 )
 from json import (
     load as json_load,
-    dump as json_dump
+    dump as json_dump,
+    dumps as json_dumps
 )
 from inspect import (
     getmembers as inspect_getmembers,
@@ -35,8 +37,16 @@ from tempfile import (
     TemporaryDirectory,
     gettempdir,
 )
-
+import cobra
+from cobra import (
+    io as cobra_io
+)
+from cobra.io.sbml import (
+    CobraSBMLError,
+    validate_sbml_model
+)
 from cobra.medium.annotations import (
+    compartment_shortlist,
     excludes,
     sbo_terms
 )
@@ -364,14 +374,175 @@ class rpSBML:
     #     #                 unit = None
     #     #             self.updateBRSynth(reaction, bd_id, value, unit, False)
 
-    def search_compartment_id(self, compartment_id: str):
-        for group in self.getModel().getListOfCompartments():
-            if (
-                compartment_id.lower() == group.getId().lower()
-                or compartment_id.lower() == group.getName().lower()
-            ):
-                return group.getId()
+    ##########################################################################
+    ############################ QUERY #######################################
+    ##########################################################################
+    def search_compartment(
+        self,
+        compartment: str
+    ) -> libsbml.Compartment:
+        """Search in the model if a compartment id exists.
+
+        :param compartment: An id or a name to search in the model
+
+        :type compartment: str
+
+        :return: Return a compartment if the specie is in the model, None otherwise
+        :rtype: libsbml.Compartment
+        """
+        # Search in model.
+        if self.getModel() is None:
+            return None
+        # Build data.
+        comp_models = self.getModel().getListOfCompartments()
+        # Find synonyms
+        comp_synonyms = []
+        for c_short, c_long in compartment_shortlist.items():
+            c_long.append(c_short)
+            c_long = [x.lower() for x in c_long]
+            if compartment.lower() in c_long:
+                comp_synonyms = c_long
+                break
+        if len(comp_synonyms) == 0:
+            comp_synonyms.append(compartment.lower())
+        # Not strict
+        for comp_synonym in comp_synonyms:
+            for comp_model in comp_models:
+                if comp_synonym == comp_model.getId().lower() \
+                    or comp_synonym == comp_model.getName().lower():
+                    return comp_model
         return None
+
+    def search_specie(
+        self,
+        specie: str
+    ) -> libsbml.Species:
+        """Search in model if a specie exists.
+
+        :param specie: A specie id to search in the model
+
+        :type specie: str
+
+        :return: Return a specie if the specie is in the model, None otherwise
+        :rtype: libsbml.Specie
+        """
+        # Search in model.
+        if self.getModel() is None:
+            return None
+        for spe in self.getModel().getListOfSpecies():
+            if re.search(specie, spe.getId(), re.IGNORECASE) \
+                or re.search(specie, spe.getName(), re.IGNORECASE):
+                return spe
+        return None
+
+    def search_reaction(
+        self,
+        reaction: str
+    ) -> libsbml.Reaction:
+        """Search in model if a reaction exists.
+
+        :param reaction: A reaction id to search in the model
+
+        :type reaction: str
+
+        :return: Return a reaction if the reaction is in the model, None otherwise
+        :rtype: libsbml.Reaction
+        """
+        # Search in model.
+        if self.getModel() is None:
+            return None
+        for rxn in self.getModel().getListOfReactions():
+            if re.search(reaction, rxn.getId(), re.IGNORECASE) \
+                or re.search(reaction, rxn.getName(), re.IGNORECASE):
+                return rxn
+        return None
+
+    def has_compartment(
+        self,
+        compartment: str,
+        strict: bool=False
+    ) -> bool:
+        """Check in the model if a compartment id exists.
+
+        :param compartment: An id (or name if not strict mode) \
+            to search in the model
+        :param strict: Perform research with the exact id provided \
+            without mapping (optional: false)
+
+        :type compartment: str
+        :type strict: bool
+
+        :return: Success or Failure if the compartment is in the model
+        :rtype: bool
+        """
+        if self.getModel() is None:
+            return False
+        if strict:
+            if self.getModel().getCompartment(compartment) is None:
+                return False
+            return True
+        else:
+            if self.search_compartment(compartment) is None:
+                return False
+            return True
+
+    def has_specie(
+        self,
+        specie: str,
+        strict: bool=False
+    ) -> bool:
+        """Check in the model if a specie exists.
+
+        :param specie: A specie to extract its id
+        :param strict: Perform research with the exact id provided \
+            without mapping (optional: false)
+
+        :type specie: str
+        :type strict: bool
+
+        :return: Success or Failure if the specie is in the model
+        :rtype: bool
+        """
+        # Check
+        if self.getModel() is None:
+            return False
+        if strict:
+            if self.getModel().getSpecies(specie) is None:
+                return False
+            return True
+        else:
+            if self.search_specie(specie) is None:
+                return False
+            return True
+
+    def has_reaction(
+        self,
+        reaction: str,
+        strict: bool=False
+    ) -> bool:
+        """Check in the model if a reaction exists.
+
+        :param reaction: A reaction to extract its id
+        :param strict: Perform research with the exact id provided \
+            without mapping (optional: false)
+
+        :type reaction: str
+        :type strict: bool
+
+        :return: Success or Failure if the reaction is in the model
+        :rtype: bool
+        """
+        # Check
+        if self.getModel() is None:
+            return False
+        if strict:
+            if self.getModel().getReactions(reaction) is None:
+                return False
+            return True
+        else:
+            if self.search_reaction(reaction) is None:
+                return False
+            return True
 
     #############################################################################################################
     ############################################ MERGE ##########################################################
@@ -4097,6 +4268,71 @@ class rpSBML:
                 annot_header=key,
                 value=value
             )
+
+    def to_cobra(
+        self,
+        logger: Logger = getLogger(__name__)
+    ) -> cobra.Model:
+        """Convert rpSBML to a cobra Model
+
+        :param logger: a logger object
+
+        :type logger: Logger
+
+        :return : A cobra Model
+        :rtype: cobra.Model
+        """
+        # To handle file removing (Windows)
+        cobra_model = None
+        with NamedTemporaryFile(delete=False) as temp_f:
+            self.write_to_file(temp_f.name)
+            temp_f.close()
+            try:
+                cobra_model = cobra_io.read_sbml_model(temp_f.name, use_fbc_package=True)
+            except CobraSBMLError:
+                logger.error('Something went wrong reading the SBML model')
+                (model, errors) = validate_sbml_model(temp_f.name)
+                logger.error(str(json_dumps(errors, indent=4)))
+
+        # To handle file removing (Windows)
+        remove(temp_f.name)
+
+        return cobra_model
+
+    @staticmethod
+    def from_cobra(
+        model: cobra.Model,
+        logger: Logger = getLogger(__name__)
+    ) -> 'rpSBML':
+        """Convert a cobra Model to an rpSBML object
+        BE CAREFUL: some data will be lost during conversion
+
+        :param model: a model to convert
+        :param logger: a logger object
+
+        :type model: cobra.Model
+        :type logger: Logger
+
+        :return : An rpSBML object
+        :rtype: rpSBML
+        """
+        # To handle file removing (Windows)
+        cobra_model = None
+        with NamedTemporaryFile(delete=False) as temp_f:
+            cobra.io.write_sbml_model(
+                model,
+                temp_f.name
+            )
+            temp_f.close()
+
+        rpsbml = rpSBML(
+            inFile=temp_f.name,
+            logger=logger
+        )
+        # To handle file removing (Windows)
+        remove(temp_f.name)
+
+        return rpsbml
 
     # def to_json(
     #     self,
