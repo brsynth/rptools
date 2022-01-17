@@ -10,7 +10,7 @@ Required:
 
 Optional:
 * **--remove_dead_end**: (boolean, default: True) Perform FVA evaluation to remove dead end metabolites
-* **--compartment_id**: (string, default: MNXC3) Specify the compartment from which to extract the sink molecules. The default are for MetaNetX files
+* **--compartment_id**: (string, default: 'c') Specify the compartment from which to extract the sink molecules. The default are for MetaNetX files
 
 ## Output
 
