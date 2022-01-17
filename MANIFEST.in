@@ -3,3 +3,4 @@ graft rptools/rpthermo/data
 graft rptools/rpscore/models
 graft rptools/rpviz/data
 graft rptools/rpviz/templates
+graft rptools/rpfba/medium
