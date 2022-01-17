@@ -24,7 +24,7 @@ def add_arguments(
     parser.add_argument(
         'compartment_id',
         type=str,
-        help='model compartment id to consider (e.g. \'c\' or \'MNXC3\' or \'c|MNXC3|cytosol|cytoplasm\')'
+        help='model compartment id to consider (e.g. \'c\' or \'MNXC3\')'
     )
     parser.add_argument(
         'outfile',

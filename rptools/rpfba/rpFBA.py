@@ -27,7 +27,7 @@ from cobra.io.sbml       import (
 )
 from cobra.core.model    import Model     as cobra_model
 from cobra.core.solution import Solution  as cobra_solution
-
+ 
 from rptools.rpfba.medium import (
     add_missing_specie,
     build_minimal_medium,
@@ -47,12 +47,6 @@ from .cobra_format import (
     cobra_suffix,
     to_cobra
 )
-
-__COMPARTMENTS = [
-    ['c', 'mnxc3', 'cytosol', 'cytoplasm'],
-    ['e', 'mnxc2', 'extracellular space'],
-    ['p', 'mnxc19', 'periplasm']
-]
 
 # TODO: add the pareto frontier optimisation as an automatic way to calculate the optimal fluxes
 
@@ -413,22 +407,16 @@ def check_SBML_compartment(
     logger: Logger = getLogger(__name__)
 ) -> Tuple[str, str]:
 
-    for comp_synonyms in __COMPARTMENTS:
-        if compartment_id.lower() in comp_synonyms:
-            compartment_id = '|'.join(comp_synonyms)
-    comp_ids = compartment_id.split('|')
+    # Check model compartment ID
+    # Set new compartment ID in case it exists under another ID
+    _compartment_id = rpsbml.search_compartment_id(compartment_id)
+    if _compartment_id is None:
+        logger.debug(f'Compartment \'{compartment_id}\' not found in the model \'{rpsbml.getName()}\'')
+    else:
+        logger.debug(f'Compartment \'{compartment_id}\' found in the model \'{rpsbml.getName()}\'')
+        return _compartment_id
 
-    for comp_id in comp_ids:
-        # Check model compartment ID
-        # Set new compartment ID in case it exists under another ID
-        _compartment_id = rpsbml.has_compartment(comp_id)
-        if _compartment_id is False:
-            logger.debug(f'Compartment \'{comp_id}\' not found in the model \'{rpsbml.getName()}\'')
-        else:
-            logger.debug(f'Compartment \'{comp_id}\' found in the model \'{rpsbml.getName()}\'')
-            return rpsbml.search_compartment(comp_id).getId()
-
-    logger.error(f'Compartment(s) \'{comp_ids}\' not found in the model \'{rpsbml.getName()}\'')
+    logger.error(f'Compartment \'{compartment_id}\' not found in the model \'{rpsbml.getName()}\'')
     logger.error(
         'Available compartments: {comp_ids}'.format(
             comp_ids=', '.join([
