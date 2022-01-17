@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.12.0](https://github.com/brsynth/rptools/tree/5.12.0) (2022-01-17)
+
+[Full Changelog](https://github.com/brsynth/rptools/compare/5.11.1...5.12.0)
+
+**Merged pull requests:**
+
+- Feat rplibs rpsbml [\#22](https://github.com/brsynth/rptools/pull/22) ([guillaume-gricourt](https://github.com/guillaume-gricourt))
+
+## [5.11.1](https://github.com/brsynth/rptools/tree/5.11.1) (2021-12-16)
+
+[Full Changelog](https://github.com/brsynth/rptools/compare/5.11.0...5.11.1)
+
 ## [5.11.0](https://github.com/brsynth/rptools/tree/5.11.0) (2021-12-09)
 
 [Full Changelog](https://github.com/brsynth/rptools/compare/5.10.0...5.11.0)
