@@ -2962,7 +2962,7 @@ class rpSBML:
 
         
         # logger.debug(f'value: {value.toXMLString()}')
-        logger.debug(f'type: {str(type(value))}')
+        # logger.debug(f'type: {str(type(value))}')
 
         if value is None:
             # logger.error('LibSBML returned a null value trying to ' + message + '.')
