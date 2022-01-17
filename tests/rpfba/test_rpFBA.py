@@ -123,37 +123,31 @@ class Test_rpFBA(Main_rpfba):
     def test_check_SBML_compartment(self):
         rpsbml = rpSBML(self.e_coli_model_path)
         # Return types.
+        comp_id = 'cytosol'
         res = check_SBML_compartment(
             rpsbml=rpsbml,
-            compartment_id='cytosol'
+            compartment_id=comp_id
         )
         self.assertIsInstance(
             res,
             str
         )
         # Values
-        self.assertEqual(
-            res,
-            'MNXC3'
-        )
+        self.assertEqual(res, comp_id)
         # Challenge - 1
+        comp_id = 'periplasm'
         res = check_SBML_compartment(
             rpsbml=rpsbml,
-            compartment_id='periplasm'
+            compartment_id=comp_id
         )
-        self.assertEqual(
-            res,
-            'MNXC19'
-        )
+        self.assertEqual(res, comp_id)
         # Challenge - 2
+        comp_id = 'x'
         res = check_SBML_compartment(
             rpsbml=rpsbml,
-            compartment_id='x'
+            compartment_id=comp_id
         )
-        self.assertIs(
-            res,
-            None
-        )
+        self.assertIs(res, None)
 
     def test_check_SBML_rxnid(self):
         rpsbml = rpSBML(self.e_coli_model_path)

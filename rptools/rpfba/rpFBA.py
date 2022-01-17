@@ -409,23 +409,21 @@ def check_SBML_compartment(
 
     # Check model compartment ID
     # Set new compartment ID in case it exists under another ID
-    _compartment_id = rpsbml.search_compartment_id(compartment_id)
-    if _compartment_id is None:
-        logger.debug(f'Compartment \'{compartment_id}\' not found in the model \'{rpsbml.getName()}\'')
-    else:
+    has_compartment = rpsbml.has_compartment(compartment_id)
+    if has_compartment:
         logger.debug(f'Compartment \'{compartment_id}\' found in the model \'{rpsbml.getName()}\'')
-        return _compartment_id
-
-    logger.error(f'Compartment \'{compartment_id}\' not found in the model \'{rpsbml.getName()}\'')
-    logger.error(
-        'Available compartments: {comp_ids}'.format(
-            comp_ids=', '.join([
-                comp.getId()
-                for comp in list(rpsbml.getModel().getListOfCompartments())
-            ])
+        return compartment_id
+    else:
+        logger.error(f'Compartment \'{compartment_id}\' not found in the model \'{rpsbml.getName()}\'')
+        logger.error(
+            'Available compartments: {comp_ids}'.format(
+                comp_ids=', '.join([
+                    comp.getId()
+                    for comp in list(rpsbml.getModel().getListOfCompartments())
+                ])
+            )
         )
-    )
-    return None
+        return None
 
 def check_SBML_rxnid(
     rpsbml: rpSBML,
