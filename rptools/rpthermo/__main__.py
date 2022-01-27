@@ -1,18 +1,10 @@
 #!/usr/bin/env python
 
-from json import (
-    dump as json_dump,
-    load as json_load
-)
 from logging import (
     Logger,
     getLogger
 )
-from typing import (
-    Dict,
-    List,
-    Tuple
-)
+from typing import Dict
 from colored import fg, bg, attr
 from brs_utils import (
     print_OK_adv as print_OK,
@@ -35,6 +27,18 @@ def _cli():
     from rptools.__main__ import init
     logger = init(parser, args)
 
+    msg = f'Parameters\n----------\n'
+    for param in ['pH', 'ionic_strength', 'pMg']:
+        value = getattr(args, param)
+        msg += f'- {param}: {value}\n'
+    logger.info(
+        '{color}{msg}{rst}'.format(
+            color=fg('light_cyan'),
+            msg=msg,
+            rst=attr('reset')
+        )
+    )
+
     ## READ PATHWAY FROM FILE
     pathway = rpPathway.from_rpSBML(
       infile=args.infile,
@@ -44,10 +48,9 @@ def _cli():
     # RUN THERMO
     results = runThermo(
         pathway=pathway,
-        ph=args.ph,
+        ph=args.pH,
         ionic_strength=args.ionic_strength,
         pMg=args.pMg,
-        temp_k=args.temp_k,
         logger=logger
     )
 

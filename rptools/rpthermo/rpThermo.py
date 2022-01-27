@@ -6,19 +6,16 @@ from logging import (
 )
 from typing import (
     Dict,
-    List,
-    Tuple
+    List
 )
 from csv import reader as csv_reader
 from copy import deepcopy
-from time import sleep
 from equilibrator_api import (
     ComponentContribution,
     Q_
 )
 from numpy import (
     zeros as np_zeros,
-    array as np_array,
     ndarray as np_ndarray
 )
 from scipy.optimize import linprog
@@ -27,11 +24,13 @@ from brs_utils import (
     print_OK_adv as print_OK,
     print_title_adv as print_title
 )
-from chemlite import(
-    Reaction,
-    Compound
-)
+from chemlite import Reaction
 from rptools.rplibs import rpPathway
+from .Args import (
+    DEFAULT_pH,
+    DEFAULT_pMg,
+    DEFAULT_ionic_strength,
+)
 
 # Name of sides with sign
 SIDES = [
@@ -48,11 +47,10 @@ SIDES = [
 
 def runThermo(
     pathway: rpPathway,
-    cc: ComponentContribution = None,
-    ph: float = None,
-    ionic_strength: float = None,
-    pMg: float = None,
-    temp_k: float = None,
+    cc: ComponentContribution=None,
+    ph: float=DEFAULT_pH,
+    ionic_strength: float=DEFAULT_ionic_strength,
+    pMg: float=DEFAULT_pMg,
     compound_substitutes: Dict = None,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
@@ -61,9 +59,9 @@ def runThermo(
     :param inFile: The path to the input file
     :param outFile: The path to the output file
     :param pathway_id: The id of the heterologous pathway of interest
-    :param ph: The pH of the host organism (Default: 7.0)
-    :param ionic_strength: Ionic strenght of the host organism (Default: 200.0)
-    :param pMg: The pMg of the host organism (Default: 10.0)
+    :param ph: The pH of the host organism (Default: 7.5)
+    :param ionic_strength: Ionic strenght of the host organism (Default: 0.25M)
+    :param pMg: The pMg of the host organism (Default: 3.0)
     :param temp_k: The temperature of the host organism in Kelvin (Default: 298.15)
     :param stdev_factor: The standard deviation factor to calculate MDF (Default: 1.96)
 
@@ -106,7 +104,6 @@ def runThermo(
             ph,
             ionic_strength,
             pMg,
-            temp_k,
             logger
         )
 
@@ -590,10 +587,9 @@ def print_reaction(
 
 # used to initialise and download the data for equilibrator
 def initThermo(
-    ph: float = None,
-    ionic_strength: float = None,
-    pMg: float = None,
-    temp_k: float = None,
+    ph: float=DEFAULT_pH,
+    ionic_strength: float=DEFAULT_ionic_strength,
+    pMg: float=DEFAULT_pMg,
     logger: Logger=getLogger(__name__)
 ) -> ComponentContribution:
 
@@ -605,14 +601,11 @@ def initThermo(
 
     cc = ComponentContribution()
 
-    if ph is not None:
-        cc.p_h = Q_(ph)
-    if ionic_strength is not None:
-        cc.ionic_strength = Q_(str(ionic_strength)+' mM')
-    if pMg is not None:
-        cc.p_mg = Q_(pMg)
-    if temp_k is not None:
-        cc.temperature = Q_(str(temp_k)+' K')
+    cc.p_h = Q_(ph)
+    cc.ionic_strength = Q_(f'{ionic_strength}M')
+    cc.p_mg = Q_(pMg)
+    # if temp_k is not None:
+    #     cc.temperature = Q_(str(temp_k)+' K')
 
     print_OK(logger)
 
