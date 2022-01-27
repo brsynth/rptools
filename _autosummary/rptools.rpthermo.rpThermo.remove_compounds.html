@@ -36,7 +36,7 @@
 <h1>rptools.rpthermo.rpThermo.remove_compounds<a class="headerlink" href="#rptools-rpthermo-rpthermo-remove-compounds" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="rptools.rpthermo.rpThermo.remove_compounds">
-<span class="sig-prename descclassname"><span class="pre">rptools.rpthermo.rpThermo.</span></span><span class="sig-name descname"><span class="pre">remove_compounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">reactions:</span> <span class="pre">List[chemlite.Reaction.Reaction],</span> <span class="pre">rxn_target_id:</span> <span class="pre">str,</span> <span class="pre">compounds:</span> <span class="pre">List</span> <span class="pre">=</span> <span class="pre">[],</span> <span class="pre">logger:</span> <span class="pre">logging.Logger</span> <span class="pre">=</span> <span class="pre">&lt;Logger</span> <span class="pre">rptools.rpthermo.rpThermo</span> <span class="pre">(WARNING)&gt;</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="headerlink" href="#rptools.rpthermo.rpThermo.remove_compounds" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rptools.rpthermo.rpThermo.</span></span><span class="sig-name descname"><span class="pre">remove_compounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">reactions:</span> <span class="pre">typing.List[chemlite.Reaction.Reaction],</span> <span class="pre">rxn_target_id:</span> <span class="pre">str,</span> <span class="pre">compounds:</span> <span class="pre">typing.List</span> <span class="pre">=</span> <span class="pre">[],</span> <span class="pre">logger:</span> <span class="pre">logging.Logger</span> <span class="pre">=</span> <span class="pre">&lt;Logger</span> <span class="pre">rptools.rpthermo.rpThermo</span> <span class="pre">(WARNING)&gt;</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="headerlink" href="#rptools.rpthermo.rpThermo.remove_compounds" title="Permalink to this definition">¶</a></dt>
 <dd><p>Try to remove compounds that are unknown in the eQuilibrator cache from reaction set (pathway).
 For this purpose, a stoichiometric matrix is built with only coefficients of these compounds.
 Then, try to solve as a linear equations system and apply new coeffs to reactions</p>
@@ -144,7 +144,7 @@ Then, try to solve as a linear equations system and apply new coeffs to reaction
       &copy;2021, Joan Hérisson, Thomas Duigou, Kenza Bazi-Kabbaj, Olivier Telle.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.3.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.4.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

@@ -36,7 +36,7 @@
 <h1>rptools.rpthermo.rpThermo.runThermo<a class="headerlink" href="#rptools-rpthermo-rpthermo-runthermo" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="rptools.rpthermo.rpThermo.runThermo">
-<span class="sig-prename descclassname"><span class="pre">rptools.rpthermo.rpThermo.</span></span><span class="sig-name descname"><span class="pre">runThermo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pathway:</span> <span class="pre">rptools.rplibs.rpPathway.rpPathway</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cc:</span> <span class="pre">Optional[equilibrator_api.component_contribution.ComponentContribution]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ph:</span> <span class="pre">Optional[float]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ionic_strength:</span> <span class="pre">Optional[float]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pMg:</span> <span class="pre">Optional[float]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_k:</span> <span class="pre">Optional[float]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compound_substitutes:</span> <span class="pre">Optional[Dict]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger:</span> <span class="pre">logging.Logger</span> <span class="pre">=</span> <span class="pre">&lt;Logger</span> <span class="pre">rptools.rpthermo.rpThermo</span> <span class="pre">(WARNING)&gt;</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="headerlink" href="#rptools.rpthermo.rpThermo.runThermo" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rptools.rpthermo.rpThermo.</span></span><span class="sig-name descname"><span class="pre">runThermo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pathway:</span> <span class="pre">rptools.rplibs.rpPathway.rpPathway</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cc:</span> <span class="pre">typing.Optional[equilibrator_api.component_contribution.ComponentContribution]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ph:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">7.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ionic_strength:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pMg:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compound_substitutes:</span> <span class="pre">typing.Optional[typing.Dict]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger:</span> <span class="pre">logging.Logger</span> <span class="pre">=</span> <span class="pre">&lt;Logger</span> <span class="pre">rptools.rpthermo.rpThermo</span> <span class="pre">(WARNING)&gt;</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="headerlink" href="#rptools.rpthermo.rpThermo.runThermo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a tar input file, perform thermodynamics analysis for each rpSBML file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -44,9 +44,9 @@
 <li><p><strong>inFile</strong> – The path to the input file</p></li>
 <li><p><strong>outFile</strong> – The path to the output file</p></li>
 <li><p><strong>pathway_id</strong> (<em>str</em>) – The id of the heterologous pathway of interest</p></li>
-<li><p><strong>ph</strong> (<em>float</em>) – The pH of the host organism (Default: 7.0)</p></li>
-<li><p><strong>ionic_strength</strong> (<em>float</em>) – Ionic strenght of the host organism (Default: 200.0)</p></li>
-<li><p><strong>pMg</strong> (<em>float</em>) – The pMg of the host organism (Default: 10.0)</p></li>
+<li><p><strong>ph</strong> (<em>float</em>) – The pH of the host organism (Default: 7.5)</p></li>
+<li><p><strong>ionic_strength</strong> (<em>float</em>) – Ionic strenght of the host organism (Default: 0.25M)</p></li>
+<li><p><strong>pMg</strong> (<em>float</em>) – The pMg of the host organism (Default: 3.0)</p></li>
 <li><p><strong>temp_k</strong> (<em>float</em>) – The temperature of the host organism in Kelvin (Default: 298.15)</p></li>
 <li><p><strong>stdev_factor</strong> – The standard deviation factor to calculate MDF (Default: 1.96)</p></li>
 </ul>
@@ -162,7 +162,7 @@
       &copy;2021, Joan Hérisson, Thomas Duigou, Kenza Bazi-Kabbaj, Olivier Telle.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.3.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.4.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
