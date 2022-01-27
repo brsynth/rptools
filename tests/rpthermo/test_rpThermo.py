@@ -121,8 +121,6 @@ species = {
 
 class Test_rpThermo(TestCase):
 
-    __test__ = False
-
     def setUp(self):
         self.logger = create_logger(__name__, 'ERROR')
         self.rxn_1 = rpReaction(
