@@ -6,10 +6,6 @@ from logging import (
 )
 from typing import Dict
 from colored import fg, bg, attr
-from brs_utils import (
-    print_OK_adv as print_OK,
-    print_title_adv as print_title
-)
 from rptools.rpthermo import runThermo
 from rptools.rpthermo.Args import add_arguments
 from rptools import build_args_parser
