@@ -33,7 +33,7 @@ positional arguments:
                         tar archive or a folder.
   output_folder         Output folder to be used. If it does not 
                         exist, an attempt will be made to create 
-                        it.It the creation of the folder fails, 
+                        it. If the creation of the folder fails, 
                         IOError will be raised.
 
 optional arguments:
@@ -52,11 +52,11 @@ optional arguments:
 ## Input expected by the HTML component
 
 Input file expected by the viewer:
-- `network.json`: should contains 2 variable, namely `network` and
+- `network.json`: should contain 2 variables, namely `network` and
 `pathways_info`.
 
 
-## For developpers
+## For developers
 
 ### Install
 ```sh
@@ -173,7 +173,7 @@ Below an overview of the `network` object expected by the JS viewer:
 }
 ```
 
-`network` is composed of 2 types of nodes ("reaction" and "chemical"), and 1 type of edge. What ever the node type,
+`network` is composed of 2 types of nodes ("reaction" and "chemical"), and 1 type of edge. Whatever the node type,
 all the keys ('id', 'path_ids', ...) should be present in each node.
 
 
@@ -181,11 +181,11 @@ all the keys ('id', 'path_ids', ...) should be present in each node.
 
 For reaction node, the content should be: 
 
-- `id`, (string), __required value__ -- The canonic reaction SMILES of the reactions. It will be use as the
+- `id`, (string), __required value__ -- The canonic reaction SMILES of the reactions. It will be used as the
 unique ID of the node. Example: `"id": "[H]OC(=O)C([H])=C([H])C([H])=C([H])C(=O)O[H]>>O=O.[H]Oc1c([H])c([H])c([H])c([H])c1O[H]"`
 - `path_ids`: (list of strings), __required values__ -- The list of unique pathway IDs into which the reaction
-is involved. It should not contains duplicates. Example: `"path_ids": ["rp_3_1", "rp_2_1", "rp_3_2", "rp_1_1"]`
-- `type`, (string), __required value__ -- Should be `"reaction"` for reaction node. It is this value that define
+is involved. It should not contain duplicates. Example: `"path_ids": ["rp_3_1", "rp_2_1", "rp_3_2", "rp_1_1"]`
+- `type`, (string), __required value__ -- Should be `"reaction"` for reaction node. It is this value that defines
 the type of node.
 - `label`, (string), __required value__ -- The label to be printed for the node.
 - `all_labels`, (list of strings), __optional__ -- All possible labels for the node.
@@ -210,10 +210,10 @@ be described in a dictionary having keys: "db_name", "entity_id", "url".
 
 For chemical node, the content should be:
 
-- `id`, (string), __required value__ -- The InChIKey of the chemical. It will be use as the unique ID of the node.
+- `id`, (string), __required value__ -- The InChIKey of the chemical. It will be used as the unique ID of the node.
 - `path_ids`: (list of strings), __required values__ -- The list of unique pathway IDs into which the chemical is
-involved. It should not contains duplicates. Example: `"path_ids": ["rp_3_1", "rp_2_1", "rp_3_2", "rp_1_1"]`
-- `type`, (string), __required value__ -- Should be `"chemical"` for chemical node. It is this value that define the
+involved. It should not contain duplicates. Example: `"path_ids": ["rp_3_1", "rp_2_1", "rp_3_2", "rp_1_1"]`
+- `type`, (string), __required value__ -- Should be `"chemical"` for chemical node. It is this value that defines the
 type of node.
 - `label`, (string), __required value__ -- The label to be printed for the node.
 - `all_labels`, (list of strings), __optional__ -- All possible labels for the node.
@@ -230,7 +230,7 @@ be described in a dictionary having keys: "db_name", "entity_id", "url".
 - `inchikey`, (string),  __required value__ -- InChIKey.
 - `target_chemical`, (bool), __required__ -- Flag to designate the target. Value should be either false (not the
 target) or true (it is).
-- `sink_chemical`, (bool), __optional value__ -- Flag to designate chemical that are available in the sink. Value
+- `sink_chemical`, (bool), __optional value__ -- Flag to designate chemicals that are available in the sink. Value
 should be either false (not in the sink) or true (it is).
 - `thermo_dg_m_formation`, (string), __optional value__ -- The dG of formation of the chemical (in mM concentration context).
 - `cofactor`, (string), __required__ -- Flag to designate cofactor chemicals (eg: ATP, NADH, ...). Value should
@@ -252,14 +252,14 @@ involved in.
 
 ### pathways_info
 
-The pathway_info JSON object purpose is to store information related to each pathways. Notice that order of 
-pathway matter: the JS viewer will print the pathways in the order they are given in this object. Here is
+The pathway_info JSON object purpose is to store information related to each pathway. Notice that order of 
+pathway matters: the JS viewer will print the pathways in the order they are given in this object. Here is
 the content:
 ```json
 {
     "path_id1": {
         "path_id": "path_id1",
-        "nb_steps": interger,
+        "nb_steps": integer,
         "node_ids": ["node_id1", "node_id2", ...],
         "edge_ids": ["edge_id1", "edge_id2", ...],
         "scores": {
@@ -293,7 +293,7 @@ Where:
 `NAD-OR-NADP`), then the MNX ID is used as ID in the network.json file. If no MNX is available, then an
 error is logged and the execution is continued.
 - rpSBML file name should end by `.xml`
-- Target chemical have a SBML ID starting by `TARGET`
+- Target chemical has an SBML ID starting by `TARGET`
 
 
 ## Known bugs and feature requests
