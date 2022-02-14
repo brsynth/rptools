@@ -24,3 +24,4 @@ dependencies:
   - chemlite # rpcompletion ,rpfba, rpthermo
   - h5py # rpscore
   - xgboost # rpscore
+  - sqlalchemy =1.4.31 # (for pandas requirements)
