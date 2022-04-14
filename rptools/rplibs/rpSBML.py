@@ -52,7 +52,7 @@ from cobra.medium.annotations import (
 )
 
 from brs_utils import(
-    extract_gz
+    extract_gz,
 )
 from .rpGraph import rpGraph
 
@@ -4953,6 +4953,7 @@ class rpSBML:
         # TODO: check that the species exist
 
         for spe_id, spe_sto in reactants.items():
+            spe_id = rpSBML.formatId(spe_id)
             spe = reac.createReactant()
             rpSBML.checklibSBML(
                 spe,
@@ -4975,6 +4976,7 @@ class rpSBML:
             )
 
         for spe_id, spe_sto in products.items():
+            spe_id = rpSBML.formatId(spe_id)
             pro = reac.createProduct()
             rpSBML.checklibSBML(pro, 'create product')
             product_ext = spe_id
@@ -5016,9 +5018,29 @@ class rpSBML:
                 value=value
             )
 
+    @staticmethod
+    def formatId(id: str, logger: Logger=getLogger()) -> str:
+        """Convert a string to a valid libSBML Id format.
+
+        Parameters
+        ----------
+        id: str
+            Id to format.
+        logger : Logger, optional
+
+        Returns
+        -------
+        Id well-formatted according to libSBML SID convention.
+        """
+        id = id.replace('-', '_')
+        # id = comp_succ(id, '_')
+        if id[0].isdigit():
+            id = '_' + id
+        return id
+
     def createSpecies(
         self,
-        species_id:str,
+        species_id: str,
         species_name: str=None,
         chemXref: Dict={},
         inchi: str=None,
@@ -5081,6 +5103,8 @@ class rpSBML:
         rpSBML.checklibSBML(spe.setInitialConcentration(1.0), 'set an initial concentration')
         # same writting convention as COBRApy
         # rpSBML.checklibSBML(spe.setId(str(species_id)+'__64__'+str(compartment_id)), 'set species id')
+
+        species_id = rpSBML.formatId(species_id)
         rpSBML.checklibSBML(spe.setId(str(species_id)), 'set species id')
         if not meta_id:
             meta_id = self._genMetaID(species_id)
