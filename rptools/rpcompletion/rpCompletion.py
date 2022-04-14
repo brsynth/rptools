@@ -150,34 +150,12 @@ def rp_completion(
         rr_reactions=cache.get('rr_reactions'),
         compounds_cache=cache.get('cid_strc'),
         max_subpaths_filter=max_subpaths_filter,
-        # compartment_id=compartment_id,
         lower_flux_bound=lower_flux_bound,
         upper_flux_bound=upper_flux_bound,
         logger=logger
     )
 
-    # # Return flat list of overall topX pathways
-    # return sum(
-    #     [
-    #         pathways
-    #         for pathways in all_pathways.values()
-    #     ], [])[:max_subpaths_filter]
-
     return all_pathways
-
-    # for sub_pathways in all_pathways.values():
-    #     for sub_pathway in sub_pathways:
-    #         print(sub_pathway)
-
-    # from chemlite import Pathway
-    # print(all_pathways)
-    # for sub_pathways in all_pathways.values():
-    #     for i in range(len(sub_pathways)):
-    #         for j in range(i+1, len(sub_pathways)):
-    #             if sub_pathways[i] == sub_pathways[j]:
-    #                 print(f'Equality between {sub_pathways[i].get_id()} and {sub_pathways[j].get_id()}')
-    # print()
-    # print(Pathway._to_dict(all_pathways[1][0]))
 
 
 def __complete_transformations(
@@ -206,6 +184,9 @@ def __complete_transformations(
     -------
     Completed stoichiometric chemical transformations
     """
+
+    logger.debug(f'transfos: {transfos}')
+    logger.debug(f'ec_numbers: {ec_numbers}')
 
     full_transfos = {}
 
@@ -770,7 +751,7 @@ def __build_all_pathways(
                     target_id = target_id[0]
                 else:
                     target_id = None
-                logger.debug(rxn._to_dict())
+                logger.debug(f'rxn: {rxn._to_dict()}')
                 pathway.add_reaction(
                     rxn=rxn,
                     target_id=target_id
