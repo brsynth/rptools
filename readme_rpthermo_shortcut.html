@@ -32,7 +32,7 @@
 
           <div class="body" role="main">
             
-  <div class="tex2jax_ignore mathjax_ignore section" id="rpthermo">
+  <div class="section" id="rpthermo">
 <h1>rpThermo<a class="headerlink" href="#rpthermo" title="Permalink to this headline">¶</a></h1>
 <p>Calculate the formation energy of chemical species and the Gibbs free energy for each reaction and for the heterologous pathway itself. This tool uses the <a class="reference external" href="https://gitlab.com/elad.noor/component-contribution">component contribution</a> method for determining the formation energy of chemical species that are either not annotated, or cannot be found in the internal database.</p>
 <p>For each species, the challenge is to find the corresponding compound in the eQuilibrator cache. To find the good compound, one tries to exact match species ID, InChIKey, InChI or SMILES and stops with the first hit. Then, if no compound has been found, in the last resort, the first part of species InChIKey is looked for within the cache. If the result (a list) is not empty, the first compound is taken.</p>
@@ -201,7 +201,7 @@ pytest -v
       &copy;2021, Joan Hérisson, Thomas Duigou, Kenza Bazi-Kabbaj, Olivier Telle.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.4.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
