@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.12.2](https://github.com/brsynth/rptools/tree/5.12.2) (2022-04-14)
+
+[Full Changelog](https://github.com/brsynth/rptools/compare/5.12.1...5.12.2)
+
+**Merged pull requests:**
+
+- Typo [\#23](https://github.com/brsynth/rptools/pull/23) ([niraito](https://github.com/niraito))
+
 ## [5.12.1](https://github.com/brsynth/rptools/tree/5.12.1) (2022-01-28)
 
 [Full Changelog](https://github.com/brsynth/rptools/compare/5.12.0...5.12.1)
