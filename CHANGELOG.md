@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.12.3](https://github.com/brsynth/rptools/tree/5.12.3) (2022-04-17)
+
+[Full Changelog](https://github.com/brsynth/rptools/compare/5.12.2...5.12.3)
+
+**Closed issues:**
+
+- Compound names [\#24](https://github.com/brsynth/rptools/issues/24)
+
 ## [5.12.2](https://github.com/brsynth/rptools/tree/5.12.2) (2022-04-14)
 
 [Full Changelog](https://github.com/brsynth/rptools/compare/5.12.1...5.12.2)
