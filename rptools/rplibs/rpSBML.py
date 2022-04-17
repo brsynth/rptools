@@ -5033,10 +5033,16 @@ class rpSBML:
         Id well-formatted according to libSBML SID convention.
         """
         id = id.replace('-', '_')
+        # if a char is neither a letter nor a digit,
+        # replace it with its ascii number
+        _id = id
+        for i in range(len(id)):
+            if not id[i].isalnum() and id[i] != '_':
+                _id = f'{id[:i]}_ASCII_{str(ord(id[i]))}_ASCII_{id[i+1:]}'
         # id = comp_succ(id, '_')
-        if id[0].isdigit():
-            id = '_' + id
-        return id
+        if _id[0].isdigit():
+            _id = f'_{_id}'
+        return _id
 
     def createSpecies(
         self,

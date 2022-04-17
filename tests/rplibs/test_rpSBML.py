@@ -63,6 +63,12 @@ class Test_rpSBML(Main_rplibs):
         #    )
         #)
 
+    def test_formatId(self):
+        self.assertEqual(
+            rpSBML.formatId('2-Oxoglutarate+'),
+            '_2_Oxoglutarate_ASCII_43_ASCII_'
+        )
+
     def test_checkSBML(self):
         self.assertTrue(rpSBML.checkSBML(self.rpsbml_lycopene))
         self.assertFalse(rpSBML.checkSBML(self.rpsbml_none))
