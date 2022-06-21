@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 
 default_comp = 'c'
 
+
 def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument(
         'input_sbml',
