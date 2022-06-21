@@ -1,7 +1,7 @@
-rptools.rpranker
+rptools.rprank
 ================
 
-.. automodule:: rptools.rpranker
+.. automodule:: rptools.rprank
 
    
    
@@ -26,7 +26,7 @@ rptools.rpranker
    :template: custom-module-template.rst
    :recursive:
 
-   rptools.rpranker.Args
-   rptools.rpranker.rpRanker
+   rptools.rprank.Args
+   rptools.rprank.rprank
 
 

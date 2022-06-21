@@ -1,7 +1,7 @@
-rptools.rpranker.Args
+rptools.rprank.Args
 =====================
 
-.. automodule:: rptools.rpranker.Args
+.. automodule:: rptools.rprank.Args
 
    
    
