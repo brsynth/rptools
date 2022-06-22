@@ -589,7 +589,7 @@ class rpSBML:
             logger = logger
         )
 
-        merged_rpsbml, reactions_in_both, missing_species = rpSBML.mergeModels(
+        merged_rpsbml, reactions_in_both, missing_species = rpSBML.merge(
             source_rpsbml=source_rpsbml,
             target_rpsbml=target_rpsbml,
             compartment_id=compartment_id,
@@ -609,6 +609,29 @@ class rpSBML:
         compartment_id: str,
         logger: Logger = getLogger(__name__)
     ) -> Tuple['rpSBML', Dict, List, str]:
+        # # Copy target rpSBML object into a new one so that
+        # # it can be modified and returned
+        # merged_rpsbml = rpSBML(
+        #     rpsbml = model,
+        #     logger = logger
+        # )
+        # merged_rpsbml.getModel().setId(
+        #     merged_rpsbml.getModel().getId()+'__'+pathway.getModel().getId()
+        # )
+        # merged_rpsbml.getModel().setName(
+        #     merged_rpsbml.getModel().getName()+' merged with '+pathway.getModel().getId()
+        # )
+        # merged_rpsbml.getModel().appendFrom(pathway.getModel())
+        # if merged_rpsbml.checkSBML():
+        #     return (
+        #         merged_rpsbml,
+        #         None,
+        #         None,
+        #         compartment_id
+        #     )
+        # else:
+        #     logger.error('Merging rpSBML objects results in a invalid SBML format')
+        #     return None, None, None, None
         """
         Merge two models species and reactions using the annotations to recognise the same species and reactions
 
@@ -2879,12 +2902,14 @@ class rpSBML:
         return d_reactions
 
 
-    def __str__(self):
-        for attr in inspect_getmembers(self):
-            if not attr[0].startswith('_'):
-                if not inspect_ismethod(attr[1]):
-                    # self.logger.info(attr)
-                    print(attr)
+    # def __str__(self):
+    #     content = ''
+    #     for attr in inspect_getmembers(self):
+    #         if not attr[0].startswith('_'):
+    #             if not inspect_ismethod(attr[1]):
+    #                 # self.logger.info(attr)
+    #                 content += f'{attr}\n'
+    #     return content
 
 
     def __eq__(self, other):
