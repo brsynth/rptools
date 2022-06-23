@@ -142,44 +142,28 @@ class Test_rpSBML(Main_rplibs):
             compartment='c',
             strict=True
         )
-        self.assertIsInstance(
-            res,
-            bool
-        )
-        self.assertTrue(res)
+        self.assertEqual(res.getId(), 'c')
         # Test - 2
         res = self.rpsbml_lycopene.has_compartment(
             compartment='C',
             strict=True
         )
-        self.assertIsInstance(
-            res,
-            bool
-        )
-        self.assertFalse(res)
+        self.assertIsNone(res)
         # Test - 3
         res = self.rpsbml_lycopene.has_compartment(
             compartment='c'
         )
-        self.assertIsInstance(
-            res,
-            bool
-        )
-        self.assertTrue(res)
+        self.assertEqual(res.getId(), 'c')
         # Test - 4
         res = self.rpsbml_lycopene.has_compartment(
             compartment='C',
         )
-        self.assertIsInstance(
-            res,
-            bool
-        )
-        self.assertTrue(res)
+        self.assertEqual(res.getId(), 'c')
         # Test - 5
         res = self.rpsbml_lycopene.has_compartment(
             compartment='intracellular space'
         )
-        self.assertTrue(res)
+        self.assertEqual(res.getId(), 'c')
 
     def test_search_specie(self):
         # Test - 1
