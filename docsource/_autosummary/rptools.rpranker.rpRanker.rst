@@ -1,7 +1,7 @@
-rptools.rpranker.rpRanker
+rptools.rprank.rprank
 =========================
 
-.. automodule:: rptools.rpranker.rpRanker
+.. automodule:: rptools.rprank.rprank
 
    
    

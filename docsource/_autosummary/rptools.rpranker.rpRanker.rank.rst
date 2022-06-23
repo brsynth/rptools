@@ -1,6 +1,6 @@
-rptools.rpranker.rpRanker.rank
+rptools.rprank.rprank.rank
 ==============================
 
-.. currentmodule:: rptools.rpranker.rpRanker
+.. currentmodule:: rptools.rprank.rprank
 
 .. autofunction:: rank

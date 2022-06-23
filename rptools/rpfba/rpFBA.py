@@ -171,8 +171,10 @@ def runFBA(
     )
     if rpsbml_merged is None:
         return None
-    logger.debug('rpsbml_merged: ' + str(rpsbml_merged))
-    logger.debug('reactions_in_both: ' + str(reactions_in_both))
+    logger.debug(f'rpsbml_merged: {rpsbml_merged}')
+    logger.debug(f'reactions_in_both: {reactions_in_both}')
+    logger.debug(f'missing_species: {missing_species}')
+
     cobra_rpsbml_merged = rpSBML.cobraize(rpsbml_merged)
 
     ## MEDIUM
@@ -235,11 +237,14 @@ def runFBA(
             logger=logger
         )
     else: hidden_species = []
-    
+
     # NOTE: reactions is organised with key being the rpsbml reaction and value being the rpsbml_gem value`
     # BUG: when merging the rxn_sink (very rare cases) can be recognised if another reaction contains the same species as a reactant
     ## under such as scenario the algorithm will consider that they are the same -- TODO: overwrite it
-    if objective_rxn_id in reactions_in_both:
+    if (
+        reactions_in_both is not None and
+        objective_rxn_id in reactions_in_both
+    ):
         logger.warning(
             'The target_reaction ('+str(objective_rxn_id)+') ' \
           + 'has been detected in model ' + str(gem_sbml_path.getName()) + ', ' \
@@ -278,6 +283,7 @@ def runFBA(
             medium=df_medium,
             logger=logger
         )
+
         results['biomass'] = results_biomass
 
     # print(cobra_results.objective_value)
@@ -409,10 +415,12 @@ def check_SBML_compartment(
 
     # Check model compartment ID
     # Set new compartment ID in case it exists under another ID
-    has_compartment = rpsbml.has_compartment(compartment_id)
-    if has_compartment:
-        logger.debug(f'Compartment \'{compartment_id}\' found in the model \'{rpsbml.getName()}\'')
-        return compartment_id
+    compartment = rpsbml.has_compartment(compartment_id)
+    if compartment is not None:
+        logger.debug(f'Compartment \'{compartment_id}\' found in the model \'{rpsbml.getName()}\' as {compartment.getId()}')
+        if compartment_id != compartment.getId():
+            logger.warning(f'Compartment \'{compartment_id}\' has been replaced by {compartment.getId()}')
+        return compartment.getId()
     else:
         logger.error(f'Compartment \'{compartment_id}\' not found in the model \'{rpsbml.getName()}\'')
         logger.error(
@@ -846,10 +854,6 @@ def rp_fraction(
         if fbc_obj_annot is None:
             logger.error('No annotation available for: '+str(biomass_objective_id))
 
-    # print(cobra_results.objective_value)
-    # rpsbml.write_to_file('joan.xml')
-    # exit()
-
     flux = float(
         fbc_obj_annot.getChild(
             'RDF'
@@ -864,26 +868,15 @@ def rp_fraction(
         )
     )
 
-    # exit()
-    # # TODO: add another to check if the objective id exists
-    # logger.debug('FBA source flux ('+str(src_rxn_id)+') is: '+str(source_flux))
-    # if not objective_id:
-    #     objective_id = 'obj_'+str(tgt_rxn_id)+'__restricted_'+str(src_rxn_id)
-
     objective_id = rpsbml.find_or_create_objective(
         rxn_id=objective_rxn_id,
         obj_id=f'brs_obj_{objective_rxn_id}',
     )
-    # objective_id = rpsbml.find_or_create_objective(
-    #     reactions = [tgt_rxn_id],
-    #     coefficients = [tgt_coeff],
-    #     is_max = is_max,
-    #     objective_id = objective_id
-    # )
+    logger.debug(f'objective_id: {objective_id}')
 
-    logger.debug('Optimising the objective: '+str(biomass_rxn_id))
-    logger.debug('     Setting upper bound: '+str(flux*fraction_coeff))
-    logger.debug('     Setting lower bound: '+str(flux*fraction_coeff))
+    logger.debug(f'Optimising the objective: {biomass_rxn_id}')
+    logger.debug(f'     Setting upper bound: {flux*fraction_coeff}')
+    logger.debug(f'     Setting lower bound: {flux*fraction_coeff}')
 
     old_upper_bound, old_lower_bound = rpsbml.getReactionConstraints(biomass_rxn_id)
     rpsbml.setReactionConstraints(
@@ -906,21 +899,6 @@ def rp_fraction(
     if cobra_results is None:
         return results_biomass, None, objective_id, minimal_medium
 
-    # # rxn>scores>fba>fraction = cobra_results.fluxes('rxn_X')
-    # # scores>fba>fraction = cobra_results.objective_value
-    # results[sim_type] = cobra_results
-
-    # # Write results for merged model
-    # write_results_to_rpsbml(
-    #     rpsbml=rpsbml,
-    #     objective_id=objective_id,
-    #     sim_type=sim_type,
-    #     cobra_results=cobra_results,
-    #     pathway_id=pathway_id,
-    #     logger=logger
-    # )
-
-    # rpsbml.write_to_file('joan.xml')
     ##### print the biomass results ######
     logger.debug('Biomass: '+str(cobra_results.fluxes.get(biomass_objective_id)))
     logger.debug(' Target: '+str(cobra_results.fluxes.get(objective_id)))
@@ -983,6 +961,10 @@ def runCobra(
         logger.debug(cobraModel.medium)
 
     cobra_results = None
+    # cobraModel.objective = {
+    #     cobraModel.reactions.get_by_id('BIOMASS_Ec_iML1515_core_75p37M'): 1,
+    #     cobraModel.reactions.get_by_id('PYRt2'): 2
+    # }
     if sim_type.lower() == 'pfba':
         cobra_results = pfba(cobraModel, fraction_coeff)
     else:
@@ -1016,6 +998,8 @@ def build_cobra_model(
     """
 
     rpsbml.logger.info('Creating Cobra object from rpSBML...')
+    logger.debug(f'objective_id: {objective_id}')
+    logger.debug(f'missing_species: {hidden_species}')
 
     rpsbml.activateObjective(
         objective_id = objective_id,

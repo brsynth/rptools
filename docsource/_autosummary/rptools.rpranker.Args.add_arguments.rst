@@ -1,6 +1,6 @@
-rptools.rpranker.Args.add\_arguments
+rptools.rprank.Args.add\_arguments
 ====================================
 
-.. currentmodule:: rptools.rpranker.Args
+.. currentmodule:: rptools.rprank.Args
 
 .. autofunction:: add_arguments

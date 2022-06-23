@@ -174,7 +174,21 @@ class Test_rpFBA(Main_rpfba):
             res,
             None
         )
- 
+
+    def test_check_SBML_compartment(self):
+        self.assertEqual(
+            check_SBML_compartment(self.rpsbml, 'MNXC3'),
+            'MNXC3'
+        )
+        self.assertEqual(
+            check_SBML_compartment(self.rpsbml, 'cytosol'),
+            'MNXC3'
+        )
+        self.assertEqual(
+            check_SBML_compartment(self.rpsbml, 'c'),
+            'MNXC3'
+        )
+
 #def build_rpsbml(
 #def build_hidden_species(
 #def build_results(
