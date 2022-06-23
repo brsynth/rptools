@@ -109,9 +109,9 @@ class rpSBML:
         self.logger = logger
 
         self.logger.debug('New instance of rpSBML')
-        self.logger.debug('inFile: ' + str(inFile))
-        self.logger.debug('rpsbml: ' + str(rpsbml))
-        self.logger.debug('name:   ' + str(name))
+        self.logger.debug(f'inFile: {inFile}')
+        self.logger.debug(f'rpsbml: {rpsbml}')
+        self.logger.debug(f'name:   {name}')
 
         # document
         # if an sbml file is given, then read it (self.document will be created)
@@ -120,16 +120,16 @@ class rpSBML:
             try:
                 kind = guess(infile)
             except FileNotFoundError as e:
-                self.logger.error(str(e))
+                self.logger.error(f'{e}')
                 self.logger.error('Exiting...')
                 exit()
             except TypeError as e:
-                self.logger.error(e)
+                self.logger.error(f'{e}')
                 self.logger.error('Exiting...')
                 exit()
             with TemporaryDirectory() as temp_d:
                 if kind:
-                    self.logger.debug('inFile is detected as ' + str(kind))
+                    self.logger.debug(f'inFile is detected as {kind}')
                     if kind.mime == 'application/gzip':
                         infile = extract_gz(inFile, temp_d)
                 self.readSBML(infile)
@@ -390,6 +390,8 @@ class rpSBML:
         :return: Return a compartment if the specie is in the model, None otherwise
         :rtype: libsbml.Compartment
         """
+        self.logger.debug(f'compartment: {compartment}')
+
         # Search in model.
         if self.getModel() is None:
             return None
@@ -476,15 +478,11 @@ class rpSBML:
         :rtype: bool
         """
         if self.getModel() is None:
-            return False
+            return None
         if strict:
-            if self.getModel().getCompartment(compartment) is None:
-                return False
-            return True
+            return self.getModel().getCompartment(compartment)
         else:
-            if self.search_compartment(compartment) is None:
-                return False
-            return True
+            return self.search_compartment(compartment)
 
     def has_specie(
         self,
@@ -857,7 +855,7 @@ class rpSBML:
     ) -> None:
 
         source_sbml_doc = source_sbml.getDocument()
-        self.logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
+        self.logger.debug(f'source_sbml_doc: {source_sbml_doc}')
 
         target_unitDefID = [i.getId() for i in self.getModel().getListOfUnitDefinitions()]
 
@@ -922,9 +920,11 @@ class rpSBML:
             source_annotation = source_compartment.getAnnotation()
 
             if not source_annotation:
-                self.logger.warning('No annotation for the source of compartment '+str(source_compartment.getId()))
+                self.logger.warning(f'No annotation for the source of compartment {source_compartment.getId()}')
 
             for target_compartment in self.getModel().getListOfCompartments():
+                self.logger.debug(f'source_compartment id: {source_compartment.getId()}; target_compartment id: {target_compartment.getId()}')
+                self.logger.debug(f'source_compartment name: {source_compartment.getName()}; target_compartment name: {target_compartment.getName()}')
                 # compare by ID or name first
                 if (
                     source_compartment.getId() == target_compartment.getId()
@@ -935,8 +935,10 @@ class rpSBML:
                 # then, compare by MIRIAM
                 else:
                     target_annotation = target_compartment.getAnnotation()
+                    self.logger.debug(f'source_annotation: {source_annotation}')
+                    self.logger.debug(f'target_annotation: {target_annotation}')
                     if not target_annotation:
-                        self.logger.warning('No annotation for the target of compartment: '+str(target_compartment.getId()))
+                        self.logger.warning(f'No annotation for the target of compartment: {target_compartment.getId()}')
                     elif rpSBML.compareMIRIAMAnnotations(
                         source_annotation,
                         target_annotation,
@@ -1008,7 +1010,7 @@ class rpSBML:
 
         source_sbml_doc = source_sbml.getDocument()
 
-        self.logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
+        self.logger.debug(f'source_sbml_doc: {source_sbml_doc}')
 
         target_paramsID = [i.getId() for i in self.getModel().getListOfParameters()]
 
@@ -1062,8 +1064,8 @@ class rpSBML:
         source_fbc = source_rpsbml.getModel().getPlugin('fbc')
         target_fbc = self.getModel().getPlugin('fbc')
 
-        self.logger.debug('source_fbc: ' + str(source_fbc))
-        self.logger.debug('target_fbc: ' + str(target_fbc))
+        self.logger.debug(f'source_fbc: {source_fbc}')
+        self.logger.debug(f'target_fbc: {target_fbc}')
 
         targetGenProductID = [i.getId() for i in target_fbc.getListOfGeneProducts()]
 
@@ -1112,8 +1114,8 @@ class rpSBML:
         source_fbc = source_rpsbml.getModel().getPlugin('fbc')
         target_fbc = self.getModel().getPlugin('fbc')
 
-        self.logger.debug('source_fbc: ' + str(source_fbc))
-        self.logger.debug('target_fbc: ' + str(target_fbc))
+        self.logger.debug(f'source_fbc: {source_fbc}')
+        self.logger.debug(f'target_fbc: {target_fbc}')
 
         targetObjectiveID = [i.getId() for i in target_fbc.getListOfObjectives()]
         # sourceObjectiveID = [i.getId() for i in source_fbc.getListOfObjectives()]
@@ -1191,7 +1193,7 @@ class rpSBML:
         compartment_id: str,
     ) -> Tuple[List[str], List[str]]:
 
-        self.logger.debug('compartment_id: ' + str(compartment_id))
+        self.logger.debug(f'compartment_id: {compartment_id}')
 
         # 'corr_species' is the dictionary of correspondace
         # between species both in pathway and model.
@@ -1221,7 +1223,7 @@ class rpSBML:
 
             # If match, copy the BRSynth annotation from the source to the target
             if source_spe_id in corr_species:
-                self.logger.debug(source_spe_id, 'IN MODEL')
+                self.logger.debug(f'{source_spe_id} IN MODEL')
                 # list_species = [i for i in corr_species[source_species]]
                 # # self.logger.debug('list_species: '+str(list_species))
                 # if len(list_species)==0:
@@ -1267,11 +1269,11 @@ class rpSBML:
             # if no match then add it to the target model
             # with the corresponding compartment:
             else:
-                self.logger.debug(source_spe_id, 'OUT OF MODEL')
+                self.logger.debug(f'{source_spe_id} OUT OF MODEL')
                 # self.logger.debug('Creating source species '+str(source_species)+' in target rpsbml')
                 source_spe = source_sbml.getModel().getSpecies(source_spe_id)
                 if not source_spe:
-                    self.logger.error('Cannot retreive model species: '+str(source_spe_id))
+                    self.logger.error(f'Cannot retreive model species: {source_spe_id}')
                 else:
                     rpSBML.checklibSBML(
                         source_spe,
@@ -1381,8 +1383,8 @@ class rpSBML:
         species: Dict
     ) -> Dict:
 
-        self.logger.debug('source_sbml: ' + str(source_sbml))
-        self.logger.debug('species: ' + str(species))
+        self.logger.debug(f'source_sbml: {source_sbml}')
+        self.logger.debug(f'species: {species}')
 
         def copySpecies(
             source_reaction: libsbml.Reaction,
@@ -1621,7 +1623,7 @@ class rpSBML:
 
         for source_reaction in source_sbml.getModel().getListOfReactions():
 
-            self.logger.debug('source_reaction: ' + str(source_reaction.getId()))
+            self.logger.debug(f'source_reaction: {source_reaction.getId()}')
 
             is_found = False
 
@@ -1700,9 +1702,9 @@ class rpSBML:
 
         source_sbml_doc = source_sbml.getDocument()
 
-        self.logger.debug('source_sbml_doc: ' + str(source_sbml_doc))
-        self.logger.debug('species: ' + str(species))
-        self.logger.debug('reactions: ' + str(reactions))
+        self.logger.debug(f'source_sbml_doc: {source_sbml_doc}')
+        self.logger.debug(f'species: {species}')
+        self.logger.debug(f'reactions: {reactions}')
 
         # TODO loop through the groups to add them
 
@@ -1734,8 +1736,8 @@ class rpSBML:
             'fetching the target model groups'
         )
 
-        self.logger.debug('species: '+str(species))
-        self.logger.debug('reactions: '+str(reactions))
+        self.logger.debug(f'species: {species}')
+        self.logger.debug(f'reactions: {reactions}')
 
         source_groups_ids = [i.id for i in source_groups.getListOfGroups()]
         target_groups_ids = [i.id for i in target_groups.getListOfGroups()]
@@ -2196,7 +2198,7 @@ class rpSBML:
                             tmp_reaction_match[source_reaction.getId()][target_reaction.getId()]['reactants'][reactant.species] = {'id': best_spe, 'score': species_match[reactant.species][best_spe], 'found': True}
                             cannotBeSpecies.append(best_spe)
                         elif not reactant.species in tmp_reaction_match[source_reaction.getId()][target_reaction.getId()]['reactants']:
-                            self.logger.warning('\t\tCould not find the following measured reactant in the matched species: '+str(reactant.species))
+                            self.logger.warning(f'\t\tCould not find the following measured reactant in the matched species: {reactant.species}')
                             tmp_reaction_match[source_reaction.getId()][target_reaction.getId()]['reactants'][reactant.species] = {'id': None, 'score': 0.0, 'found': False}
                     for product in source_reaction.getListOfProducts():
                         # self.logger.debug('\t\tProduct: '+str(product.species))
@@ -2207,7 +2209,7 @@ class rpSBML:
                             tmp_reaction_match[source_reaction.getId()][target_reaction.getId()]['reactants'][product.species] = {'id': best_spe, 'score': species_match[product.species][best_spe], 'found': True}
                             cannotBeSpecies.append(best_spe)
                         elif not product.species in tmp_reaction_match[source_reaction.getId()][target_reaction.getId()]['products']:
-                            self.logger.warning('\t\tCould not find the following measured product in the matched species: '+str(product.species))
+                            self.logger.warning(f'\t\tCould not find the following measured product in the matched species: {product.species}')
                             tmp_reaction_match[source_reaction.getId()][target_reaction.getId()]['products'][product.species] = {'id': None, 'score': 0.0, 'found': False}
                     # self.logger.debug('\t\tcannotBeSpecies: '+str(cannotBeSpecies))
                 reactants_score = [tmp_reaction_match[source_reaction.getId()][target_reaction.getId()]['reactants'][i]['score'] for i in tmp_reaction_match[source_reaction.getId()][target_reaction.getId()]['reactants']]
@@ -2462,7 +2464,9 @@ class rpSBML:
         :return: A tuple corresponding to the dictionnary correspondance between species provided and specie in the model and a list of species not find in the model
         :rtype: Tuple[Dict[str,str], List[str]]
         """
-        
+        logger.debug(f'species_ids: {species_ids}')
+        logger.debug(f'compartment_id: {compartment_id}')
+
         ############## compare species ###################
         # source_target = {}
         # target_source = {}
@@ -2486,6 +2490,7 @@ class rpSBML:
             # species_match[source_species.getId()] = {'id': None, 'score': 0.0, 'found': False}
             # TODO: need to exclude from the match if a simulated chemical species is already matched with a higher score to another measured species
             for target_species in target_sbml.getModel().getListOfSpecies():
+                logger.debug(f'source_species_id/compartment: {source_species_id}/{compartment_id}; target_species/compartment: {target_species}/{target_species.getCompartment()}')
                 # print(source_species.getId(), source_species.getCompartment())
                 # print(target_species.getId(), target_species.getCompartment())
                 # print(compartment_ids)
@@ -2505,7 +2510,7 @@ class rpSBML:
                 #     # in the current loop
                 #     else:
                 #         continue
-                
+
                 # Skip the species that are not in the same compartment as the source
                 if compartment_id != target_species.getCompartment():
                     continue
@@ -2800,7 +2805,7 @@ class rpSBML:
                         best_ec_compare['score'] = tmp_score
             return best_ec_compare['score']
         else:
-            self.logger.warning('One of the two reactions does not have any EC entries.\nMeasured: '+str(meas_reac_miriam)+' \nSimulated: '+str(sim_reac_miriam))
+            self.logger.warning(f'One of the two reactions does not have any EC entries.\nMeasured: {meas_reac_miriam} \nSimulated: {sim_reac_miriam}')
             return 0.0
 
 
@@ -3246,7 +3251,7 @@ class rpSBML:
         # self.logger.debug('annotation: {0}'.format(annotation))
         annot_obj = libsbml.XMLNode.convertStringToXMLNode(annotation)
         if not annot_obj:
-            self.logger.error('Cannot convert this string to annotation object: '+str(annotation))
+            self.logger.error(f'Cannot convert this string to annotation object: {annotation}')
             return False
         #### retreive the annotation object
         brsynth_annot = None
@@ -3269,7 +3274,7 @@ class rpSBML:
         if not target_found:
             source_found = self.addBRSynthAnnot(brsynth_annot, annot_obj, annot_header)
             if not source_found:
-                self.logger.error('Cannot find '+str(annot_header)+' in source annotation')
+                self.logger.error(f'Cannot find {annot_header} in source annotation')
                 return False
 
         return True
@@ -3304,7 +3309,7 @@ class rpSBML:
                         break
 
                 if not source_found:
-                    self.logger.error('Cannot find '+str(annot_header)+' in source annotation')
+                    self.logger.error(f'Cannot find {annot_header} in source annotation')
 
         return target_found
 
@@ -3389,7 +3394,7 @@ class rpSBML:
         :return: Sucess or failure of the function
         """
         if type_param not in ['compartment', 'reaction', 'species']:
-            self.logger.error('type_param must be '+str(['compartment', 'reaction', 'species'])+' not '+str(type_param))
+            self.logger.error(f'type_param must be [\'compartment\', \'reaction\', \'species\'] not {type_param}')
             return False
         miriam_annot = None
         isReplace = False
@@ -3420,7 +3425,7 @@ class rpSBML:
         for i in range(miriam_annot.getNumChildren()):
             single_miriam = miriam_annot.getChild(i)
             if single_miriam.getAttributes().getLength()>1:
-                self.logger.error('MIRIAM annotations should never have more than 1: '+str(single_miriam.toXMLString()))
+                self.logger.error(f'MIRIAM annotations should never have more than 1: {single_miriam.toXMLString()}')
                 continue
             single_miriam_attr = single_miriam.getAttributes()
             if not single_miriam_attr.isEmpty():
@@ -3434,7 +3439,7 @@ class rpSBML:
                         v = single_miriam_attr.getValue(0).split('/')[-1]
                         inside[self.header_miriam[type_param][db]] = [v]
                     except KeyError:
-                        self.logger.warning('Cannot find the self.header_miriram entry '+str(db))
+                        self.logger.warning(f'Cannot find the self.header_miriram entry {db}')
                         continue
             else:
                 self.logger.warning('Cannot return MIRIAM attribute')
@@ -3476,7 +3481,7 @@ class rpSBML:
                         miriam_annot.insertChild(0, toWrite_annot)
                     except KeyError:
                         # WARNING need to check this
-                        self.logger.warning('Cannot find '+str(database_id)+' in self.miriam_header for '+str(type_param))
+                        self.logger.warning(f'Cannot find {database_id} in self.miriam_header for {type_param}')
                         continue
         if isReplace:
             ori_miriam_annot = sbase_obj.getAnnotation()
@@ -3500,9 +3505,9 @@ class rpSBML:
         # objective_id: str = None
     ) -> str:
 
-        self.logger.debug('rxn_id:    ' + str(rxn_id))
-        self.logger.debug('coeff: ' + str(coeff))
-        self.logger.debug('is_max:       ' + str(is_max))
+        self.logger.debug(f'rxn_id: {rxn_id}')
+        self.logger.debug(f'coeff: {coeff}')
+        self.logger.debug(f'is_max: {is_max}')
         # self.logger.debug('objective_id: ' + str(objective_id))
 
         # if objective_id is None:
@@ -3566,12 +3571,12 @@ class rpSBML:
         for objective in fbc_plugin.getListOfObjectives():
 
             if objective.getId() == objective_id:
-                self.logger.debug('The specified objective id ('+str(objective_id)+') already exists')
+                self.logger.debug(f'The specified objective id {objective_id} already exists')
                 return objective_id
             
             if not set([i.getReaction() for i in objective.getListOfFluxObjectives()])-set(reactions):
                 # TODO: consider setting changing the name of the objective
-                self.logger.debug('The specified objective id ('+str(objective_id)+') has another objective with the same reactions: '+str(objective.getId()))
+                self.logger.debug(f'The specified objective id {objective_id} has another objective with the same reactions: {objective.getId()}')
                 return objective.getId()
 
         return None
@@ -3648,7 +3653,7 @@ class rpSBML:
         :return: Dictionnary of the pathway annotation
         """
 
-        self.logger.debug('Read SBML file from ' + inFile)
+        self.logger.debug(f'Read SBML file from {inFile}')
         # if not os_path.isfile(inFile):
         #     self.logger.error('Invalid input file: ' + inFile)
         #     raise FileNotFoundError
@@ -3660,10 +3665,10 @@ class rpSBML:
         for err in [self.getDocument().getError(i) for i in range(self.getDocument().getNumErrors())]:
             # TODO if the error is related to packages not enabled (like groups or fbc) activate them
             if err.isFatal:
-                self.logger.error('libSBML reading error: '+str(err.getShortMessage()))
+                self.logger.error(f'libSBML reading error: {err.getShortMessage()}')
                 raise FileNotFoundError
             else:
-                self.logger.warning('libSBML reading warning: '+str(err.getShortMessage()))
+                self.logger.warning(f'libSBML reading warning: {err.getShortMessage()}')
         if not self.getModel():
             self.logger.error('Either the file was not read correctly or the SBML is empty')
             raise FileNotFoundError
@@ -3794,7 +3799,7 @@ class rpSBML:
             rpSBML.checklibSBML(group, 'retreiving '+group_id+' group')
             return [m.getIdRef() for m in group.getListOfMembers()]
         except:
-            self.logger.debug('Group \''+group_id+'\' not found')
+            self.logger.debug(f'Group \'{group_id}\' not found')
             return None
         # members = []
         # for member in group.getListOfMembers():
@@ -4100,7 +4105,7 @@ class rpSBML:
                         if species_id in [i.getSpecies() for i in reaction.getListOfReactants()]:
                             return True
                     else:
-                        self.logger.warning('isSpeciesProduct does not find the directionailty of the reaction for reaction: '+str(species_id))
+                        self.logger.warning(f'isSpeciesProduct does not find the directionailty of the reaction for reaction: {species_id}')
                         return True
                 else:
                     # if the reaction is not reversible then product are the only way to create it
@@ -4430,6 +4435,7 @@ class rpSBML:
         target_dict = rpSBML.readMIRIAMAnnotation(target_annot, logger)
         # list the common keys between the two
         for com_key in set(list(source_dict.keys()))-(set(list(source_dict.keys()))-set(list(target_dict.keys()))):
+            logger.debug(com_key)
             # compare the keys and if same is non-empty means that there
             # are at least one instance of the key that is the same
             if bool(set(source_dict[com_key]) & set(target_dict[com_key])):
@@ -4629,7 +4635,7 @@ class rpSBML:
         reaction = self.getModel().getReaction(reaction_id)
 
         if not reaction:
-            self.logger.error('Cannot find the reaction: '+str(reaction_id))
+            self.logger.error(f'Cannot find the reaction: {reaction_id}')
             return False
  
         reac_fbc = reaction.getPlugin('fbc')
@@ -5328,7 +5334,7 @@ class rpSBML:
         plugin: str = 'fbc'
     ) -> None:
 
-        self.logger.debug('Activate objective ' + objective_id)
+        self.logger.debug(f'Activate objective {objective_id}')
 
         plugin = self.getPlugin(plugin)
         self.checklibSBML(
