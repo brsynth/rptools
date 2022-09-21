@@ -32,6 +32,12 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument('rp2paths_pathways', type=str)
     # parser.add_argument('--rp2paths_pathways', nargs='?', type=str)
     parser.add_argument('outdir', type=str)
+    parser.add_argument(
+        '--cache-dir',
+        default=None,
+        type=str,
+        help='Path to the cache to generate or read from'
+    )
     # parser.add_argument('--outdir', nargs='?', type=str)
     # parser.add_argument(
     #     '--out_format',

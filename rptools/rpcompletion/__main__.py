@@ -38,7 +38,9 @@ def _cli():
             'template_reactions',
             'cid_strc',
             'deprecatedCompID_compid',
-        ]
+        ],
+        cache_dir=args.cache_dir,
+        logger=logger
     )
 
     pathways = rp_completion(
