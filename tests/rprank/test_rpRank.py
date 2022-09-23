@@ -33,18 +33,33 @@ class Test_rpRank(TestCase):
     def _test_file(self, infile: str, expected_result_file: str):
         # Build the list of pathways to rank
         pathway_filenames = glob(f'{infile}/*')
-        pathways = [
-            rpPathway.from_rpSBML(
-                infile=pathway_filename
-            ) for pathway_filename in pathway_filenames
-        ]
+        pathways = {}
+        for pathway_fname in pathway_filenames:
+            pathway = rpPathway.from_rpSBML(
+                infile=pathway_fname
+            )
+            pathway_name = pathway.get_id().replace(' ', '_')
+            pathways[pathway_name] = {
+                'pathway': pathway,
+                'filename': pathway_fname
+            }
 
         # Rank pathways
         sorted_pathways = rank(pathways)
 
+        # Rename pathway ids to their filenames
+        pathway_names = {
+            pathway_name: os_path.basename(pathway['filename'])
+            for pathway_name, pathway in pathways.items()
+        }
+        sorted_renamed_pathways = {
+            pathway_names[pathway_name]: score
+            for pathway_name, score in sorted_pathways.items()
+        }
+
         # Output
         computed_scores = {}
-        for name, score in sorted_pathways.items():
+        for name, score in sorted_renamed_pathways.items():
             if score in computed_scores.keys():
                 computed_scores[score].update([name])
             else:
