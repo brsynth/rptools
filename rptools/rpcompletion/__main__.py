@@ -66,14 +66,7 @@ def _cli():
                 'rp_'+pathway.get_id()
             ) + '.xml'
         )
-    # for pathway_id, sub_pathways in pathways.items():
-    #     for sub_pathway in sub_pathways[-args.max_subpaths_filter:]:
-    #         sub_pathway.to_rpSBML().write_to_file(
-    #             os_path.join(
-    #                 args.outdir,
-    #                 'rp_'+sub_pathway.get_id()
-    #             ) + '.xml'
-    #         )
+
     StreamHandler.terminator = ""
     logger.info(
         '{color}{typo}Results are stored in {rst}'.format(

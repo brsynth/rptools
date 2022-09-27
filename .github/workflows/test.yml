@@ -28,7 +28,7 @@ jobs:
       - name: Checkout package repository
         uses: actions/checkout@v3
       - name: Deploying miniconda
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@v2.1.1
         with:
           miniconda-version: "latest"
           environment-file: environment.yaml
