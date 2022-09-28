@@ -19,7 +19,6 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument(
         '--pH',
         type=float,
-        choices=range(MIN_pH, MAX_pH+1),
         metavar=f'[{MIN_pH}-{MAX_pH}]',
         default=DEFAULT_pH
     )
