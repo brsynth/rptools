@@ -40,4 +40,4 @@ jobs:
       - name: Building & Testing conda package
         run: |
           conda install -y python pytest pytest-cov pytest-mock
-          python -m pytest tests/rpfba tests/rpcompletion tests/rpextractsink tests/rplibs tests/rprank tests/rpreport tests/rpscore tests/rpviz
+          python -m pytest tests/rpfba tests/rpcompletion tests/rpextractsink tests/rplibs tests/rprank tests/rpreport
