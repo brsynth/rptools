@@ -19,7 +19,8 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
     strategy:
       matrix:
-        os: ["ubuntu", "macos", "windows"]
+        # os: ["ubuntu", "macos", "windows"]
+        os: ["ubuntu"]
     defaults:
       run:
         shell: bash -l {0}
@@ -39,4 +40,4 @@ jobs:
       - name: Building & Testing conda package
         run: |
           conda install -y python pytest pytest-cov pytest-mock
-          python -m pytest tests/rpfba tests/rpcompletion tests/rpextractsink
+          python -m pytest tests/rpfba tests/rpcompletion tests/rpextractsink tests/rplibs tests/rprank tests/rpreport tests/rpscore tests/rpviz
