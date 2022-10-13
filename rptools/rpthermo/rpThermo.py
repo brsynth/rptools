@@ -502,6 +502,8 @@ def minimize(
         method='revised simplex'
     )
 
+    logger.debug(f'COEFFS: {res}')
+
     return res.x
 
 

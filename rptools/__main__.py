@@ -6,8 +6,9 @@ from argparse import (
 )
 from logging import Logger
 from typing import List
-from rptools.Args import build_args_parser
 from colored import fg, bg, attr
+
+from rptools.Args import build_args_parser
 
 
 def init(
