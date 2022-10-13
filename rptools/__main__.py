@@ -7,7 +7,6 @@ from argparse import (
 from logging import Logger
 from typing import List
 from colored import fg, bg, attr
-
 from rptools.Args import build_args_parser
 
 
