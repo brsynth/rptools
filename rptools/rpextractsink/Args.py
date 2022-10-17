@@ -18,8 +18,8 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
         '--compartment_id',
         type=str,
         default=default_comp,
-        help=(f'SBML compartment id from which to extract '
-              'the chemical species (default: {default_comp})')
+        help=(f"SBML compartment id from which to extract "
+              f"the chemical species (default: {default_comp})")
     )
     parser.add_argument(
         '--remove_dead_end',
