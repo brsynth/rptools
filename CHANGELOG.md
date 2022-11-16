@@ -1,5 +1,14 @@
 # Changelog
 
+## [6.0.0](https://github.com/brsynth/rptools/tree/6.0.0) (2022-11-16)
+
+[Full Changelog](https://github.com/brsynth/rptools/compare/5.13.1...6.0.0)
+
+**Closed issues:**
+
+- Compounds not included in the Sink [\#26](https://github.com/brsynth/rptools/issues/26)
+- bounds rpthermo bug [\#25](https://github.com/brsynth/rptools/issues/25)
+
 ## [5.13.1](https://github.com/brsynth/rptools/tree/5.13.1) (2022-06-23)
 
 [Full Changelog](https://github.com/brsynth/rptools/compare/5.13.0...5.13.1)
