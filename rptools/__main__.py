@@ -83,7 +83,6 @@ def entry_point():
 def _cli():
 
     entry_point()
-
     return 0
 
 
