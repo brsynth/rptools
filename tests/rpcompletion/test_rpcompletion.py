@@ -4,10 +4,9 @@ Created on Jul 15 2020
 @author: Joan Hérisson
 """
 
-import logging
 from tempfile             import TemporaryDirectory
 from rr_cache import rrCache
-from rptools.rplibs       import rpSBML
+from rptools.rplibs       import rpPathway
 from rptools.rpcompletion import rp_completion
 # from rptools.rpcompletion.rpCompletion import (
 #     # build_side_rxn,
@@ -30,72 +29,104 @@ from brs_utils import (
 
 class Test_rpCompletion(TestCase):
 
-    __test__ = False
-
     def setUp(self):
         self.logger = create_logger(__name__, 'ERROR')
+        self.cache = rrCache(
+            attrs=[
+                'rr_reactions',
+                'template_reactions',
+                'cid_strc',
+                'deprecatedCompID_compid',
+            ],
+            logger=self.logger
+        )
+        self.data_path = os_path.join(
+            os_path.dirname(__file__),
+            'data' , 'lycopene'
+        )
+        self.output_path = os_path.join(
+            os_path.dirname(__file__),
+            'data', 'output' , 'lycopene'
+        )
+        self.rp2_pathways = os_path.join(
+            self.data_path,
+            '1-rp2_metnet.csv'
+        )
+        self.sink = os_path.join(
+            self.data_path,
+            '2-sink.csv'
+        )
+        self.rp2paths_compounds = os_path.join(
+            self.data_path,
+            '3-rp2paths_compounds.tsv'
+        )
+        self.rp2paths_pathways = os_path.join(
+            self.data_path,
+            '4-rp2paths_pathways.csv'
+        )
+        test_file_pattern = 'rp_002_0022'
+        self.rpsbml_xml = test_file_pattern+'_sbml.xml'
+        self.rpsbml_json = os_path.join(
+            self.data_path,
+            'refs',
+            test_file_pattern+'.json'
+        )
+
+        # self.files = {
+        #     'rp_001_0011_sbml.xml': 32217,
+        #     'rp_001_0001_sbml.xml': 32501,
+        #     'rp_001_0006_sbml.xml': 32086,
+        #     'rp_002_0012_sbml.xml': 32214,
+        #     'rp_002_0022_sbml.xml': 32465,
+        #     'rp_002_0002_sbml.xml': 32626,
+        #     'rp_003_0001_sbml.xml': 34943,
+        #     'rp_003_0002_sbml.xml': 35207,
+        #     'rp_003_0010_sbml.xml': 33746,
+        #     'rp_003_0131_sbml.xml': 34530,
+        #     'rp_003_0132_sbml.xml': 34794,
+        #     'rp_003_0140_sbml.xml': 33332,
+        #     'rp_003_0261_sbml.xml': 34658,
+        #     'rp_003_0262_sbml.xml': 34922,
+        #     'rp_003_0270_sbml.xml': 33461,
+        # }
+
+    def test_rp_completion(self):
+        pathways = rp_completion(
+            rp2_metnet=self.rp2_pathways,
+            sink=self.sink,
+            rp2paths_compounds=self.rp2paths_compounds,
+            rp2paths_pathways=self.rp2paths_pathways,
+            cache=self.cache,
+            upper_flux_bound=999999,
+            lower_flux_bound=0,
+            max_subpaths_filter=10,
+            logger=self.logger
+        )
+        for pathway in pathways:
+            ref_file = os_path.join(
+                self.output_path,
+                f'rp_{pathway.get_id()}.xml'
+            )
+            ref_pathway = rpPathway.from_rpSBML(ref_file)
 
 
-    # def test_rp_completion(self):
-    #     with TemporaryDirectory() as temp_d:
-    #         temp_d = '/tmp/joan20'
-    #         result = rp_completion(
-    #             self.cache,
-    #             self.rp2_pathways,
-    #             self.rp2paths_compounds,
-    #             self.rp2paths_pathways,
-    #             temp_d,
-    #             upper_flux_bound=999999,
-    #             lower_flux_bound=0,
-    #             max_subpaths_filter=10,
-    #             pathway_id='rp_pathway',
-    #             compartment_id='MNXC3',
-    #             species_group_id='central_species',
-    #             sink_species_group_id='rp_sink_species',
-    #             pubchem_search=False,
-    #             logger=self.logger
-    #         )
-    #         # Useless to sort files since smiles could be equivalent and not equal, then checksum will be different
-    #         for file in listdir(temp_d):
-    #             self.assertEqual(
-    #                 self.files[file],
-    #                 Path(os_path.join(temp_d, file)).stat().st_size
-    #             )
-    #         rpsbml = rpSBML(os_path.join(temp_d, self.rpsbml_xml))
-    #         # print(json_dumps(rpsbml.toDict(), indent=4))
-    #         # self.assertTrue(False)
-    #         # exit()
-    #         with open(self.rpsbml_json, 'r') as f:
-    #             self.assertDictEqual(rpsbml.toDict(), json_load(f))
-    #             # self.assertEqual(os_stat(os_path.join(temp_d, file)).st_size, size)
+        # print(pathways[0].get_id())
+        # exit()
+        # for i in range(self.files)
+            # # Useless to sort files since smiles could be equivalent and not equal, then checksum will be different
+            # for file in listdir(temp_d):
+            #     self.assertEqual(
+            #         self.files[file],
+            #         Path(os_path.join(temp_d, file)).stat().st_size
+            #     )
+            # rpsbml = rpSBML(os_path.join(temp_d, self.rpsbml_xml))
+            # # print(json_dumps(rpsbml.toDict(), indent=4))
+            # # self.assertTrue(False)
+            # # exit()
+            # with open(self.rpsbml_json, 'r') as f:
+            #     self.assertDictEqual(rpsbml.toDict(), json_load(f))
+            #     # self.assertEqual(os_stat(os_path.join(temp_d, file)).st_size, size)
          
-
-    # cache            = rrCache()
-    data_path          = os_path.join(os_path.dirname(__file__), 'data' , 'lycopene')
-    rp2_pathways       = os_path.join(data_path, '1-rp2_pathways.csv')
-    rp2paths_compounds = os_path.join(data_path, '2-rp2paths_compounds.tsv')
-    rp2paths_pathways  = os_path.join(data_path, '3-rp2paths_pathways.csv')
-    test_file_pattern  = 'rp_002_0022'
-    rpsbml_xml         = test_file_pattern+'_sbml.xml'
-    rpsbml_json        = os_path.join(data_path, 'refs', test_file_pattern+'.json')
-
-    files = {
-        'rp_001_0011_sbml.xml': 32217,
-        'rp_001_0001_sbml.xml': 32501,
-        'rp_001_0006_sbml.xml': 32086,
-        'rp_002_0012_sbml.xml': 32214,
-        'rp_002_0022_sbml.xml': 32465,
-        'rp_002_0002_sbml.xml': 32626,
-        'rp_003_0001_sbml.xml': 34943,
-        'rp_003_0002_sbml.xml': 35207,
-        'rp_003_0010_sbml.xml': 33746,
-        'rp_003_0131_sbml.xml': 34530,
-        'rp_003_0132_sbml.xml': 34794,
-        'rp_003_0140_sbml.xml': 33332,
-        'rp_003_0261_sbml.xml': 34658,
-        'rp_003_0262_sbml.xml': 34922,
-        'rp_003_0270_sbml.xml': 33461,
-    }
 
     # def test_update_rppaths(self):
     #     path_base_id = 2
