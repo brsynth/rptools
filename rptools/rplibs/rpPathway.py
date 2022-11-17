@@ -172,18 +172,18 @@ class rpPathway(Pathway, rpObject):
             'compartments': deepcopy(self.get_compartments()),
         }
 
-    def __eq__(self, other) -> bool:
-        """Check if two rpPathway objects are equal.
+    # def __eq__(self, other) -> bool:
+    #     """Check if two rpPathway objects are equal.
 
-        Parameters
-        ----------
-        other: rpPathway
-            Object to compare with.
-        """
-        if not isinstance(other, rpPathway):
-            return False
-        else:
-            return self.to_rpSBML() == other.to_rpSBML()
+    #     Parameters
+    #     ----------
+    #     other: rpPathway
+    #         Object to compare with.
+    #     """
+    #     if not isinstance(other, rpPathway):
+    #         return False
+    #     else:
+    #         return self.to_rpSBML() == other.to_rpSBML()
 
     # def __eq__(self, other) -> bool:
     #     """Returns the equality between two rpPathway objects."""

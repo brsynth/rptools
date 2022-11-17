@@ -2933,6 +2933,7 @@ class rpSBML:
         # return \
         #     sorted(self.readGroupMembers('rp_pathway')) == sorted(other.readGroupMembers('rp_pathway')) \
         # and self._get_reactions_with_species_keys(self.logger) == other._get_reactions_with_species_keys(other.logger)
+        self.logger.debug(f'Comparing {self} and {other}')
         return \
             self._get_reactions_with_species_keys() \
             == \

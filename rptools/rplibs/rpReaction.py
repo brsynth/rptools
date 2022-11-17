@@ -181,14 +181,28 @@ class rpReaction(Reaction, rpObject):
         if not isinstance(self, other.__class__):
             return False
         # Compare with some specific keys
-        return all(
-            self._to_dict().get(key) == other._to_dict().get(key)
-            for key in [
-                'ec_numbers',
-                'reactants',
-                'products'
-            ]
-        )
+        for key in [
+            'ec_numbers',
+            'reactants',
+            'products'
+        ]:
+            obj_1 = self._to_dict().get(key)
+            obj_2 = other._to_dict().get(key)
+            # if objects are of type list, sort them
+            if isinstance(obj_1, list):
+                if sorted(obj_1) != sorted(obj_2):
+                    return False
+            elif self._to_dict().get(key) != other._to_dict().get(key):
+                return False
+        return True
+        # return all(
+        #     self._to_dict().get(key) == other._to_dict().get(key)
+        #     for key in [
+        #         'ec_numbers',
+        #         'reactants',
+        #         'products'
+        #     ]
+        # )
 
     ## READ METHODS
     def get_rp2_transfo_id(self) -> str:
