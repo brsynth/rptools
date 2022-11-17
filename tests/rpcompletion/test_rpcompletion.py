@@ -72,23 +72,17 @@ class Test_rpCompletion(TestCase):
             test_file_pattern+'.json'
         )
 
-        # self.files = {
-        #     'rp_001_0011_sbml.xml': 32217,
-        #     'rp_001_0001_sbml.xml': 32501,
-        #     'rp_001_0006_sbml.xml': 32086,
-        #     'rp_002_0012_sbml.xml': 32214,
-        #     'rp_002_0022_sbml.xml': 32465,
-        #     'rp_002_0002_sbml.xml': 32626,
-        #     'rp_003_0001_sbml.xml': 34943,
-        #     'rp_003_0002_sbml.xml': 35207,
-        #     'rp_003_0010_sbml.xml': 33746,
-        #     'rp_003_0131_sbml.xml': 34530,
-        #     'rp_003_0132_sbml.xml': 34794,
-        #     'rp_003_0140_sbml.xml': 33332,
-        #     'rp_003_0261_sbml.xml': 34658,
-        #     'rp_003_0262_sbml.xml': 34922,
-        #     'rp_003_0270_sbml.xml': 33461,
-        # }
+        self.ref_files = [
+            '001_0001',
+            '001_0006',
+            '001_0011',
+            '002_0001',
+            '002_0011',
+            '002_0021',
+            '003_0001',
+            '003_0131',
+            '003_0261'
+        ]
 
     def test_rp_completion(self):
         pathways = rp_completion(
@@ -102,13 +96,14 @@ class Test_rpCompletion(TestCase):
             max_subpaths_filter=10,
             logger=self.logger
         )
-        for pathway in pathways:
+        pathways = {pathway.get_id(): pathway for pathway in pathways}
+        for pathway_id in self.ref_files:
             ref_file = os_path.join(
                 self.output_path,
-                f'rp_{pathway.get_id()}.xml'
+                f'rp_{pathway_id}.xml'
             )
             ref_pathway = rpPathway.from_rpSBML(ref_file)
-            self.assertEqual(pathway, ref_pathway)
+            self.assertEqual(pathways[pathway_id], ref_pathway)
 
         # print(pathways[0].get_id())
         # exit()
