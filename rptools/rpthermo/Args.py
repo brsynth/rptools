@@ -25,7 +25,6 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument(
         '--ionic_strength',
         type=float,
-        choices=range(MIN_ionic_strength, MAX_ionic_strength+1),
         metavar=f'[{MIN_ionic_strength}-{MAX_ionic_strength}]',
         default=DEFAULT_ionic_strength
     )
