@@ -195,14 +195,6 @@ class rpReaction(Reaction, rpObject):
             elif self._to_dict().get(key) != other._to_dict().get(key):
                 return False
         return True
-        # return all(
-        #     self._to_dict().get(key) == other._to_dict().get(key)
-        #     for key in [
-        #         'ec_numbers',
-        #         'reactants',
-        #         'products'
-        #     ]
-        # )
 
     ## READ METHODS
     def get_rp2_transfo_id(self) -> str:

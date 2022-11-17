@@ -20,9 +20,7 @@ class Test_rpReaction(TestCase):
             "CMPD_0000000003": 1,
             "MNXM13": 1
         }
-        self.ec_numbers = [
-            "4.1.1.63"
-        ]
+        self.ec_numbers = ["4.1.1.63"]
         self.id = "rxn"
         self.miriam = {'ec-code': ['4.1.1.63']}
         self.rxn = rpReaction(
@@ -106,26 +104,21 @@ class Test_rpReaction(TestCase):
     
     def test___eq__(self):
         rxn = deepcopy(self.rxn)
-        self.assertEqual(
-            self.rxn,
-            rxn
-        )
+        self.assertEqual(self.rxn, rxn)
         rxn.set_idx_in_path(2)
-        self.assertEqual(
-            self.rxn,
-            rxn
-        )
+        self.assertEqual(self.rxn, rxn)
         rxn.add_reactant('reac', 2)
         # objects are not equal
-        self.assertNotEqual(
-            self.rxn,
-            rxn
-        )
+        self.assertNotEqual(self.rxn, rxn)
         # objects are not the same type
-        self.assertNotEqual(
-            self.rxn,
-            'rxn'
-        )
+        self.assertNotEqual(self.rxn, 'rxn')
+        # Test with unsorted ec_numbers
+        rxn_1 = deepcopy(self.rxn)
+        rxn_2 = deepcopy(self.rxn)
+        ec_numbers = ["4.1.1.63", "6.2.2.34"]
+        rxn_1.set_ec_numbers(ec_numbers)
+        rxn_2.set_ec_numbers(ec_numbers[::-1])
+        self.assertEqual(rxn_1, rxn_2)
 
     def test_get_default_fbc(self):
         fbc = {
