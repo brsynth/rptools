@@ -7,7 +7,7 @@ Please see `rptool` documentation.
 
 Produce the HTML files
 ```sh
-python -m rpviz.cli <input-folder> <output-folder>
+python -m rptools.rpviz <input-folder> <output-folder>
 ```
 
 To view the pathways, open the `index.html` file outputted in `<out-folder>` using any web browser.
@@ -17,13 +17,13 @@ To view the pathways, open the `index.html` file outputted in `<out-folder>` usi
 Using a folder as input:
 ```sh
 conda activate <myenv>
-python -m rpviz.cli sample/input/as_dir sample/output/as_dir
+python -m rptools.rpviz sample/input/as_dir sample/output/as_dir
 ```
 
 Using a tar file as input:
 ```sh
 conda activate <myenv>
-python -m rpviz.cli sample/input/as_tar.tgz sample/output/as_tar
+python -m rptools.rpviz sample/input/as_tar.tgz sample/output/as_tar
 ```
 
 ## Command line arguments
