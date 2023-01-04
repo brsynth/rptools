@@ -8,7 +8,7 @@ dependencies:
   - timeout-decorator # rpextractsink
   - rdkit # rpextractsink, rplibs
   - python-libsbml # rplibs, rpfba
-  - numpy # rplibs
+  - numpy <=1.22.4 # rplibs
   - pandas # rplibs, rpthermo
   - scipy # rpthermo
   - equilibrator-api # rpthermo
