@@ -157,7 +157,7 @@ def runFBA(
     ## MERGE
     # Merge predicted pathway with the full model
     # missing_species are species that are not detected in the model
-    logger.info('Merging rpSBML models: ' + rpsbml.getName() + ' and ' + rpsbml_gem.getName() + '...')
+    logger.info(f'Merging : {rpsbml_gem.getName()} model and {rpsbml.getName()} pathway...')
     (
         rpsbml_merged,
         reactions_in_both,
@@ -169,6 +169,10 @@ def runFBA(
         compartment_id=compartment_id,
         logger=logger
     )
+    if merge:
+        merged_outfile = rpsbml.getName() + '__MERGED_IN__' + rpsbml_gem.getName() + '.sbml'
+        logger.info(f'Write merged rpSBML file to {merged_outfile}')
+        rpsbml_merged.write_to_file(merged_outfile)
     if rpsbml_merged is None:
         return None
     logger.debug(f'rpsbml_merged: {rpsbml_merged}')
@@ -438,6 +442,8 @@ def check_SBML_rxnid(
     rxn_id: str,
     logger: Logger = getLogger(__name__)
 ) -> Tuple[str, str]:
+    logger.debug(f'rpsbml: {rpsbml.getName()}')
+    logger.debug(f'rxn_id: {rxn_id}')
 
     # Check model reaction ID
     # Get reaction from the rpSBML
@@ -456,6 +462,8 @@ def check_SBML_rxnid(
                 )
             )
         return None
+
+    logger.debug(f'rxn_id found as {rxn_id}')
 
     return _rxn.getId()
 

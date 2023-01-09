@@ -60,7 +60,7 @@ def add_arguments(
         '--merge',
         action='store_true',
         default=False,
-        help='output the full merged model instead of heterologous pathway only (default: False)'
+        help='output the full merged model in addition of heterologous pathway only (default: False)'
     )
     parser.add_argument(
         '--ignore_orphan_species',
