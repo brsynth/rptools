@@ -41,7 +41,7 @@ class Test_rpSBML(Main_rplibs):
     #ref_name  = 'RetroPath_Pathway_1_1'
     #ref_score = 0.5684564101634014
 
-    rpsbml_lycopene_name = "002_0001"
+    rpsbml_lycopene_name = "rp_002_0001"
     rpsbml_lycopene_specie_id = ['CMPD_0000000001', 'MNXM24', 'M_ppi_c', 'M_grdp_c', 'CMPD_0000000003', 'MNXM83', 'MNXM8975', 'TARGET_0000000001']
 
     def setUp(self):
@@ -285,9 +285,8 @@ class Test_rpSBML(Main_rplibs):
 
     def test_speciesMatchWith(self):
         # Return type.
-        species_match_with = rpSBML.speciesMatchWith(
+        species_match_with = self.rpsbml_none.speciesMatchWith(
             [],
-            self.rpsbml_none,
             ''
         )
         self.assertIsInstance(species_match_with, Tuple)
@@ -296,16 +295,14 @@ class Test_rpSBML(Main_rplibs):
         # Basic
         self.assertEqual(
             sorted(self.rpsbml_lycopene_specie_id),
-            sorted(rpSBML.speciesMatchWith(
+            sorted(self.rpsbml_lycopene.speciesMatchWith(
                 self.rpsbml_lycopene_specie_id,
-                self.rpsbml_lycopene,
                 'c'
             )[0].values())
         )
         # Challenge - 1
-        species_match_with = rpSBML.speciesMatchWith(
+        species_match_with = self.rpsbml_lycopene.speciesMatchWith(
             ['HMDB00250', '13420'],
-            self.rpsbml_lycopene,
             'c'
         )
         self.assertEqual(
@@ -322,9 +319,8 @@ class Test_rpSBML(Main_rplibs):
         )
         self.assertFalse(species_match_with[1])
         # Challenge - 2
-        species_match_with = rpSBML.speciesMatchWith(
+        species_match_with = self.rpsbml_lycopene.speciesMatchWith(
             ['HMDB00250', '13420'],
-            self.rpsbml_lycopene,
             ''
         )
         self.assertFalse(species_match_with[0])
@@ -333,9 +329,8 @@ class Test_rpSBML(Main_rplibs):
             2
         )
         # Challenge - 3
-        species_match_with = rpSBML.speciesMatchWith(
+        species_match_with = self.rpsbml_lycopene.speciesMatchWith(
             ['MNXM24', '13421'],
-            self.rpsbml_lycopene,
             'c'
         )
         self.assertEqual(

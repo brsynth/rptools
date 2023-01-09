@@ -841,14 +841,14 @@ class rpPathway(Pathway, rpObject):
         rpSBML object.
         """
 
-        rpsbml = rpSBML(name='rp_'+self.get_id(), logger=self.get_logger())
+        rpsbml = rpSBML(name=self.get_id(), logger=self.get_logger())
 
         ## Create a generic Model, ie the structure and unit definitions that we will use the most
         rpsbml.genericModel(
-            self.get_id(),
-            'RP_model_'+self.get_id(),
-            self.get_compartments(),
-            self.get_unit_defs(),
+            modelName=self.get_id(),
+            modelID=self.get_id(),
+            compartments=self.get_compartments(),
+            unit_def=self.get_unit_defs(),
             # upper_flux_bound,
             # lower_flux_bound
         )

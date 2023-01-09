@@ -249,9 +249,8 @@ def crossref_medium_id(
     compound_ids = [x for x in df['tmp_compound_id'] if not pd.isna(x)]
 
     # CrossRef componds.
-    corr_species, miss_species = rpSBML.speciesMatchWith(
+    corr_species, miss_species = model.speciesMatchWith(
         compound_ids,
-        model,
         compartment_id
     )
     if len(miss_species) > 0:
