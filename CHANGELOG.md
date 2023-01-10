@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.1.0](https://github.com/brsynth/rptools/tree/6.1.0) (2023-01-10)
+
+[Full Changelog](https://github.com/brsynth/rptools/compare/6.0.2...6.1.0)
+
+**Merged pull requests:**
+
+- rptools.rpviz [\#28](https://github.com/brsynth/rptools/pull/28) ([niraito](https://github.com/niraito))
+
 ## [6.0.2](https://github.com/brsynth/rptools/tree/6.0.2) (2023-01-04)
 
 [Full Changelog](https://github.com/brsynth/rptools/compare/6.0.1...6.0.2)
