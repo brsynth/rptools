@@ -46,7 +46,7 @@ def _reduce_model(
 #
 #
 @timeout(__TIMEOUT*60.0)
-def _removeDeadEnd(sbml_path):
+def _removeDeadEnd(sbml_path) -> rpSBML:
     cobraModel = cobra_io.read_sbml_model(sbml_path, use_fbc_package=True)
     cobraModel = _reduce_model(cobraModel)
     with TemporaryDirectory() as tmpOutputFolder:
@@ -54,6 +54,50 @@ def _removeDeadEnd(sbml_path):
         rpsbml = rpSBML(os_path.join(tmpOutputFolder, 'tmp.xml'))
         return rpsbml
 
+
+@timeout(__TIMEOUT*60.0)
+def _get_dead_end_metabolites(
+    sbml_path: str,
+    logger: Logger = getLogger(__name__)
+) -> list:
+    """Search for dead end metabolites
+
+    Metabolites are iteratively tested for production
+    by adding a demand bound on the metabolite and 
+    trying to maximize the flux passing through it.
+
+    Parameters
+    ----------
+    model : rpSBML
+        model to investigate
+    logger : Logger, optional
+        logger object, by default getLogger(__name__)
+
+    Returns
+    -------
+    list
+        dead end metabolite IDs
+    """
+    model = cobra_io.read_sbml_model(sbml_path, use_fbc_package=True)
+    dead_ends = []
+    for met in model.metabolites:
+        with model:  # The context manager is unecessary
+            try:
+                rxn = model.add_boundary(met, type="demand")
+            except ValueError as e:
+                if f"DM_{met}" in model.demands:
+                    rxn = model.reactions.get_by_id(f"DM_{met}")
+                else:
+                    logger.warning(
+                        "Cannot create a demand bound for metabolite {} "
+                        "while searching for dead end metabolites... "
+                        "This metabolite will be considered as producible"
+                        )
+            model.objective = rxn
+            value = model.slim_optimize(error_value=0.0)
+            if value == 0.0:
+                dead_ends.append(met.id)
+    return dead_ends
 
 #######################################################################
 ############################# PUBLIC FUNCTIONS ########################
@@ -73,27 +117,25 @@ def genSink(
     compartment_id=default_comp,
     logger: Logger = getLogger(__name__)
 ):
-    ### because cobrapy can be terrible and cause infinite loop depending on the input SBML model
-    if remove_dead_end:
-        try:
-            rpsbml = _removeDeadEnd(input_sbml)
-        except TimeoutError:
-            logger.warning('removeDeadEnd reached its timeout... parsing the whole model')
-            rpsbml = rpSBML(input_sbml)
-    else:
-        rpsbml = rpSBML(input_sbml)
-    ### open the cache ###
+    dead_ends = _get_dead_end_metabolites(input_sbml) if remove_dead_end else []
+    print(len(dead_ends))
     species = []
+    rpsbml = rpSBML(input_sbml)
     for i in rpsbml.getModel().getListOfSpecies():
-        if i.getCompartment() == compartment_id:
+        if (
+            i.getCompartment() == compartment_id and
+            i.id not in dead_ends
+        ):
             species.append(i)
+    print("================== DEAD ENDS")
+    print(dead_ends)
+    print("================== SPECIES")
+    print([s.id for s in species])
     if not species:
         logger.error('Could not retreive any species in the compartment: '+str(compartment_id))
         logger.error('Is the right compartment set?')
         return False
     with open(output_sink, 'w', encoding='utf-8') as outS:
-        # writer = csv_writer(outS, delimiter=',', quotechar='"', quoting=QUOTE_NONNUMERIC)
-        # writer.writerow(['Name','InChI'])
         write(outS, ['Name', 'InChI'])
         for i in species:
             res = rpsbml.readMIRIAMAnnotation(i.getAnnotation())
@@ -109,7 +151,6 @@ def genSink(
                 inchi = None
             if inchi:
                 write(outS, [mnx, inchi])
-                # writer.writerow([mnx,inchi])
 
 
 def write(outFile, elts, delimiter=',', quotechar='"'):
