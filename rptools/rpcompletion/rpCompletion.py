@@ -683,7 +683,7 @@ def __build_all_pathways(
         for sub_path_idx in range(len(sub_pathways)):
 
             pathway = rpPathway(
-                id=str(path_idx).zfill(3)+'_'+str(sub_path_idx+1).zfill(4),
+                id=f'rp_{str(path_idx).zfill(3)}_{str(sub_path_idx+1).zfill(4)}',
                 logger=logger
             )
             logger.debug(pathway.get_id())
