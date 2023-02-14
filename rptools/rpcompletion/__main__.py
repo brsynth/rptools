@@ -63,7 +63,7 @@ def _cli():
         pathway.to_rpSBML().write_to_file(
             os_path.join(
                 args.outdir,
-                'rp_'+pathway.get_id()
+                pathway.get_id()
             ) + '.xml'
         )
 
