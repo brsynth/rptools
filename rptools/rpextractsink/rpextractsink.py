@@ -9,6 +9,9 @@ from tempfile       import TemporaryDirectory
 from rptools.rplibs import rpSBML
 from .Args import default_comp
 from os             import path          as os_path
+
+from rptools.rpfba import cobra_format
+
 # because cobrapy is terrible
 from brs_utils import timeout
 # from timeout_decorator import timeout           as timeout_decorator_timeout
@@ -118,19 +121,14 @@ def genSink(
     logger: Logger = getLogger(__name__)
 ):
     dead_ends = _get_dead_end_metabolites(input_sbml) if remove_dead_end else []
-    print(len(dead_ends))
     species = []
     rpsbml = rpSBML(input_sbml)
     for i in rpsbml.getModel().getListOfSpecies():
         if (
-            i.getCompartment() == compartment_id and
-            i.id not in dead_ends
+                i.getCompartment() == compartment_id and
+                cobra_format.to_cobra(i.id) not in dead_ends
         ):
             species.append(i)
-    print("================== DEAD ENDS")
-    print(dead_ends)
-    print("================== SPECIES")
-    print([s.id for s in species])
     if not species:
         logger.error('Could not retreive any species in the compartment: '+str(compartment_id))
         logger.error('Is the right compartment set?')
