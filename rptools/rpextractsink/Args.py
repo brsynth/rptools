@@ -29,8 +29,8 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     )
     parser.add_argument(
         '--cache-dir',
-        default=None,
+        default='',
         help=('Path to the cache directory. If not specified, '
-             'None is passed to rrCache.')
+             'empty string is passed to rrCache.')
     )
     return parser
