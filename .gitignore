@@ -12,3 +12,4 @@ _exclude
 /docsource/_build/
 /docsource/_autosummary
 cicd-toolkit
+*.egg-info
