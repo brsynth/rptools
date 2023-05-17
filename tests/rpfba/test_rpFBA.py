@@ -1,15 +1,8 @@
 from glob import glob
-from unittest import TestCase
-from shutil import rmtree
-from tempfile import TemporaryDirectory, mkdtemp
 from zipfile import ZipFile
 
-from json import load as json_load
 from os import path as os_path
 
-from cobra.core.solution import Solution as cobra_solution
-
-from brs_utils import create_logger, extract_gz
 from rptools.rpfba.rpFBA import check_SBML_compartment, check_SBML_rxnid, runFBA
 from rptools.rplibs import rpPathway, rpSBML
 from main_rpfba import Main_rpfba
@@ -96,6 +89,11 @@ class Test_rpFBA(Main_rpfba):
         res = check_SBML_compartment(rpsbml=rpsbml, compartment_id=comp_id)
         self.assertIs(res, None)
 
+    def test_check_SBML_compartment_basal(self):
+        self.assertEqual(check_SBML_compartment(self.rpsbml, "MNXC3"), "MNXC3")
+        self.assertEqual(check_SBML_compartment(self.rpsbml, "cytosol"), "MNXC3")
+        self.assertEqual(check_SBML_compartment(self.rpsbml, "c"), "MNXC3")
+
     def test_check_SBML_rxnid(self):
         rpsbml = rpSBML(self.e_coli_model_path)
         # Return types.
@@ -106,11 +104,6 @@ class Test_rpFBA(Main_rpfba):
         # Challenge - 1
         res = check_SBML_rxnid(rpsbml=rpsbml, rxn_id="undefined")
         self.assertIs(res, None)
-
-    def test_check_SBML_compartment(self):
-        self.assertEqual(check_SBML_compartment(self.rpsbml, "MNXC3"), "MNXC3")
-        self.assertEqual(check_SBML_compartment(self.rpsbml, "cytosol"), "MNXC3")
-        self.assertEqual(check_SBML_compartment(self.rpsbml, "c"), "MNXC3")
 
 
 # def build_rpsbml(

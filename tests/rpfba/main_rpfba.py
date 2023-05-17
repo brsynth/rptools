@@ -1,4 +1,3 @@
-import rr_cache
 from unittest import TestCase
 from os import path as os_path
 from shutil import rmtree
