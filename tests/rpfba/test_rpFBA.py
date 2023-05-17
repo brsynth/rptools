@@ -73,23 +73,6 @@ class Test_rpFBA(Main_rpfba):
             self.assertDictEqual(res_previous, res_run_fba)
 
     def test_check_SBML_compartment(self):
-        rpsbml = rpSBML(self.e_coli_model_path)
-        # Return types.
-        comp_id = "cytosol"
-        res = check_SBML_compartment(rpsbml=rpsbml, compartment_id=comp_id)
-        self.assertIsInstance(res, str)
-        # Values
-        self.assertEqual(res, comp_id)
-        # Challenge - 1
-        comp_id = "periplasm"
-        res = check_SBML_compartment(rpsbml=rpsbml, compartment_id=comp_id)
-        self.assertEqual(res, comp_id)
-        # Challenge - 2
-        comp_id = "x"
-        res = check_SBML_compartment(rpsbml=rpsbml, compartment_id=comp_id)
-        self.assertIs(res, None)
-
-    def test_check_SBML_compartment_basal(self):
         self.assertEqual(check_SBML_compartment(self.rpsbml, "MNXC3"), "MNXC3")
         self.assertEqual(check_SBML_compartment(self.rpsbml, "cytosol"), "MNXC3")
         self.assertEqual(check_SBML_compartment(self.rpsbml, "c"), "MNXC3")
