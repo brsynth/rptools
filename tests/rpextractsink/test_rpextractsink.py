@@ -65,8 +65,8 @@ class Test_rpExtractSink(TestCase):
         rmtree(self.temp_d)
 
 
+    # Test with dead ends
     def test_genSink(self):
-        # Test with dead ends
         self._test_genSink(
             cache = self.cache,
             input_sbml = self.e_coli_model_path,
@@ -74,7 +74,10 @@ class Test_rpExtractSink(TestCase):
             compartment_id = 'MNXC3',
             ref_file = 'output_sink.csv'
         )
-        # Test without dead ends
+
+
+    # Test without dead ends
+    def test_genSink_rmDE(self):
         self._test_genSink(
             cache = self.cache,
             input_sbml = self.e_coli_model_path,
@@ -82,6 +85,18 @@ class Test_rpExtractSink(TestCase):
             compartment_id = 'MNXC3',
             ref_file = 'output_sink_woDE.csv'
         )
+
+
+    # Test with wrong compartment
+    def test_genSink_wrong_comp(self):
+        test_sink = genSink(
+            cache = self.cache,
+            input_sbml = self.e_coli_model_path,
+            remove_dead_end = True,
+            compartment_id = 'MNXC3_wrong',
+            logger = self.logger
+        )
+        self.assertDictEqual(test_sink, {})
 
 
     def _test_genSink(
