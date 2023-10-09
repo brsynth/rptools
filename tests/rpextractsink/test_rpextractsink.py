@@ -12,9 +12,8 @@ from rptools.rpextractsink import genSink
 from rr_cache import rrCache
 
 # Specific for tests themselves
-from pathlib  import Path
 from tempfile import NamedTemporaryFile
-from filecmp  import cmp
+from re import findall as re_findall
 from os import (
     path as os_path,
     remove
@@ -67,51 +66,46 @@ class Test_rpExtractSink(TestCase):
 
 
     def test_genSink(self):
-        outfile = NamedTemporaryFile(delete=False)
-        outfile.close()
-        genSink(
-            self.cache,
+        # Test with dead ends
+        self._test_genSink(
+            cache = self.cache,
             input_sbml = self.e_coli_model_path,
-            output_sink = outfile.name,
             remove_dead_end = False,
             compartment_id = 'MNXC3',
+            ref_file = 'output_sink.csv'
+        )
+        # Test without dead ends
+        self._test_genSink(
+            cache = self.cache,
+            input_sbml = self.e_coli_model_path,
+            remove_dead_end = True,
+            compartment_id = 'MNXC3',
+            ref_file = 'output_sink_woDE.csv'
+        )
+
+
+    def _test_genSink(
+        self,
+        cache: rrCache,
+        input_sbml: str,
+        remove_dead_end: bool,
+        compartment_id: str,
+        ref_file: str
+    ):
+        test_sink = genSink(
+            self.cache,
+            input_sbml = input_sbml,
+            remove_dead_end = remove_dead_end,
+            compartment_id = compartment_id,
             logger = self.logger
         )
-        outfile.close()
-        with open(outfile.name, 'r') as test_f:
-            test_content = test_f.read()
-            with open(
-                os_path.join(
-                    self.data_path,
-                    'output_sink.csv'
-                ),
-                'r'
-            ) as ref_f:
-                ref_content = ref_f.read()
-                self.assertEqual(test_content, ref_content)
-        remove(outfile.name)
-
-
-    def test_genSink_rmDE(self):
-        outfile = NamedTemporaryFile(delete=False)
-        outfile.close()
-        genSink(
-            self.cache,
-            input_sbml = self.e_coli_model_path,
-            output_sink = outfile.name,
-            remove_dead_end = True,
-            compartment_id = 'MNXC3'
-        )
-        outfile.close()
-        with open(outfile.name, 'r') as test_f:
-            test_content = test_f.read()
-            with open(
-                os_path.join(
-                    self.data_path,
-                    'output_sink_woDE.csv'
-                ),
-                'r'
-            ) as ref_f:
-                ref_content = ref_f.read()
-                self.assertEqual(test_content, ref_content)
-        remove(outfile.name)
+        ref_sink = {}
+        with open(
+            os_path.join(self.data_path, ref_file),
+            'r'
+        ) as ref_f:
+            ref_content = ref_f.readlines()
+            for line in ref_content[1:]: # skip header
+                id, inchi = re_findall(r'"([^"]+)"', line)
+                ref_sink[id] = inchi
+        self.assertDictEqual(test_sink, ref_sink)
