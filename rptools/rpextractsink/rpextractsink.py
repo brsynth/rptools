@@ -155,7 +155,6 @@ def get_inchi_from_url(
 def genSink(
     cache,
     input_sbml,
-    output_sink,
     remove_dead_end=False,
     compartment_id=default_comp,
     logger: Logger = getLogger(__name__)
@@ -220,12 +219,7 @@ def genSink(
                 logger.warning(f'MetaNetX ID {mnx_id} already in sink')
             sink[mnx_id] = inchi
 
-    logger.debug(f'Writing sink to {output_sink}...')
-    # Write the sink file
-    with open(output_sink, 'w', encoding='utf-8') as outS:
-        write(outS, ['Name', 'InChI'])
-        for _mnx_id, _inchi in sink.items():
-            write(outS, [_mnx_id, _inchi])
+    return sink
 
 
 def write(outFile, elts, delimiter=',', quotechar='"'):
