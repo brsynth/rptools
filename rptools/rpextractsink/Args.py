@@ -33,4 +33,9 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
         help=('Path to the cache directory. If not specified, '
              'empty string is passed to rrCache.')
     )
+    parser.add_argument(
+        '--standalone',
+        action='store_true',
+        help=('do not get the InChI from Internet')
+    )
     return parser

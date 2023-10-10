@@ -8,22 +8,18 @@ Created on June 17 2020
 from unittest import TestCase
 
 # Specific for tool
-from rptools.rpextractsink import genSink
+from rptools.rpextractsink.rpextractsink import genSink
 from rr_cache import rrCache
 
 # Specific for tests themselves
-from tempfile import NamedTemporaryFile
 from re import findall as re_findall
-from os import (
-    path as os_path,
-    remove
-)
+from os import path as os_path
 from brs_utils import (
     create_logger,
     extract_gz
 )
-from shutil    import rmtree
-from tempfile  import mkdtemp
+from shutil import rmtree
+from tempfile import mkdtemp
 
 
 # Cette classe est un groupe de tests. Son nom DOIT commencer
@@ -68,35 +64,49 @@ class Test_rpExtractSink(TestCase):
     # Test with dead ends
     def test_genSink(self):
         self._test_genSink(
-            cache = self.cache,
-            input_sbml = self.e_coli_model_path,
-            remove_dead_end = False,
-            compartment_id = 'MNXC3',
-            ref_file = 'output_sink.csv'
+            cache=self.cache,
+            input_sbml=self.e_coli_model_path,
+            remove_dead_end=False,
+            compartment_id='MNXC3',
+            standalone=False,
+            ref_file='output_sink.csv'
         )
 
 
     # Test without dead ends
     def test_genSink_rmDE(self):
         self._test_genSink(
-            cache = self.cache,
-            input_sbml = self.e_coli_model_path,
-            remove_dead_end = True,
-            compartment_id = 'MNXC3',
-            ref_file = 'output_sink_woDE.csv'
+            cache=self.cache,
+            input_sbml=self.e_coli_model_path,
+            remove_dead_end=True,
+            compartment_id='MNXC3',
+            standalone=False,
+            ref_file='output_sink_woDE.csv'
         )
 
 
     # Test with wrong compartment
     def test_genSink_wrong_comp(self):
-        test_sink = genSink(
-            cache = self.cache,
-            input_sbml = self.e_coli_model_path,
-            remove_dead_end = True,
-            compartment_id = 'MNXC3_wrong',
-            logger = self.logger
+        test_sink=genSink(
+            cache=self.cache,
+            input_sbml=self.e_coli_model_path,
+            remove_dead_end=False,
+            compartment_id='MNXC3_wrong',
+            standalone=False
         )
         self.assertDictEqual(test_sink, {})
+
+
+    # Test without Internet connection
+    def test_genSink_standalone(self):
+        self._test_genSink(
+            cache=self.cache,
+            input_sbml=self.e_coli_model_path,
+            remove_dead_end=False,
+            compartment_id='MNXC3',
+            ref_file='output_sink_standalone.csv',
+            standalone=True
+        )
 
 
     def _test_genSink(
@@ -105,14 +115,16 @@ class Test_rpExtractSink(TestCase):
         input_sbml: str,
         remove_dead_end: bool,
         compartment_id: str,
-        ref_file: str
+        ref_file: str,
+        standalone: bool
     ):
         test_sink = genSink(
-            self.cache,
-            input_sbml = input_sbml,
-            remove_dead_end = remove_dead_end,
-            compartment_id = compartment_id,
-            logger = self.logger
+            cache=cache,
+            input_sbml=input_sbml,
+            remove_dead_end=remove_dead_end,
+            compartment_id=compartment_id,
+            standalone=standalone,
+            logger=self.logger
         )
         ref_sink = {}
         with open(

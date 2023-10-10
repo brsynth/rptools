@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 from rr_cache import rrCache
-from rptools.rpextractsink  import genSink
-from rptools.rpextractsink.Args import add_arguments
+from .rpextractsink import genSink
+from .Args import add_arguments
 from rptools import build_args_parser
 
 
@@ -22,12 +22,37 @@ def _cli():
         cache_dir=args.cache_dir,
         logger=logger
     )
-    genSink(cache,
-            args.input_sbml,
-            args.output_sink,
-            args.remove_dead_end,
-            args.compartment_id,
-            logger=logger)
+    sink = genSink(
+        cache,
+        args.input_sbml,
+        args.remove_dead_end,
+        args.compartment_id,
+        args.standalone,
+        logger=logger
+    )
+    
+    logger.debug(f'Writing sink to {args.output_sink}...')
+    # Write the sink file
+    with open(args.output_sink, 'w', encoding='utf-8') as outS:
+        write(outS, ['Name', 'InChI'])
+        for _mnx_id, _inchi in sink.items():
+            write(outS, [_mnx_id, _inchi])
+
+
+def write(outFile, elts, delimiter=',', quotechar='"'):
+    """
+    Write elements of elts list into file as 'csv' would do
+
+    :param file: file to write into
+    :param elts: list of elements to write
+    :param delimiter: character to insert between each element
+    :param quotechar: character to put around each element
+    """
+    if elts:
+        outFile.write(quotechar+elts[0]+quotechar)
+        for elt in elts[1:]:
+            outFile.write(delimiter+quotechar+elt+quotechar)
+    outFile.write('\n')
 
 
 if __name__ == '__main__':

@@ -12,7 +12,7 @@ from os             import path          as os_path
 from requests import get as r_get
 from re import search as re_search
 
-
+from rr_cache import rrCache
 from rptools.rpfba import cobra_format
 
 # because cobrapy is terrible
@@ -147,19 +147,39 @@ def get_inchi_from_url(
         return ''
 
 
-## Generate the sink from a given model and the
-#
-# NOTE: this only works for MNX models, since we are parsing the id
-# TODO: change this to read the annotations and extract the MNX id's
-#
 def genSink(
-    cache,
-    input_sbml,
-    remove_dead_end=False,
-    compartment_id=default_comp,
+    cache: rrCache,
+    input_sbml: str,
+    remove_dead_end: bool = False,
+    compartment_id: str = default_comp,
+    standalone: bool = False,
     logger: Logger = getLogger(__name__)
-):
+) -> dict:
+    '''
+    Generate the sink dictionary from a given SBML file
+    
+    NOTE: this only works for MNX models, since we are parsing the id
+    TODO: change this to read the annotations and extract the MNX id's
+
+    :param cache: cache object
+    :type cache: rrCache
+    :param input_sbml: path to the SBML file
+    :type input_sbml: str
+    :param remove_dead_end: remove dead end metabolites, by default False
+    :type remove_dead_end: bool, optional
+    :param compartment_id: compartment ID, by default default_comp
+    :type compartment_id: str, optional
+    :param standalone: do not use MetaNetX, by default False
+    :type standalone: bool, optional
+    :param logger: logger object, by default getLogger(__name__)
+    :type logger: Logger, optional
+    :return: sink dictionary
+    :rtype: dict
+    '''
     logger.debug('Extracting the sink from: '+str(input_sbml))
+
+    sink = {}
+
     dead_ends = _get_dead_end_metabolites(input_sbml, logger) if remove_dead_end else []
     species = []
     rpsbml = rpSBML(input_sbml)
@@ -168,7 +188,8 @@ def genSink(
     if compartment_id not in compartments:
         logger.error(f'Unable to find the compartment \'{compartment_id}\' in the model.')
         logger.error(f'Available compartments are {compartments}.')
-        return False
+        return sink
+
     logger.debug(f'List of Species: {list(rpsbml.getModel().getListOfSpecies())}')
     logger.debug(f'List of Compartments: {compartments}')
     logger.debug(f'Retrieving the species of the compartment {compartment_id}...')
@@ -179,7 +200,6 @@ def genSink(
     if not species:
         logger.warning(f'Could not retrieve any species in the compartment: {compartment_id}')
 
-    sink = {}
     for spe in species:
         logger.debug(f'Processing species: {spe.getId()}')
         res = rpsbml.readMIRIAMAnnotation(spe.getAnnotation())
@@ -199,7 +219,7 @@ def genSink(
             logger.debug(f'MetaNetX ID: {mnx_id}')
             if mnx_id in cache.get('cid_strc'):
                 inchi = cache.get('cid_strc')[mnx_id]['inchi']
-        if not inchi:
+        if not inchi and not standalone:
             # Try to get InChI from MetaNetX
             if mnx_url:
                 inchi = get_inchi_from_url(mnx_url, logger)
@@ -220,19 +240,3 @@ def genSink(
             sink[mnx_id] = inchi
 
     return sink
-
-
-def write(outFile, elts, delimiter=',', quotechar='"'):
-    """
-    Write elements of elts list into file as 'csv' would do
-
-    :param file: file to write into
-    :param elts: list of elements to write
-    :param delimiter: character to insert between each element
-    :param quotechar: character to put around each element
-    """
-    if elts:
-        outFile.write(quotechar+elts[0]+quotechar)
-        for elt in elts[1:]:
-            outFile.write(delimiter+quotechar+elt+quotechar)
-    outFile.write('\n')
