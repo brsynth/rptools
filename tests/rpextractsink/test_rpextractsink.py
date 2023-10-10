@@ -87,7 +87,7 @@ class Test_rpExtractSink(TestCase):
 
     # Test with wrong compartment
     def test_genSink_wrong_comp(self):
-        test_sink=genSink(
+        test_sink = genSink(
             cache=self.cache,
             input_sbml=self.e_coli_model_path,
             remove_dead_end=False,
