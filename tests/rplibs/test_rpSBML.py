@@ -285,13 +285,12 @@ class Test_rpSBML(Main_rplibs):
 
     def test_speciesMatchWith(self):
         # Return type.
-        species_match_with = self.rpsbml_none.speciesMatchWith(
+        corr_spe, miss_spe = self.rpsbml_none.speciesMatchWith(
             [],
             ''
         )
-        self.assertIsInstance(species_match_with, Tuple)
-        self.assertIsInstance(species_match_with[0], Dict)
-        self.assertIsInstance(species_match_with[1], List)
+        self.assertIsInstance(corr_spe, Dict)
+        self.assertIsInstance(miss_spe, List)
         # Basic
         self.assertEqual(
             sorted(self.rpsbml_lycopene_specie_id),
@@ -301,46 +300,29 @@ class Test_rpSBML(Main_rplibs):
             )[0].values())
         )
         # Challenge - 1
-        species_match_with = self.rpsbml_lycopene.speciesMatchWith(
-            ['HMDB00250', '13420'],
+        corr_spe, miss_spe = self.rpsbml_lycopene.speciesMatchWith(
+            ['HMDB00250', 'CHEBI:13420'],
             'c'
         )
-        self.assertEqual(
-            len(species_match_with[0]),
-            2
+        self.assertDictEqual(
+            corr_spe,
+            {'HMDB00250': 'M_ppi_c', 'CHEBI:13420': 'M_ppi_c'}
         )
-        self.assertEqual(
-            len(set(species_match_with[0].values())),
-            1
-        )
-        self.assertIn(
-            'M_ppi_c',
-            species_match_with[0].values()
-        )
-        self.assertFalse(species_match_with[1])
+        self.assertListEqual(miss_spe, [])
         # Challenge - 2
-        species_match_with = self.rpsbml_lycopene.speciesMatchWith(
+        corr_spe, miss_spe = self.rpsbml_lycopene.speciesMatchWith(
             ['HMDB00250', '13420'],
             ''
         )
-        self.assertFalse(species_match_with[0])
-        self.assertEqual(
-            len(species_match_with[1]),
-            2
-        )
+        self.assertDictEqual(corr_spe, {})
+        self.assertListEqual(sorted(miss_spe), sorted(['HMDB00250', '13420']))
         # Challenge - 3
-        species_match_with = self.rpsbml_lycopene.speciesMatchWith(
+        corr_spe, miss_spe = self.rpsbml_lycopene.speciesMatchWith(
             ['MNXM24', '13421'],
             'c'
         )
-        self.assertEqual(
-            ['MNXM24'],
-            list(species_match_with[0].values())
-        )
-        self.assertEqual(
-            ['13421'],
-            species_match_with[1]
-        )
+        self.assertDictEqual(corr_spe, {'MNXM24': 'MNXM24'})
+        self.assertListEqual(miss_spe, ['13421'])
 
     def test_is_boundary_type(self):
         # TODO: implement test which doesn't account abount SBO terms, to see how compartment_id ... are managed

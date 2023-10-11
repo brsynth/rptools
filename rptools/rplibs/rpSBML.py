@@ -2151,7 +2151,8 @@ class rpSBML:
         :type compartment_id: str
         :type logger: logging
 
-        :return: A tuple corresponding to the dictionnary correspondance between species provided and specie in the model and a list of species not find in the model
+        :return: A tuple corresponding to the dictionnary correspondance between species provided
+        and specie in the model and a list of species not find in the model
         :rtype: Tuple[Dict[str,str], List[str]]
         """
         self.logger.debug(f'species_ids: {species_ids}')
@@ -2246,41 +2247,42 @@ class rpSBML:
         try:
             # For all (lists of) cross refs in MIRIAM annot
             for cross_refs in miriam_annot:
-                # For all single cross ref in a DB list
-                for cross_ref in cross_refs:
-                    logger.debug(f'Comparing {species_id_to_match} with {cross_ref} (MIRIAM)')
-                    # Found a match between species ID and the current cross ref
-                    if species_id_to_match == cross_ref:
-                        curr_match = model_species.getId()
-                        curr_score = scores[curr_match]
-                        logger.debug(f'Found match: {species_id_to_match} -> {curr_match} (involved in {curr_score} reactions)')
-                        # Species ID already matched with another species
-                        if species_id_to_match in prev_matches:
-                            prev_match = prev_matches[species_id_to_match]
-                            prev_score = scores[prev_match]
+                cross_ref = cross_refs.split('/')[-1]
+                # # For all single cross ref in a DB list
+                # for cross_ref in cross_refs:
+                logger.debug(f'Comparing {species_id_to_match} with {cross_ref} (MIRIAM)')
+                # Found a match between species ID and the current cross ref
+                if species_id_to_match == cross_ref:
+                    curr_match = model_species.getId()
+                    curr_score = scores[curr_match]
+                    logger.debug(f'Found match: {species_id_to_match} -> {curr_match} (involved in {curr_score} reactions)')
+                    # Species ID already matched with another species
+                    if species_id_to_match in prev_matches:
+                        prev_match = prev_matches[species_id_to_match]
+                        prev_score = scores[prev_match]
+                        logger.warning(
+                            f'*** A match already exists for {species_id_to_match}'
+                        )
+                        logger.warning(
+                            f'    \__ previous match: {species_id_to_match} -> {prev_match} (involved in {prev_score} reactions)'
+                        )
+                        logger.warning(
+                            f'    \__  current match: {species_id_to_match} -> {curr_match} (involved in {curr_score} reactions)'
+                        )
+                        # Compare the scores of the previous and the current match
+                        if curr_score > prev_score:
                             logger.warning(
-                                f'*** A match already exists for {species_id_to_match}'
+                                f'--> Keep {species_id_to_match} -> {curr_match}'
                             )
-                            logger.warning(
-                                f'    \__ previous match: {species_id_to_match} -> {prev_match} (involved in {prev_score} reactions)'
-                            )
-                            logger.warning(
-                                f'    \__  current match: {species_id_to_match} -> {curr_match} (involved in {curr_score} reactions)'
-                            )
-                            # Compare the scores of the previous and the current match
-                            if curr_score > prev_score:
-                                logger.warning(
-                                    f'--> Keep {species_id_to_match} -> {curr_match}'
-                                )
-                                return curr_match
-                            else:
-                                logger.warning(
-                                    f'--> Keep {species_id_to_match} -> {prev_match}'
-                                )
-                        else:
                             return curr_match
-                        # Stop the search in the current MIRIAM annotations
-                        raise MatchSpecies
+                        else:
+                            logger.warning(
+                                f'--> Keep {species_id_to_match} -> {prev_match}'
+                            )
+                    else:
+                        return curr_match
+                    # Stop the search in the current MIRIAM annotations
+                    raise MatchSpecies
         except MatchSpecies:
             pass
 
@@ -2563,32 +2565,7 @@ class rpSBML:
         return d_reactions
 
 
-    # def __str__(self):
-    #     content = ''
-    #     for attr in inspect_getmembers(self):
-    #         if not attr[0].startswith('_'):
-    #             if not inspect_ismethod(attr[1]):
-    #                 # self.logger.info(attr)
-    #                 content += f'{attr}\n'
-    #     return content
-
-
     def __eq__(self, other):
-        # self_species = self.getModel().getListOfSpecies()
-        # other_species = other.getModel().getListOfSpecies()
-        # for rxn in self.getModel().getListOfReactions():
-        #     for elt in rxn.getListOfReactants():
-        #         print(elt.getSpecies(), elt.getStoichiometry(), self_species.get(elt.getSpecies()))
-        #     for elt in rxn.getListOfProducts():
-        #         print(elt.getSpecies(), elt.getStoichiometry(), other_species.get(elt.getSpecies()))
-            # print(list(rxn.getListOfReactants()))
-            # print(list(rxn.getListOfProducts()))
-        # print(list(self.getModel().getListOfReactions()))
-        # print(list(other.getModel().getListOfReactions()))
-            # len(self.getModel().getListOfReactions())==len(other.getModel().getListOfReactions()) \
-        # return \
-        #     sorted(self.readGroupMembers('rp_pathway')) == sorted(other.readGroupMembers('rp_pathway')) \
-        # and self._get_reactions_with_species_keys(self.logger) == other._get_reactions_with_species_keys(other.logger)
         self.logger.debug(f'Comparing {self} and {other}')
         return \
             self._get_reactions_with_species_keys() \
