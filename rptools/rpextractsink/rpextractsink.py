@@ -178,9 +178,6 @@ def genSink(
     '''
     Generate the sink dictionary from a given SBML file
     
-    NOTE: this only works for MNX models, since we are parsing the id
-    TODO: change this to read the annotations and extract the MNX id's
-
     :param cache: cache object
     :type cache: rrCache
     :param input_sbml: path to the SBML file
