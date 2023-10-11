@@ -112,27 +112,47 @@ def _get_dead_end_metabolites(
 #######################################################################
 
 
+def get_inchi_from_crossid(
+    id: str,
+    logger: Logger = getLogger(__name__)
+) -> str:
+    '''
+    Get the InChI from a given ID on MetaNetX
+
+    :param id: ID to retrieve the InChI from
+    :type id: str
+    :param logger: logger object, by default getLogger(__name__)
+    :type logger: Logger, optional
+    :return: InChI
+    :rtype: str
+    '''
+    # Get the InChI structure from MetaNetX
+    logger.debug(f'Retrieving InChI from MetaNetX for {id}...')
+    url_mnx = 'https://www.metanetx.org'
+    url_search = f'{url_mnx}/cgi-bin/mnxweb/search'
+    try:
+        page = r_get(f'{url_search}?query={id}')
+    except Exception as e:
+        logger.warning(f'Connection lost from {url_search}')
+        return ''
+    url_crossid = re_search(r'/chem_info/\w+', page.text).group()
+    return get_inchi_from_url(f'{url_mnx}{url_crossid}', logger)
+
+
 def get_inchi_from_url(
     url: str,
     logger: Logger = getLogger(__name__)
 ) -> str:
     '''
     Get the InChI from a given URL
-
-    :param url: URL to retrieve the InChI from
+    
+    :param url: URL
     :type url: str
     :param logger: logger object, by default getLogger(__name__)
     :type logger: Logger, optional
     :return: InChI
     :rtype: str
     '''
-    # print()
-    # print(res[0])
-    # page = r_get(res[0])
-    # soup = BeautifulSoup(page.text, features='html.parser')
-    # data = json_loads(soup.find('script', type='application/ld+json').text)
-    # print(data)
-    # Get the InChI structure from MetaNetX
     logger.debug(f'Retrieving InChI from {url}...')
     try:
         page = r_get(url)
@@ -184,6 +204,7 @@ def genSink(
     species = []
     rpsbml = rpSBML(input_sbml)
     compartments = [comp.getId() for comp in rpsbml.getModel().getListOfCompartments()]
+
     # Check if given compartment is in the model
     if compartment_id not in compartments:
         logger.error(f'Unable to find the compartment \'{compartment_id}\' in the model.')
@@ -193,6 +214,7 @@ def genSink(
     logger.debug(f'List of Species: {list(rpsbml.getModel().getListOfSpecies())}')
     logger.debug(f'List of Compartments: {compartments}')
     logger.debug(f'Retrieving the species of the compartment {compartment_id}...')
+
     for i in rpsbml.getModel().getListOfSpecies():
         if (i.getCompartment() == compartment_id and
             cobra_format.to_cobra(i.id) not in dead_ends):
@@ -201,42 +223,65 @@ def genSink(
         logger.warning(f'Could not retrieve any species in the compartment: {compartment_id}')
 
     for spe in species:
+
         logger.debug(f'Processing species: {spe.getId()}')
-        res = rpsbml.readMIRIAMAnnotation(spe.getAnnotation())
-        logger.debug(f'MIRIAM: {res}')
-        # search for metanetx URL
-        logger.debug(f'Searching for MetaNetX ID...')
-        mnx_url = ''
-        for url in res:
-            if 'metanetx' in url:
-                mnx_url = url
-                break
+        miriam = rpsbml.readMIRIAMAnnotation(spe.getAnnotation())
+        logger.debug(f'MIRIAM: {miriam}')
         inchi = ''
-        mnx_id = ''
-        if mnx_url:
-            # Get InChI from MetaNetX cache
-            mnx_id = mnx_url.split('/')[-1].split(':')[-1]
-            logger.debug(f'MetaNetX ID: {mnx_id}')
+
+        # Find MNX ID from MIRIAM
+        mnx_id = find_mnx_id(miriam)
+
+        if mnx_id:
+            # Get InChI from cache
             if mnx_id in cache.get('cid_strc'):
                 inchi = cache.get('cid_strc')[mnx_id]['inchi']
-        if not inchi and not standalone:
-            # Try to get InChI from MetaNetX
-            if mnx_url:
-                inchi = get_inchi_from_url(mnx_url, logger)
             else:
-                # Try to get InChI from each other URL
-                for url in res:
-                    inchi = get_inchi_from_url(url, logger)
-                    if inchi:
-                        break
+                logger.debug(f'Could not retrieve InChI for {mnx_id} from cache')
+                if not standalone:
+                    # Get InChI from MetaNetX
+                    inchi = get_inchi_from_url(
+                        f'https://www.metanetx.org/chem_info/{mnx_id}',
+                        logger
+                    )
+        elif not standalone:
+            # Search on MetaNetX with MIRIAM cross-references
+            i = 0
+            while not inchi and i < len(miriam):
+                url = miriam[i]
+                id = url.split('/')[-1]
+                inchi = get_inchi_from_crossid(id, logger)
+                i += 1
+
         if not inchi:
             logger.warning(f'Could not retrieve any InChI for {spe.getId()}')
         else:
             logger.debug(f'InChI: {inchi}')
-            if not mnx_id:
-                mnx_id = cobra_format.uncobraize(spe.getId())
-            if mnx_id in sink:
-                logger.warning(f'MetaNetX ID {mnx_id} already in sink')
-            sink[mnx_id] = inchi
+            if spe.getId() in sink:
+                logger.warning(f'MetaNetX ID {spe.getId()} already in sink')
+            sink[spe.getId()] = inchi
 
     return sink
+
+
+def find_mnx_id(
+    miriam: list,
+    logger: Logger = getLogger(__name__)
+) -> str:
+    '''
+    Find the MetaNetX ID from the MIRIAM annotation
+    
+    :param miriam: list of MIRIAM annotation
+    :type miriam: list
+    :param logger: logger object, by default getLogger(__name__)
+    :type logger: Logger, optional
+    :return: MetaNetX ID
+    :rtype: str
+    '''
+    mnx_id = ''
+    for url in miriam:
+        if 'metanetx' in url:
+            mnx_id = url.split('/')[-1].split(':')[-1]
+            logger.debug(f'MetaNetX ID: {mnx_id}')
+            break
+    return mnx_id
