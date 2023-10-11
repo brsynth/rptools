@@ -1,8 +1,11 @@
 from argparse import ArgumentParser
+from os import path as os_path
+
 
 default_upper_flux_bound = 10000
 default_lower_flux_bound = -default_upper_flux_bound
 default_max_subpaths_filter = 10
+
 
 def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument(
@@ -34,7 +37,7 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument('outdir', type=str)
     parser.add_argument(
         '--cache-dir',
-        default=None,
+        default='',
         type=str,
         help='Path to the cache to generate or read from'
     )
