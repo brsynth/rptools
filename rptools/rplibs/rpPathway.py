@@ -815,7 +815,7 @@ class rpPathway(Pathway, rpObject):
         for rxn in self.get_list_of_reactions():
             xref = {
                 'ec-code': rxn.get_ec_numbers(),
-                **rxn.get_miriam()
+                'miriam': rxn.get_miriam()
             }
             # Add the reaction in the model
             rpsbml.createReaction(
