@@ -25,6 +25,17 @@ def _cli():
     from rptools.__main__ import init
     logger = init(parser, args)
 
+    logger.debug('Parameters')
+    logger.debug('   |--> rp2_metnet: '+str(args.rp2_metnet))
+    logger.debug('   |--> sink: '+str(args.sink))
+    logger.debug('   |--> rp2paths_compounds: '+str(args.rp2paths_compounds))
+    logger.debug('   |--> rp2paths_pathways: '+str(args.rp2paths_pathways))
+    logger.debug('   |--> outdir: '+str(args.outdir))
+    logger.debug('   |--> cache_dir: '+str(args.cache_dir))
+    logger.debug('   |--> upper_flux_bound: '+str(args.upper_flux_bound))
+    logger.debug('   |--> lower_flux_bound: '+str(args.lower_flux_bound))
+    logger.debug('   |--> max_subpaths_filter: '+str(args.max_subpaths_filter))
+
 
     check_args(
         args.max_subpaths_filter,
@@ -89,6 +100,9 @@ def check_args(
     outdir: str,
     logger: Logger = getLogger(__name__)
 ):
+    logger.debug('Checking arguments...')
+    logger.debug('   |--> max_subpaths_filter: '+str(max_subpaths_filter))
+    logger.debug('   |--> outdir: '+str(outdir))
     # out_format = out_format.upper()
     # if out_format not in FORMATS.keys():
     #     raise ValueError(

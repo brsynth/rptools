@@ -221,6 +221,7 @@ def __complete_transformations(
                 # tmpl_rxn_id=tmpl_rxn_id,
                 logger=logger
             )
+            logger.debug(f'full_transfos[{transfo_id}]["complement"][{rule_id}]: {full_transfos[transfo_id]["complement"][rule_id]}')
 
     return full_transfos
 
