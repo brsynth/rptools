@@ -3851,14 +3851,16 @@ class rpSBML:
         :rtype: bool
         :return: True if there is at least one similar and False if none
         """
-        source_dict = self.readMIRIAMAnnotation(source_annot)
-        # list the common keys between the two
-        for com_key in set(list(source_dict.keys()))-(set(list(source_dict.keys()))-set(list(target_dict.keys()))):
-            # compare the keys and if same is non-empty means that there
-            # are at least one instance of the key that is the same
-            if bool(set(source_dict[com_key]) & set(target_dict[com_key])):
-                return True
-        return False
+        source_miriam = self.readMIRIAMAnnotation(source_annot)
+        source_dict = {}
+        for xref in source_miriam:
+            db = xref.split('/')[-2:-1][0]
+            ref = xref.split('/')[-1].split(':')[-1]
+            if db in source_dict:
+                source_dict[db].append(ref)
+            else:
+                source_dict[db] = [ref]
+        return self.compareAnnotations_dict_dict(source_dict, target_dict)
 
 
     def compareAnnotations_dict_dict(self, source_dict, target_dict):
