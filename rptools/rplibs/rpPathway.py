@@ -28,8 +28,7 @@ from typing import (
     List,
     Set,
     Union,
-    TypeVar,
-    Tuple
+    TypeVar
 )
 from logging import (
     Logger,
@@ -44,7 +43,10 @@ from chemlite import (
 )
 from numpy import isin
 from .rpSBML import rpSBML
-from .rpReaction import rpReaction
+from .rpReaction import (
+    rpReaction,
+    write_to
+)
 from .rpCompound import rpCompound
 from .rpObject import rpObject
 
@@ -668,65 +670,6 @@ class rpPathway(Pathway, rpObject):
         -------
         rpPathway object built.
         """
-        def write_to(data: Dict, object: TypeVar) -> None:
-            # Detect fba and thermo infos
-            for key, value in data.items():
-                if value == 'None':
-                    value = None
-                elif str(value) == 'nan':
-                    value = 'NaN'
-                if isinstance(value, dict):
-                    keyword = key.split(rpObject.get_sep())[0]
-                    offset = (
-                        len(keyword)
-                        + len(rpObject.get_sep())
-                    )
-                    getattr(
-                        object,
-                        'add_'+keyword.replace('rp_', '')+'_info'
-                    )(key[offset:], value)
-                else:
-                    try:
-                        getattr(
-                            object,
-                            'set_'+key.replace('rp_', '')
-                        )(value)
-                    except AttributeError:
-                        pass
-
-        def build_reaction(
-            rxn_id: str,
-            infos: Dict,
-            logger: Logger = getLogger(__name__)
-        ) -> Tuple[
-            rpReaction,
-            Union[str, None]
-        ]:
-            # try:
-            #     ec_numbers = infos['miriam']['ec-code']
-            # except KeyError:
-            #     ec_numbers = []
-            reaction = rpReaction(
-                id=rxn_id,
-                # ec_numbers=ec_numbers,
-                reactants=infos['left'],
-                products=infos['right'],
-                lower_flux_bound=infos['fbc_lower_value'],
-                upper_flux_bound=infos['fbc_upper_value'],
-                flux_bound_units=infos['fbc_units'],
-                reversible=infos['reversible'],
-                miriam=infos['miriam'],
-                logger=logger
-            )
-            # Add additional infos
-            write_to(infos['brsynth'], reaction)
-            # Detects if the current reaction produces the target
-            target_id = [spe_id for spe_id in reaction.get_products_ids() if 'TARGET' in spe_id]
-            if target_id != []:
-                target_id = target_id[0]
-            else:
-                target_id = None
-            return reaction, target_id
 
         if infile is not None:
             rpsbml = rpSBML(inFile=infile, logger=logger)
@@ -789,7 +732,7 @@ class rpPathway(Pathway, rpObject):
             rxn_infos['fbc_lower_value'] = pathway.get_parameter_value(rxn_infos['fbc_lower_value'])
             rxn_infos['fbc_upper_value'] = pathway.get_parameter_value(rxn_infos['fbc_upper_value'])
             rxn_infos['fbc_units'] = pathway.get_parameter_units(rxn_infos['fbc_lower_value'])
-            reaction, target_id = build_reaction(rxn_id, rxn_infos, logger)
+            reaction, target_id = rpReaction.build(rxn_id, rxn_infos, logger)
             # Add the reaction to the pathway
             pathway.add_reaction(
                 rxn=reaction,

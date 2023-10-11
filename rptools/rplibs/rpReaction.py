@@ -27,7 +27,8 @@ from typing import (
     Dict,
     List,
     Union,
-    TypeVar
+    TypeVar,
+    Tuple
 )
 from copy import deepcopy
 from logging import (
@@ -52,15 +53,58 @@ class rpReaction(Reaction, rpObject):
 
     @staticmethod
     def get_selenzy_prefix() -> str: return rpReaction.__selenzy_prefix
+
+
     @staticmethod
     def get_default_fbc_units() -> str:
         return rpReaction.__default_fbc_units
+
+
     @staticmethod
     def get_default_fbc_lower() -> float:
         return rpReaction.__default_fbc_lower
+
+
     @staticmethod
     def get_default_fbc_upper() -> float:
         return rpReaction.__default_fbc_upper
+
+    @staticmethod
+    def build(
+        rxn_id: str,
+        infos: Dict,
+        logger: Logger = getLogger(__name__)
+    ) -> Tuple[
+        'rpReaction',
+        Union[str, None]
+    ]:
+        # Extract EC numbers from miriam
+        ec_numbers = []
+        for info in infos['miriam']:
+            if 'ec-code' in info:
+                ec_numbers.append(info.split('/')[-1])
+        reaction = rpReaction(
+            id=rxn_id,
+            ec_numbers=ec_numbers,
+            reactants=infos['left'],
+            products=infos['right'],
+            lower_flux_bound=infos['fbc_lower_value'],
+            upper_flux_bound=infos['fbc_upper_value'],
+            flux_bound_units=infos['fbc_units'],
+            reversible=infos['reversible'],
+            miriam=infos['miriam'],
+            logger=logger
+        )
+        # Add additional infos
+        write_to(infos['brsynth'], reaction)
+        # Detects if the current reaction produces the target
+        target_id = [spe_id for spe_id in reaction.get_products_ids() if 'TARGET' in spe_id]
+        if target_id != []:
+            target_id = target_id[0]
+        else:
+            target_id = None
+        return reaction, target_id
+
 
     def __init__(
         self,
@@ -466,3 +510,32 @@ class rpReaction(Reaction, rpObject):
             Extended informations to add
         """
         self.__miriam[key] = deepcopy(infos)
+
+
+def write_to(data: Dict, object: TypeVar) -> None:
+    # Detect fba and thermo infos
+    for key, value in data.items():
+        if value == 'None':
+            value = None
+        elif str(value) == 'nan':
+            value = 'NaN'
+        if isinstance(value, dict):
+            keyword = key.split(rpObject.get_sep())[0]
+            offset = (
+                len(keyword)
+                + len(rpObject.get_sep())
+            )
+            getattr(
+                object,
+                'add_'+keyword.replace('rp_', '')+'_info'
+            )(key[offset:], value)
+        else:
+            try:
+                getattr(
+                    object,
+                    'set_'+key.replace('rp_', '')
+                )(value)
+            except AttributeError:
+                pass
+
+
