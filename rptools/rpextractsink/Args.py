@@ -5,12 +5,12 @@ default_comp = 'c'
 
 def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument(
-        'input-sbml',
+        'input_sbml',
         type=str,
         help="input SBML file"
     )
     parser.add_argument(
-        'output-sink',
+        'output_sink',
         type=str,
         help="output sink file"
     )

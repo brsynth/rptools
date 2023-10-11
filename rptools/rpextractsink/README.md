@@ -8,7 +8,7 @@ RetroPath2 sink generator. From a given SBML file, the tool will extract all the
 ## Input
 
 Required:
-* **input-sbml**: (string) Path to the input SBML file
+* **input_sbml**: (string) Path to the input SBML file
 
 Optional:
 * **--remove-dead-end**: (boolean, default: True) Perform FVA evaluation to remove dead end metabolites
@@ -18,7 +18,7 @@ Optional:
 
 ## Output
 
-* **output-sbml**: (string) Path to the output csv file
+* **output_sbml**: (string) Path to the output csv file
 
 
 ## Install
