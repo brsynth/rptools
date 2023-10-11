@@ -97,14 +97,14 @@ def _get_dead_end_metabolites(
                     rxn = model.reactions.get_by_id(f"DM_{met}")
                 else:
                     logger.warning(
-                        "Cannot create a demand bound for metabolite {} "
+                        "Cannot create a demand bound for metabolite {met} "
                         "while searching for dead end metabolites... "
                         "This metabolite will be considered as producible"
                         )
             model.objective = rxn
             value = model.slim_optimize(error_value=0.0)
             if value == 0.0:
-                dead_ends.append(met.id)
+                dead_ends.append(cobra_format.from_cobra(met.id))
     return dead_ends
 
 #######################################################################
@@ -198,6 +198,7 @@ def genSink(
     sink = {}
 
     dead_ends = _get_dead_end_metabolites(input_sbml, logger) if remove_dead_end else []
+    logger.debug(f'Dead ends: {dead_ends}')
     species = []
     rpsbml = rpSBML(input_sbml)
     compartments = [comp.getId() for comp in rpsbml.getModel().getListOfCompartments()]
@@ -214,7 +215,7 @@ def genSink(
 
     for i in rpsbml.getModel().getListOfSpecies():
         if (i.getCompartment() == compartment_id and
-            cobra_format.to_cobra(i.id) not in dead_ends):
+            i.id not in dead_ends):
             species.append(i)
     if not species:
         logger.warning(f'Could not retrieve any species in the compartment: {compartment_id}')
