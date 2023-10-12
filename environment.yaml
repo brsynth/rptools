@@ -16,7 +16,7 @@ dependencies:
   - colored # rplibs
   - networkx >=2.5 # rplibs
   - filetype  # rplibs (conda-forge)
-  - rr_cache # rpcompletion
+  - rr_cache>=3.1.1 # rpcompletion
   - rxn_rebuild # rpcompletion
   - chemlite # rpcompletion ,rpfba, rpthermo
   - h5py # rpscore
