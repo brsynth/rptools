@@ -39,10 +39,11 @@ jobs:
 
   Conda-Build:
     needs: [Build-Recipe]
-    runs-on: ${{ matrix.os }}-latest
+    # runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ["ubuntu", "macos"]
+        os: ["ubuntu-20.04", "macos-latest"]
     defaults:
       run:
         shell: bash -l {0}

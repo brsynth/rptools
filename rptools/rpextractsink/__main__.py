@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
-from rr_cache import rrCache
 from .rpextractsink import genSink
 from .Args import add_arguments
 from rptools import build_args_parser
+
+from rr_cache import rrCache
 
 
 def _cli():
