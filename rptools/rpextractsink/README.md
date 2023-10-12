@@ -11,7 +11,7 @@ Required:
 * **input_sbml**: (string) Path to the input SBML file
 
 Optional:
-* **--remove-dead-end**: (boolean, default: True) Perform FVA evaluation to remove dead end metabolites
+* **--remove-dead-end**: (boolean, default: True) Perform FVA (Flux Variability Analysis) evaluation to remove dead end metabolites
 * **--compartment-id**: (string, default: 'c') Specify the compartment from which to extract the sink molecules. The default are for MetaNetX files
 * **--standalone**: (boolean, default: False) If True, do not retrieve InChI from Internet
 * **--cache-dir**: (string, default: None) Path to the cache directory
