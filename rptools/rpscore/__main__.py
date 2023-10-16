@@ -51,7 +51,8 @@ def entry_point():
         pathway=pathway,
         # data_train_file=args.data_train_file,
         # models_path=models_path,
-        no_of_rxns_thres=args.no_of_rxns_thres
+        no_of_rxns_thres=args.no_of_rxns_thres,
+        logger=logger
     )
 
     # if len(pathways) > 1:

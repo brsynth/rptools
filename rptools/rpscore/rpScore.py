@@ -14,6 +14,10 @@ from rdkit import (
     DataStructs,
     RDLogger
 )
+from logging import (
+    Logger,
+    getLogger
+)
 from rdkit.Chem import AllChem
 from h5py import File as h5py_File
 from tqdm import tqdm
@@ -397,7 +401,8 @@ def predict_score(
     pathway: rpPathway,
     # data_train_file: str,
     # models_path: str,
-    no_of_rxns_thres: int
+    no_of_rxns_thres: int,
+    logger: Logger = getLogger(__name__)
 ) -> float:
 # ) -> List[float]:
 
@@ -406,7 +411,8 @@ def predict_score(
             format_files(
                 pathway=pathway,
                 reactions_fp=rf,
-                pathways_fp=pf
+                pathways_fp=pf,
+                logger=logger
             )
             rf.close()
             pf.close()
@@ -428,7 +434,8 @@ def format_files(
 #   pathways: List[rpPathway],
     pathway: rpPathway,
     reactions_fp,
-    pathways_fp
+    pathways_fp,
+    logger: Logger = getLogger(__name__)
 ) -> None:
 
     # PATHWAYS FILE
@@ -471,9 +478,19 @@ def format_files(
     data = {}
     data['Unnamed: 0'] = i
     data['Pathway Name'] = pathway.get_id()
-    data['dfG_prime_m'] = pathway.get_thermo_dGm_prime()['value']
-    data['FBA'] = ';'.join(pathway.get_fba().keys())
-    data['FBA Flux'] = ';'.join([str(v['value']) for v in pathway.get_fba().values()])
+    if pathway.get_thermo_dGm_prime():
+        data['dfG_prime_m'] = pathway.get_thermo_dGm_prime()['value']
+    else:
+        logger.error('No thermodynamics data available')
+        logger.error('Exiting...')
+        sys_exit(1)
+    if pathway.get_fba():
+        data['FBA'] = ';'.join(pathway.get_fba().keys())
+        data['FBA Flux'] = ';'.join([str(v['value']) for v in pathway.get_fba().values()])
+    else:
+        logger.error('No FBA data available')
+        logger.error('Exiting...')
+        sys_exit(2)
     pathways_fp.write(
         ','.join(
         [str(data.get(c, '')) for c in columns]
