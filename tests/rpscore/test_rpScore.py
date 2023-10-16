@@ -5,8 +5,11 @@ from brs_utils import (
     create_logger,
 )
 
-from rptools.rpscore import predict_score
-
+from rptools.rpscore import (
+    predict_score,
+    ThermoError,
+    FBAError
+)
 
 
 class Test_rpScore(TestCase):
@@ -38,3 +41,33 @@ class Test_rpScore(TestCase):
                 no_of_rxns_thres=10
             )
         )
+
+    def test_score_woThermo(self):
+        pathway_path = os_path.join(
+            self.data_path,
+            'pathway_woThermo.xml'
+        )
+        self.pathway = rpPathway.from_rpSBML(
+            infile=pathway_path,
+            logger=self.logger
+        )
+        with self.assertRaises(ThermoError):
+            predict_score(
+                pathway=self.pathway,
+                no_of_rxns_thres=10
+            )
+
+    def test_score_woFBA(self):
+        pathway_path = os_path.join(
+            self.data_path,
+            'pathway_woFBA.xml'
+        )
+        self.pathway = rpPathway.from_rpSBML(
+            infile=pathway_path,
+            logger=self.logger
+        )
+        with self.assertRaises(FBAError):
+            predict_score(
+                pathway=self.pathway,
+                no_of_rxns_thres=10
+            )
