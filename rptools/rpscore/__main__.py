@@ -6,13 +6,13 @@ from logging import (
     Logger,
     getLogger
 )
-from os import (
-    path as os_path,
-    makedirs
+from os import path as os_path
+from .rpscore import (
+    predict_score,
+    ThermoError,
+    FBAError
 )
-from tempfile import NamedTemporaryFile
-from rptools.rpscore import predict_score
-from rptools.rpscore.Args import add_arguments
+from .Args import add_arguments
 from rptools.rplibs import rpPathway
 from rptools import build_args_parser
 
@@ -47,13 +47,20 @@ def entry_point():
         logger=logger
     )
 
-    score = predict_score(
-        pathway=pathway,
-        # data_train_file=args.data_train_file,
-        # models_path=models_path,
-        no_of_rxns_thres=args.no_of_rxns_thres,
-        logger=logger
-    )
+    try:
+        score = predict_score(
+            pathway=pathway,
+            # data_train_file=args.data_train_file,
+            # models_path=models_path,
+            no_of_rxns_thres=args.no_of_rxns_thres,
+            logger=logger
+        )
+    except ThermoError as e:
+        logger.error(e)
+        exit(1)
+    except FBAError as e:
+        logger.error(e)
+        exit(2)
 
     # if len(pathways) > 1:
     #     if not os_path.exists(args.outdir):

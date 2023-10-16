@@ -44,6 +44,14 @@ __DATA_TRAIN_FILE = os_path.join(
 )
 
 
+class ThermoError(Exception):
+    pass
+
+
+class FBAError(Exception):
+    pass
+
+
 ##############################################################################################
 
 def feature_template_df(no_of_rxns_thres):
@@ -481,16 +489,12 @@ def format_files(
     if pathway.get_thermo_dGm_prime():
         data['dfG_prime_m'] = pathway.get_thermo_dGm_prime()['value']
     else:
-        logger.error('No thermodynamics data available')
-        logger.error('Exiting...')
-        sys_exit(1)
+        raise ThermoError('No thermodynamics data available')
     if pathway.get_fba():
         data['FBA'] = ';'.join(pathway.get_fba().keys())
         data['FBA Flux'] = ';'.join([str(v['value']) for v in pathway.get_fba().values()])
     else:
-        logger.error('No FBA data available')
-        logger.error('Exiting...')
-        sys_exit(2)
+        raise FBAError('No FBA data available')
     pathways_fp.write(
         ','.join(
         [str(data.get(c, '')) for c in columns]
