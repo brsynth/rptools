@@ -6,7 +6,7 @@ Created on Jan 21 2021
 """
 
 
-from rptools.rpthermo.rpThermo import (
+from rptools.rpthermo.rpthermo import (
     runThermo,
     initThermo
 )

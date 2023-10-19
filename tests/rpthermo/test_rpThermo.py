@@ -1,7 +1,7 @@
 from unittest import TestCase
 from copy import deepcopy
 from numpy import array as np_array
-from rptools.rpthermo.rpThermo import (
+from rptools.rpthermo.rpthermo import (
     build_stoichio_matrix,
     get_target_rxn_idx,
     minimize,

@@ -1,5 +1,4 @@
 from typing import (List, Dict)
-from rptools.rplibs import rpPathway
 
 
 def rank(pathways: Dict) -> List[str]:
