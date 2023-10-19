@@ -4,10 +4,6 @@ from tempfile import NamedTemporaryFile
 from errno import EEXIST as errno_EEXIST
 from rptools import build_args_parser
 from rptools.__main__ import init
-from rptools.rplibs import (
-    rpPathway,
-    rpModel
-)
 from .Args import add_arguments
 from .rpfba import (
     preprocess,
