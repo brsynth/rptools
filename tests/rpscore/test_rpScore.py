@@ -1,6 +1,9 @@
 from unittest import TestCase
 from os import path as os_path
-from rptools.rplibs import rpPathway
+from rptools.rplibs import (
+    rpPathway,
+    rpSBML
+)
 from brs_utils import (
     create_logger,
 )
@@ -27,10 +30,7 @@ class Test_rpScore(TestCase):
     def setUp(self):
         self.logger = create_logger(__name__, 'ERROR')
 
-        self.pathway = rpPathway.from_rpSBML(
-            infile=self.rpsbml_path,
-            logger=self.logger
-        )
+        self.pathway = rpPathway(infile=self.rpsbml_path)
 
     def test_score(self):
         self.assertEqual(
@@ -48,8 +48,7 @@ class Test_rpScore(TestCase):
             'pathway_woThermo.xml'
         )
         self.pathway = rpPathway.from_rpSBML(
-            infile=pathway_path,
-            logger=self.logger
+            rpsbml=rpSBML(inFile=pathway_path)
         )
         with self.assertRaises(ThermoError):
             predict_score(
@@ -63,8 +62,7 @@ class Test_rpScore(TestCase):
             'pathway_woFBA.xml'
         )
         self.pathway = rpPathway.from_rpSBML(
-            infile=pathway_path,
-            logger=self.logger
+            rpsbml=rpSBML(inFile=pathway_path)
         )
         with self.assertRaises(FBAError):
             predict_score(

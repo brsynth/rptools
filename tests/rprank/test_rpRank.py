@@ -35,9 +35,7 @@ class Test_rpRank(TestCase):
         pathway_filenames = glob(f'{infile}/*')
         pathways = {}
         for pathway_fname in pathway_filenames:
-            pathway = rpPathway.from_rpSBML(
-                infile=pathway_fname
-            )
+            pathway = rpPathway(infile=pathway_fname)
             pathway_name = pathway.get_id().replace(' ', '_')
             pathways[pathway_name] = {
                 'pathway': pathway,

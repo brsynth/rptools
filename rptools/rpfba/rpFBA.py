@@ -1,11 +1,7 @@
-import csv
-import pickle
-import sys
-
 import pandas as pd
-from copy import deepcopy
 from logging import Logger, getLogger
 from os import remove
+from argparse import Namespace as arg_nspace
 from pandas.core.series import Series as np_series
 from typing import List, Dict, Tuple
 from tempfile import NamedTemporaryFile
@@ -16,134 +12,68 @@ from cobra.io.sbml import validate_sbml_model, CobraSBMLError
 from cobra.core.model import Model as cobra_model
 from cobra.core.solution import Solution as cobra_solution
 
-from rptools.rplibs.rpCompound import rpCompound
-from rptools.rplibs.rpSBML import rpSBML
-from rptools.rplibs.rpPathway import rpPathway
-from rptools.rplibs.rpReaction import rpReaction
+from rptools.rplibs import (
+    rpSBML,
+    rpPathway,
+    rpReaction
+)
 from .cobra_format import cobraize, uncobraize_results, cobra_suffix, to_cobra
 
 # TODO: add the pareto frontier optimisation as an automatic way to calculate the optimal fluxes
 
+class ModelError(Exception):
+    pass
 
-def runFBA(
-    pathway: rpPathway,
-    gem_sbml_path: str,
-    compartment_id: str,
-    objective_rxn_id: str = "rxn_target",
-    biomass_rxn_id: str = "biomass",
-    sim_type: str = "fraction",
-    fraction_coeff: float = 0.75,
-    merge: bool = False,
-    ignore_orphan_species: bool = True,
+
+def preprocess(
+    args: arg_nspace,
     logger: Logger = getLogger(__name__),
-) -> Dict:
-    """Single rpSBML simulation
+):
+    pathway = rpPathway(args.pathway_file, logger=logger)
+    pathway.setup_pathway_fba()
+    model = rpSBML(inFile=args.model_file, logger=logger)
 
-    :param file_name: The name of the model
-    :param pathway_fn: Path to the pathway file (JSON)
-    :param gem_sbml: Path to the GEM file
-    :param sim_type: The type of simulation to use. Available simulation types include: fraction, fba, rpfba
-    :param src_rxn_id: The reaction id of the source reaction.
-    :param target_reaction: The reaction id of the target reaction. Note that if fba or rpfba options are used, then these are ignored
-    :param source_coefficient: The source coefficient
-    :param target_coefficient: The target coefficient
-    :param is_max: Maximise or minimise the objective'last', i
-    :param fraction_of: The fraction of the optimum. Note that this value is ignored is fba is used
-    :param tmpOutputFolder: The path to the output document
-    :param merge: Output the merged model (Default: False)
-    :param pathway_id: The id of the heterologous pathway (Default: rp_pathway)
-    :param objective_id: Overwrite the auto-generated id of the results (Default: None)
-    :param compartment_id: The SBML compartment id (Default: MNXC3)
-    :param fill_orphan_species: Add pseudo reactions that consume/produce single parent species. Note in development
-    :param species_group_id: The id of the central species (Default: central_species)
-    :param sink_species_group_id: The id of the sink species (Default: rp_sink_species)
-
-    :type inputTar: str
-    :type gem_sbml_path: str
-    :type sim_type: str
-    :type src_rxn_id: str
-    :type target_reaction: str
-    :type source_coefficient: float
-    :type target_coefficient: float
-    :type is_max: bool
-    :type fraction_of: float
-    :type tmpOutputFolder: str
-    :type merge: bool
-    :type num_workers: int
-    :type pathway_id: str
-    :type objective_id: str
-    :type compartment_id: str
-    :type fill_orphan_species: bool
-    :type species_group_id: str
-    :type sink_species_group_id: str
-
-    :return: Succcess or failure of the function
-    :rtype: bool
-    """
-
-    logger.debug("           pathway_fn: " + str(pathway))
-    logger.debug("        gem_sbml_path: " + str(gem_sbml_path))
-    logger.debug("             sim_type: " + str(sim_type))
-    logger.debug("     objective_rxn_id: " + objective_rxn_id)
-    logger.debug("       biomass_rxn_id: " + str(biomass_rxn_id))
-    logger.debug("       fraction_coeff: " + str(fraction_coeff))
-    logger.debug("                merge: " + str(merge))
-    logger.debug("       compartment_id: " + str(compartment_id))
-    logger.debug("ignore_orphan_species: " + str(ignore_orphan_species))
-
-    ## MODEL
-    # Create rpSBML object
-    rpsbml_gem = rpSBML(inFile=gem_sbml_path, logger=logger)
-    # Check compartment ID
-    compartment_id = check_SBML_compartment(
-        rpsbml=rpsbml_gem, compartment_id=compartment_id, logger=logger
-    )
-    if compartment_id is None:
-        return None
-    # Check biomass reaction ID
-    biomass_rxn_id = check_SBML_rxnid(
-        rpsbml=rpsbml_gem, rxn_id=biomass_rxn_id, logger=logger
-    )
-    if biomass_rxn_id is None:
-        return None
-
-    # PATHWAY
-    rpsbml = build_rpsbml(pathway=pathway, logger=logger)
-    # Check objective reaction ID
-    objective_rxn_id = check_SBML_rxnid(
-        rpsbml=rpsbml, rxn_id=objective_rxn_id, logger=logger
-    )
-    if objective_rxn_id is None:
-        return None
-
-    ## MERGE
-    # Merge predicted pathway with the full model
-    # missing_species are species that are not detected in the model
-    logger.info(
-        f"Merging : {rpsbml_gem.getName()} model and {rpsbml.getName()} pathway..."
-    )
-    (rpsbml_merged, reactions_in_both, missing_species, compartment_id) = rpSBML.merge(
-        pathway=rpsbml, model=rpsbml_gem, compartment_id=compartment_id, logger=logger
-    )
-    if merge:
-        merged_outfile = (
-            rpsbml.getName() + "__MERGED_IN__" + rpsbml_gem.getName() + ".sbml"
+    try:
+        ids = check_ids(
+            pathway=pathway,
+            model=model,
+            objective_rxn_id=args.objective_rxn_id,
+            biomass_rxn_id=args.biomass_rxn_id,
+            compartment_id=args.compartment_id,
+            logger=logger,
         )
-        logger.info(f"Write merged rpSBML file to {merged_outfile}")
-        rpsbml_merged.write_to_file(merged_outfile)
-    if rpsbml_merged is None:
-        return None
-    logger.debug(f"rpsbml_merged: {rpsbml_merged}")
+    except ModelError as e:
+        logger.error(e)
+        return 1
+
+    # MERGE
+    (
+        merged_model,
+        reactions_in_both,
+        missing_species,
+        compartment_id
+    ) = rpSBML.merge(
+        pathway=pathway.get_rpsbml(),
+        model=model,
+        compartment_id=ids['comp_id'],
+        logger=logger
+    )
+    logger.debug(f"model: {model}")
     logger.debug(f"reactions_in_both: {reactions_in_both}")
     logger.debug(f"missing_species: {missing_species}")
+    if args.merge:
+        merged_outfile = (
+            pathway.get_id() + "__MERGED_IN__" + model.getName() + ".sbml"
+        )
+        logger.info(f"Write merged rpSBML file to {merged_outfile}")
+        merged_model.write_to_file(merged_outfile)
 
-    cobra_rpsbml_merged = rpSBML.cobraize(rpsbml_merged)
-
+    # CHECKING
     # Detect orphan species among missing ones in the model,
     # i.e. that are only consumed or produced
-    if ignore_orphan_species:
+    if args.ignore_orphan_species:
         hidden_species = build_hidden_species(
-            rpsbml=rpsbml,
+            rpsbml=merged_model,
             missing_species=missing_species,
             compartment_id=compartment_id,
             logger=logger,
@@ -151,31 +81,133 @@ def runFBA(
     else:
         hidden_species = []
 
-    # NOTE: reactions is organised with key being the rpsbml reaction and value being the rpsbml_gem value`
-    # BUG: when merging the rxn_sink (very rare cases) can be recognised if another reaction contains the same species as a reactant
-    ## under such as scenario the algorithm will consider that they are the same -- TODO: overwrite it
-    if reactions_in_both is not None and objective_rxn_id in reactions_in_both:
-        logger.warning(
-            "The target_reaction ("
-            + str(objective_rxn_id)
-            + ") "
-            + "has been detected in model "
-            + str(gem_sbml_path.getName())
-            + ", "
-            + "ignoring this model..."
-        )
-        return None
+    return merged_model, pathway, ids, hidden_species
+
+
+def check_ids(
+    pathway: rpPathway,
+    model: rpSBML,
+    objective_rxn_id: str,
+    biomass_rxn_id: str,
+    compartment_id: str,
+    logger: Logger = getLogger(__name__)
+) -> Dict:
+    '''Check the IDs of the pathway and the model.
+    If the IDs are not found, then raise ModelError exception.
+    
+    :param pathway: The pathway rpSBML object
+    :param model: The model rpSBML object
+    :param objective_rxn_id: The objective reaction ID
+    :param biomass_rxn_id: The biomass reaction ID
+    :param compartment_id: The SBML compartment ID
+    :param logger: The logger object
+    
+    :type pathway: rpPathway
+    :type model: rpSBML
+    :type objective_rxn_id: str
+    :type biomass_rxn_id: str
+    :type compartment_id: str
+    :type logger: Logger
+    
+    :return: The objective reaction ID, the model compartment ID, and the biomass reaction ID
+    :rtype: Dict
+    '''
+
+    # PATHWAY
+    # Check objective reaction ID
+    objective_rxn_id = pathway.get_rpsbml().check_SBML_rxnid(objective_rxn_id)
+    if objective_rxn_id is None:
+        raise ModelError(f"No objective reaction ID found in the pathway {pathway.get_id()}.")
+
+    # MODEL
+    # Check compartment ID
+    compartment_id = model.check_SBML_compartment(compartment_id)
+    if compartment_id is None:
+        raise ModelError(f"No compartment ID found in the model {model.get_id()}.")
+    # Check biomass reaction ID
+    biomass_rxn_id = model.check_SBML_rxnid(biomass_rxn_id)
+    if biomass_rxn_id is None:
+        raise ModelError(f"No biomass reaction ID found in the model {model.get_id()}.")
+
+    return {
+    'obj_rxn_id': objective_rxn_id,
+    'comp_id': compartment_id,
+    'biomass_rxn_id': biomass_rxn_id
+    }
+
+
+def runFBA(
+    model_file: str,
+    compartment_id: str,
+    objective_rxn_id: str = "rxn_target",
+    biomass_rxn_id: str = "biomass",
+    sim_type: str = "fraction",
+    fraction_coeff: float = 0.75,
+    hidden_species: List[str] = [],
+    logger: Logger = getLogger(__name__),
+) -> Dict:
+    """Single rpSBML simulation
+
+    :param model_file: Path to the model file (SBML)
+    :param compartment_id: The compartment ID
+    :param objective_rxn_id: The objective reaction ID (Default: rxn_target)
+    :param biomass_rxn_id: The biomass reaction ID (Default: biomass)
+    :param sim_type: The simulation type (Default: fraction)
+    :param fraction_coeff: The fraction coefficient (Default: 0.75)
+    :param hidden_species: List of hidden species (Default: [])
+    :param logger: The logger object
+
+    :type model_file: str
+    :type compartment_id: str
+    :type objective_rxn_id: str
+    :type biomass_rxn_id: str
+    :type sim_type: str
+    :type fraction_coeff: float
+    :type hidden_species: List[str]
+    :type logger: Logger
+
+    :return: The results of the simulation
+    :rtype: Dict
+    """
+
+    logger.debug("           model_file: " + str(model_file))
+    logger.debug("             sim_type: " + str(sim_type))
+    logger.debug("     objective_rxn_id: " + str(objective_rxn_id))
+    logger.debug("       biomass_rxn_id: " + str(biomass_rxn_id))
+    logger.debug("       fraction_coeff: " + str(fraction_coeff))
+    logger.debug("       compartment_id: " + str(compartment_id))
+    logger.debug("       hidden_species: " + str(hidden_species))
+
+    # Load the model
+    model_c = rpSBML.cobraize(
+        rpSBML(inFile=model_file, logger=logger)
+    )
+
+    # # NOTE: reactions is organised with key being the rpsbml reaction and value being the rpsbml_gem value`
+    # # BUG: when merging the rxn_sink (very rare cases) can be recognised if another reaction contains the same species as a reactant
+    # ## under such as scenario the algorithm will consider that they are the same -- TODO: overwrite it
+    # if reactions_in_both is not None and pathway_obj_rxn_id in reactions_in_both:
+    #     logger.warning(
+    #         "The target_reaction ("
+    #         + str(pathway_obj_rxn_id)
+    #         + ") "
+    #         + "has been detected in model "
+    #         + str(model.getName())
+    #         + ", "
+    #         + "ignoring this model..."
+    #     )
+    #     return 2
 
     ######## FBA ########
     results = {}
     if sim_type.lower() in ["fba", "pfba"]:
-        objective_id = cobra_rpsbml_merged.find_or_create_objective(
+        objective_id = model_c.find_or_create_objective(
             rxn_id=objective_rxn_id,
             obj_id=f"brs_obj_{objective_rxn_id}",
         )
         cobra_results = runCobra(
             sim_type=sim_type,
-            rpsbml=cobra_rpsbml_merged,
+            rpsbml=model_c,
             hidden_species=hidden_species,
             objective_id=objective_id,
             fraction_coeff=fraction_coeff,
@@ -183,7 +215,7 @@ def runFBA(
         )
     else:
         (cobra_results, results_biomass, objective_id) = rp_fraction(
-            rpsbml=cobra_rpsbml_merged,
+            rpsbml=model_c,
             objective_rxn_id=objective_rxn_id,
             biomass_rxn_id=biomass_rxn_id,
             hidden_species=hidden_species,
@@ -202,26 +234,14 @@ def runFBA(
 
     # Write results for merged model
     write_results_to_rpsbml(
-        rpsbml=cobra_rpsbml_merged,
+        rpsbml=model_c,
         objective_id=objective_id,
         cobra_results=cobra_results,
         sim_type=sim_type,
         logger=logger,
     )
 
-    _results = build_results(
-        results=results, pathway=pathway, compartment_id=compartment_id
-    )
-    _results["ignored_species"] = deepcopy(hidden_species)
-
-    # Remove the Cobra standard ('compound@compartment') from all compounds
-    pathway.uncobraize()
-    _results = uncobraize_results(_results, cobra_suffix(compartment_id))
-
-    # Write results into the pathway
-    write_results_to_pathway(pathway, _results, logger)
-
-    return _results
+    return results
 
     # if cobra_results is None:
     #     return None
@@ -258,31 +278,6 @@ def runFBA(
     # exit()
 
 
-def build_rpsbml(pathway: rpPathway, logger: Logger = getLogger(__name__)) -> rpSBML:
-    # Create consumption of the target
-    rxn_target = create_target_consumption_reaction(pathway.get_target_id(), logger)
-    # Set Flux Bounds
-    for rxn in pathway.get_list_of_reactions() + [rxn_target]:
-        rxn.set_fbc(l_bound=0, u_bound=rpReaction.get_default_fbc_upper())
-        rxn.set_reversible(False)
-    # Create rpSBML object
-    rpsbml = pathway.to_rpSBML()
-    # Create the target consumption reaction in the rpSBML
-    rpsbml.createReaction(
-        id=rxn_target.get_id(),
-        reactants=rxn_target.get_reactants(),
-        products=rxn_target.get_products(),
-        smiles=rxn_target.get_smiles(),
-        fbc_upper=rxn_target.get_fbc_upper(),
-        fbc_lower=rxn_target.get_fbc_lower(),
-        fbc_units=rxn_target.get_fbc_units(),
-        reversible=rxn_target.reversible(),
-        reacXref={"ec": rxn_target.get_ec_numbers()},
-        infos=rxn_target._to_dict(full=False),
-    )
-    return rpsbml
-
-
 def build_hidden_species(
     rpsbml: rpSBML,
     missing_species: List[str],
@@ -295,75 +290,19 @@ def build_hidden_species(
     ]
 
 
-def check_SBML_compartment(
-    rpsbml: rpSBML, compartment_id: str, logger: Logger = getLogger(__name__)
-) -> Tuple[str, str]:
-    # Check model compartment ID
-    # Set new compartment ID in case it exists under another ID
-    compartment = rpsbml.has_compartment(compartment_id)
-    if compartment is not None:
-        logger.debug(
-            f"Compartment '{compartment_id}' found in the model '{rpsbml.getName()}' as {compartment.getId()}"
-        )
-        if compartment_id != compartment.getId():
-            logger.warning(
-                f"Compartment '{compartment_id}' has been replaced by {compartment.getId()}"
-            )
-        return compartment.getId()
-    else:
-        logger.error(
-            f"Compartment '{compartment_id}' not found in the model '{rpsbml.getName()}'"
-        )
-        logger.error(
-            "Available compartments: {comp_ids}".format(
-                comp_ids=", ".join(
-                    [
-                        comp.getId()
-                        for comp in list(rpsbml.getModel().getListOfCompartments())
-                    ]
-                )
-            )
-        )
-        return None
-
-
-def check_SBML_rxnid(
-    rpsbml: rpSBML, rxn_id: str, logger: Logger = getLogger(__name__)
-) -> Tuple[str, str]:
-    logger.debug(f"rpsbml: {rpsbml.getName()}")
-    logger.debug(f"rxn_id: {rxn_id}")
-
-    # Check model reaction ID
-    # Get reaction from the rpSBML
-    _rxn = rpsbml.getModel().getReaction(rxn_id)
-    if _rxn is None:
-        logger.error(
-            f"Reaction ID '{rxn_id}' not found in the model '{rpsbml.getName()}'"
-        )
-        possible_rxn_ids = [
-            rxn.getId()
-            for rxn in list(rpsbml.getModel().getListOfReactions())
-            if rxn_id in rxn.getId().lower()
-        ]
-        if possible_rxn_ids != []:
-            logger.error(
-                "Possible reactions: {rxn_ids}".format(
-                    rxn_ids=", ".join(possible_rxn_ids)
-                )
-            )
-        return None
-
-    logger.debug(f"rxn_id found as {rxn_id}")
-
-    return _rxn.getId()
-
-
 def build_results(
     results: Dict,
     pathway: rpPathway,
     compartment_id: str,
+    hidden_species: List[str],
+    logger: Logger = getLogger(__name__),
 ) -> Dict:
-    _results = {"species": {}, "reactions": {}, "pathway": {}}
+    _results = {
+        "species": {},
+        "reactions": {},
+        "pathway": {},
+        "ignored_species": hidden_species,
+    }
 
     # SPECIES
     for spe_id in pathway.get_species_ids():
@@ -395,15 +334,8 @@ def build_results(
         }
         if sim_type == "biomass":
             _results["pathway"][sim_type]["units"] = "gDW / gDW / hour"
+
     return _results
-
-
-def create_target_consumption_reaction(
-    target_id: str, logger: Logger = getLogger(__name__)
-) -> "rpReaction":
-    rxn = rpReaction(id="rxn_target", logger=logger)
-    rxn.add_reactant(compound_id=target_id, stoichio=1)
-    return rxn
 
 
 def write_results_to_pathway(

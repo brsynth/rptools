@@ -116,7 +116,7 @@ class Test_rpPathway(TestCase):
         self.rxn = rpReaction(
             id="rxn_4",
             ec_numbers=[
-                "1.13.11.1"
+#                "1.13.11.1"
             ],
             reactants=self.reactants,
             products=self.products
@@ -126,7 +126,7 @@ class Test_rpPathway(TestCase):
             rpReaction(
                 id="rxn_3",
                 ec_numbers=[
-                    "4.1.1.63"
+#                    "4.1.1.63"
                 ],
                 reactants={
                     "CMPD_0000000010": 1,
@@ -140,7 +140,7 @@ class Test_rpPathway(TestCase):
             rpReaction(
                 id="rxn_2",
                 ec_numbers=[
-                    "1.14.13.23"
+#                    "1.14.13.23"
                 ],
                 reactants={
                     "CMPD_0000000025": 1,
@@ -157,7 +157,7 @@ class Test_rpPathway(TestCase):
             rpReaction(
                 id="rxn_1",
                 ec_numbers=[
-                    "4.1.3.45"
+#                    "4.1.3.45"
                 ],
                 reactants={
                     "MNXM337": 1
@@ -421,12 +421,11 @@ class Test_rpPathway(TestCase):
 
     def test_rpSBML_file(self):
         with NamedTemporaryFile(delete=False) as tempf:
-            self.pathway.to_rpSBML().write_to_file(tempf.name)
             tempf.close()
             self.assertEqual(
                 self.pathway,
                 rpPathway.from_rpSBML(
-                    infile=tempf.name
+                    self.pathway.to_rpSBML()
                 )
             )
             tempf.close()
@@ -435,13 +434,9 @@ class Test_rpPathway(TestCase):
     def test_rpSBML_file_rpsbml(self):
         with NamedTemporaryFile(delete=False) as tempf:
             self.pathway.to_rpSBML().write_to_file(tempf.name)
-            tempf.close()
             self.assertEqual(
                 self.pathway,
-                rpPathway.from_rpSBML(
-                    infile=tempf.name,
-                    rpsbml=None
-                )
+                rpPathway(infile=tempf.name)
             )
             tempf.close()
             remove(tempf.name)

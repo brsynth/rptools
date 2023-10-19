@@ -178,16 +178,16 @@ class rpSBML:
                 'inchikey': 'inchikey/',
                 'pubchem': 'pubchem.compound/',
                 'mnx': 'metanetx.chemical/',
-                'chebi': 'chebi/CHEBI:',
+                'chebi': 'chebi/',
                 'bigg': 'bigg.metabolite/',
                 'hmdb': 'hmdb/',
                 'kegg_c': 'kegg.compound/',
                 'kegg_d': 'kegg.drug/',
-                'biocyc': 'biocyc/META:',
+                'biocyc': 'biocyc/',
                 'seed': 'seed.compound/',
                 'metacyc': 'metacyc.compound/',
                 'sabiork': 'sabiork.compound/',
-                'reactome': 'reactome/R-ALL-'
+                'reactome': 'reactome/'
             }
         }
         self.header_miriam = {
@@ -587,6 +587,9 @@ class rpSBML:
         """
         logger.debug('pathway: ' + str(pathway))
         logger.debug('model: ' + str(model))
+        logger.info(
+            f"Merging : {model.getName()} model and {pathway.getName()} pathway..."
+        )
 
         # Copy target rpSBML object into a new one so that
         # it can be modified and returned
@@ -675,6 +678,66 @@ class rpSBML:
         else:
             logger.error('Merging rpSBML objects results in a invalid SBML format')
             return None, None, None, None
+
+
+    def check_SBML_compartment(self, compartment_id: str) -> Tuple[str, str]:
+        # Check model compartment ID
+        # Set new compartment ID in case it exists under another ID
+        compartment = self.has_compartment(compartment_id)
+        if compartment is not None:
+            self.logger.debug(
+                f"Compartment '{compartment_id}' found in the model '{self.getName()}' as {compartment.getId()}"
+            )
+            if compartment_id != compartment.getId():
+                self.logger.warning(
+                    f"Compartment '{compartment_id}' has been replaced by {compartment.getId()}"
+                )
+            return compartment.getId()
+        else:
+            self.logger.error(
+                f"Compartment '{compartment_id}' not found in the model '{self.getName()}'"
+            )
+            self.logger.error(
+                "Available compartments: {comp_ids}".format(
+                    comp_ids=", ".join(
+                        [
+                            comp.getId()
+                            for comp in list(self.getModel().getListOfCompartments())
+                        ]
+                    )
+                )
+            )
+            return None
+
+
+    def check_SBML_rxnid(self, rxn_id: str) -> Tuple[str, str]:
+        self.logger.debug(f"rpsbml: {self.getName()}")
+        self.logger.debug(f"rxn_id: {rxn_id}")
+
+        # Check model reaction ID
+        # Get reaction from the rpSBML
+        _rxn = self.getModel().getReaction(rxn_id)
+        if _rxn is None:
+            self.logger.error(
+                f"Reaction ID '{rxn_id}' not found in the model '{self.getName()}'"
+            )
+            possible_rxn_ids = [
+                rxn.getId()
+                for rxn in list(self.getModel().getListOfReactions())
+                if rxn_id in rxn.getId().lower()
+            ]
+            if possible_rxn_ids != []:
+                self.logger.error(
+                    "Possible reactions: {rxn_ids}".format(
+                        rxn_ids=", ".join(possible_rxn_ids)
+                    )
+                )
+            return None
+
+        self.logger.debug(f"rxn_id found as {rxn_id}")
+
+        return _rxn.getId()
+
 
     @staticmethod
     def renameSpecies(
@@ -2245,14 +2308,15 @@ class rpSBML:
             pass
 
         try:
+            annot_dict = rpSBML.convert_miriam_to_dict(miriam_annot)
             # For all (lists of) cross refs in MIRIAM annot
-            for cross_refs in miriam_annot:
-                cross_ref = cross_refs.split('/')[-1]
-                # # For all single cross ref in a DB list
-                # for cross_ref in cross_refs:
-                logger.debug(f'Comparing {species_id_to_match} with {cross_ref} (MIRIAM)')
+            for db, xrefs in annot_dict.items():
+                # cross_ref = cross_refs.split('/')[-1]
+                # # # For all single cross ref in a DB list
+                # # for cross_ref in cross_refs:
+                logger.debug(f'Comparing {species_id_to_match} with {xrefs} (MIRIAM)')
                 # Found a match between species ID and the current cross ref
-                if species_id_to_match == cross_ref:
+                if species_id_to_match in xrefs:
                     curr_match = model_species.getId()
                     curr_score = scores[curr_match]
                     logger.debug(f'Found match: {species_id_to_match} -> {curr_match} (involved in {curr_score} reactions)')
@@ -2695,25 +2759,25 @@ class rpSBML:
         """Compare two dictionaries of lists that describe the cross-reference and return the difference
 
         :param current: The source cross-reference dictionary
-        :param toadd: The target cross-reference dictionary
+        :param toadd: The target cross-reference list
 
-        :type current: dict
-        :type toadd: dict
+        :type current: Dict
+        :type toadd: List
 
         :return: Difference between the two cross-reference dictionaries
-        :rtype: dict
+        :rtype: Dict
         """
-        toadd = deepcopy(toadd)
+        _toadd = deepcopy(toadd)
         for database_id in current:
             try:
-                list_diff = [i for i in toadd[database_id] if i not in current[database_id]]
+                list_diff = [i for i in _toadd[database_id] if i not in current[database_id]]
                 if not list_diff:
-                    toadd.pop(database_id)
+                    _toadd.pop(database_id)
                 else:
-                    toadd[database_id] = list_diff
+                    _toadd[database_id] = list_diff
             except KeyError:
                 pass
-        return toadd
+        return _toadd
 
 
     ######################################################################
@@ -2968,12 +3032,12 @@ class rpSBML:
 
         :param sbase_obj: The libSBML object to add the different
         :param type_param: The type of parameter entered. Valid include ['compartment', 'reaction', 'species']
-        :param xref: Dictionnary of the cross reference
+        :param xref: List of the cross reference
         :param meta_id: The meta ID to be added to the annotation string
 
         :type sbase_obj: libsbml.SBase
         :type type_param: str
-        :type xref: dict
+        :type xref: List
         :type meta_id: str
 
         :rtype: bool
@@ -3032,6 +3096,7 @@ class rpSBML:
                 pass
         # add or ignore
         toadd = self._compareXref(inside, xref)
+        toadd = self.convert_miriam_to_dict(toadd)
         for database_id in toadd:
             for species_id in toadd[database_id]:
                 # not sure how to avoid having it that way
@@ -3212,6 +3277,69 @@ class rpSBML:
             #     meta_id = self._genMetaID(str(fluxobj_id))
             # target_flux_obj.setMetaId(meta_id)
             # target_flux_obj.setAnnotation(self._defaultBRSynthAnnot(meta_id))
+
+
+    def check_SBML_compartment(
+        self, compartment_id: str, logger: Logger = getLogger(__name__)
+    ) -> Tuple[str, str]:
+        # Check model compartment ID
+        # Set new compartment ID in case it exists under another ID
+        compartment = self.has_compartment(compartment_id)
+        if compartment is not None:
+            logger.debug(
+                f"Compartment '{compartment_id}' found in the model '{self.getName()}' as {compartment.getId()}"
+            )
+            if compartment_id != compartment.getId():
+                logger.warning(
+                    f"Compartment '{compartment_id}' has been replaced by {compartment.getId()}"
+                )
+            return compartment.getId()
+        else:
+            logger.error(
+                f"Compartment '{compartment_id}' not found in the model '{self.getName()}'"
+            )
+            logger.error(
+                "Available compartments: {comp_ids}".format(
+                    comp_ids=", ".join(
+                        [
+                            comp.getId()
+                            for comp in list(self.getModel().getListOfCompartments())
+                        ]
+                    )
+                )
+            )
+            return None
+
+
+    def check_SBML_rxnid(
+        self, rxn_id: str, logger: Logger = getLogger(__name__)
+    ) -> Tuple[str, str]:
+        logger.debug(f"rpsbml: {self.getName()}")
+        logger.debug(f"rxn_id: {rxn_id}")
+
+        # Check model reaction ID
+        # Get reaction from the rpSBML
+        _rxn = self.getModel().getReaction(rxn_id)
+        if _rxn is None:
+            logger.error(
+                f"Reaction ID '{rxn_id}' not found in the model '{self.getName()}'"
+            )
+            possible_rxn_ids = [
+                rxn.getId()
+                for rxn in list(self.getModel().getListOfReactions())
+                if rxn_id in rxn.getId().lower()
+            ]
+            if possible_rxn_ids != []:
+                logger.error(
+                    "Possible reactions: {rxn_ids}".format(
+                        rxn_ids=", ".join(possible_rxn_ids)
+                    )
+                )
+            return None
+
+        logger.debug(f"rxn_id found as {rxn_id}")
+
+        return _rxn.getId()
 
 
     #####################################################################
@@ -3428,14 +3556,14 @@ class rpSBML:
         annot: libsbml.XMLNode,
         logger: Logger = getLogger(__name__)
     ):
-        """Return the MIRIAM annotations of species
+        """Return the MIRIAM annotations of a libSBML object
 
         :param annot: The annotation object of libSBML
 
         :type annot: libsbml.XMLNode
 
-        :rtype: dict
-        :return: Dictionary of all the annotation of species
+        :rtype: list
+        :return: List of all the annotations
         """
         try:
             toRet = []
@@ -3637,6 +3765,7 @@ class rpSBML:
             rxn_l = [rxn.getId() for rxn in list(self.getModel().getListOfReactions())]
         else:
             rxn_l = self.readGroupMembers(pathway_id)
+
         for rxn_id in rxn_l:
             reactions[rxn_id] = self.read_reaction(rxn_id)
         return reactions
@@ -3814,74 +3943,56 @@ class rpSBML:
         target_annot,
         logger: Logger = getLogger(__name__)
     ) -> bool:
-        """Determine if two libsbml species or reactions have members in common in MIRIAM annotation
+        """Determine if two libsbml objects have members in common in MIRIAM annotation
 
         Compare two dictionnaries and if any of the values of any of the same keys are the same then the function return True, and if none are found then return False
 
         :param source_annot: Source object of libSBML
         :param target_annot: Target object of libSBML
 
-        :type source_annot: libsbml.Reaction
-        :type target_annot: libsbml.Reaction
+        :type source_annot: libsbml.Object
+        :type target_annot: libsbml.Object
 
         :rtype: bool
         :return: True if there is at least one similar and False if none
         """
-        source_dict = rpSBML.readMIRIAMAnnotation(source_annot, logger)
-        target_dict = rpSBML.readMIRIAMAnnotation(target_annot, logger)
-        # list the common keys between the two
-        for com_key in set(list(source_dict.keys()))-(set(list(source_dict.keys()))-set(list(target_dict.keys()))):
-            logger.debug(com_key)
-            # compare the keys and if same is non-empty means that there
-            # are at least one instance of the key that is the same
-            if bool(set(source_dict[com_key]) & set(target_dict[com_key])):
+        source_dict = rpSBML.convert_miriam_to_dict(
+            rpSBML.readMIRIAMAnnotation(source_annot)
+        )
+        target_dict = rpSBML.convert_miriam_to_dict(
+            rpSBML.readMIRIAMAnnotation(target_annot)
+        )
+        common_keys = source_dict.keys() & target_dict.keys()
+        for key in common_keys:
+            common_values = set(source_dict[key]) & set(target_dict[key])
+            if common_values:
                 return True
         return False
 
 
-    def compareAnnotations_annot_dict(self, source_annot, target_dict):
-        """Compare an annotation object and annotation dictionary
+    @staticmethod
+    def convert_miriam_to_dict(miriam: List) -> Dict:
+        """Convert a MIRIAM annotation to a dictionary
 
-        :param source_annot: Source object of libSBML
-        :param target_annot: Target dictionary
+        :param miriam: MIRIAM annotation
+        :type miriam: list
 
-        :type target_annot: dict
-        :type source_annot: libsbml.Reaction
-
-        :rtype: bool
-        :return: True if there is at least one similar and False if none
+        :rtype: dict
+        :return: Dictionary of the annotation
         """
-        source_miriam = self.readMIRIAMAnnotation(source_annot)
-        source_dict = {}
-        for xref in source_miriam:
-            db = xref.split('/')[-2:-1][0]
-            ref = xref.split('/')[-1].split(':')[-1]
-            if db in source_dict:
-                source_dict[db].append(ref)
-            else:
-                source_dict[db] = [ref]
-        return self.compareAnnotations_dict_dict(source_dict, target_dict)
-
-
-    def compareAnnotations_dict_dict(self, source_dict, target_dict):
-        """Compare an annotation as dictionaries
-
-        :param source_annot: Source dictionary
-        :param target_annot: Target dictionary
-
-        :type source_annot: dict
-        :type target_annot: dict
-
-        :rtype: bool
-        :return: True if there is at least one similar and False if none
-        """
-        # list the common keys between the two
-        for com_key in set(list(source_dict.keys()))-(set(list(source_dict.keys()))-set(list(target_dict.keys()))):
-            # compare the keys and if same is non-empty means that there
-            # are at least one instance of the key that is the same
-            if bool(set(source_dict[com_key]) & set(target_dict[com_key])):
-                return True
-        return False
+        res_dict = {}
+        for xref in miriam:
+            try:
+                m = re.match('^http(s)?://identifiers.org/(\w+\.?\w+)[:/](\w+:?\w*)', xref).groups()
+                db = m[1]
+                ref = m[2]
+                if db in res_dict:
+                    res_dict[db].append(ref)
+                else:
+                    res_dict[db] = [ref]
+            except AttributeError:
+                pass
+        return res_dict
 
 
     #########################################################################
@@ -4332,7 +4443,7 @@ class rpSBML:
         self,
         species_id: str,
         species_name: str=None,
-        chemXref: Dict={},
+        chemXref: List=[],
         inchi: str=None,
         inchikey: str=None,
         smiles: str=None,
@@ -4347,7 +4458,7 @@ class rpSBML:
 
         :param species_id: The id of the created species
         :param species_name: Overwrite the default name of the created species (Default: None)
-        :param chemXref: The dict containing the MIRIAM annotation (Default: {})
+        :param chemXref: The list containing the MIRIAM annotation (Default: {})
         :param inchi: The InChI string to be added to BRSynth annotation (Default: None)
         :param inchikey: The InChIkey string to be added to BRSynth annotation (Default: None)
         :param smiles: The SMLIES string to be added to BRSynth annotation (Default: None)
@@ -4358,7 +4469,7 @@ class rpSBML:
 
         :type species_id: str 
         :type species_name: str
-        :type chemXref: Dict
+        :type chemXref: List
         :type inchikey: str
         :type smiles: str
         :type compartment: str 
@@ -4586,6 +4697,11 @@ class rpSBML:
 
         # compartments
         for comp_id, comp in compartments.items():
-            self.createCompartment(1, comp_id, comp['name'], comp['annot'])
+            comp_lst = []
+            for db, comps in comp['annot'].items():
+                for comp_name in comps:
+                    comp_lst += [f"http://identifiers.org/{self.miriam_header['compartment'][db]}{comp_name}"]
+            self.createCompartment(1, comp_id, comp['name'], comp_lst)
+            # self.createCompartment(1, comp_id, comp['name'], comp['annot'])
 
         self.logger.debug('Generic model created')

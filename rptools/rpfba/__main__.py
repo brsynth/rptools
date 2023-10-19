@@ -1,27 +1,33 @@
-import pandas as pd
-
 from os import path as os_path, makedirs as os_makedirs
+from sys import exit as sys_exit
+from tempfile import NamedTemporaryFile
 from errno import EEXIST as errno_EEXIST
-from logging import Logger, getLogger
-from typing import List, Dict, Tuple
-from copy import deepcopy
 from rptools import build_args_parser
-from rptools.rpfba.Args import add_arguments
-from rptools.rpfba import runFBA
-from rptools.rplibs.rpPathway import rpPathway
+from rptools.__main__ import init
+from rptools.rplibs import (
+    rpPathway,
+    rpModel
+)
+from .Args import add_arguments
+from .rpfba import (
+    preprocess,
+    runFBA,
+    build_results,
+    write_results_to_pathway
+)
+
+
+def _make_dir(filename):
+    dirname = os_path.dirname(filename)
+    if dirname != "" and not os_path.exists(dirname):
+        try:
+            os_makedirs(dirname)
+        except OSError as exc:  # Guard against race condition
+            if exc.errno != errno_EEXIST:
+                raise
 
 
 def entry_point():
-    def _make_dir(filename):
-        dirname = os_path.dirname(filename)
-        if dirname != "" and not os_path.exists(dirname):
-            try:
-                os_makedirs(dirname)
-            except OSError as exc:  # Guard against race condition
-                if exc.errno != errno_EEXIST:
-                    raise
-
-    # Args.
     parser = build_args_parser(
         prog="rpfba",
         description="Process to Flux Balance Analysis",
@@ -29,34 +35,61 @@ def entry_point():
     )
     args = parser.parse_args()
 
-    # Init.
-    from rptools.__main__ import init
-
     logger = init(parser, args)
 
-    pathway = rpPathway.from_rpSBML(infile=args.pathway_file, logger=logger)
+    # PREPROCESSING
+    (
+        merged_model,
+        pathway,
+        ids,
+        hidden_species
+    ) = preprocess(
+        args=args,
+        logger=logger
+    )
 
-    results = runFBA(
+    # FBA
+    results = {}
+    with NamedTemporaryFile() as tmpfile:
+        merged_model.write_to_file(tmpfile.name)
+        results = runFBA(
+            model_file=tmpfile.name,
+            compartment_id=ids['comp_id'],
+            biomass_rxn_id=ids['biomass_rxn_id'],
+            objective_rxn_id=ids['obj_rxn_id'],
+            sim_type=args.sim,
+            fraction_coeff=args.fraction_of,
+            hidden_species=hidden_species,
+            logger=logger,
+        )
+
+    # RESULTS
+    results = build_results(
+        results=results,
         pathway=pathway,
-        gem_sbml_path=args.model_file,
-        compartment_id=args.compartment_id,
-        biomass_rxn_id=args.biomass_rxn_id,
-        objective_rxn_id=args.objective_rxn_id,
-        sim_type=args.sim,
-        fraction_coeff=args.fraction_of,
-        merge=args.merge,
-        ignore_orphan_species=args.ignore_orphan_species,
+        compartment_id=ids['comp_id'],
+        hidden_species=hidden_species,
         logger=logger,
     )
 
-    if results is None:
+    # # Remove the Cobra standard ('compound@compartment') from all compounds
+    # pathway.uncobraize()
+
+    # results = uncobraize_results(results, cobra_suffix(compartment_id))
+
+    # Write results into the pathway
+    write_results_to_pathway(pathway, results, logger)
+
+
+    if not results:
         logger.info("No results written. Exiting...")
     else:
         logger.info("Writing into file...")
         _make_dir(args.outfile)
-        pathway.to_rpSBML().write_to_file(args.outfile)
+        pathway.write_to_file(args.outfile)
         logger.info("   |--> written in " + args.outfile)
 
+    return 0
 
 if __name__ == "__main__":
-    entry_point()
+    sys_exit(entry_point())
