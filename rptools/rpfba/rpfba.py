@@ -14,10 +14,9 @@ from cobra.core.solution import Solution as cobra_solution
 
 from rptools.rplibs import (
     rpSBML,
-    rpPathway,
-    rpReaction
+    rpPathway
 )
-from .cobra_format import cobraize, uncobraize_results, cobra_suffix, to_cobra
+from .cobra_format import cobraize, to_cobra
 
 # TODO: add the pareto frontier optimisation as an automatic way to calculate the optimal fluxes
 
