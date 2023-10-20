@@ -102,7 +102,7 @@ class Test_rpCompletion(TestCase):
                 self.output_path,
                 f'rp_{pathway_id}.xml'
             )
-            ref_pathway = rpPathway.from_rpSBML(ref_file)
+            ref_pathway = rpPathway(ref_file)
             self.assertEqual(pathways[f'rp_{pathway_id}'], ref_pathway)
 
         # print(pathways[0].get_id())

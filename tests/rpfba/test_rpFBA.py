@@ -1,9 +1,11 @@
 from glob import glob
 from zipfile import ZipFile
+from types import SimpleNamespace
+from tempfile import NamedTemporaryFile
 
 from os import path as os_path
 
-from rptools.rpfba.rpFBA import check_SBML_compartment, check_SBML_rxnid, runFBA
+from rptools.rpfba.rpfba import preprocess, runFBA
 from rptools.rplibs import rpPathway, rpSBML
 from main_rpfba import Main_rpfba
 
@@ -30,7 +32,7 @@ class Test_rpFBA(Main_rpfba):
             return (files, names, sims)
 
         def _extract_res_from_file(filename):
-            rp_pathway = rpPathway.from_rpSBML(infile=filename)
+            rp_pathway = rpPathway(infile=filename)
             res = {}
             res["pathway"] = rp_pathway.get_fba()
             res["reactions"] = {}
@@ -52,54 +54,40 @@ class Test_rpFBA(Main_rpfba):
 
         files, names, sims = _extract_var(os_path.join(self.temp_d, "lycopene_fba"))
 
+        args = SimpleNamespace(
+            model_file=self.e_coli_model_path,
+            compartment_id="c",
+            biomass_rxn_id="biomass",
+            objective_rxn_id="rxn_target",
+            ignore_orphan_species=True,
+            sim="fraction",
+            fraction_of=0.75,
+            merge=True
+        )
         for ix in range(len(files)):
-            pathway_cr = rpPathway.from_rpSBML(
-                infile=os_path.join(self.temp_d, "cr_fba", names[ix] + ".xml")
-            )
-            res = runFBA(
-                pathway=pathway_cr,
-                gem_sbml_path=self.e_coli_model_path,
-                compartment_id="c",
-                objective_rxn_id="rxn_target",
-                biomass_rxn_id="biomass",
-                sim_type=sims[ix],
-            )
+            args.pathway_file = os_path.join(self.temp_d, "cr_fba", names[ix] + ".xml")
+            (
+                merged_model,
+                pathway,
+                ids,
+                hidden_species
+            ) = preprocess(args=args)
+            results = {}
+            with NamedTemporaryFile() as tmpfile:
+                merged_model.write_to_file(tmpfile.name)
+                results = runFBA(
+                    model_file=tmpfile.name,
+                    compartment_id=ids['comp_id'],
+                    biomass_rxn_id=ids['biomass_rxn_id'],
+                    objective_rxn_id=ids['obj_rxn_id'],
+                    sim_type=sims[ix],
+                    fraction_coeff=args.fraction_of,
+                    hidden_species=hidden_species
+                )
 
             res_previous = _format_dict(_extract_res_from_file(files[ix]))
             res_run_fba = _format_dict(
-                {x: y for x, y in res.items() if x in ["pathway", "reactions"]}
+                {x: y for x, y in results.items() if x in ["pathway", "reactions"]}
             )
 
             self.assertDictEqual(res_previous, res_run_fba)
-
-    def test_check_SBML_compartment(self):
-        self.assertEqual(check_SBML_compartment(self.rpsbml, "MNXC3"), "MNXC3")
-        self.assertEqual(check_SBML_compartment(self.rpsbml, "cytosol"), "MNXC3")
-        self.assertEqual(check_SBML_compartment(self.rpsbml, "c"), "MNXC3")
-
-    def test_check_SBML_rxnid(self):
-        rpsbml = rpSBML(self.e_coli_model_path)
-        # Return types.
-        res = check_SBML_rxnid(rpsbml=rpsbml, rxn_id="biomass")
-        self.assertIsInstance(res, str)
-        # Values
-        self.assertEqual(res, "biomass")
-        # Challenge - 1
-        res = check_SBML_rxnid(rpsbml=rpsbml, rxn_id="undefined")
-        self.assertIs(res, None)
-
-
-# def build_rpsbml(
-# def build_hidden_species(
-# def build_results(
-# def create_target_consumption_reaction(
-# def write_results_to_pathway(
-# def complete_heterologous_pathway(
-# def rp_fraction(
-# def runCobra(
-# def build_cobra_model(
-# def write_results_to_rpsbml(
-# def write_fluxes_to_objectives(
-# def write_fluxes_to_reactions(
-# def write_objective_to_pathway(
-# def create_ignored_species_group(

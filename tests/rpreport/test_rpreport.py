@@ -1,6 +1,4 @@
-from rptools.rpreport.rp_report import (
-    run_report
-)
+from rptools.rpreport import run_report
 import os
 import fnmatch
 import tempfile

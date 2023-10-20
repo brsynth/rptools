@@ -61,7 +61,7 @@ class rpPathway(Pathway, rpObject):
         'id': 'c',
         'name': 'cytosol',
         'annot': {
-            'name': ['cytosol'],
+            # 'name': ['cytosol'],
             'seed': ['cytosol', 'c0', 'c'],
             'mnx': ['MNXC3'],
             'bigg': ['c_c', 'c']
@@ -70,7 +70,8 @@ class rpPathway(Pathway, rpObject):
 
     def __init__(
         self,
-        id: str,
+        infile: str = None,
+        id: str = '',
         cache: Cache = None,
         logger: Logger = getLogger(__name__)
     ):
@@ -80,10 +81,14 @@ class rpPathway(Pathway, rpObject):
         ----------
         id: str
             ID of the reaction
+        infile: str
+            Path to the input file (SBML)
         cache: Cache, optional
             Cache to store compounds once over reactions
         logger : Logger, optional
         """
+        self.__rpsbml = rpSBML(inFile=infile, logger=logger)
+        id = id if id else self.get_rpsbml().getName()
         Pathway.__init__(
             self,
             id=id,
@@ -117,10 +122,8 @@ class rpPathway(Pathway, rpObject):
         # Additional names for methods
         self.get_sink = self.get_sink_species
         self.set_sink = self.set_sink_species
-
-    ## OUT METHODS
-    # def __repr__(self):
-    #     return dumps(self.to_dict(), indent=4)
+        if infile:
+            self.__import_rpSBML(self.__rpsbml)
 
     def _to_dict(
         self,
@@ -159,35 +162,6 @@ class rpPathway(Pathway, rpObject):
             'unit_defs': deepcopy(self.get_unit_defs()),
             'compartments': deepcopy(self.get_compartments()),
         }
-
-    # def __eq__(self, other) -> bool:
-    #     """Check if two rpPathway objects are equal.
-
-    #     Parameters
-    #     ----------
-    #     other: rpPathway
-    #         Object to compare with.
-    #     """
-    #     if not isinstance(other, rpPathway):
-    #         return False
-    #     else:
-    #         return self.to_rpSBML() == other.to_rpSBML()
-
-    # def __eq__(self, other) -> bool:
-    #     """Returns the equality between two rpPathway objects."""
-    #     if not isinstance(self, other.__class__):
-    #         return False
-    #     # Compare with specific keys
-    #     return all(
-    #         (
-    #             self._to_dict().get(key) == other._to_dict().get(key)
-    #             or self._to_dict().get(key) is other._to_dict().get(key)
-    #         )
-    #         for key in [
-    #             'reactions',
-    #             'target',
-    #         ]
-    #     )
 
     ## READ METHODS
     def get_species_groups(self) -> Dict[str, Set]:
@@ -647,9 +621,8 @@ class rpPathway(Pathway, rpObject):
         # except TypeError:
         #     self.__set_species_group('intermediate', [])
 
-    @staticmethod
-    def from_rpSBML(
-        infile: str = None,
+    def __import_rpSBML(
+        self,
         rpsbml: rpSBML = None,
         logger: Logger = getLogger(__name__)
     ) -> 'rpPathway':
@@ -671,18 +644,12 @@ class rpPathway(Pathway, rpObject):
         rpPathway object built.
         """
 
-        if infile is not None:
-            rpsbml = rpSBML(inFile=infile, logger=logger)
-
-        # Create the rpPathway object
-        pathway = rpPathway(
-            id=rpsbml.getName(),
-            logger=logger
-        )
+        # rpsbml = self.get_rpsbml()
+        self.__rpsbml = rpsbml
 
         ## COMPARTMENTS
         for compartment in rpsbml.getModel().getListOfCompartments():
-            pathway.add_compartment(
+            self.add_compartment(
                 id=compartment.getId(),
                 name=compartment.getName(),
                 annot=rpSBML.readMIRIAMAnnotation(compartment.getAnnotation()),
@@ -691,7 +658,7 @@ class rpPathway(Pathway, rpObject):
         ## UNIT DEFINITIONS
         for unit_defs in rpsbml.getModel().getListOfUnitDefinitions():
             for unit in unit_defs.getListOfUnits():
-                pathway.add_unit_def(
+                self.add_unit_def(
                     id=unit.getId(),
                     kind=unit.getKind(),
                     exp=unit.getExponent(),
@@ -701,7 +668,7 @@ class rpPathway(Pathway, rpObject):
 
         ## PARAMETERS
         for param in rpsbml.getModel().getListOfParameters():
-            pathway.add_parameter(
+            self.add_parameter(
                 id=param.getId(),
                 value=param.getValue(),
                 units=param.getUnits()
@@ -729,12 +696,12 @@ class rpPathway(Pathway, rpObject):
 
         ## REACTIONS
         for rxn_id, rxn_infos in rpsbml.read_reactions(pathway_id).items():
-            rxn_infos['fbc_lower_value'] = pathway.get_parameter_value(rxn_infos['fbc_lower_value'])
-            rxn_infos['fbc_upper_value'] = pathway.get_parameter_value(rxn_infos['fbc_upper_value'])
-            rxn_infos['fbc_units'] = pathway.get_parameter_units(rxn_infos['fbc_lower_value'])
+            rxn_infos['fbc_lower_value'] = self.get_parameter_value(rxn_infos['fbc_lower_value'])
+            rxn_infos['fbc_upper_value'] = self.get_parameter_value(rxn_infos['fbc_upper_value'])
+            rxn_infos['fbc_units'] = self.get_parameter_units(rxn_infos['fbc_lower_value'])
             reaction, target_id = rpReaction.build(rxn_id, rxn_infos, logger)
             # Add the reaction to the pathway
-            pathway.add_reaction(
+            self.add_reaction(
                 rxn=reaction,
                 target_id=target_id
             )
@@ -748,7 +715,7 @@ class rpPathway(Pathway, rpObject):
                     rpsbml.getGroup(group_id).getAnnotation(),
                     rpsbml.logger
                 )
-                write_to(annot, pathway)
+                write_to(annot, self)
             # 'rp_sink_species', 'rp_completed_species', 'rp_trunk_species'
             # have no annotation to write into rpPathway
             else:
@@ -756,10 +723,12 @@ class rpPathway(Pathway, rpObject):
                     {
                         group_id: rpsbml.readGroupMembers(group_id)
                     },
-                    pathway
+                    self
                 )
 
-        return pathway
+    def get_rpsbml(self) -> rpSBML:
+        """Get the rpSBML object."""
+        return self.__rpsbml
 
     def to_rpSBML(self) -> rpSBML:
         """Convert the current rpPathway object
@@ -770,8 +739,8 @@ class rpPathway(Pathway, rpObject):
         rpSBML object.
         """
 
-        rpsbml = rpSBML(name=self.get_id(), logger=self.get_logger())
-
+        rpsbml = self.get_rpsbml()
+        # print(self.get_compartments())
         ## Create a generic Model, ie the structure and unit definitions that we will use the most
         rpsbml.genericModel(
             modelName=self.get_id(),
@@ -832,6 +801,26 @@ class rpPathway(Pathway, rpObject):
             )
 
         return rpsbml
+
+    @staticmethod
+    def from_rpSBML(rpsbml: rpSBML) -> 'rpPathway':
+        """Build a rpPathway object from a rpSBML object.
+
+        Parameters
+        ----------
+        rpsbml: rpSBML
+            rpSBML object
+
+        Returns
+        -------
+        rpPathway object built.
+        """
+        pathway = rpPathway(
+            id=rpsbml.getName(),
+            logger=rpsbml.logger
+        )
+        pathway.__import_rpSBML(rpsbml)
+        return pathway
 
     def add_reaction(
         self,
@@ -932,3 +921,38 @@ class rpPathway(Pathway, rpObject):
         for spe_id in self.get_species_ids():
             self.rename_compound(spe_id, uncobraize(spe_id))
 
+    def create_target_consumption_reaction(
+        target_id: str, logger: Logger = getLogger(__name__)
+    ) -> "rpReaction":
+        rxn = rpReaction(id="rxn_target", logger=logger)
+        rxn.add_reactant(compound_id=target_id, stoichio=1)
+        return rxn
+
+    def setup_pathway_fba(self):
+
+        # Create consumption of the target
+        rxn_target = rpReaction(id="rxn_target", logger=self.get_logger())
+        rxn_target.add_reactant(compound_id=self.get_target_id(), stoichio=1)
+
+        # Set Flux Bounds
+        for rxn in self.get_list_of_reactions() + [rxn_target]:
+            rxn.set_fbc(l_bound=0, u_bound=rpReaction.get_default_fbc_upper())
+            rxn.set_reversible(False)
+
+        # Create the target consumption reaction in the rpSBML
+        self.get_rpsbml().createReaction(
+            id=rxn_target.get_id(),
+            reactants=rxn_target.get_reactants(),
+            products=rxn_target.get_products(),
+            smiles=rxn_target.get_smiles(),
+            fbc_upper=rxn_target.get_fbc_upper(),
+            fbc_lower=rxn_target.get_fbc_lower(),
+            fbc_units=rxn_target.get_fbc_units(),
+            reversible=rxn_target.reversible(),
+            reacXref={"ec": rxn_target.get_ec_numbers()},
+            infos=rxn_target._to_dict(full=False),
+        )
+
+    def write_to_file(self, outfile: str) -> None:
+        """Write the pathway into a SBML file."""
+        self.to_rpSBML().write_to_file(outfile)

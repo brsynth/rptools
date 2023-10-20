@@ -4,7 +4,7 @@ Created on June 16 2020
 @author: Joan Hérisson
 """
 
-from rptools.rpfba.rpFBA import (
+from rptools.rpfba.rpfba import (
     runFBA
 )
 

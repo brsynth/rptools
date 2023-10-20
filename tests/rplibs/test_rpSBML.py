@@ -414,12 +414,11 @@ class Test_rpSBML(Main_rplibs):
         # Challenge - create
         species_id='M_ipdp_c'
         species_name='Isopentenyl diphosphate'
-        chemXref = {
-            'bigg': ['ipdp'],
-            'biocyc': ['TUNGSTATE'],
-            'chebi': ['128769', '6037']
-            #'metanetx': ['MNXM83']
-        }
+        chemXref = [
+            'http://identifiers.org/chebi/CHEBI:6037',
+            'http://identifiers.org/chebi/CHEBI:128769',
+            'http://identifiers.org/biocyc/META:TUNGSTATE'
+        ]
         inchi="InChI=1S/C5H12O7P2/c1-5(2)3-4-11-14(9,10)12-13(6,7)8/h1,3-4H2,2H3,(H,9,10)(H2,6,7,8)/p-3"
         inchikey="NUHSROFQTUXZQQ-UHFFFAOYSA-K"
         smiles="C=C(C)CCOP(=O)([O-])OP(=O)([O-])[O-]"
@@ -449,17 +448,13 @@ class Test_rpSBML(Main_rplibs):
             species_name,
             specie.getName()
         )
-        self.assertTrue(
-            self.rpsbml_lycopene.compareAnnotations_annot_dict(
-                specie.getAnnotation(),
-                chemXref
-            )
+        self.assertListEqual(
+            sorted(chemXref),
+            sorted(rpSBML.readMIRIAMAnnotation(specie.getAnnotation()))
         )
-        self.assertTrue(
-            self.rpsbml_lycopene.compareAnnotations_dict_dict(
-                self.rpsbml_lycopene.readBRSYNTHAnnotation(specie.getAnnotation()),
-                brsynth_annot
-            )
+        self.assertDictEqual(
+            self.rpsbml_lycopene.readBRSYNTHAnnotation(specie.getAnnotation()),
+            brsynth_annot
         )
         self.assertEqual(
             compartment,
