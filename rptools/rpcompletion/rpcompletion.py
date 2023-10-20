@@ -30,6 +30,7 @@ from .Args import (
     default_max_subpaths_filter
 )
 
+
 def rp_completion(
     rp2_metnet,
     sink,
