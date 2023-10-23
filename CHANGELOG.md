@@ -1,8 +1,17 @@
 # Changelog
 
+## [6.3.1](https://github.com/brsynth/rptools/tree/6.3.1) (2023-10-23)
+
+[Full Changelog](https://github.com/brsynth/rptools/compare/6.3.0...6.3.1)
+
 ## [6.3.0](https://github.com/brsynth/rptools/tree/6.3.0) (2023-10-20)
 
 [Full Changelog](https://github.com/brsynth/rptools/compare/6.2.3...6.3.0)
+
+**Merged pull requests:**
+
+- merge [\#31](https://github.com/brsynth/rptools/pull/31) ([breakthewall](https://github.com/breakthewall))
+- rpfba: Remove `medium` feature [\#29](https://github.com/brsynth/rptools/pull/29) ([guillaume-gricourt](https://github.com/guillaume-gricourt))
 
 ## [6.2.3](https://github.com/brsynth/rptools/tree/6.2.3) (2023-03-17)
 
