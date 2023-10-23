@@ -13,7 +13,6 @@ dependencies:
   - scipy # rpthermo
   - equilibrator-api # rpthermo
   - equilibrator-cache >=0.5.4 # rpthermo
-  - openbabel # rpthermo (equilibrator-assets)
   - colored # rplibs
   - networkx >=2.5 # rplibs
   - filetype  # rplibs (conda-forge)
@@ -22,5 +21,4 @@ dependencies:
   - chemlite # rpcompletion ,rpfba, rpthermo
   - h5py # rpscore
   - xgboost # rpscore
-  - sqlalchemy # (for pandas requirements)
   - bs4 # rpviz
