@@ -42,7 +42,7 @@ Please see `rptool` documentation.
 from rptools.rplibs import rpPathway
 from rptools.rpfba import runFBA
 
-pathway = rpPathway.from_rpSBML(infile='tests/rpfba/data/sets/measured_3/B.xml')
+pathway = rpPathway(infile='tests/rpfba/data/sets/measured_3/B.xml')
 
 results = runFBA(
     pathway=pathway,

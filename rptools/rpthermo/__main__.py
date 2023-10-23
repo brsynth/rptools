@@ -36,7 +36,7 @@ def _cli():
     )
 
     ## READ PATHWAY FROM FILE
-    pathway = rpPathway.from_rpSBML(
+    pathway = rpPathway(
       infile=args.infile,
       logger=logger
     )

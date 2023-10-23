@@ -31,7 +31,7 @@ def entry_point():
     # Build the list of pathways to rank (with their filename)
     pathways = {}
     for pathway_fname in args.pathways:
-        pathway = rpPathway.from_rpSBML(
+        pathway = rpPathway(
             infile=pathway_fname,
             logger=logger
         )

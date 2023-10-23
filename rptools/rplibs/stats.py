@@ -79,7 +79,7 @@ def entry_point():
 
     # Build the list of pathways to rank
     pathways = [
-        rpPathway.from_rpSBML(
+        rpPathway(
             infile=pathway_filename,
             logger=logger
         ) for pathway_filename in args.pathways

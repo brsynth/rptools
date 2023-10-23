@@ -22,7 +22,7 @@ Please see `rptool` documentation.
 from rptools.rpscore import predict_score
 from rptools.rplibs import rpPathway
 
-pathway = rpPathway.from_rpSBML(
+pathway = rpPathway(
     infile='tests/rpscore/data/pathway.xml'
 )
 

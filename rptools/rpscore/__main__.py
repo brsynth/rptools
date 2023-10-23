@@ -36,13 +36,13 @@ def entry_point():
     # pathways = []
     # for pathway in args.pathways:
     #     pathways.append(
-    #         rpPathway.from_rpSBML(
+    #         rpPathway(
     #             infile=pathway,
     #             logger=logger
     #         )
     #     )
 
-    pathway = rpPathway.from_rpSBML(
+    pathway = rpPathway(
         infile=args.infile,
         logger=logger
     )
