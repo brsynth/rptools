@@ -2,7 +2,7 @@ name: rptools
 channels:
   - conda-forge
 dependencies:
-  - python >=3.9
+  - python <=3.11
   - brs_utils # rpcompletion, rpfba, Args
   - cobra # rpfba, rpextractsink, rplibs
   - timeout-decorator # rpextractsink
@@ -17,9 +17,10 @@ dependencies:
   - colored # rplibs
   - networkx >=2.5 # rplibs
   - filetype  # rplibs (conda-forge)
-  - rr_cache>=3.1.1 # rpcompletion
+  - rr_cache >=3.1.1 # rpcompletion
   - rxn_rebuild # rpcompletion
   - chemlite # rpcompletion ,rpfba, rpthermo
   - h5py # rpscore
   - xgboost # rpscore
-  - sqlalchemy =1.4.31 # (for pandas requirements)
+  - sqlalchemy # (for pandas requirements)
+  - bs4 # rpviz
