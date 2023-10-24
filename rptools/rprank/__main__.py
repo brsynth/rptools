@@ -1,16 +1,5 @@
-from typing import (
-    Dict,
-    List
-)
-from logging import (
-    Logger,
-    getLogger
-)
-from os import (
-    path as os_path,
-    makedirs
-)
-from .rpRank import rank
+from os import path as os_path
+from .rprank import rank
 from .Args import add_arguments
 from rptools.rplibs import rpPathway
 from rptools import build_args_parser
