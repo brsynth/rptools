@@ -4,7 +4,7 @@ channels:
 dependencies:
   - python <=3.11
   - brs_utils # rpcompletion, rpfba, Args
-  - cobra # rpfba, rpextractsink, rplibs
+  - cobra >=0.26.3 # rpfba, rpextractsink, rplibs
   - timeout-decorator # rpextractsink
   - rdkit # rpextractsink, rplibs
   - python-libsbml # rplibs, rpfba
