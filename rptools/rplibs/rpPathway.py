@@ -768,7 +768,7 @@ class rpPathway(Pathway, rpObject):
 
         ## Add species to the model
         for specie in self.get_species():
-            if isinstance(specie, Compound):
+            if not isinstance(specie, rpCompound):
                 specie = rpCompound.from_compound(specie)
             rpsbml.createSpecies(
                 species_id=specie.get_id(),
