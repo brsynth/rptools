@@ -14,9 +14,10 @@ from rptools.rplibs import (
     rpReaction,
     rpCompound
 )
+from main_rplibs import Main_rplibs
 
 
-class Test_rpPathway(TestCase):
+class Test_rpPathway(Main_rplibs):
 
     def setUp(self):
         self.target = rpCompound(
@@ -292,6 +293,17 @@ class Test_rpPathway(TestCase):
                 'global_score': -1
             }
         )
+
+    # def test_to_rpSBML(self):
+    #     with NamedTemporaryFile() as tempf:
+    #         pathway = rpPathway(self.rpsbml_lycopene_path)
+    #         pathway.to_rpSBML().write_to_file(tempf.name)
+    #         # compare files
+    #         with open(self.rpsbml_lycopene_path, 'r') as f:
+    #             self.assertEqual(
+    #                 f.read(),
+    #                 tempf.read()
+    #             )
 
     def test_completed_species(self):
         species = ['SPE_1', 'SPE_2']

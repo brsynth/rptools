@@ -786,6 +786,7 @@ class rpPathway(Pathway, rpObject):
                 'ec-code': rxn.get_ec_numbers(),
                 'miriam': rxn.get_miriam()
             }
+            xref = [f'http://identifiers.org/ec-code/{ec}' for ec in xref['ec-code'] if ec != '']
             # Add the reaction in the model
             rpsbml.createReaction(
                 id=rxn.get_id(),

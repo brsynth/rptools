@@ -3096,44 +3096,62 @@ class rpSBML:
                 pass
         # add or ignore
         toadd = self._compareXref(inside, xref)
-        toadd = self.convert_miriam_to_dict(toadd)
-        for database_id in toadd:
-            for species_id in toadd[database_id]:
-                # not sure how to avoid having it that way
-                if database_id in self.miriam_header[type_param]:
-                    try:
-                        # determine if the dictionnaries
-                        annotation = '''<annotation>
+        # if type_param=='reaction':
+        #     toadd = {'ec-code': toadd}
+        # else:
+        #     toadd = self.convert_miriam_to_dict(toadd)
+        for url in toadd:
+            annotation = '''<annotation>
     <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
     <rdf:Description rdf:about="# tmp">
       <bqbiol:is>
-        <rdf:Bag>'''
-                        if type_param=='species':
-                            if database_id=='kegg' and species_id[0]=='C':
-                                annotation += '''
-              <rdf:li rdf:resource="http://identifiers.org/'''+self.miriam_header[type_param]['kegg_c']+str(species_id)+'''"/>'''
-                            elif database_id=='kegg' and species_id[0]=='D':
-                                annotation += '''
-              <rdf:li rdf:resource="http://identifiers.org/'''+self.miriam_header[type_param]['kegg_d']+str(species_id)+'''"/>'''
-                            else:
-                                annotation += '''
-              <rdf:li rdf:resource="http://identifiers.org/'''+self.miriam_header[type_param][database_id]+str(species_id)+'''"/>'''
-                        else:
-                            annotation += '''
-              <rdf:li rdf:resource="http://identifiers.org/'''+self.miriam_header[type_param][database_id]+str(species_id)+'''"/>'''
-                        annotation += '''
+        <rdf:Bag>
+            <rdf:li rdf:resource="'''+url+'''"/>
         </rdf:Bag>
       </bqbiol:is>
     </rdf:Description>
     </rdf:RDF>
     </annotation>'''
-                        toPass_annot = libsbml.XMLNode.convertStringToXMLNode(annotation)
-                        toWrite_annot = toPass_annot.getChild('RDF').getChild('Description').getChild('is').getChild('Bag').getChild(0)
-                        miriam_annot.insertChild(0, toWrite_annot)
-                    except KeyError:
-                        # WARNING need to check this
-                        self.logger.warning(f'Cannot find {database_id} in self.miriam_header for {type_param}')
-                        continue
+            toPass_annot = libsbml.XMLNode.convertStringToXMLNode(annotation)
+            toWrite_annot = toPass_annot.getChild('RDF').getChild('Description').getChild('is').getChild('Bag').getChild(0)
+            miriam_annot.insertChild(0, toWrite_annot)
+    #     for database_id in toadd:
+    #         for species_id in toadd[database_id]:
+    #             # not sure how to avoid having it that way
+    #             if database_id in self.miriam_header[type_param]:
+    #                 try:
+    #                     # determine if the dictionnaries
+    #                     annotation = '''<annotation>
+    # <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+    # <rdf:Description rdf:about="# tmp">
+    #   <bqbiol:is>
+    #     <rdf:Bag>'''
+    #                     if type_param=='species':
+    #                         if database_id=='kegg' and species_id[0]=='C':
+    #                             annotation += '''
+    #           <rdf:li rdf:resource="http://identifiers.org/'''+self.miriam_header[type_param]['kegg_c']+str(species_id)+'''"/>'''
+    #                         elif database_id=='kegg' and species_id[0]=='D':
+    #                             annotation += '''
+    #           <rdf:li rdf:resource="http://identifiers.org/'''+self.miriam_header[type_param]['kegg_d']+str(species_id)+'''"/>'''
+    #                         else:
+    #                             annotation += '''
+    #           <rdf:li rdf:resource="http://identifiers.org/'''+self.miriam_header[type_param][database_id]+str(species_id)+'''"/>'''
+    #                     else:
+    #                         annotation += '''
+    #           <rdf:li rdf:resource="http://identifiers.org/'''+self.miriam_header[type_param][database_id]+str(species_id)+'''"/>'''
+    #                     annotation += '''
+    #     </rdf:Bag>
+    #   </bqbiol:is>
+    # </rdf:Description>
+    # </rdf:RDF>
+    # </annotation>'''
+    #                     toPass_annot = libsbml.XMLNode.convertStringToXMLNode(annotation)
+    #                     toWrite_annot = toPass_annot.getChild('RDF').getChild('Description').getChild('is').getChild('Bag').getChild(0)
+    #                     miriam_annot.insertChild(0, toWrite_annot)
+    #                 except KeyError:
+    #                     # WARNING need to check this
+    #                     self.logger.warning(f'Cannot find {database_id} in self.miriam_header for {type_param}')
+    #                     continue
         if isReplace:
             ori_miriam_annot = sbase_obj.getAnnotation()
             if not ori_miriam_annot:
@@ -4284,7 +4302,7 @@ class rpSBML:
         fbc_lower: float,
         fbc_units: str,
         reversible: bool = True,
-        reacXref: Dict = {},
+        reacXref: List = [],
         infos: Dict = {},
         meta_id: str = None
     ):
@@ -4302,7 +4320,7 @@ class rpSBML:
         :param rxn: The id's of the reactant and products of the reactions. Example: {'left': [], 'right': []}
         :param compartment_id: The id of the compartment to add the reaction
         :param reaction_smiles: The reaction rule to add to the BRSynth annotation of the reaction (Default: None)
-        :param reacXref: The dict containing the MIRIAM annotation (Default: {})
+        :param reacXref: The list containing the reactions cross references (Default: [])
         :param pathway_id: The Groups id of the reaction to which the reacion id will be added (Default: None)
         :param meta_id: Meta id (Default: None)
 
@@ -4312,7 +4330,7 @@ class rpSBML:
         :type rxn: dict
         :type compartment_id: str
         :type reaction_smiles: str
-        :type reacXref: dict
+        :type reacXref: list
         :type pathway_id: str
         :type meta_id: str
 
