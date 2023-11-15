@@ -950,7 +950,7 @@ class rpPathway(Pathway, rpObject):
             fbc_lower=rxn_target.get_fbc_lower(),
             fbc_units=rxn_target.get_fbc_units(),
             reversible=rxn_target.reversible(),
-            reacXref={"ec": rxn_target.get_ec_numbers()},
+            reacXref=rxn_target.get_ec_numbers(),
             infos=rxn_target._to_dict(full=False),
         )
 
