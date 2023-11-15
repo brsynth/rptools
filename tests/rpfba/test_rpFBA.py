@@ -69,21 +69,16 @@ class Test_rpFBA(Main_rpfba):
             (
                 merged_model,
                 pathway,
-                ids,
-                hidden_species
+                ids
             ) = preprocess(args=args)
-            results = {}
-            with NamedTemporaryFile() as tmpfile:
-                merged_model.write_to_file(tmpfile.name)
-                results = runFBA(
-                    model_file=tmpfile.name,
-                    compartment_id=ids['comp_id'],
-                    biomass_rxn_id=ids['biomass_rxn_id'],
-                    objective_rxn_id=ids['obj_rxn_id'],
-                    sim_type=sims[ix],
-                    fraction_coeff=args.fraction_of,
-                    hidden_species=hidden_species
-                )
+            results = runFBA(
+                model=merged_model,
+                compartment_id=ids['comp_id'],
+                biomass_rxn_id=ids['biomass_rxn_id'],
+                objective_rxn_id=ids['obj_rxn_id'],
+                sim_type=sims[ix],
+                fraction_coeff=args.fraction_of
+            )
 
             res_previous = _format_dict(_extract_res_from_file(files[ix]))
             res_run_fba = _format_dict(

@@ -60,6 +60,13 @@ def preprocess(
     logger.debug(f"model: {model}")
     logger.debug(f"reactions_in_both: {reactions_in_both}")
     logger.debug(f"missing_species: {missing_species}")
+
+    # CHECKING
+    # Detect orphan species among missing ones in the model,
+    # i.e. that are only consumed or produced
+    if args.ignore_orphan_species:
+        merged_model.search_isolated_species(missing_species)
+
     if args.merge:
         merged_outfile = (
             pathway.get_id() + "__MERGED_IN__" + model.getName() + ".sbml"
@@ -67,20 +74,7 @@ def preprocess(
         logger.info(f"Write merged rpSBML file to {merged_outfile}")
         merged_model.write_to_file(merged_outfile)
 
-    # CHECKING
-    # Detect orphan species among missing ones in the model,
-    # i.e. that are only consumed or produced
-    if args.ignore_orphan_species:
-        hidden_species = build_hidden_species(
-            rpsbml=merged_model,
-            missing_species=missing_species,
-            compartment_id=compartment_id,
-            logger=logger,
-        )
-    else:
-        hidden_species = []
-
-    return merged_model, pathway, ids, hidden_species
+    return merged_model, pathway, ids
 
 
 def check_ids(
@@ -135,7 +129,7 @@ def check_ids(
     }
 
 
-def runFBA(
+def runFBA_fromFile(
     model_file: str,
     compartment_id: str,
     objective_rxn_id: str = "rxn_target",
@@ -177,10 +171,60 @@ def runFBA(
     logger.debug("       compartment_id: " + str(compartment_id))
     logger.debug("       hidden_species: " + str(hidden_species))
 
-    # Load the model
-    model_c = rpSBML.cobraize(
-        rpSBML(inFile=model_file, logger=logger)
+    return runFBA(
+        model=rpSBML(inFile=model_file, logger=logger),
+        compartment_id=compartment_id,
+        objective_rxn_id=objective_rxn_id,
+        biomass_rxn_id=biomass_rxn_id,
+        sim_type=sim_type,
+        fraction_coeff=fraction_coeff,
+        hidden_species=hidden_species,
+        logger=logger
     )
+
+
+def runFBA(
+    model: rpSBML,
+    compartment_id: str,
+    objective_rxn_id: str = "rxn_target",
+    biomass_rxn_id: str = "biomass",
+    sim_type: str = "fraction",
+    fraction_coeff: float = 0.75,
+    logger: Logger = getLogger(__name__),
+) -> Dict:
+    """Single rpSBML simulation
+
+    :param model_file: Path to the model file (SBML)
+    :param compartment_id: The compartment ID
+    :param objective_rxn_id: The objective reaction ID (Default: rxn_target)
+    :param biomass_rxn_id: The biomass reaction ID (Default: biomass)
+    :param sim_type: The simulation type (Default: fraction)
+    :param fraction_coeff: The fraction coefficient (Default: 0.75)
+    :param hidden_species: List of hidden species (Default: [])
+    :param logger: The logger object
+
+    :type model_file: str
+    :type compartment_id: str
+    :type objective_rxn_id: str
+    :type biomass_rxn_id: str
+    :type sim_type: str
+    :type fraction_coeff: float
+    :type hidden_species: List[str]
+    :type logger: Logger
+
+    :return: The results of the simulation
+    :rtype: Dict
+    """
+
+    logger.debug("                model: " + str(model))
+    logger.debug("             sim_type: " + str(sim_type))
+    logger.debug("     objective_rxn_id: " + str(objective_rxn_id))
+    logger.debug("       biomass_rxn_id: " + str(biomass_rxn_id))
+    logger.debug("       fraction_coeff: " + str(fraction_coeff))
+    logger.debug("       compartment_id: " + str(compartment_id))
+
+    # # Load the model
+    # model_c = rpSBML.cobraize(model)
 
     # # NOTE: reactions is organised with key being the rpsbml reaction and value being the rpsbml_gem value`
     # # BUG: when merging the rxn_sink (very rare cases) can be recognised if another reaction contains the same species as a reactant
@@ -200,24 +244,22 @@ def runFBA(
     ######## FBA ########
     results = {}
     if sim_type.lower() in ["fba", "pfba"]:
-        objective_id = model_c.find_or_create_objective(
+        objective_id = model.find_or_create_objective(
             rxn_id=objective_rxn_id,
             obj_id=f"brs_obj_{objective_rxn_id}",
         )
         cobra_results = runCobra(
             sim_type=sim_type,
-            rpsbml=model_c,
-            hidden_species=hidden_species,
+            rpsbml=model,
             objective_id=objective_id,
             fraction_coeff=fraction_coeff,
             logger=logger,
         )
     else:
         (cobra_results, results_biomass, objective_id) = rp_fraction(
-            rpsbml=model_c,
+            rpsbml=model,
             objective_rxn_id=objective_rxn_id,
             biomass_rxn_id=biomass_rxn_id,
-            hidden_species=hidden_species,
             fraction_coeff=fraction_coeff,
             logger=logger,
         )
@@ -233,7 +275,7 @@ def runFBA(
 
     # Write results for merged model
     write_results_to_rpsbml(
-        rpsbml=model_c,
+        rpsbml=model,
         objective_id=objective_id,
         cobra_results=cobra_results,
         sim_type=sim_type,
@@ -277,16 +319,17 @@ def runFBA(
     # exit()
 
 
-def build_hidden_species(
-    rpsbml: rpSBML,
-    missing_species: List[str],
-    compartment_id: bool,
-    logger: Logger = getLogger(__name__),
-) -> List[str]:
-    rpsbml.search_isolated_species(missing_species)
-    return [
-        cobraize(spe_id, compartment_id) for spe_id in rpsbml.get_isolated_species()
-    ]
+# def build_hidden_species(
+#     rpsbml: rpSBML,
+#     missing_species: List[str],
+#     compartment_id: bool,
+#     logger: Logger = getLogger(__name__),
+# ) -> List[str]:
+#     rpsbml.search_isolated_species(missing_species)
+#     return rpsbml.get_isolated_species()
+#     return [
+#         cobraize(spe_id, compartment_id) for spe_id in rpsbml.get_isolated_species()
+#     ]
 
 
 def build_results(
@@ -355,123 +398,123 @@ def write_results_to_pathway(
     pathway.add_species_group("fba_ignored", results["ignored_species"])
 
 
-def complete_heterologous_pathway(
-    rpsbml: rpSBML,
-    hidden_species: List[str],
-    rpsbml_merged: rpSBML,
-    species_group_id: str,
-    sink_species_group_id: str,
-    pathway_id: str,
-    reactions_in_both: Dict,
-    logger: Logger = getLogger(__name__),
-) -> None:
-    # Save the central species
-    # groups = rpsbml.getPlugin('groups')
-    central = rpsbml.getGroup(species_group_id)
-    sink_group = rpsbml.getGroup(sink_species_group_id)
-    rp_group = rpsbml.getGroup(pathway_id)
-    cent_spe = [str(i.getIdRef()) for i in central.getListOfMembers()]
-    sink_spe = [str(i.getIdRef()) for i in sink_group.getListOfMembers()]
-    rp_reac = [str(i.getIdRef()) for i in rp_group.getListOfMembers()]
-    logger.debug("old central species: " + str(cent_spe))
-    logger.debug("old sink species:    " + str(sink_spe))
-    logger.debug("old rp reactions:    " + str(rp_reac))
+# def complete_heterologous_pathway(
+#     rpsbml: rpSBML,
+#     hidden_species: List[str],
+#     rpsbml_merged: rpSBML,
+#     species_group_id: str,
+#     sink_species_group_id: str,
+#     pathway_id: str,
+#     reactions_in_both: Dict,
+#     logger: Logger = getLogger(__name__),
+# ) -> None:
+#     # Save the central species
+#     # groups = rpsbml.getPlugin('groups')
+#     central = rpsbml.getGroup(species_group_id)
+#     sink_group = rpsbml.getGroup(sink_species_group_id)
+#     rp_group = rpsbml.getGroup(pathway_id)
+#     cent_spe = [str(i.getIdRef()) for i in central.getListOfMembers()]
+#     sink_spe = [str(i.getIdRef()) for i in sink_group.getListOfMembers()]
+#     rp_reac = [str(i.getIdRef()) for i in rp_group.getListOfMembers()]
+#     logger.debug("old central species: " + str(cent_spe))
+#     logger.debug("old sink species:    " + str(sink_spe))
+#     logger.debug("old rp reactions:    " + str(rp_reac))
 
-    rev_reactions = {v: k for k, v in reactions_in_both.items()}
-    logger.debug("reactions_in_both: " + str(reactions_in_both))
-    logger.debug("rev_reactions:     " + str(rev_reactions))
-    logger.info("Building model with heterologous pathway only")
-    groups = rpsbml_merged.getPlugin("groups")
-    rp_pathway = rpsbml_merged.getGroup(pathway_id)
-    logger.debug("---- Reactions ----")
-    for member in rp_pathway.getListOfMembers():
-        #### reaction annotation
-        logger.debug(member.getIdRef())
-        reacFBA = rpsbml_merged.getModel().getReaction(member.getIdRef())
-        logger.debug(reacFBA)
-        try:
-            # reacIN = rpsbml.model.getReaction(reactions_convert[member.getIdRef()])
-            reacIN = rpsbml.getModel().getReaction(rev_reactions[member.getIdRef()])
-        except KeyError:
-            reacIN = rpsbml.getModel().getReaction(member.getIdRef())
-        logger.debug(reacIN)
-        logger.debug(reacFBA.getAnnotation())
-        reacIN.setAnnotation(reacFBA.getAnnotation())
-        #### species TODO: only for shadow price
-    #### add groups ####
-    source_groups = rpsbml_merged.getPlugin("groups")
-    target_groups = rpsbml.getPlugin("groups")
-    target_groupsID = [i.getId() for i in rpsbml.getListOfGroups()]
-    for source_group in rpsbml_merged.getListOfGroups():
-        logger.debug("Replacing group id: " + str(source_group.getId()))
-        if source_group.getId() == species_group_id:
-            target_group = rpsbml.getGroup(source_group.getId())
-            # TODO: #### replace the new potentially incorect central species with the normal ones #####
-            # delete all the previous members
-            logger.debug("Removing rp_core_species")
-            for i in range(target_group.getNumMembers()):
-                logger.debug(
-                    "Deleting group member: "
-                    + str(target_group.getMember(0).getIdRef())
-                )
-                target_group.removeMember(0)
-            # add the new ones
-            for cs in cent_spe:
-                logger.debug("Creating new member: " + str(cs))
-                newM = target_group.createMember()
-                newM.setIdRef(cs)
-        elif source_group.getId() == sink_species_group_id:
-            target_group = rpsbml.getGroup(source_group.getId())
-            logger.debug("Removing sink species")
-            for i in range(target_group.getNumMembers()):
-                logger.debug(
-                    "Deleting group member: "
-                    + str(target_group.getMember(0).getIdRef())
-                )
-                target_group.removeMember(0)
-            # add the new ones
-            for cs in sink_spe:
-                logger.debug("Creating new member: " + str(cs))
-                newM = target_group.createMember()
-                newM.setIdRef(cs)
-        elif source_group.getId() in target_groupsID:
-            target_group = rpsbml.getGroup(source_group.getId())
-            target_group.setAnnotation(source_group.getAnnotation())
-        """
-        elif source_group.getId()==pathway_id:
-            target_group = target_groups.getGroup(source_group.getId())
-            logger.debug('Removing rp ractions')
-            for i in range(target_group.getNumMembers()):
-                logger.debug('Deleting group member: '+str(target_group.getMember(0).getIdRef()))
-                target_group.removeMember(0)
-            #add the new ones
-            for cs in rp_reac:
-                logger.debug('Creating new member: '+str(cs))
-                newM = target_group.createMember()
-                newM.setIdRef(cs)
-        """
-    # add ignored_species group
-    rpsbml.set_isolated_species(rpsbml_merged.get_isolated_species())
-    create_ignored_species_group(rpsbml, hidden_species, logger)
-    #### add objectives ####
-    source_fbc = rpsbml_merged.getPlugin("fbc")
-    target_fbc = rpsbml.getPlugin("fbc")
-    target_objID = [i.getId() for i in target_fbc.getListOfObjectives()]
-    for source_obj in source_fbc.getListOfObjectives():
-        source_obj_id = source_obj.getId()
-        if source_obj.getId() in target_objID:
-            target_obj = target_fbc.getObjective(source_obj.getId())
-            target_obj.setAnnotation(source_obj.getAnnotation())
-            for target_fluxObj in target_obj.getListOfFluxObjectives():
-                for source_fluxObj in source_obj.getListOfFluxObjectives():
-                    if target_fluxObj.getReaction() == source_fluxObj.getReaction():
-                        target_fluxObj.setAnnotation(source_fluxObj.getAnnotation())
-        else:
-            target_fbc.addObjective(source_obj)
-    # rpsbml.createMultiFluxObj('obj_RP1_sink', ['RP1_sink'], [1])
-    target_fbc.setActiveObjectiveId(
-        source_obj_id
-    )  # tmp random assignement of objective
+#     rev_reactions = {v: k for k, v in reactions_in_both.items()}
+#     logger.debug("reactions_in_both: " + str(reactions_in_both))
+#     logger.debug("rev_reactions:     " + str(rev_reactions))
+#     logger.info("Building model with heterologous pathway only")
+#     groups = rpsbml_merged.getPlugin("groups")
+#     rp_pathway = rpsbml_merged.getGroup(pathway_id)
+#     logger.debug("---- Reactions ----")
+#     for member in rp_pathway.getListOfMembers():
+#         #### reaction annotation
+#         logger.debug(member.getIdRef())
+#         reacFBA = rpsbml_merged.getModel().getReaction(member.getIdRef())
+#         logger.debug(reacFBA)
+#         try:
+#             # reacIN = rpsbml.model.getReaction(reactions_convert[member.getIdRef()])
+#             reacIN = rpsbml.getModel().getReaction(rev_reactions[member.getIdRef()])
+#         except KeyError:
+#             reacIN = rpsbml.getModel().getReaction(member.getIdRef())
+#         logger.debug(reacIN)
+#         logger.debug(reacFBA.getAnnotation())
+#         reacIN.setAnnotation(reacFBA.getAnnotation())
+#         #### species TODO: only for shadow price
+#     #### add groups ####
+#     source_groups = rpsbml_merged.getPlugin("groups")
+#     target_groups = rpsbml.getPlugin("groups")
+#     target_groupsID = [i.getId() for i in rpsbml.getListOfGroups()]
+#     for source_group in rpsbml_merged.getListOfGroups():
+#         logger.debug("Replacing group id: " + str(source_group.getId()))
+#         if source_group.getId() == species_group_id:
+#             target_group = rpsbml.getGroup(source_group.getId())
+#             # TODO: #### replace the new potentially incorect central species with the normal ones #####
+#             # delete all the previous members
+#             logger.debug("Removing rp_core_species")
+#             for i in range(target_group.getNumMembers()):
+#                 logger.debug(
+#                     "Deleting group member: "
+#                     + str(target_group.getMember(0).getIdRef())
+#                 )
+#                 target_group.removeMember(0)
+#             # add the new ones
+#             for cs in cent_spe:
+#                 logger.debug("Creating new member: " + str(cs))
+#                 newM = target_group.createMember()
+#                 newM.setIdRef(cs)
+#         elif source_group.getId() == sink_species_group_id:
+#             target_group = rpsbml.getGroup(source_group.getId())
+#             logger.debug("Removing sink species")
+#             for i in range(target_group.getNumMembers()):
+#                 logger.debug(
+#                     "Deleting group member: "
+#                     + str(target_group.getMember(0).getIdRef())
+#                 )
+#                 target_group.removeMember(0)
+#             # add the new ones
+#             for cs in sink_spe:
+#                 logger.debug("Creating new member: " + str(cs))
+#                 newM = target_group.createMember()
+#                 newM.setIdRef(cs)
+#         elif source_group.getId() in target_groupsID:
+#             target_group = rpsbml.getGroup(source_group.getId())
+#             target_group.setAnnotation(source_group.getAnnotation())
+#         """
+#         elif source_group.getId()==pathway_id:
+#             target_group = target_groups.getGroup(source_group.getId())
+#             logger.debug('Removing rp ractions')
+#             for i in range(target_group.getNumMembers()):
+#                 logger.debug('Deleting group member: '+str(target_group.getMember(0).getIdRef()))
+#                 target_group.removeMember(0)
+#             #add the new ones
+#             for cs in rp_reac:
+#                 logger.debug('Creating new member: '+str(cs))
+#                 newM = target_group.createMember()
+#                 newM.setIdRef(cs)
+#         """
+#     # add ignored_species group
+#     rpsbml.set_isolated_species(rpsbml_merged.get_isolated_species())
+#     create_ignored_species_group(rpsbml, hidden_species, logger)
+#     #### add objectives ####
+#     source_fbc = rpsbml_merged.getPlugin("fbc")
+#     target_fbc = rpsbml.getPlugin("fbc")
+#     target_objID = [i.getId() for i in target_fbc.getListOfObjectives()]
+#     for source_obj in source_fbc.getListOfObjectives():
+#         source_obj_id = source_obj.getId()
+#         if source_obj.getId() in target_objID:
+#             target_obj = target_fbc.getObjective(source_obj.getId())
+#             target_obj.setAnnotation(source_obj.getAnnotation())
+#             for target_fluxObj in target_obj.getListOfFluxObjectives():
+#                 for source_fluxObj in source_obj.getListOfFluxObjectives():
+#                     if target_fluxObj.getReaction() == source_fluxObj.getReaction():
+#                         target_fluxObj.setAnnotation(source_fluxObj.getAnnotation())
+#         else:
+#             target_fbc.addObjective(source_obj)
+#     # rpsbml.createMultiFluxObj('obj_RP1_sink', ['RP1_sink'], [1])
+#     target_fbc.setActiveObjectiveId(
+#         source_obj_id
+#     )  # tmp random assignement of objective
 
 
 # def rp_fba(
@@ -558,7 +601,6 @@ def rp_fraction(
     rpsbml: rpSBML,
     objective_rxn_id: str,
     biomass_rxn_id: str,
-    hidden_species: List[str],
     fraction_coeff: float = 0.75,
     logger: Logger = getLogger(__name__),
 ) -> cobra_solution:
@@ -587,7 +629,6 @@ def rp_fraction(
     """
 
     logger.debug("rpsbml:       " + str(rpsbml))
-    logger.debug("hidden_species:   " + str(hidden_species))
     logger.debug("objective_rxn_id:   " + objective_rxn_id)
     logger.debug("biomass_rxn_id: " + str(biomass_rxn_id))
     logger.debug("fraction_coeff:  " + str(fraction_coeff))
@@ -628,7 +669,6 @@ def rp_fraction(
         cobra_results = runCobra(
             sim_type="biomass",
             rpsbml=rpsbml,
-            hidden_species=hidden_species,
             objective_id=biomass_objective_id,
             logger=logger,
         )
@@ -680,7 +720,6 @@ def rp_fraction(
     cobra_results = runCobra(
         sim_type=sim_type,
         rpsbml=rpsbml,
-        hidden_species=hidden_species,
         objective_id=objective_id,
         fraction_coeff=fraction_coeff,
         logger=logger,
@@ -709,7 +748,6 @@ def runCobra(
     sim_type: str,
     rpsbml: rpSBML,
     objective_id: str,
-    hidden_species: List[str] = [],
     fraction_coeff: float = 0.95,
     logger: Logger = getLogger(__name__),
 ) -> Tuple[cobra_solution, pd.DataFrame]:
@@ -736,7 +774,6 @@ def runCobra(
     cobraModel = build_cobra_model(
         rpsbml=rpsbml,
         objective_id=objective_id,
-        hidden_species=hidden_species,
         logger=logger,
     )
     if not cobraModel:
@@ -762,7 +799,6 @@ def runCobra(
 def build_cobra_model(
     rpsbml: rpSBML,
     objective_id: str,
-    hidden_species: List[str] = [],
     logger: Logger = getLogger(__name__),
 ) -> cobra_model:
     """Convert the rpSBML object to cobra object
@@ -773,7 +809,6 @@ def build_cobra_model(
 
     rpsbml.logger.info("Creating Cobra object from rpSBML...")
     logger.debug(f"objective_id: {objective_id}")
-    logger.debug(f"missing_species: {hidden_species}")
 
     rpsbml.activateObjective(objective_id=objective_id, plugin="fbc")
 
@@ -797,7 +832,10 @@ def build_cobra_model(
 
     # Hide to Cobra species that are isolated
     cobraModel.remove_metabolites(
-        [cobraModel.metabolites.get_by_id(to_cobra(met)) for met in hidden_species]
+        [
+            cobraModel.metabolites.get_by_id(to_cobra(met))
+            for met in rpsbml.get_isolated_species()
+        ]
     )
 
     logger.debug(cobraModel)
@@ -997,34 +1035,34 @@ def write_objective_to_pathway(
     )
 
 
-def create_ignored_species_group(
-    rpsbml: rpSBML, hidden_species: List[str], logger: Logger = getLogger(__name__)
-) -> None:
-    """
-    Write ignored species during FBA to the pathway with id pathway_id in rpsbml object.
+# def create_ignored_species_group(
+#     rpsbml: rpSBML, hidden_species: List[str], logger: Logger = getLogger(__name__)
+# ) -> None:
+#     """
+#     Write ignored species during FBA to the pathway with id pathway_id in rpsbml object.
 
-    Parameters
-    ----------
-    rpsbml: rpSBML
-        rpSBML object of which reactions will be updated with results
-    pathway_id: str
-        The id of the pathway within reactions will be updated
-    """
+#     Parameters
+#     ----------
+#     rpsbml: rpSBML
+#         rpSBML object of which reactions will be updated with results
+#     pathway_id: str
+#         The id of the pathway within reactions will be updated
+#     """
 
-    group_id = "rpfba_ignored_species"
+#     group_id = "rpfba_ignored_species"
 
-    rpsbml.createGroup(id=group_id, brs_annot=False)
-    for spe in hidden_species:
-        rpsbml.addMember(group_id=group_id, idRef=spe)
+#     rpsbml.createGroup(id=group_id, brs_annot=False)
+#     for spe in hidden_species:
+#         rpsbml.addMember(group_id=group_id, idRef=spe)
 
-    logger.debug("Create " + str(group_id) + " group with " + str(hidden_species))
+#     logger.debug("Create " + str(group_id) + " group with " + str(hidden_species))
 
-    # rpsbml.updateBRSynth(
-    #     sbase_obj=rpsbml.getGroup(group_id),
-    #     annot_header='ignored_species',
-    #     value=str(missing_species),
-    #     isList=True
-    # )
+#     # rpsbml.updateBRSynth(
+#     #     sbase_obj=rpsbml.getGroup(group_id),
+#     #     annot_header='ignored_species',
+#     #     value=str(missing_species),
+#     #     isList=True
+#     # )
 
 
 ########################################################################

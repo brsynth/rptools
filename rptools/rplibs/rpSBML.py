@@ -744,19 +744,23 @@ class rpSBML:
         rpsbml: 'rpSBML',
         transl_dict_species: Dict[str, str]
     ) -> None:
+
         with NamedTemporaryFile(delete=False) as tempf:
             rpsbml.write_to_file(tempf.name)
             tempf.close()
             with open(tempf.name, 'r') as in_f:
                 text = in_f.read()
+                # rename species in the file
                 for speID, speID_transl in transl_dict_species.items():
                     text = text.replace(speID+'"', speID_transl+'"')
+                # write out the SBML file with new species names
                 with NamedTemporaryFile(mode='w', delete=False) as out_tempf:
                     out_tempf.write(text)
                     out_tempf.close()
                     rpsbml = rpSBML(inFile=out_tempf.name)
         remove(tempf.name)
         remove(out_tempf.name)
+
         return rpsbml
 
     @staticmethod
@@ -765,9 +769,24 @@ class rpSBML:
             cobraize
         )
         return rpSBML.renameSpecies(
-            rpsbml=rpsbml,
+            rpsbml=rpSBML(rpsbml=rpsbml),
             transl_dict_species={
                 specie.getId(): cobraize(
+                    specie.getId(),
+                    specie.getCompartment()
+                ) for specie in list(rpsbml.getModel().getListOfSpecies())
+            }
+        )
+
+    @staticmethod
+    def uncobraize(rpsbml: 'rpSBML') -> 'rpSBML':
+        from rptools.rpfba.cobra_format import (
+            uncobraize
+        )
+        return rpSBML.renameSpecies(
+            rpsbml=rpSBML(rpsbml=rpsbml),
+            transl_dict_species={
+                specie.getId(): uncobraize(
                     specie.getId(),
                     specie.getCompartment()
                 ) for specie in list(rpsbml.getModel().getListOfSpecies())
@@ -1793,9 +1812,10 @@ class rpSBML:
         -------
             List of isolated species
         """
-        try:
-            return self.isolated_species
-        except AttributeError:
+        group = self.getModel().getPlugin('groups').getGroup("rp_fba_ignored_species")
+        if group:
+            return [m.getIdRef() for m in group.getListOfMembers()]
+        else:
             return []
 
 
@@ -1807,7 +1827,13 @@ class rpSBML:
         ----------
             species: List [str]
         """
-        self.isolated_species = deepcopy(species)
+        group_id = "rp_fba_ignored_species"
+        # Remove group if it exists
+        self.removeGroup(group_id)
+        self.createGroup(id=group_id, brs_annot=False)
+        for spe in species:
+            self.addMember(group_id=group_id, idRef=spe)
+        self.logger.debug("Create " + str(group_id) + " group with " + str(species))
 
     # @staticmethod
     def search_isolated_species(
@@ -1862,12 +1888,15 @@ class rpSBML:
             logger = self.logger
         )
 
-        self.isolated_species = list(
-            set(
-                rpgraph.onlyConsumedSpecies(species) +
-                rpgraph.onlyProducedSpecies(species)
+        self.set_isolated_species(
+            list(
+                set(
+                    rpgraph.onlyConsumedSpecies(species) +
+                    rpgraph.onlyProducedSpecies(species)
+                )
             )
         )
+
 
         # return self.get_isolated_species()
 
@@ -4574,7 +4603,7 @@ class rpSBML:
         brs_annot: bool = True,
         meta_id: str = None
     ) -> libsbml.GroupsModelPlugin:
-        """Create libSBML pathway
+        """
 
         Create a group that is added to self.model
 
@@ -4597,6 +4626,25 @@ class rpSBML:
         if brs_annot:
             new_group.setAnnotation(self._defaultBRSynthAnnot(meta_id))
         return new_group
+
+
+    def removeGroup(
+        self,
+        id: str
+    ) -> libsbml.GroupsModelPlugin:
+        """
+
+        Remove a group that is added to self.model
+
+        :param id: The Groups id of the pathway id
+
+        :type id: str
+
+        :rtype: None
+        :return: None
+        """
+        groups_plugin = self.getModel().getPlugin('groups')
+        groups_plugin.removeGroup(id)
 
 
     def addMember(

@@ -37,29 +37,37 @@ def entry_point():
     (
         merged_model,
         pathway,
-        ids,
-        hidden_species
+        ids
     ) = preprocess(
         args=args,
         logger=logger
     )
 
     # FBA
-    results = {}
-    with NamedTemporaryFile() as tmpfile:
-        merged_model.write_to_file(tmpfile.name)
-        results = runFBA(
-            model_file=tmpfile.name,
-            compartment_id=ids['comp_id'],
-            biomass_rxn_id=ids['biomass_rxn_id'],
-            objective_rxn_id=ids['obj_rxn_id'],
-            sim_type=args.sim,
-            fraction_coeff=args.fraction_of,
-            hidden_species=hidden_species,
-            logger=logger,
-        )
+    results = runFBA(
+        model=merged_model,
+        compartment_id=ids['comp_id'],
+        biomass_rxn_id=ids['biomass_rxn_id'],
+        objective_rxn_id=ids['obj_rxn_id'],
+        sim_type=args.sim,
+        fraction_coeff=args.fraction_of,
+        logger=logger,
+    )
+    # with NamedTemporaryFile() as tmpfile:
+    #     merged_model.write_to_file(tmpfile.name)
+    #     results = runFBA(
+    #         model_file=tmpfile.name,
+    #         compartment_id=ids['comp_id'],
+    #         biomass_rxn_id=ids['biomass_rxn_id'],
+    #         objective_rxn_id=ids['obj_rxn_id'],
+    #         sim_type=args.sim,
+    #         fraction_coeff=args.fraction_of,
+    #         hidden_species=hidden_species,
+    #         logger=logger,
+    #     )
 
     # RESULTS
+    hidden_species = merged_model.get_isolated_species()
     results = build_results(
         results=results,
         pathway=pathway,
@@ -75,7 +83,6 @@ def entry_point():
 
     # Write results into the pathway
     write_results_to_pathway(pathway, results, logger)
-
 
     if not results:
         logger.info("No results written. Exiting...")
