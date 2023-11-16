@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" xmlns:groups="http://www.sbml.org/sbml/level3/version1/groups/version1" xmlns:fbc="http://www.sbml.org/sbml/level3/version1/fbc/version2" level="3" version="1" groups:required="false" fbc:required="false">
-  <model metaid="f9b1ff022aa2133fc1e5e5d1fbac90ac29a744e960a2774be646bc71471ed597" id="RP_model_002_0001" name="002_0001" substanceUnits="mole" timeUnits="second" extentUnits="mole" fbc:strict="true">
+  <model metaid="f9b1ff022aa2133fc1e5e5d1fbac90ac29a744e960a2774be646bc71471ed597" id="rp_002_0001" name="rp_002_0001" substanceUnits="mole" timeUnits="second" extentUnits="mole" fbc:strict="true">
     <listOfCompartments>
       <compartment metaid="_2e7d2c03a9507ae265ecf5b5356885a53393a2029d241394997265a1a25aefc6" sboTerm="SBO:0000290" id="c" name="cytosol" size="1" constant="true">
         <annotation>
