@@ -5,9 +5,9 @@ Created on May 28 2021
 """
 
 from tempfile import NamedTemporaryFile
-from unittest import TestCase
 from os import remove
 from copy import deepcopy
+# from xmldiff import main as xmldiff_main
 from rr_cache import rrCache
 from rptools.rplibs import (
     rpPathway,
@@ -299,11 +299,19 @@ class Test_rpPathway(Main_rplibs):
     #         pathway = rpPathway(self.rpsbml_lycopene_path)
     #         pathway.to_rpSBML().write_to_file(tempf.name)
     #         # compare files
-    #         with open(self.rpsbml_lycopene_path, 'r') as f:
-    #             self.assertEqual(
-    #                 f.read(),
-    #                 tempf.read()
-    #             )
+    #         print(xmldiff_main.diff_files(
+    #                 tempf,
+    #                 self.rpsbml_lycopene_path,
+    #                 #diff_options={'ignored_attrs': ['metaid', 'id']}
+    #                 ))
+    #         self.assertListEqual(
+    #             [],
+    #             xmldiff_main.diff_files(
+    #                 tempf,
+    #                 self.rpsbml_lycopene_path,
+    #                 #diff_options={'ignored_attrs': ['metaid', 'id']}
+    #                 )
+    #         )
 
     def test_completed_species(self):
         species = ['SPE_1', 'SPE_2']
