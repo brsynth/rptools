@@ -62,7 +62,7 @@ class Test_rpFBA(Main_rpfba):
             ignore_orphan_species=True,
             sim="fraction",
             fraction_of=0.75,
-            merge=True
+            merge=""
         )
         for ix in range(len(files)):
             args.pathway_file = os_path.join(self.temp_d, "cr_fba", names[ix] + ".xml")

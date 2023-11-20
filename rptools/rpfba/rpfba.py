@@ -17,6 +17,7 @@ from rptools.rplibs import (
     rpPathway
 )
 from .cobra_format import cobraize, to_cobra
+from .Args import DEFAULT_ARGS as DEFAULT_RPFBA_ARGS
 
 # TODO: add the pareto frontier optimisation as an automatic way to calculate the optimal fluxes
 
@@ -132,10 +133,10 @@ def check_ids(
 def runFBA_fromFile(
     model_file: str,
     compartment_id: str,
-    objective_rxn_id: str = "rxn_target",
-    biomass_rxn_id: str = "biomass",
-    sim_type: str = "fraction",
-    fraction_coeff: float = 0.75,
+    objective_rxn_id: str = DEFAULT_RPFBA_ARGS["objective_rxn_id"],
+    biomass_rxn_id: str = DEFAULT_RPFBA_ARGS["biomass_rxn_id"],
+    sim_type: str = DEFAULT_RPFBA_ARGS["sim"],
+    fraction_coeff: float = DEFAULT_RPFBA_ARGS["fraction_coeff"],
     hidden_species: List[str] = [],
     logger: Logger = getLogger(__name__),
 ) -> Dict:
@@ -186,10 +187,10 @@ def runFBA_fromFile(
 def runFBA(
     model: rpSBML,
     compartment_id: str,
-    objective_rxn_id: str = "rxn_target",
-    biomass_rxn_id: str = "biomass",
-    sim_type: str = "fraction",
-    fraction_coeff: float = 0.75,
+    objective_rxn_id: str = DEFAULT_RPFBA_ARGS["objective_rxn_id"],
+    biomass_rxn_id: str = DEFAULT_RPFBA_ARGS["biomass_rxn_id"],
+    sim_type: str = DEFAULT_RPFBA_ARGS["sim"],
+    fraction_coeff: float = DEFAULT_RPFBA_ARGS["fraction_coeff"],
     logger: Logger = getLogger(__name__),
 ) -> Dict:
     """Single rpSBML simulation
@@ -601,7 +602,7 @@ def rp_fraction(
     rpsbml: rpSBML,
     objective_rxn_id: str,
     biomass_rxn_id: str,
-    fraction_coeff: float = 0.75,
+    fraction_coeff: float = DEFAULT_RPFBA_ARGS["fraction_coeff"],
     logger: Logger = getLogger(__name__),
 ) -> cobra_solution:
     """Optimise for a target reaction while fixing a source reaction to the fraction of its optimum
