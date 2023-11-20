@@ -2,15 +2,15 @@ name: rptools
 channels:
   - conda-forge
 dependencies:
-  - python <=3.11
+  - python <=3.9
   - brs_utils # rpcompletion, rpfba, Args
   - cobra >=0.26.3 # rpfba, rpextractsink, rplibs
   - timeout-decorator # rpextractsink
   - rdkit # rpextractsink, rplibs
   - python-libsbml # rplibs, rpfba
-  - numpy # rplibs, rpfba, rpscore, rpthermo
-  - pandas # rplibs, rpthermo
-  - scipy # rpthermo
+  - numpy <1.25 # rplibs, rpfba, rpscore, rpthermo ('np.find_common_type' deprecated)
+  - pandas <2.0 # rplibs, rpthermo ('frame.append' deprecated)
+  - scipy <1.11 # rpthermo (method='revised simplex' deprecated)
   - equilibrator-api # rpthermo
   - equilibrator-cache >=0.5.4 # rpthermo
   - colored # rplibs
