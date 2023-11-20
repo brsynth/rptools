@@ -1,5 +1,9 @@
 # Changelog
 
+## [6.4.0](https://github.com/brsynth/rptools/tree/6.4.0) (2023-11-20)
+
+[Full Changelog](https://github.com/brsynth/rptools/compare/6.3.3...6.4.0)
+
 ## [6.3.3](https://github.com/brsynth/rptools/tree/6.3.3) (2023-11-16)
 
 [Full Changelog](https://github.com/brsynth/rptools/compare/6.3.2...6.3.3)
