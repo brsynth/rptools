@@ -67,12 +67,12 @@ def preprocess(
     if args.ignore_orphan_species:
         merged_model.search_isolated_species(missing_species)
 
-    if args.merge:
-        merged_outfile = (
-            pathway.get_id() + "__MERGED_IN__" + model.getName() + ".sbml"
-        )
-        logger.info(f"Write merged rpSBML file to {merged_outfile}")
-        merged_model.write_to_file(merged_outfile)
+    if args.merge != "":
+        # merged_outfile = (
+        #     pathway.get_id() + "__MERGED_IN__" + model.getName() + ".sbml"
+        # )
+        logger.info(f"Write merged rpSBML file to {args.merge}")
+        merged_model.write_to_file(args.merge)
 
     return merged_model, pathway, ids
 

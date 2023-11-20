@@ -7,7 +7,6 @@ __author__ = 'Thomas Duigou'
 __license__ = 'MIT'
 
 
-import os
 import pandas
 import distutils.dir_util
 from pathlib import Path

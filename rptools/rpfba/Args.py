@@ -43,8 +43,8 @@ def add_arguments(parser: ArgumentParser):
     )
     parser.add_argument(
         "--merge",
-        action="store_true",
-        default=False,
+        type=str,
+        default="",
         help="output the full merged model in addition of heterologous pathway only (default: False)",
     )
     parser.add_argument(
