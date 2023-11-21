@@ -12,63 +12,63 @@ on:
 
 jobs:
 
-  # Build-Recipe:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Installing make
-  #       run: |
-  #         sudo apt-get update
-  #         sudo apt-get -y install make
-  #     - name: Checkout CI/CD Toolkit
-  #       uses: actions/checkout@v3
-  #       with:
-  #         repository: breakthewall/cicd-toolkit
-  #         path: cicd-toolkit
-  #         persist-credentials: false
-  #         fetch-depth: 0
-  #     - name: Building recipe
-  #       run: |
-  #         cd cicd-toolkit
-  #         make -C makefiles -f conda.mk build-recipe
-  #     - name: Saving recipe
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: recipe
-  #         path: cicd-toolkit/recipe/meta.yaml
+  Build-Recipe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Installing make
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install make
+      - name: Checkout CI/CD Toolkit
+        uses: actions/checkout@v3
+        with:
+          repository: breakthewall/cicd-toolkit
+          path: cicd-toolkit
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Building recipe
+        run: |
+          cd cicd-toolkit
+          make -C makefiles -f conda.mk build-recipe
+      - name: Saving recipe
+        uses: actions/upload-artifact@v3
+        with:
+          name: recipe
+          path: cicd-toolkit/recipe/meta.yaml
 
-  # Conda-Build:
-  #   needs: [Build-Recipe]
-  #   runs-on: ${{ matrix.os }}-latest
-  #   strategy:
-  #     matrix:
-  #       os: ["ubuntu", "macos"]
-  #   defaults:
-  #     run:
-  #       shell: bash -l {0}
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Checkout CI/CD Toolkit
-  #       uses: actions/checkout@v3
-  #       with:
-  #         repository: breakthewall/cicd-toolkit
-  #         path: cicd-toolkit
-  #         persist-credentials: false
-  #         fetch-depth: 0
-  #     - name: Loading recipe
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         name: recipe
-  #         path: cicd-toolkit/recipe
-  #     - name: Deploying miniconda
-  #       uses: conda-incubator/setup-miniconda@v2
-  #       with:
-  #         miniconda-version: "latest"
-  #         environment-file: cicd-toolkit/recipe/conda_build_env.yaml
-  #         activate-environment: test
-  #     - name: Building & Testing conda package
-  #       run: |
-  #         conda-build cicd-toolkit/recipe
+  Conda-Build:
+    needs: [Build-Recipe]
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      matrix:
+        os: ["ubuntu", "macos"]
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Checkout CI/CD Toolkit
+        uses: actions/checkout@v3
+        with:
+          repository: breakthewall/cicd-toolkit
+          path: cicd-toolkit
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Loading recipe
+        uses: actions/download-artifact@v3
+        with:
+          name: recipe
+          path: cicd-toolkit/recipe
+      - name: Deploying miniconda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          miniconda-version: "latest"
+          environment-file: cicd-toolkit/recipe/conda_build_env.yaml
+          activate-environment: test
+      - name: Building & Testing conda package
+        run: |
+          conda-build cicd-toolkit/recipe
 
   Tag:
     # needs: [Conda-Build]
