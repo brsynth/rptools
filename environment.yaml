@@ -10,7 +10,7 @@ dependencies:
   - python-libsbml # rplibs, rpfba
   - numpy <1.25 # rplibs, rpfba, rpscore, rpthermo ('np.find_common_type' deprecated)
   - pandas <2.0 # rplibs, rpthermo ('frame.append' deprecated)
-  - scipy <1.11 # rpthermo (method='revised simplex' deprecated)
+  - scipy # rpthermo
   - equilibrator-api # rpthermo
   - equilibrator-cache >=0.5.4 # rpthermo
   - colored # rplibs
