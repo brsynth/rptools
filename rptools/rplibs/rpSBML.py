@@ -5,8 +5,11 @@ import numpy as np
 from copy import deepcopy
 from filetype import guess
 from hashlib import sha256
-from math import isnan
-from pandas import DataFrame  as pd_DataFrame
+#from math import isnan
+from pandas import (
+    DataFrame  as pd_DataFrame,
+    concat as pd_concat
+)
 
 from os import (
         path as os_path,
@@ -14,13 +17,13 @@ from os import (
 )
 from json import (
     load as json_load,
-    dump as json_dump,
+#    dump as json_dump,
     dumps as json_dumps
 )
-from inspect import (
-    getmembers as inspect_getmembers,
-    ismethod as inspect_ismethod
-)
+# from inspect import (
+#     getmembers as inspect_getmembers,
+#     ismethod as inspect_ismethod
+# )
 from logging import (
     Logger,
     getLogger
@@ -30,12 +33,12 @@ from typing import (
     Dict,
     Tuple,
     TypeVar,
-    Union
+#    Union
 )
 from tempfile import (
     NamedTemporaryFile,
     TemporaryDirectory,
-    gettempdir,
+#    gettempdir,
 )
 import cobra
 from cobra import (
@@ -2492,14 +2495,18 @@ class rpSBML:
         # Create list of exchange reactions
         for reaction in model.getModel().getListOfReactions():
             if model.is_boundary_type(reaction, "exchange", compartment_id):
-                compound = dict(
-                    model_id=_specie_id_from_exchange(
-                        reaction,
-                        logger
+                compound = pd_DataFrame(
+                    dict(
+                        model_id=_specie_id_from_exchange(
+                            reaction,
+                            logger
+                        ),
+                        libsbml_reaction=reaction
                     ),
-                    libsbml_reaction=reaction
+                    index=[0]
                 )
-                df = df.append(compound, ignore_index=True)
+#                df = df.append(compound, ignore_index=True)
+                df = pd_concat([df, compound], ignore_index=True)
         # Fmg
         df.sort_values('model_id', inplace=True)
         df.reset_index(inplace=True, drop=True)
