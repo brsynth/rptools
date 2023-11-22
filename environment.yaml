@@ -2,7 +2,7 @@ name: rptools
 channels:
   - conda-forge
 dependencies:
-  - python <=3.9
+  - python <=3.10
   - brs_utils # rpcompletion, rpfba, Args
   - cobra >=0.26.3 # rpfba, rpextractsink, rplibs
   - timeout-decorator # rpextractsink
