@@ -1807,6 +1807,16 @@ class rpSBML:
         )
 
 
+    def rm_isolated_species(self) -> None:
+        """
+        Remove isolated species.
+        """
+        group = self.getModel().getPlugin('groups').getGroup("rp_fba_ignored_species")
+        if group:
+            self.getModel().getPlugin('groups').removeGroup(group.getId())
+            self.logger.debug("Remove " + str(group.getId()) + " group")
+
+
     def get_isolated_species(self) -> List[str]:
         """
         Return speices that are isolated, i.e. are only consumed or only produced.
