@@ -59,7 +59,7 @@ class Test_rpFBA(Main_rpfba):
             compartment_id="c",
             biomass_rxn_id="biomass",
             objective_rxn_id="rxn_target",
-            ignore_orphan_species=True,
+            with_orphan_species=False,
             sim="fraction",
             fraction_of=0.75,
             merge=""
