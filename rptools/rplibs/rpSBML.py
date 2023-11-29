@@ -1813,8 +1813,9 @@ class rpSBML:
         """
         group = self.getModel().getPlugin('groups').getGroup("rp_fba_ignored_species")
         if group:
-            self.getModel().getPlugin('groups').removeGroup(group.getId())
-            self.logger.debug("Remove " + str(group.getId()) + " group")
+            id = group.getId()
+            self.getModel().getPlugin('groups').removeGroup(id)
+            self.logger.debug(f"{str(id)} group removed")
 
 
     def get_isolated_species(self) -> List[str]:
