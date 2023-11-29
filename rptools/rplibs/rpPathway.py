@@ -931,6 +931,10 @@ class rpPathway(Pathway, rpObject):
 
     def setup_pathway_fba(self):
 
+        # Remove isolated species
+        self.set_fba_ignored_species([])
+        self.get_rpsbml().rm_isolated_species()
+
         # Create consumption of the target
         rxn_target = rpReaction(id="rxn_target", logger=self.get_logger())
         rxn_target.add_reactant(compound_id=self.get_target_id(), stoichio=1)
