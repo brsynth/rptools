@@ -508,6 +508,22 @@ class Test_rpSBML(Main_rplibs):
             rpSBML
         )
 
+    def test_isolated_species(self):
+        self.assertSetEqual(
+            set(self.rpsbml_lycopene.get_isolated_species()),
+            set(["MNXM24", "MNXM8975"])
+        )
+        self.rpsbml_lycopene.set_isolated_species(["MNXM24"])
+        self.assertSetEqual(
+            set(self.rpsbml_lycopene.get_isolated_species()),
+            set(["MNXM24"])
+        )
+        self.rpsbml_lycopene.rm_isolated_species()
+        self.assertListEqual(
+            self.rpsbml_lycopene.get_isolated_species(),
+            []
+        )
+
     #def test_initEmpty(self):002_0001
     #    rpSBML(name='rpSBML_test', logger=self.logger)
 
