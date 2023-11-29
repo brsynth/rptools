@@ -15,7 +15,7 @@ DEFAULT_ARGS = {
     "sim": "fraction",
     "fraction_coeff": 0.75,
     "merge": "",
-    "ignore_orphan_species": True,
+    "with_orphan_species": False,
 }
 
 def add_arguments(parser: ArgumentParser):
@@ -61,10 +61,10 @@ def add_arguments(parser: ArgumentParser):
         help="output the full merged model in addition of heterologous pathway only (default: False)",
     )
     parser.add_argument(
-        "--ignore_orphan_species",
+        "--with_orphan_species",
         action="store_true",
-        default=DEFAULT_ARGS["ignore_orphan_species"],
-        help="ignore metabolites that are only consumed or produced (default: True)",
+        default=DEFAULT_ARGS["with_orphan_species"],
+        help="Take metabolites that are only consumed (default: False)",
     )
 
     return parser

@@ -65,13 +65,10 @@ def preprocess(
     # CHECKING
     # Detect orphan species among missing ones in the model,
     # i.e. that are only consumed or produced
-    if args.ignore_orphan_species:
+    if not args.with_orphan_species:
         merged_model.search_isolated_species(missing_species)
 
     if args.merge != "":
-        # merged_outfile = (
-        #     pathway.get_id() + "__MERGED_IN__" + model.getName() + ".sbml"
-        # )
         logger.info(f"Write merged rpSBML file to {args.merge}")
         merged_model.write_to_file(args.merge)
 
