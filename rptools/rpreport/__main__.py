@@ -1,7 +1,7 @@
 from rptools.rpreport.Args import add_arguments
 from rptools import build_args_parser
 
-from rptools.rpreport.rp_report import run_report
+from rptools.rpreport.rpreport import run_report
 
 
 def entry_point():
