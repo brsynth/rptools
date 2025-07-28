@@ -6,7 +6,7 @@ dependencies:
   - brs_utils # rpcompletion, rpfba, Args
   - cobra >=0.26.3 # rpfba, rpextractsink, rplibs
   - timeout-decorator # rpextractsink
-  - rdkit # rpextractsink, rplibs
+  - rdkit # rpextractsink, rplibs, rpcompletion
   - python-libsbml # rplibs, rpfba
   - numpy <1.25 # rplibs, rpfba, rpscore, rpthermo ('np.find_common_type' deprecated)
   - pandas <2.0 # rplibs, rpthermo ('frame.append' deprecated)
@@ -17,7 +17,7 @@ dependencies:
   - networkx >=2.5 # rplibs
   - filetype  # rplibs (conda-forge)
   - rr_cache >=3.1.1 # rpcompletion
-  - rxn_rebuild # rpcompletion
+  - rxn_rebuild >=3.1.1 # rpcompletion
   - chemlite # rpcompletion ,rpfba, rpthermo
   - h5py # rpscore
   - xgboost # rpscore

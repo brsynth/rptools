@@ -401,7 +401,6 @@ def _predict_score(
         out_f.close()
         score_df = pd_read_csv(out_f.name)
         remove(out_f.name)
-
     return list(score_df.to_dict()['Prob1_mean'].values())
 
 def predict_score(

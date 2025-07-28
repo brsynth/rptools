@@ -63,6 +63,7 @@ def _cli():
         upper_flux_bound=int(args.upper_flux_bound),
         lower_flux_bound=int(args.lower_flux_bound),
         max_subpaths_filter=args.max_subpaths_filter,
+        cofactors=args.cofactors,
         logger=logger
     )
 
