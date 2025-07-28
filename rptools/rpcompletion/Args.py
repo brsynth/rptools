@@ -5,6 +5,7 @@ from os import path as os_path
 default_upper_flux_bound = 10000
 default_lower_flux_bound = -default_upper_flux_bound
 default_max_subpaths_filter = 10
+default_cofactors = None
 
 
 def add_arguments(parser: ArgumentParser) -> ArgumentParser:
@@ -55,6 +56,12 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
         type=int,
         default=default_max_subpaths_filter,
         help=f'Define the topX pathways to keep (default: {default_max_subpaths_filter}, 0 = no filtering)')
+    parser.add_argument(
+        '--cofactors',
+        type=str,
+        help='Name of the file containing the list of cofactors to ignore (default: None)',
+        default=None
+    )
     # parser.add_argument('--pathway_id', type=str, default='rp_pathway')
     # parser.add_argument('--compartment_id', type=str, default='MNXC3')
     # parser.add_argument('--species_group_id', type=str, default='rp_trunk_species')

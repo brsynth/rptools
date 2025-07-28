@@ -12,6 +12,10 @@ from logging import (
     getLogger
 )
 from copy import deepcopy
+from rdkit.Chem import (
+    MolFromSmiles,
+    MolToSmiles
+)
 from brs_utils import (
     insert_and_or_replace_in_sorted_list,
     Item,
@@ -27,7 +31,8 @@ from rptools.rplibs import (
 from .Args import (
     default_upper_flux_bound,
     default_lower_flux_bound,
-    default_max_subpaths_filter
+    default_max_subpaths_filter,
+    default_cofactors
 )
 
 
@@ -40,6 +45,7 @@ def rp_completion(
     upper_flux_bound: float = default_upper_flux_bound,
     lower_flux_bound: float = default_lower_flux_bound,
     max_subpaths_filter: int = default_max_subpaths_filter,
+    cofile: str = default_cofactors,
     logger: Logger = getLogger(__name__)
 ) -> List[rpPathway]:
     """Process to the completion of metabolic pathways 
@@ -88,6 +94,8 @@ def rp_completion(
     max_subpaths_filter: int, optional
         Number of pathways (best) kept per master pathway
         (default: 10)
+    cofile: str, optional
+        Name of the file containing the list of cofactors to ignore (default: None)
     logger: Logger, optional
 
     Returns
@@ -123,12 +131,21 @@ def rp_completion(
         infile=sink,
         logger=logger
     )
+    if cofile is not None:
+        # Read cofactors
+        cofactors = __parse_cofactors(
+            cofile=cofile,
+            logger=logger
+        )
+    else:
+        cofactors = []
 
     # COMPLETE TRANSFORMATIONS
     full_transfos = __complete_transformations(
         transfos=transfos,
         ec_numbers=ec_numbers,
         cache=cache,
+        cofactors=cofactors,
         logger=logger
     )
 
@@ -163,6 +180,7 @@ def __complete_transformations(
     transfos: Dict,
     ec_numbers: Dict,
     cache: rrCache,
+    cofactors: List[str] = [],
     logger: Logger = getLogger(__name__)
 ) -> Dict:
     """From template reactions, put back chemical species
@@ -193,6 +211,7 @@ def __complete_transformations(
 
     # For each transformation
     for transfo_id, transfo in transfos.items():
+        logger.debug(f'transfo_id: {transfo_id}, transfo: {transfo}')
 
         full_transfos[transfo_id] = {}
         full_transfos[transfo_id]['ec'] = ec_numbers[transfo_id]['ec']
@@ -201,11 +220,15 @@ def __complete_transformations(
                 left=__build_smiles(transfo['left']),
                 right=__build_smiles(transfo['right'])
             )
+        logger.debug(f'transfo_smi: {transfo_smi}')
 
         # Add compounds of the current transformation
         full_transfos[transfo_id]['left'] = dict(transfos[transfo_id]['left'])
+        logger.debug(f'full_transfos[{transfo_id}]["left"]: {full_transfos[transfo_id]["left"]}')
         full_transfos[transfo_id]['right'] = dict(transfos[transfo_id]['right'])
+        logger.debug(f'full_transfos[{transfo_id}]["right"]: {full_transfos[transfo_id]["right"]}')
         full_transfos[transfo_id]['complement'] = {}
+        logger.debug(f'full_transfos[{transfo_id}]["complement"]: {full_transfos[transfo_id]["complement"]}')
 
         # MULTIPLE RR FOR ONE TRANSFO
         for rule_id in transfo['rule_ids']:
@@ -219,12 +242,45 @@ def __complete_transformations(
                 rxn_rule_id=rule_id,
                 transfo=transfo_smi,
                 direction='forward',
+                cmpds_to_ignore=cofactors,
                 # tmpl_rxn_id=tmpl_rxn_id,
                 logger=logger
             )
             logger.debug(f'full_transfos[{transfo_id}]["complement"][{rule_id}]: {full_transfos[transfo_id]["complement"][rule_id]}')
 
     return full_transfos
+
+
+def __parse_cofactors(cofile, logger=getLogger(__name__)):
+    # Read cofactors IDs from cofile whose the header is:
+    # <ID>	<SMILES>	<INCHI>	<INCHIKEY>
+    # as a list of <ID>
+    """Parse the cofactors file and return a list of cofactors IDs.
+    """
+    cofactors = []
+    with open(cofile, 'r') as f:
+        next(f)  # Skip header line
+        for line in f:
+            parts = line.strip().split('\t')
+            cofactors.append(parts[0])
+    logger.debug(f"Read cofactors: {cofactors}")
+    return cofactors
+
+
+def __canonicalize_smiles(smiles: str) -> str:
+    """
+    Convert a SMILES string to its canonical form using RDKit.
+
+    Parameters:
+    - smiles (str): Input SMILES string.
+
+    Returns:
+    - str: Canonical SMILES string. Returns None if input is invalid.
+    """
+    mol = MolFromSmiles(smiles)
+    if mol is None:
+        return None  # Handle invalid SMILES
+    return MolToSmiles(mol, canonical=True)
 
 
 def __build_smiles(
@@ -245,6 +301,7 @@ def __build_smiles(
     SMILES string
     """
     return '.'.join([Cache.get(spe_id).get_smiles() for spe_id in side.keys()])
+
 
 def __build_reader(
     path: str,
@@ -279,7 +336,11 @@ def __build_reader(
         except FileNotFoundError:
             logger.error('Could not read file: '+str(path))
             return None
-    next(reader)
+    try:
+        next(reader)
+    except StopIteration:
+        logger.warning('Empty file: '+str(path))
+        return None
     return reader
 
 
@@ -401,6 +462,7 @@ def __get_compound_from_cache(
         'formula': formula
     }
 
+
 def __read_rp2_metnet(
     infile: str,
     logger: Logger = getLogger(__name__)
@@ -456,7 +518,7 @@ def __read_sink(
     sink_molecules = set()
     reader = __build_reader(path=infile, logger=logger)
     if reader is None:
-        logger.error(f'File not found: {infile}')
+        logger.warning(f'The sink file {infile} is empty or not found. Continuing without sink molecules.')
         return []
     for row in reader:
         sink_molecules.add(row[0])
@@ -856,6 +918,9 @@ def __add_compounds(
     if compounds have known structure or not.
     """
     _compounds = deepcopy(compounds)
+    if compounds_to_add == {}:
+        logger.debug('No compounds to add')
+        return _compounds
     for side in ['right', 'left']:
         # added compounds with struct
         for cmpd_id, cmpd in compounds_to_add[side].items():
@@ -870,6 +935,7 @@ def __add_compounds(
             else:
                 _compounds[side][cmpd_id] = cmpd['stoichio']
     return _compounds
+
 
 def __keep_unique_pathways(
     pathways: List[Dict],
