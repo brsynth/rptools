@@ -42,7 +42,7 @@ class Test_rpCompletion(TestCase):
         )
         self.data_path = os_path.join(
             os_path.dirname(__file__),
-            'data' , 'lycopene'
+            'data' , 'input', 'lycopene'
         )
         self.output_path = os_path.join(
             os_path.dirname(__file__),
@@ -104,6 +104,69 @@ class Test_rpCompletion(TestCase):
             )
             ref_pathway = rpPathway(ref_file)
             self.assertEqual(pathways[f'rp_{pathway_id}'], ref_pathway)
+
+    def test_rp_completion_wo_cofactors(self):
+        data_path = os_path.join(
+            os_path.dirname(__file__),
+            'data' , 'input', 'wo_cofactors'
+        )
+        output_path = os_path.join(
+            os_path.dirname(__file__),
+            'data', 'output' , 'wo_cofactors'
+        )
+        rp2_pathways = os_path.join(
+            data_path,
+            '1-rp2_metnet.csv'
+        )
+        sink = os_path.join(
+            data_path,
+            '2-sink.txt'
+        )
+        rp2paths_compounds = os_path.join(
+            data_path,
+            '3-rp2paths_compounds.tsv'
+        )
+        rp2paths_pathways = os_path.join(
+            data_path,
+            '4-rp2paths_pathways.csv'
+        )
+        cofile = os_path.join(
+            data_path,
+            'cofactors_mnx.tsv'
+        )
+        pathways = rp_completion(
+            rp2_metnet=rp2_pathways,
+            sink=sink,
+            rp2paths_compounds=rp2paths_compounds,
+            rp2paths_pathways=rp2paths_pathways,
+            cache=self.cache,
+            upper_flux_bound=999999,
+            lower_flux_bound=0,
+            max_subpaths_filter=10,
+            cofile=cofile,
+            logger=self.logger
+        )
+        pathways = {pathway.get_id(): pathway for pathway in pathways}
+        ref_files_wo_cofactors = [
+            '010_0025',
+            '010_0026',
+            '010_0030',
+            '010_0067',
+            '010_0068',
+            '010_0072',
+            '012_0056',
+            '012_0059',
+            '013_0012',
+            '067_0013'
+        ]
+        for pathway_id in ref_files_wo_cofactors:
+            ref_file = os_path.join(
+                output_path,
+                f'rp_{pathway_id}.xml'
+            )
+            ref_pathway = rpPathway(ref_file)
+            self.assertEqual(pathways[f'rp_{pathway_id}'], ref_pathway)
+
 
         # print(pathways[0].get_id())
         # exit()

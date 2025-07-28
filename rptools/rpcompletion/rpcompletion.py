@@ -45,7 +45,7 @@ def rp_completion(
     upper_flux_bound: float = default_upper_flux_bound,
     lower_flux_bound: float = default_lower_flux_bound,
     max_subpaths_filter: int = default_max_subpaths_filter,
-    cofactors: str = default_cofactors,
+    cofile: str = default_cofactors,
     logger: Logger = getLogger(__name__)
 ) -> List[rpPathway]:
     """Process to the completion of metabolic pathways 
@@ -94,7 +94,7 @@ def rp_completion(
     max_subpaths_filter: int, optional
         Number of pathways (best) kept per master pathway
         (default: 10)
-    cofactors: str, optional
+    cofile: str, optional
         Name of the file containing the list of cofactors to ignore (default: None)
     logger: Logger, optional
 
@@ -131,12 +131,14 @@ def rp_completion(
         infile=sink,
         logger=logger
     )
-    if cofactors is not None:
+    if cofile is not None:
         # Read cofactors
         cofactors = __parse_cofactors(
-            cofile=cofactors,
+            cofile=cofile,
             logger=logger
         )
+    else:
+        cofactors = []
 
     # COMPLETE TRANSFORMATIONS
     full_transfos = __complete_transformations(
