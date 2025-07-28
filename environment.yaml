@@ -17,7 +17,7 @@ dependencies:
   - networkx >=2.5 # rplibs
   - filetype  # rplibs (conda-forge)
   - rr_cache >=3.1.1 # rpcompletion
-  - rxn_rebuild >=3.1.1 # rpcompletion
+  - rxn_rebuild >=3.1.3 # rpcompletion
   - chemlite # rpcompletion ,rpfba, rpthermo
   - h5py # rpscore
   - xgboost # rpscore
