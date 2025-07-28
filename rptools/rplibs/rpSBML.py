@@ -235,7 +235,7 @@ class rpSBML:
         self.logger.debug('Checking SBML format...')
         try:
             return libsbml.SBMLValidator().validate(self.getDocument()) == 0
-        except ValueError:
+        except (ValueError, TypeError):
             return False
 
 
