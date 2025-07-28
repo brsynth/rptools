@@ -32,7 +32,7 @@ jobs:
           cd cicd-toolkit
           make -C makefiles -f conda.mk build-recipe
       - name: Saving recipe
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: recipe
           path: cicd-toolkit/recipe/meta.yaml
@@ -56,7 +56,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - name: Loading recipe
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: recipe
           path: cicd-toolkit/recipe
