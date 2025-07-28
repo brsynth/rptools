@@ -7,7 +7,7 @@ from logging import (
     Logger,
     getLogger,
 )
-from colored import fg, bg, attr
+from colored import fg, attr
 from rr_cache import rrCache
 from rptools import build_args_parser
 from rptools.rpcompletion import rp_completion
