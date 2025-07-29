@@ -19,8 +19,8 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
     strategy:
       matrix:
-#        os: ["ubuntu", "macos", "windows"]
-        os: ["ubuntu", "macos-15-large"]
+        # Available runners: see https://github.com/actions/runner-images#available-images
+        os: ["ubuntu", "macos-13"]
     defaults:
       run:
         shell: bash -l {0}
