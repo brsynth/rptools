@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
 #        os: ["ubuntu", "macos", "windows"]
-        os: ["ubuntu", "macos"]
+        os: ["ubuntu", "macos-15-large"]
     defaults:
       run:
         shell: bash -l {0}
