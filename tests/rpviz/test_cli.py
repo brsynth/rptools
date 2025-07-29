@@ -109,3 +109,51 @@ def test_tar_input(mocker, tmpdir):
     ref_objects = __read_multi_object_json(ref_file)
     test_objects = __read_multi_object_json(test_file)
     assert not deepdiff.DeepDiff(ref_objects, test_objects, ignore_order=True)
+
+
+def test_with_cofactors(mocker, tmpdir):
+    """Test the CLI with no cofactor file."""
+    args = ['prog', str(REF_IN_TAR), str(tmpdir), '--cofactor-file', str(COF_FILE)]
+    mocker.patch('sys.argv', args)
+    parser = __build_arg_parser()
+    args = parser.parse_args()
+    __run(args)
+    test_file = tmpdir / 'network.json'
+    test_objects = __read_multi_object_json(test_file)
+    assert any(
+        node['data']['cofactor']
+        for node in test_objects['network']['elements']['nodes']
+        if node['data']['type'] == 'chemical'
+    )
+
+
+def test_without_cofactors(mocker, tmpdir):
+    """Test the CLI without a cofactor file."""
+
+    # Case 1: with cofactor file set to None
+    args = ['prog', str(REF_IN_TAR), str(tmpdir), '--cofactor-file', 'None']
+    mocker.patch('sys.argv', args)
+    parser = __build_arg_parser()
+    args = parser.parse_args()
+    __run(args)
+    test_file = tmpdir / 'network.json'
+    test_objects = __read_multi_object_json(test_file)
+    assert not any(
+        node['data']['cofactor']
+        for node in test_objects['network']['elements']['nodes']
+        if node['data']['type'] == 'chemical'
+    )
+
+    # Case 2: with no cofactor detection switch
+    args = ['prog', str(REF_IN_TAR), str(tmpdir), '--no-cofactor-detection']
+    mocker.patch('sys.argv', args)
+    parser = __build_arg_parser()
+    args = parser.parse_args()
+    __run(args)
+    test_file = tmpdir / 'network.json'
+    test_objects = __read_multi_object_json(test_file)
+    assert not any(
+        node['data']['cofactor']
+        for node in test_objects['network']['elements']['nodes']
+        if node['data']['type'] == 'chemical'
+    )
