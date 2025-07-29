@@ -53,7 +53,7 @@ def __build_arg_parser(prog='python -m rpviz.cli'):
         default=os.path.join(
             os.path.dirname(__file__),
             "data",
-            "cofactor_inchi_201811.tsv",
+            "cofactor_mnx_202507.tsv",
         ),
         help=(
             "File listing structures to consider as cofactors. "
