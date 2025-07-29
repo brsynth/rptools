@@ -62,6 +62,14 @@ def __build_arg_parser(prog='python -m rpviz.cli'):
         )
     )
     parser.add_argument(
+        "--no-cofactor-detection",
+        action="store_true",
+        help=(
+            "If set, no cofactor detection will be performed. "
+            "This is equivalent to setting --cofactor-file None."
+        )
+    )
+    parser.add_argument(
         "--autonomous_html",
         default=None,
         help=(
@@ -139,6 +147,8 @@ def __run(args):
     # Add cofactor annotations (if any)
     if args.cofactor is not None and args.cofactor != 'None':
         network = annotate_cofactors(network, args.cofactor)
+    if args.no_cofactor_detection:
+        logging.info('No cofactor detection requested, skipping.')
 
     # Add chemical SVGs
     network = annotate_chemical_svg(network)
