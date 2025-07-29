@@ -9,7 +9,7 @@ __license__ = 'MIT'
 import os
 import csv
 import logging
-from typing import Union
+from typing import Dict, Union
 
 from rptools.rplibs import rpSBML, rpPathway
 from rptools.rplibs.rpReaction import rpReaction
@@ -617,6 +617,21 @@ def parse_one_pathway(rp_pathway: rpPathway) -> tuple:
 
 
 def parse_all_pathways(input_files: list) -> tuple:
+    """Parse all pathways from a list of SBML files.
+
+    Parameters
+    ----------
+    input_files : list
+        List of SBML file paths to parse.
+
+    Returns
+    -------
+    tuple
+        A tuple containing:
+        - network: dict, a dictionary representing the network of elements.
+        - pathways_info: dict, a dictionary containing information about each
+          pathway.
+    """
     network = {'elements': {'nodes': [], 'edges': []}}
     all_nodes = {}
     all_edges = {}
@@ -661,12 +676,20 @@ def parse_all_pathways(input_files: list) -> tuple:
     return network, pathways_info_ordered
 
 
-def annotate_cofactors(network, cofactor_file):
+def annotate_cofactors(network: Dict, cofactor_file: str) -> Dict:
     """Annotate cofactors based on structures listed in the cofactor file.
 
-    :param network: dict, network of elements as outputted by the sbml_to_json method
-    :param cofactor_file: str, file path
-    :return: dict, network annotated
+    Parameters
+    ----------
+    network : dict
+        Network of elements as outputted by the sbml_to_json method.
+    cofactor_file : str
+        File path to the cofactor file.
+
+    Returns
+    -------
+    dict
+        Network annotated with cofactor information.
     """
     if not os.path.exists(cofactor_file):
         logging.error('Cofactor file not found: %s', cofactor_file)
