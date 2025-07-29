@@ -49,7 +49,7 @@ def __build_arg_parser(prog='python -m rpviz.cli'):
         "--debug", action="store_true", help="Turn on debug instructions"
     )
     parser.add_argument(
-        "--cofactor",
+        "--cofactor-file",
         default=os.path.join(
             os.path.dirname(__file__),
             "data",
@@ -145,10 +145,11 @@ def __run(args):
         )
 
     # Add cofactor annotations (if any)
-    if args.cofactor is not None and args.cofactor != 'None':
-        network = annotate_cofactors(network, args.cofactor)
     if args.no_cofactor_detection:
         logging.info('No cofactor detection requested, skipping.')
+    elif args.cofactor_file is not None and args.cofactor_file != 'None':
+        logging.info('Using cofactor file: %s', args.cofactor_file)
+        network = annotate_cofactors(network, args.cofactor_file)
 
     # Add chemical SVGs
     network = annotate_chemical_svg(network)
