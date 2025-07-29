@@ -51,9 +51,15 @@ def __build_arg_parser(prog='python -m rpviz.cli'):
     parser.add_argument(
         "--cofactor",
         default=os.path.join(
-            os.path.dirname(__file__), "data", "cofactor_inchi_201811.tsv"
+            os.path.dirname(__file__),
+            "data",
+            "cofactor_inchi_201811.tsv",
         ),
-        help="File listing structures to consider as cofactors.",
+        help=(
+            "File listing structures to consider as cofactors. "
+            "If None, no cofactor will be annotated. "
+            "Default: %(default)s"
+        )
     )
     parser.add_argument(
         "--autonomous_html",
@@ -130,9 +136,12 @@ def __run(args):
             f'"{args.input_rpSBMLs}" not found. Exit'
         )
 
-    # Add annotations
-    network = annotate_cofactors(network, args.cofactor)  # Typical cofactors
-    network = annotate_chemical_svg(network)  # SVGs depiction for chemical
+    # Add cofactor annotations (if any)
+    if args.cofactor is not None and args.cofactor != 'None':
+        network = annotate_cofactors(network, args.cofactor)
+
+    # Add chemical SVGs
+    network = annotate_chemical_svg(network)
 
     # Build the Viewer
     viewer = Viewer(out_folder=args.output_folder)

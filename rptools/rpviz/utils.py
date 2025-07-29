@@ -738,11 +738,18 @@ def annotate_cofactors(network: Dict, cofactor_file: str) -> Dict:
     return network
 
 
-def annotate_chemical_svg(network):
+def annotate_chemical_svg(network: Dict) -> Dict:
     """Annotate chemical nodes with SVGs depiction.
 
-    :param network: dict, network of elements as outputted by the sbml_to_json method
-    :return: dict, network annotated
+    Parameters
+    ----------
+    network : dict
+        Network of elements as outputted by the sbml_to_json method.
+
+    Returns
+    -------
+    dict
+        Network annotated with SVG depictions of chemical nodes.
     """
     from rdkit.Chem import MolFromInchi
     from rdkit.Chem.Draw import rdMolDraw2D
