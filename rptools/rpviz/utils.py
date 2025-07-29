@@ -694,18 +694,22 @@ def annotate_cofactors(network: Dict, cofactor_file: str) -> Dict:
     if not os.path.exists(cofactor_file):
         logging.error('Cofactor file not found: %s', cofactor_file)
         return network
+
     # Collect cofactor IDs and structures
     cof_inchis = set()
     cof_ids = set()
     with open(cofactor_file, 'r', encoding='utf-8') as ifh:
-        reader = csv.reader(ifh, delimiter='\t')
+        reader = csv.DictReader(ifh, delimiter='\t')
         for row in reader:
-            if row[0].startswith('#'):  # Skip comments
+            if row['ID'].startswith('#'):
+                # Skip row starting with comments
                 continue
-            if row[0].startswith('InChI'):  # inchi based
-                cof_inchis.add(row[0])
-            if row[2].startswith('MNXM'):
-                cof_ids |= set(row[2].split(','))  # id based
+            if row['INCHI'] != '':
+                # InChI describing cofactors
+                cof_inchis.add(row['INCHI'])
+            if row['ID'] != '':
+                # IDs of cofactors
+                cof_ids |= set(row['ID'].split(','))
 
     # Match and annotate network elements
     for node in network['elements']['nodes']:
@@ -714,8 +718,8 @@ def annotate_cofactors(network: Dict, cofactor_file: str) -> Dict:
             and node['data']['inchi'] is not None
         ):
             match = False
-            for cof_inchi in cof_inchis:
-                if node['data']['inchi'].find(cof_inchi) > -1:  # Match
+            for inchi in cof_inchis:
+                if node['data']['inchi'].find(inchi) > -1:  # Match
                     node['data']['cofactor'] = True
                     match = True
                     continue
@@ -726,9 +730,9 @@ def annotate_cofactors(network: Dict, cofactor_file: str) -> Dict:
             and len(node['data']['all_labels']) > 0
         ):
             match = False
-            for cof_id in cof_ids:
+            for id_ in cof_ids:
                 for label in node['data']['all_labels']:
-                    if label == cof_id:
+                    if label == id_:
                         node['data']['cofactor'] = True
                         match = True
                         continue
