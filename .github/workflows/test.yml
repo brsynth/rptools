@@ -39,5 +39,5 @@ jobs:
       #     pip install conda
       - name: Building & Testing conda package
         run: |
-          conda install -y python pytest pytest-cov pytest-mock
+          conda install -y python pytest pytest-cov pytest-mock deepdiff
           python -m pytest tests
