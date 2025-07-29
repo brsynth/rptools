@@ -14,14 +14,8 @@ from rptools.rpviz.__main__ import (
 
 REF_IN_DIR = Path(__file__).resolve().parent / 'inputs' / 'as_dir'
 REF_IN_TAR = Path(__file__).resolve().parent / 'inputs' / 'as_tar.tgz'
+COF_FILE = Path(__file__).resolve().parent / 'inputs' / 'cofactors_mnx_202507.tsv'
 REF_OUT_DIR = Path(__file__).resolve().parent / 'outputs'
-COF_FILE = (
-    Path(__file__).resolve().parent.parent.parent
-    / "rptools"
-    / "rpviz"
-    / "data"
-    / "cofactors_mnx_202507.tsv"
-)
 
 
 def __dump_file(path: str, data: Dict) -> None:
