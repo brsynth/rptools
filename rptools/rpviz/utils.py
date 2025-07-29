@@ -605,8 +605,10 @@ def parse_one_pathway(rp_pathway: rpPathway) -> tuple:
                 try:
                     assert _edge_seem_equal(edge, edges[edge_id])
                 except AssertionError:
-                    logging.error(f'Unexpected edge inequality '
-                                  f'between 2 edges having ID {edge_id}.')
+                    logging.error(
+                        f'Unexpected edge inequality '
+                        f'between 2 edges having ID {edge_id}.'
+                    )
     # Update pathway info
     pathway['node_ids'] = list(nodes.keys())
     pathway['edge_ids'] = list(edges.keys())
@@ -619,8 +621,6 @@ def parse_all_pathways(input_files: list) -> tuple:
     all_nodes = {}
     all_edges = {}
     pathways_info = {}
-
-    from pprint import pprint
 
     for sbml_path in input_files:
         rpsbml = rpSBML(str(sbml_path))
@@ -669,7 +669,7 @@ def annotate_cofactors(network, cofactor_file):
     :return: dict, network annotated
     """
     if not os.path.exists(cofactor_file):
-        logging.error(f'Cofactor file not found: {cofactor_file}')
+        logging.error('Cofactor file not found: %s', cofactor_file)
         return network
     # Collect cofactor IDs and structures
     cof_inchis = set()
