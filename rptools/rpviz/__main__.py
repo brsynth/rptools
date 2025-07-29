@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """CLI for generating the JSON file expected by the pathway visualiser."""
- 
+
 __author__ = 'Thomas Duigou'
 __license__ = 'MIT'
 
@@ -17,7 +17,12 @@ import tempfile
 
 from pathlib import Path
 
-from rptools.rpviz.utils import annotate_cofactors, annotate_chemical_svg, get_autonomous_html, parse_all_pathways
+from rptools.rpviz.utils import (
+    annotate_cofactors,
+    annotate_chemical_svg,
+    get_autonomous_html,
+    parse_all_pathways
+)
 from rptools.rpviz.Viewer import Viewer
 
 
@@ -25,20 +30,39 @@ def __build_arg_parser(prog='python -m rpviz.cli'):
     desc = 'Converting SBML RP file.'
 
     parser = argparse.ArgumentParser(description=desc, prog=prog)
-    parser.add_argument('input_rpSBMLs',
-                        help='Input file containing rpSBML files in a tar archive or a folder.')
-    parser.add_argument('output_folder',
-                        help='Output folder to be used. If it does not exist, an attempt will be made to create it.'
-                             'It the creation of the folder fails, IOError will be raised.')
-    parser.add_argument('--debug', action='store_true',
-                        help='Turn on debug instructions')
-    parser.add_argument('--cofactor',
-                        default=os.path.join(os.path.dirname(__file__), 'data', 'cofactor_inchi_201811.tsv'),
-                        help='File listing structures to consider as cofactors.')
-    parser.add_argument('--autonomous_html',
-                        default=None,
-                        help="Optional file path, if provided will output an autonomous HTML containing all "
-                             "dependencies.")
+    parser.add_argument(
+        "input_rpSBMLs",
+        help=(
+            "Input file containing rpSBML files in a tar"
+            " archive or a folder."
+        ),
+    )
+    parser.add_argument(
+        "output_folder",
+        help=(
+            "Output folder to be used. If it does not exist, an attempt will"
+            " be made to create it. If the creation of the folder fails,"
+            " IOError will be raised."
+        ),
+    )
+    parser.add_argument(
+        "--debug", action="store_true", help="Turn on debug instructions"
+    )
+    parser.add_argument(
+        "--cofactor",
+        default=os.path.join(
+            os.path.dirname(__file__), "data", "cofactor_inchi_201811.tsv"
+        ),
+        help="File listing structures to consider as cofactors.",
+    )
+    parser.add_argument(
+        "--autonomous_html",
+        default=None,
+        help=(
+            "Optional file path, if provided will output an autonomous HTML"
+            " containing all dependencies."
+        )
+    )
 
     return parser
 
@@ -57,31 +81,45 @@ def __run(args):
         # Input is a folder
         if input_path.is_dir():
             input_files = list(input_path.glob('*.xml'))
-            if not len(input_files):
+            if len(input_files) == 0:
                 raise FileNotFoundError(
                     f'"{args.input_rpSBMLs}" sounds like a directory '
                     'but no rpSBML files (xml extension) has been find. '
                     'Exit. '
                     )
             # Parse
-            network, pathways_info = parse_all_pathways(input_files=input_files)
+            (
+                network,
+                pathways_info,
+            ) = parse_all_pathways(
+                input_files=input_files
+            )
         # Input is a tarfile
         elif input_path.is_file() and tarfile.is_tarfile(args.input_rpSBMLs):
             with tempfile.TemporaryDirectory() as tmp_folder:
                 with tarfile.open(args.input_rpSBMLs, mode='r') as tar:
                     tar.extractall(path=tmp_folder)
                 _ = list(Path(tmp_folder).glob('*.xml'))
-                if not len(_):  # Possible if there is a root folder
+                if len(_) == 0:  # Possible if there is a root folder
                     _ = list(Path(tmp_folder).glob('*/*.xml'))
                 # Removed tar "fork" files if any (name starts by ._)
-                input_files = [item for item in _ if not item.name.startswith('._')]
+                input_files = [
+                    item for item in _ if not item.name.startswith('._')
+                ]
                 # Check if any file to parse
-                if not len(input_files):
-                    raise FileNotFoundError(
-                        f'No rpSBML files found in "{args.input_rpSBMLs}" tarfile. Exit.'
-                        )
+                if len(input_files) == 0:
+                    msg = (
+                        f'No rpSBML files found in "{args.input_rpSBMLs}" '
+                        'tarfile. Exit.'
+                    )
+                    raise FileNotFoundError(msg)
                 # Parse
-                network, pathways_info = parse_all_pathways(input_files=input_files)
+                (
+                    network,
+                    pathways_info
+                ) = parse_all_pathways(
+                    input_files=input_files
+                )
         # Input is something else
         else:
             raise NotImplementedError(
@@ -102,11 +140,11 @@ def __run(args):
 
     # Write info extracted from rpSBMLs
     json_out_file = os.path.join(args.output_folder, 'network.json')
-    with open(json_out_file, 'w') as ofh:
+    with open(json_out_file, 'w', encoding='utf-8') as ofh:
         ofh.write('network = ' + json.dumps(network, indent=4))
         ofh.write(os.linesep)
         ofh.write('pathways_info = ' + json.dumps(pathways_info, indent=4))
-    
+
     # Write single HTML if requested
     if args.autonomous_html is not None:
         str_html = get_autonomous_html(args.output_folder)
