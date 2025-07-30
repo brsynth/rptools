@@ -811,8 +811,10 @@ def get_autonomous_html(ifolder):
         rep = b'>' + js_string
         html_string = html_string.replace(ori, rep)
     # open and read style.css and replace it in the HTML
-    css_replace = ['css/jquery.tablesorte.theme.default-2.31.2.min.css',
-                  'css/viewer.css']
+    css_replace = [
+        'css/jquery.tablesorte.theme.default-2.31.2.min.css',
+        'css/viewer.css'
+    ]
     for css_file in css_replace:
         css_bytes = open(ifolder + '/' + css_file, 'rb').read()
         ori = b'<link href="' + css_file.encode() + b'" rel="stylesheet" type="text/css"/>'
