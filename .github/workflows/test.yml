@@ -20,7 +20,8 @@ jobs:
     strategy:
       matrix:
         # Available runners: see https://github.com/actions/runner-images#available-images
-        os: ["ubuntu", "macos-13"]
+        # os: ["ubuntu", "macos"]
+        os: ["ubuntu"]
     defaults:
       run:
         shell: bash -l {0}
