@@ -237,16 +237,20 @@ def __complete_transformations(
             # If 'tmpl_rxn_id' is not given,
             # the transformation will be completed
             # for each template reaction from reaction rule was built from
-            full_transfos[transfo_id]['complement'][rule_id] = rebuild_rxn(
-                cache=cache,
-                rxn_rule_id=rule_id,
-                transfo=transfo_smi,
-                direction='forward',
-                cmpds_to_ignore=cofactors,
-                # tmpl_rxn_id=tmpl_rxn_id,
-                logger=logger
-            )
-            logger.debug(f'full_transfos[{transfo_id}]["complement"][{rule_id}]: {full_transfos[transfo_id]["complement"][rule_id]}')
+            try:
+                full_transfos[transfo_id]['complement'][rule_id] = rebuild_rxn(
+                    cache=cache,
+                    rxn_rule_id=rule_id,
+                    transfo=transfo_smi,
+                    direction='forward',
+                    cmpds_to_ignore=cofactors,
+                    # tmpl_rxn_id=tmpl_rxn_id,
+                    logger=logger
+                )
+                logger.debug(f'full_transfos[{transfo_id}]["complement"][{rule_id}]: {full_transfos[transfo_id]["complement"][rule_id]}')
+            except KeyError as e:
+                logger.error(f'Could not find reaction rule {rule_id} in the cache. Are you in the right data type space?')
+                exit(1)
 
     return full_transfos
 
@@ -547,7 +551,11 @@ def __read_pathways(
     as dictionnaries
     """
 
-    df = pd.read_csv(infile)
+    try:
+        df = pd.read_csv(infile)
+    except pd.errors.EmptyDataError as e:
+        logger.error(f'File {infile} is empty: {e}')
+        return {}, {}
 
     check = __check_pathways(df)
     if not check:
@@ -646,10 +654,14 @@ def __build_pathway_combinatorics(
 
             transfo_idx += 1
             # Compounds from original transformation
-            compounds = {
-                'right': dict(full_transfos[transfo_id]['right']),
-                'left': dict(full_transfos[transfo_id]['left'])
-            }
+            try:
+                compounds = {
+                    'right': dict(full_transfos[transfo_id]['right']),
+                    'left': dict(full_transfos[transfo_id]['left'])
+                }
+            except KeyError as e:
+                logger.error(f'Could not find transformation {transfo_id} in the cache. Are you in the right data type space?')
+                exit(1)
             # Build list of transformations
             # where each transfo can correspond to multiple reactions
             # due to multiple reaction rules and/or multiple template reactions

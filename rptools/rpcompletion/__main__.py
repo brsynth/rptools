@@ -31,7 +31,7 @@ def _cli():
     logger.debug('   |--> rp2paths_compounds: '+str(args.rp2paths_compounds))
     logger.debug('   |--> rp2paths_pathways: '+str(args.rp2paths_pathways))
     logger.debug('   |--> outdir: '+str(args.outdir))
-    logger.debug('   |--> cache_dir: '+str(args.cache_dir))
+    logger.debug('   |--> data_type: '+str(args.data_type))
     logger.debug('   |--> upper_flux_bound: '+str(args.upper_flux_bound))
     logger.debug('   |--> lower_flux_bound: '+str(args.lower_flux_bound))
     logger.debug('   |--> max_subpaths_filter: '+str(args.max_subpaths_filter))
@@ -44,13 +44,14 @@ def _cli():
     )
 
     cache = rrCache(
-        attrs=[
-            'rr_reactions',
-            'template_reactions',
-            'cid_strc',
-            'deprecatedCompID_compid',
-        ],
-        cache_dir=args.cache_dir,
+        # attrs=[
+        #     'rr_reactions',
+        #     'template_reactions',
+        #     'cid_strc',
+        #     'deprecatedCompID_compid',
+        # ],
+        data_type=args.data_type,
+        interactive=False,
         logger=logger
     )
 
@@ -63,7 +64,7 @@ def _cli():
         upper_flux_bound=int(args.upper_flux_bound),
         lower_flux_bound=int(args.lower_flux_bound),
         max_subpaths_filter=args.max_subpaths_filter,
-        cofactors=args.cofactors,
+        cofile=args.cofactors,
         logger=logger
     )
 

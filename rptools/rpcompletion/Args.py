@@ -6,6 +6,7 @@ default_upper_flux_bound = 10000
 default_lower_flux_bound = -default_upper_flux_bound
 default_max_subpaths_filter = 10
 default_cofactors = None
+default_data_type = 'mnx3.1'
 
 
 def add_arguments(parser: ArgumentParser) -> ArgumentParser:
@@ -37,10 +38,10 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     # parser.add_argument('--rp2paths_pathways', nargs='?', type=str)
     parser.add_argument('outdir', type=str)
     parser.add_argument(
-        '--cache-dir',
-        default='',
+        '--data-type',
+        default=default_data_type,
         type=str,
-        help='Path to the cache to generate or read from'
+        help='Type of data to use (e.g. mnx3.1, mnx4.0...). Determines which configuration files and folders to use both the cache and the input cache (default: %(default)s).'
     )
     # parser.add_argument('--outdir', nargs='?', type=str)
     # parser.add_argument(

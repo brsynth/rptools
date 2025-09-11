@@ -32,12 +32,8 @@ class Test_rpCompletion(TestCase):
     def setUp(self):
         self.logger = create_logger(__name__, 'ERROR')
         self.cache = rrCache(
-            attrs=[
-                'rr_reactions',
-                'template_reactions',
-                'cid_strc',
-                'deprecatedCompID_compid',
-            ],
+            data_type='mnx3.1',
+            interactive=False,
             logger=self.logger
         )
         self.data_path = os_path.join(
