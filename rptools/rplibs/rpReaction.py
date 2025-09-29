@@ -102,7 +102,12 @@ class rpReaction(Reaction, rpObject):
         if target_id != []:
             target_id = target_id[0]
         else:
-            target_id = None
+            # If not, detects if the current reaction consumes the target
+            target_id = [spe_id for spe_id in reaction.get_reactants_ids() if 'TARGET' in spe_id]
+            if target_id != []:
+                target_id = target_id[0]
+            else:
+                target_id = None
         return reaction, target_id
 
 
