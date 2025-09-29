@@ -79,7 +79,7 @@ def test_build_arg_parser(mocker):
 
 def test_dir_input(mocker, tmpdir):
     """Test the CLI with a directory input."""
-    args = ['prog', str(REF_IN_DIR), str(tmpdir)]
+    args = ['prog', str(REF_IN_DIR), str(tmpdir), '--no-cofactor-detection']
     mocker.patch('sys.argv', args)
     parser = __build_arg_parser()
     args = parser.parse_args()
@@ -93,7 +93,7 @@ def test_dir_input(mocker, tmpdir):
 
 def test_tar_input(mocker, tmpdir):
     """Test the CLI with a tar input."""
-    args = ['prog', str(REF_IN_TAR), str(tmpdir)]
+    args = ['prog', str(REF_IN_TAR), str(tmpdir), '--no-cofactor-detection']
     mocker.patch('sys.argv', args)
     parser = __build_arg_parser()
     args = parser.parse_args()
