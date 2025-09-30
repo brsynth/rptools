@@ -38,7 +38,9 @@ class Test_rpExtractSink(TestCase):
     )
 
     cache = rrCache(
-        ['cid_strc']
+        # ['cid_strc'],
+        data_type='mnx3.1',
+        interactive=False
     )
 
 
@@ -135,4 +137,8 @@ class Test_rpExtractSink(TestCase):
             for line in ref_content[1:]: # skip header
                 id, inchi = re_findall(r'"([^"]+)"', line)
                 ref_sink[id] = inchi
+        # print('"Name","InChI"')
+        # for key, value in test_sink.items():
+        #     print(f'"{key}","{value}"')
+        # exit()
         self.assertDictEqual(test_sink, ref_sink)
