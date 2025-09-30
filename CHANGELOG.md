@@ -1,5 +1,18 @@
 # Changelog
 
+## [6.6.0](https://github.com/brsynth/rptools/tree/6.6.0) (2025-09-30)
+
+[Full Changelog](https://github.com/brsynth/rptools/compare/6.5.0...6.6.0)
+
+**Closed issues:**
+
+- Call to UniProt in PartsGenie is broken [\#34](https://github.com/brsynth/rptools/issues/34)
+- Declaring channels for the packages in the environment [\#33](https://github.com/brsynth/rptools/issues/33)
+
+**Merged pull requests:**
+
+- improve cofactor handling within rpviz [\#39](https://github.com/brsynth/rptools/pull/39) ([tduigou](https://github.com/tduigou))
+
 ## [6.5.0](https://github.com/brsynth/rptools/tree/6.5.0) (2023-11-29)
 
 [Full Changelog](https://github.com/brsynth/rptools/compare/6.4.1...6.5.0)
