@@ -40,5 +40,5 @@ jobs:
       #     pip install conda
       - name: Building & Testing conda package
         run: |
-          conda env update --file environment-dev.yaml
+          conda env update --file environment-dev.yaml -n test
           python -m pytest tests
