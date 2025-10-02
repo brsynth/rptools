@@ -19,7 +19,7 @@ def _cli():
     logger = init(parser, args)
 
     cache = rrCache(
-        attrs=['cid_strc'],
+        # attrs=['cid_strc'],
         cache_dir=args.cache_dir,
         logger=logger
     )
