@@ -20,7 +20,7 @@ def _cli():
 
     cache = rrCache(
         # attrs=['cid_strc'],
-        cache_dir=args.cache_dir,
+        data_type=args.data_type,
         logger=logger
     )
     sink = genSink(

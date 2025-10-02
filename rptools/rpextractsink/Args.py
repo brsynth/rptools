@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 
 default_comp = 'c'
+default_data_type = 'mnx3.1'
 
 
 def add_arguments(parser: ArgumentParser) -> ArgumentParser:
@@ -28,10 +29,9 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
              'species that do not have any flux')
     )
     parser.add_argument(
-        '--cache-dir',
-        default='',
-        help=('Path to the cache directory. If not specified, '
-             'empty string is passed to rrCache.')
+        '--data-type',
+        default=default_data_type,
+        help=(f'Type of cache data to use (default: {default_data_type})')
     )
     parser.add_argument(
         '--standalone',
