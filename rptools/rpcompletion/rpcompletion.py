@@ -244,7 +244,7 @@ def __complete_transformations(
                     transfo=transfo_smi,
                     direction='forward',
                     cmpds_to_ignore=cofactors,
-                    data_type=cache.get('data_type'),
+                    cspace=cache.get('cspace'),
                     # tmpl_rxn_id=tmpl_rxn_id,
                     logger=logger
                 )

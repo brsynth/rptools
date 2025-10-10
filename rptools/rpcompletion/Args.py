@@ -38,10 +38,11 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     # parser.add_argument('--rp2paths_pathways', nargs='?', type=str)
     parser.add_argument('outdir', type=str)
     parser.add_argument(
-        '--data-type',
+        '--chemical-space',
+        dest='cspace',
         default=default_data_type,
         type=str,
-        help='Type of data to use (e.g. mnx3.1, mnx4.0...). Determines which configuration files and folders to use both the cache and the input cache (default: %(default)s).'
+        help='Chemical space to use (e.g. mnx3.1, mnx4.0...). Determines which configuration files and folders to use both the cache and the input cache (default: %(default)s).'
     )
     # parser.add_argument('--outdir', nargs='?', type=str)
     # parser.add_argument(

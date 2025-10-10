@@ -50,7 +50,7 @@ def _cli():
         #     'cid_strc',
         #     'deprecatedCompID_compid',
         # ],
-        data_type=args.data_type,
+        cspace=args.cspace,
         interactive=False,
         logger=logger
     )

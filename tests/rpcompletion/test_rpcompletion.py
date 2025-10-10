@@ -32,7 +32,7 @@ class Test_rpCompletion(TestCase):
     def setUp(self):
         self.logger = create_logger(__name__, 'ERROR')
         self.cache = rrCache(
-            data_type='mnx3.1',
+            cspace='mnx3.1',
             interactive=False,
             logger=self.logger
         )
