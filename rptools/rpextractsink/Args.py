@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 
 default_comp = 'c'
-default_data_type = 'mnx3.1'
+default_cspace = 'mnx3.1'
 
 
 def add_arguments(parser: ArgumentParser) -> ArgumentParser:
@@ -29,9 +29,9 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
              'species that do not have any flux')
     )
     parser.add_argument(
-        '--data-type',
-        default=default_data_type,
-        help=(f'Type of cache data to use (default: {default_data_type})')
+        '--chemical-space',
+        default=default_cspace,
+        help=(f'Type of cache data to use (default: {default_cspace})')
     )
     parser.add_argument(
         '--standalone',

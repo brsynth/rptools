@@ -39,7 +39,7 @@ class Test_rpExtractSink(TestCase):
 
     cache = rrCache(
         # ['cid_strc'],
-        data_type='mnx3.1',
+        cspace='mnx3.1',
         interactive=False
     )
 

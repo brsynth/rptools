@@ -6,7 +6,7 @@ default_upper_flux_bound = 10000
 default_lower_flux_bound = -default_upper_flux_bound
 default_max_subpaths_filter = 10
 default_cofactors = None
-default_data_type = 'mnx3.1'
+default_cspace = 'mnx3.1'
 
 
 def add_arguments(parser: ArgumentParser) -> ArgumentParser:
@@ -40,7 +40,7 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument(
         '--chemical-space',
         dest='cspace',
-        default=default_data_type,
+        default=default_cspace,
         type=str,
         help='Chemical space to use (e.g. mnx3.1, mnx4.0...). Determines which configuration files and folders to use both the cache and the input cache (default: %(default)s).'
     )

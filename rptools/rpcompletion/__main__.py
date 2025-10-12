@@ -31,7 +31,6 @@ def _cli():
     logger.debug('   |--> rp2paths_compounds: '+str(args.rp2paths_compounds))
     logger.debug('   |--> rp2paths_pathways: '+str(args.rp2paths_pathways))
     logger.debug('   |--> outdir: '+str(args.outdir))
-    logger.debug('   |--> data_type: '+str(args.data_type))
     logger.debug('   |--> upper_flux_bound: '+str(args.upper_flux_bound))
     logger.debug('   |--> lower_flux_bound: '+str(args.lower_flux_bound))
     logger.debug('   |--> max_subpaths_filter: '+str(args.max_subpaths_filter))
