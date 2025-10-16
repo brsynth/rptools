@@ -30,6 +30,7 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     )
     parser.add_argument(
         '--chemical-space',
+        type=str,
         default=default_cspace,
         help=(f'Type of cache data to use (default: {default_cspace})')
     )
