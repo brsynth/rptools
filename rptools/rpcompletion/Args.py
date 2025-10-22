@@ -44,6 +44,13 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
         type=str,
         help='Chemical space to use (e.g. mnx3.1, mnx4.0...). Determines which configuration files and folders to use both the cache and the input cache (default: %(default)s).'
     )
+    parser.add_argument(
+        '--cache-dir',
+        dest='cache_dir',
+        default=None,
+        type=str,
+        help='Directory where the rrCache is stored. If not provided, the default directory will be used.'
+    )
     # parser.add_argument('--outdir', nargs='?', type=str)
     # parser.add_argument(
     #     '--out_format',

@@ -42,17 +42,19 @@ def _cli():
         logger
     )
 
-    cache = rrCache(
-        # attrs=[
-        #     'rr_reactions',
-        #     'template_reactions',
-        #     'cid_strc',
-        #     'deprecatedCompID_compid',
-        # ],
-        cspace=args.cspace,
-        interactive=False,
-        logger=logger
-    )
+    if args.cache_dir is None:
+        cache = rrCache(
+            cspace=args.cspace,
+            interactive=False,
+            logger=logger
+        )
+    else:
+        cache = rrCache(
+            cspace=args.cspace,
+            install_dir=args.cache_dir,
+            interactive=False,
+            logger=logger
+        )
 
     pathways = rp_completion(
         rp2_metnet=args.rp2_metnet,
