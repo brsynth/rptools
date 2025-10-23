@@ -105,14 +105,7 @@ def rp_completion(
     """
 
     if cache is None:
-        cache = rrCache(
-            attrs=[
-                'rr_reactions',
-                'template_reactions',
-                'cid_strc',
-                'deprecatedCompID_compid',
-            ]
-        )
+        cache = rrCache(logger=logger)
 
     ## READ
     __rp2paths_compounds_in_cache(
