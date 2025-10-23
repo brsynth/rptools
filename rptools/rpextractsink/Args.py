@@ -35,6 +35,14 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
         default=default_cspace,
         help=(f'Type of cache data to use (default: {default_cspace})')
     )
+    
+    parser.add_argument(
+        '--cache-dir',
+        dest='cache_dir',
+        default=None,
+        type=str,
+        help='Directory where the rrCache is stored. If not provided, the default directory will be used.'
+    )
     parser.add_argument(
         '--standalone',
         action='store_true',

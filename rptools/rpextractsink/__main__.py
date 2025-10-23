@@ -18,11 +18,17 @@ def _cli():
     from rptools.__main__ import init
     logger = init(parser, args)
 
-    cache = rrCache(
-        # attrs=['cid_strc'],
-        cspace=args.cspace,
-        logger=logger
-    )
+    if args.cache_dir is None:
+        cache = rrCache(
+            cspace=args.cspace,
+            logger=logger
+        )
+    else:
+        cache = rrCache(
+            cspace=args.cspace,
+            install_dir=args.cache_dir,
+            logger=logger
+        )
     sink = genSink(
         cache,
         args.input_sbml,
