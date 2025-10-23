@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.7.0](https://github.com/brsynth/rptools/tree/6.7.0) (2025-10-23)
+
+[Full Changelog](https://github.com/brsynth/rptools/compare/6.6.6...6.7.0)
+
+**Closed issues:**
+
+- `rpextractsink` missing argument in the `add_argument()` [\#41](https://github.com/brsynth/rptools/issues/41)
+
 ## [6.6.6](https://github.com/brsynth/rptools/tree/6.6.6) (2025-10-16)
 
 [Full Changelog](https://github.com/brsynth/rptools/compare/6.6.5...6.6.6)
