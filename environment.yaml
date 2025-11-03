@@ -20,5 +20,5 @@ dependencies:
   - rxn_rebuild >=3.1.5 # rpcompletion
   - chemlite # rpcompletion ,rpfba, rpthermo
   - h5py # rpscore
-  - xgboost # rpscore
+  - xgboost <=3.0.0 # rpscore
   - bs4 # rpviz
