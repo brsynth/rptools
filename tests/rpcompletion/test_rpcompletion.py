@@ -89,7 +89,7 @@ class Test_rpCompletion(TestCase):
             cache=self.cache,
             upper_flux_bound=999999,
             lower_flux_bound=0,
-            max_subpaths_filter=10,
+            maxsubpaths=10,
             logger=self.logger
         )
         pathways = {pathway.get_id(): pathway for pathway in pathways}
@@ -138,7 +138,7 @@ class Test_rpCompletion(TestCase):
             cache=self.cache,
             upper_flux_bound=999999,
             lower_flux_bound=0,
-            max_subpaths_filter=10,
+            maxsubpaths=0,
             cofile=cofile,
             logger=self.logger
         )

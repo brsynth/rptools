@@ -4,7 +4,7 @@ from os import path as os_path
 
 default_upper_flux_bound = 10000
 default_lower_flux_bound = -default_upper_flux_bound
-default_max_subpaths_filter = 10
+default_maxsubpaths = 10
 default_cofactors = None
 default_cspace = 'mnx3.1'
 
@@ -61,10 +61,10 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument('--upper_flux_bound', type=int, default=default_upper_flux_bound)
     parser.add_argument('--lower_flux_bound', type=int, default=default_lower_flux_bound)
     parser.add_argument(
-        '--max_subpaths_filter',
+        '--maxsubpaths',
         type=int,
-        default=default_max_subpaths_filter,
-        help=f'Define the topX pathways to keep (default: {default_max_subpaths_filter}, 0 = no filtering)')
+        default=default_maxsubpaths,
+        help=f'Define the topX subpathways per master pathway to keep after completion (default: {default_maxsubpaths}, 0 = no filtering)')
     parser.add_argument(
         '--cofactors',
         type=str,
