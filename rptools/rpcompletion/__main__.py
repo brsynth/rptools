@@ -33,11 +33,11 @@ def _cli():
     logger.debug('   |--> outdir: '+str(args.outdir))
     logger.debug('   |--> upper_flux_bound: '+str(args.upper_flux_bound))
     logger.debug('   |--> lower_flux_bound: '+str(args.lower_flux_bound))
-    logger.debug('   |--> max_subpaths_filter: '+str(args.max_subpaths_filter))
+    logger.debug('   |--> maxsubpaths: '+str(args.maxsubpaths))
 
 
     check_args(
-        args.max_subpaths_filter,
+        args.maxsubpaths,
         args.outdir,
         logger
     )
@@ -64,7 +64,7 @@ def _cli():
         cache=cache,
         upper_flux_bound=int(args.upper_flux_bound),
         lower_flux_bound=int(args.lower_flux_bound),
-        max_subpaths_filter=args.max_subpaths_filter,
+        maxsubpaths=args.maxsubpaths,
         cofile=args.cofactors,
         logger=logger
     )

@@ -32,7 +32,7 @@ from rptools.rplibs import (
 from .Args import (
     default_upper_flux_bound,
     default_lower_flux_bound,
-    default_max_subpaths_filter,
+    default_maxsubpaths,
     default_cofactors
 )
 
@@ -45,7 +45,7 @@ def rp_completion(
     cache: rrCache = None,
     upper_flux_bound: float = default_upper_flux_bound,
     lower_flux_bound: float = default_lower_flux_bound,
-    max_subpaths_filter: int = default_max_subpaths_filter,
+    maxsubpaths: int = default_maxsubpaths,
     cofile: str = default_cofactors,
     logger: Logger = getLogger(__name__)
 ) -> List[rpPathway]:
@@ -92,8 +92,8 @@ def rp_completion(
     lower_flux_bound: float, optional
         Lower flux bound for all new reactions created
         (default: default_lower_flux_bound from Args file),
-    max_subpaths_filter: int, optional
-        Number of pathways (best) kept per master pathway
+    maxsubpaths: int, optional
+        Number of pathways (best) kept per master pathway, after completion
         (default: 10)
     cofile: str, optional
         Name of the file containing the list of cofactors to ignore (default: None)
@@ -161,7 +161,7 @@ def rp_completion(
         sink_molecules=sink_molecules,
         rr_reactions=cache.get('rr_reactions'),
         compounds_cache=cache.get('cid_strc'),
-        max_subpaths_filter=max_subpaths_filter,
+        maxsubpaths=maxsubpaths,
         lower_flux_bound=lower_flux_bound,
         upper_flux_bound=upper_flux_bound,
         logger=logger
@@ -698,7 +698,7 @@ def __build_all_pathways(
     sink_molecules: List,
     rr_reactions: Dict,
     compounds_cache: Dict,
-    max_subpaths_filter: int,
+    maxsubpaths: int,
     lower_flux_bound: float,
     upper_flux_bound: float,
     logger: Logger = getLogger(__name__)
@@ -723,8 +723,8 @@ def __build_all_pathways(
         Reaction rules cache
     compounds_cache: Dict
         Compounds cache
-    max_subpaths_filter: int
-        Number of pathways (best) kept per master pathway
+    maxsubpaths: int
+        Number of pathways (best) kept per master pathway, after completion
     lower_flux_bound: float
         Lower flux bound for all new reactions created
     upper_flux_bound: float
@@ -876,13 +876,13 @@ def __build_all_pathways(
         ], [])
 
     # Globally sort pathways
-    pathways = sorted(pathways)[-max_subpaths_filter:]
+    pathways = sorted(pathways)[-maxsubpaths:]
 
     logger.info(f'Pathways statistics')
     logger.info(f'-------------------')
     logger.info(f'   pathways: {nb_pathways}')
     logger.info(f'   unique pathways: {nb_unique_pathways}')
-    logger.info(f'   selected pathways: {len(pathways)} (topX filter = {max_subpaths_filter})')
+    logger.info(f'   selected pathways: {len(pathways)} (topX filter = {maxsubpaths})')
 
     # Return topX pathway objects
     return [
