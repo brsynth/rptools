@@ -748,8 +748,7 @@ def __build_all_pathways(
         sub_pathways = list(itertools_product(*transfos_lst))
 
         ## SUB-PATHWAYS
-        # # Keep only topX best sub_pathways
-        # # within a same master pathway
+        # Iter over all possible sub-pathways, then filtering later on
         res_pathways[path_idx] = []
         for sub_path_idx in range(len(sub_pathways)):
 
@@ -868,21 +867,29 @@ def __build_all_pathways(
 
         nb_unique_pathways += len(res_pathways[path_idx])
 
-    # Flatten lists of pathways
-    pathways = sum(
-        [
-            pathways
-            for pathways in res_pathways.values()
-        ], [])
+    # Flatten lists of pathways,
+    # keeping only 'maxsubpaths' subpathways per master pathway
+    if maxsubpaths < 1:
+        pathways = sum(
+            [
+                pathways
+                for pathways in res_pathways.values()
+            ], [])
+    else:
+        pathways = sum(
+            [
+                pathways[:maxsubpaths]
+                for pathways in res_pathways.values()
+            ], [])
 
     # Globally sort pathways
-    pathways = sorted(pathways)[-maxsubpaths:]
+    pathways = sorted(pathways)#[-maxsubpaths:]
 
     logger.info(f'Pathways statistics')
     logger.info(f'-------------------')
     logger.info(f'   pathways: {nb_pathways}')
     logger.info(f'   unique pathways: {nb_unique_pathways}')
-    logger.info(f'   selected pathways: {len(pathways)} (topX filter = {maxsubpaths})')
+    logger.info(f'   kept pathways: {len(pathways)}')
 
     # Return topX pathway objects
     return [
