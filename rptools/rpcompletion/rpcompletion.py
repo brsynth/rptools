@@ -548,8 +548,8 @@ def __read_pathways(
 
     try:
         df = pd.read_csv(infile)
-    except pd.errors.EmptyDataError as e:
-        logger.error(f'File {infile} is empty: {e}')
+    except (pd.errors.EmptyDataError, FileNotFoundError) as e:
+        logger.error(f'File {infile} is empty or does not exist: {e}')
         return {}, {}
 
     check = __check_pathways(df)
