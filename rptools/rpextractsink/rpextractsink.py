@@ -11,6 +11,7 @@ from .Args import default_comp
 from os             import path          as os_path
 from requests import get as r_get
 from re import search as re_search
+from time import sleep
 
 from rr_cache import rrCache
 from rptools.rpfba import cobra_format
@@ -135,6 +136,25 @@ def get_inchi_from_crossid(
     except Exception as e:
         logger.warning(f'Connection lost from {url_search}')
         return ''
+    logger.debug(f'Page retrieved from MetaNetX for {id}: {page.url}')
+    logger.debug(f'Page content: {page.text}')
+    # If server 'too busy', wait and retry 3 times
+    retries = 3
+    wait_time = 5  # seconds
+    attempt = 0
+    while 'please try again' in page.text.lower() and attempt < retries:
+        logger.debug(f'Server is too busy. Retrying in {wait_time} seconds... (Attempt {attempt + 1} of {retries})')
+        sleep(wait_time)
+        try:
+            page = r_get(f'{url_search}?query={id}')
+        except Exception as e:
+            logger.warning(f'Connection lost from {url_search}')
+            return ''
+        attempt += 1
+    if 'please try again' in page.text.lower():
+        logger.debug('Server is still too busy after multiple attempts. Aborting retrieval.')
+        return ''
+    logger.debug(f'Final page content after retries: {page.text}')
     url_crossid = re_search(r'/chem_info/\w+', page.text).group()
     return get_inchi_from_url(f'{url_mnx}{url_crossid}', logger)
 
