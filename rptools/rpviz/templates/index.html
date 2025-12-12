@@ -56,7 +56,30 @@ __license__ = 'MIT'
 <!--    <script src="js/cytoscape-cola-1.4.3.js"></script>-->
 
 </head>
+
+<!-- Controls for hiding panels -->
+<script>
+$(function () {
+
+    $('#toggle-panels').on('click', function () {
+        $('#interaction, #info').toggleClass('panel-hidden');
+        resizeCy();
+    });
+
+    function resizeCy() {
+        if (window.cy) {
+            cy.resize();
+            cy.fit();
+        }
+    }
+
+});
+</script>
+
 <body>
+    <div id="toggle-panels-container">
+        <button id="toggle-panels">Toggle panels</button>
+    </div>
 
     <div id="base">
 

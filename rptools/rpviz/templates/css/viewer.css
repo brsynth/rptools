@@ -20,6 +20,26 @@ body {
     box-shadow: 0 0 5px 0px black;
 }
 
+/* Hide panels **************************************/
+#toggle-panels-container {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+}
+
+#toggle-panels {
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* Hide panels */
+.panel-hidden {
+    display: none !important;
+}
+
 /* Left panel: pathway level interaction **************************************/
 #interaction {
     position: absolute;
