@@ -40,6 +40,17 @@ body {
     display: none !important;
 }
 
+/* Expanded view when panels are hidden */
+#viewer.panels-hidden #cy {
+    width: 100%;
+    margin-left: 0;
+}
+
+#viewer.panels-hidden #interaction,
+#viewer.panels-hidden #info {
+    display: none !important;
+}
+
 /* Left panel: pathway level interaction **************************************/
 #interaction {
     position: absolute;
