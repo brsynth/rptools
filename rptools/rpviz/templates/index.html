@@ -62,15 +62,40 @@ __license__ = 'MIT'
 $(function () {
 
     $('#toggle-panels').on('click', function () {
-        $('#interaction, #info').toggleClass('panel-hidden');
-        resizeCy();
+    if (!window.cy) return;
+
+    const cyEl = document.getElementById('cy');
+
+    const oldPan = cy.pan();
+    const oldZoom = cy.zoom();
+    const oldLeft = cyEl.getBoundingClientRect().left;
+
+    $('#interaction, #info').toggleClass('panel-hidden');
+    $('#viewer').toggleClass('panels-hidden');
+
+    requestAnimationFrame(() => {
+        const newLeft = cyEl.getBoundingClientRect().left;
+
+        // Correct sign: compensate by how much the container shifted
+        const shift = oldLeft - newLeft;
+
+        cy.resize();
+        cy.zoom(oldZoom);
+        cy.pan({ x: oldPan.x + shift, y: oldPan.y });
+    });
     });
 
     function resizeCy() {
-        if (window.cy) {
-            cy.resize();
-            cy.fit();
-        }
+    if (!window.cy) return;
+
+    // save current viewport
+    const z = cy.zoom();
+    const p = cy.pan();
+
+    cy.resize();          // let Cytoscape recompute its canvas size
+    cy.zoom(z);           // restore zoom
+    cy.pan(p);            // restore pan
+    // (no cy.fit())
     }
 
 });
