@@ -4,6 +4,10 @@ from logging import (
     Logger,
     getLogger
 )
+from os import (
+    makedirs as os_makedirs,
+    path as os_path
+)
 from typing import Dict
 from colored import fg, bg, attr
 from rptools.rpthermo import runThermo
@@ -53,6 +57,8 @@ def _cli():
     # Print results
     print_results(pathway, results, logger)
     # Write pathway into file
+    # Create the output directory if not exists
+    os_makedirs(os_path.dirname(args.outfile), exist_ok=True)
     pathway.to_rpSBML().write_to_file(args.outfile)
     logger.info(
         "{color}{typo}Written into file: {file}{rst}".format(
