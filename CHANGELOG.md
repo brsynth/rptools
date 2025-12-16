@@ -1,5 +1,16 @@
 # Changelog
 
+## [6.8.0](https://github.com/brsynth/rptools/tree/6.8.0) (2025-12-16)
+
+[Full Changelog](https://github.com/brsynth/rptools/compare/6.7.2...6.8.0)
+
+**Merged pull requests:**
+
+- feat\(rpscore\): create output dir if does not exist [\#47](https://github.com/brsynth/rptools/pull/47) ([breakthewall](https://github.com/breakthewall))
+- feat\(rpthermo\): create output folder if does not exist [\#46](https://github.com/brsynth/rptools/pull/46) ([breakthewall](https://github.com/breakthewall))
+- feat\(rpviz\): Toggle panels [\#45](https://github.com/brsynth/rptools/pull/45) ([breakthewall](https://github.com/breakthewall))
+- chore\(rpextractsink.py\): retry connecting to MetNetX when it fails [\#43](https://github.com/brsynth/rptools/pull/43) ([breakthewall](https://github.com/breakthewall))
+
 ## [6.7.2](https://github.com/brsynth/rptools/tree/6.7.2) (2025-11-04)
 
 [Full Changelog](https://github.com/brsynth/rptools/compare/6.7.1...6.7.2)
