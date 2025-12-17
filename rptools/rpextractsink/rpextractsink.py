@@ -155,8 +155,12 @@ def get_inchi_from_crossid(
         logger.debug('Server is still too busy after multiple attempts. Aborting retrieval.')
         return ''
     logger.debug(f'Final page content after retries: {page.text}')
-    url_crossid = re_search(r'/chem_info/\w+', page.text).group()
-    return get_inchi_from_url(f'{url_mnx}{url_crossid}', logger)
+    try:
+        url_crossid = re_search(r'/chem_info/\w+', page.text).group()
+        return get_inchi_from_url(f'{url_mnx}{url_crossid}', logger)
+    except Exception as e:
+        logger.debug(f'Error retrieving InChI from URL: {e}')
+        return ''
 
 
 def get_inchi_from_url(
