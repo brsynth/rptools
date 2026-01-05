@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.8.1](https://github.com/brsynth/rptools/tree/6.8.1) (2026-01-05)
+
+[Full Changelog](https://github.com/brsynth/rptools/compare/6.8.0...6.8.1)
+
+**Merged pull requests:**
+
+- fix\(rpextractsink\): handle cmpd info not found from URL [\#48](https://github.com/brsynth/rptools/pull/48) ([breakthewall](https://github.com/breakthewall))
+
 ## [6.8.0](https://github.com/brsynth/rptools/tree/6.8.0) (2025-12-16)
 
 [Full Changelog](https://github.com/brsynth/rptools/compare/6.7.2...6.8.0)
