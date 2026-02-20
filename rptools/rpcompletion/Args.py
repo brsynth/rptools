@@ -71,6 +71,11 @@ def add_arguments(parser: ArgumentParser) -> ArgumentParser:
         help='Name of the file containing the list of cofactors to ignore (default: None)',
         default=None
     )
+    parser.add_argument(
+        '--forward', dest='forward',
+        help='Consider reactions in the forward direction',
+        required=False, action='store_true'
+    )
     # parser.add_argument('--pathway_id', type=str, default='rp_pathway')
     # parser.add_argument('--compartment_id', type=str, default='MNXC3')
     # parser.add_argument('--species_group_id', type=str, default='rp_trunk_species')

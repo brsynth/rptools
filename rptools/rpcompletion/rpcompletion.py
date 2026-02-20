@@ -47,6 +47,7 @@ def rp_completion(
     lower_flux_bound: float = default_lower_flux_bound,
     maxsubpaths: int = default_maxsubpaths,
     cofile: str = default_cofactors,
+    forward: bool = False,
     logger: Logger = getLogger(__name__)
 ) -> List[rpPathway]:
     """Process to the completion of metabolic pathways 
@@ -140,6 +141,7 @@ def rp_completion(
         ec_numbers=ec_numbers,
         cache=cache,
         cofactors=cofactors,
+        forward=forward,
         logger=logger
     )
 
@@ -159,8 +161,7 @@ def rp_completion(
         pathways=pathway_combinatorics,
         transfos=full_transfos,
         sink_molecules=sink_molecules,
-        rr_reactions=cache.get('rr_reactions'),
-        compounds_cache=cache.get('cid_strc'),
+        cache=cache,
         maxsubpaths=maxsubpaths,
         lower_flux_bound=lower_flux_bound,
         upper_flux_bound=upper_flux_bound,
@@ -175,6 +176,7 @@ def __complete_transformations(
     ec_numbers: Dict,
     cache: rrCache,
     cofactors: List[str] = [],
+    forward: bool = False,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
     """From template reactions, put back chemical species
@@ -206,15 +208,8 @@ def __complete_transformations(
     # For each transformation
     for transfo_id, transfo in transfos.items():
         logger.debug(f'transfo_id: {transfo_id}, transfo: {transfo}')
-
         full_transfos[transfo_id] = {}
         full_transfos[transfo_id]['ec'] = ec_numbers[transfo_id]['ec']
-        # Convert transformation into SMILES
-        transfo_smi = '{left}>>{right}'.format(
-                left=__build_smiles(transfo['left']),
-                right=__build_smiles(transfo['right'])
-            )
-        logger.debug(f'transfo_smi: {transfo_smi}')
 
         # Add compounds of the current transformation
         full_transfos[transfo_id]['left'] = dict(transfos[transfo_id]['left'])
@@ -226,25 +221,39 @@ def __complete_transformations(
 
         # MULTIPLE RR FOR ONE TRANSFO
         for rule_id in transfo['rule_ids']:
+            logger.debug(f'rule_id: {rule_id}')
 
             # MULTIPLE TEMPLATE REACTIONS FOR ONE RR
             # If 'tmpl_rxn_id' is not given,
             # the transformation will be completed
             # for each template reaction from reaction rule was built from
             try:
-                full_transfos[transfo_id]['complement'][rule_id] = rebuild_rxn(
+                # Convert transformation into SMILES
+                left_smiles = __build_smiles(transfo['left'])
+                right_smiles = __build_smiles(transfo['right'])
+                logger.debug(f'transfo_smi: {left_smiles}>>{right_smiles}')
+                if forward:
+                    transfo_smi = f'{left_smiles}>>{right_smiles}'
+                else:
+                    transfo_smi = f'{right_smiles}>>{left_smiles}'
+                full_transfo = rebuild_rxn(
                     cache=cache,
                     rxn_rule_id=rule_id,
                     transfo=transfo_smi,
-                    direction='forward',
                     cmpds_to_ignore=cofactors,
-                    cspace=cache.get('cspace'),
-                    # tmpl_rxn_id=tmpl_rxn_id,
+                    cspace=cache.get_cspace(),
+                    cspace_type=cache.get_type(),
                     logger=logger
                 )
+                if not forward:
+                    for rxn_id, _transfo in full_transfo.items():
+                        _transfo['full_transfo']['right'], _transfo['full_transfo']['left'] = _transfo['full_transfo']['left'], _transfo['full_transfo']['right']
+                        _transfo['added_cmpds']['right'], _transfo['added_cmpds']['left'] = _transfo['added_cmpds']['left'], _transfo['added_cmpds']['right']
+                full_transfos[transfo_id]['complement'][rule_id] = deepcopy(full_transfo)
                 logger.debug(f'full_transfos[{transfo_id}]["complement"][{rule_id}]: {full_transfos[transfo_id]["complement"][rule_id]}')
             except KeyError as e:
-                logger.error(f'Could not find reaction rule {rule_id} in the cache. Are you in the right data type space?')
+                # logger.error(f'Could not find reaction rule {rule_id} in the cache. Are you in the right chemical space (mnx3.1, mnx4.4, rr2026...)?')
+                logger.error(e)
                 exit(1)
 
     return full_transfos
@@ -292,14 +301,24 @@ def __build_smiles(
     Parameters
     ----------
     side: Dict
-        Stoichiometric chemical reaction side
+        Stoichiometric chemical reaction side with species IDs as keys
+        and stoichiometric coefficients as values
     logger: Logger, optional
 
     Returns
     -------
     SMILES string
     """
-    return '.'.join([Cache.get(spe_id).get_smiles() for spe_id in side.keys()])
+    logger.debug(f'side: {side}')
+    smiles_list = []
+    for spe_id, stoichio_coeff in side.items():
+        logger.debug(f'spe_id: {spe_id}, sto_coeff: {stoichio_coeff}')
+        spe_smiles = Cache.get(spe_id).get_smiles()
+        # Repeat SMILES based on stoichiometric coefficient
+        smiles_list.extend([spe_smiles] * int(stoichio_coeff))
+    
+    result = '.'.join(smiles_list)
+    return result
 
 
 def __build_reader(
@@ -426,7 +445,8 @@ def __get_compound_from_cache(
             resConv = cache._convert_depiction(
                 idepic=smiles,
                 itype='smiles',
-                otype={'inchi'}
+                otype={'inchi'},
+                logger=logger
             )
             inchi = resConv['inchi']
         except NotImplementedError as e:
@@ -440,7 +460,8 @@ def __get_compound_from_cache(
             resConv = cache._convert_depiction(
                 idepic=smiles,
                 itype='smiles',
-                otype={'inchikey'}
+                otype={'inchikey'},
+                logger=logger
             )
             inchikey = resConv['inchikey']
         except NotImplementedError as e:
@@ -581,6 +602,8 @@ def __read_pathways(
                 for compound in compounds:
                     sto, spe = compound.split('.')
                     transfos[transfo_id][side][spe] = int(sto)
+                    # if sto != '1':
+                    #     print(transfos[transfo_id])
 
     return pathways, transfos
 
@@ -655,7 +678,7 @@ def __build_pathway_combinatorics(
                     'left': dict(full_transfos[transfo_id]['left'])
                 }
             except KeyError as e:
-                logger.error(f'Could not find transformation {transfo_id} in the cache. Are you in the right data type space?')
+                logger.error(f'Could not find transformation {transfo_id} in the cache. Are you in the right chemical space (mnx3.1, mnx4.4, rr2026...)?')
                 exit(1)
             # Build list of transformations
             # where each transfo can correspond to multiple reactions
@@ -696,8 +719,7 @@ def __build_all_pathways(
     pathways: Dict,
     transfos: Dict,
     sink_molecules: List,
-    rr_reactions: Dict,
-    compounds_cache: Dict,
+    cache: rrCache,
     maxsubpaths: int,
     lower_flux_bound: float,
     upper_flux_bound: float,
@@ -719,10 +741,8 @@ def __build_all_pathways(
         Full chemical transformations
     sink_molecules: List
         Sink chemical species IDs
-    rr_reactions: Dict
-        Reaction rules cache
-    compounds_cache: Dict
-        Compounds cache
+    cache: rrCache
+        Cache that contains reaction rules, reactions and compounds data
     maxsubpaths: int
         Number of pathways (best) kept per master pathway, after completion
     lower_flux_bound: float
@@ -735,6 +755,17 @@ def __build_all_pathways(
     -------
     Set of ranked rpPathway objects
     """
+
+    logger.debug(f'pathways: {pathways}')
+    logger.debug(f'transfos: {transfos}')
+    logger.debug(f'sink_molecules: {sink_molecules}')
+    logger.debug(f'cache: {cache}')
+    logger.debug(f'maxsubpaths: {maxsubpaths}')
+    logger.debug(f'lower_flux_bound: {lower_flux_bound}')
+    logger.debug(f'upper_flux_bound: {upper_flux_bound}')
+
+    rr_reactions=cache.get('rr_reactions')
+    compounds_cache=cache.get('cid_strc')
 
     res_pathways = {}
 
@@ -771,8 +802,10 @@ def __build_all_pathways(
                 ## COMPOUNDS
                 # Template reaction compounds
                 added_cmpds = transfo['complement'][rule_ids][tmpl_rxn_id]['added_cmpds']
+
                 # Add missing compounds to the cache
                 for side in added_cmpds.keys():
+                    # Compounds with no structure are in '<side>_nostruct'
                     for spe_id in added_cmpds[side].keys():
                         logger.debug(f'Add missing compound {spe_id}')
                         if spe_id not in Cache.get_objects():
@@ -937,17 +970,17 @@ def __add_compounds(
         return _compounds
     for side in ['right', 'left']:
         # added compounds with struct
-        for cmpd_id, cmpd in compounds_to_add[side].items():
+        for cmpd_id, cmpd_sto in compounds_to_add[side].items():
             if cmpd_id in _compounds[side]:
-                _compounds[side][cmpd_id] += cmpd['stoichio']
+                _compounds[side][cmpd_id] += cmpd_sto
             else:
-                _compounds[side][cmpd_id] = cmpd['stoichio']
-        # added compounds with no struct
-        for cmpd_id, cmpd in compounds_to_add[side+'_nostruct'].items():
-            if cmpd_id in _compounds[side]:
-                _compounds[side][cmpd_id] += cmpd['stoichio']
-            else:
-                _compounds[side][cmpd_id] = cmpd['stoichio']
+                _compounds[side][cmpd_id] = cmpd_sto
+        # # added compounds with no struct
+        # for cmpd_id, cmpd in compounds_to_add[side+'_nostruct'].items():
+        #     if cmpd_id in _compounds[side]:
+        #         _compounds[side][cmpd_id] += cmpd['stoichio']
+        #     else:
+        #         _compounds[side][cmpd_id] = cmpd['stoichio']
     return _compounds
 
 

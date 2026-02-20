@@ -66,6 +66,7 @@ def _cli():
         lower_flux_bound=int(args.lower_flux_bound),
         maxsubpaths=args.maxsubpaths,
         cofile=args.cofactors,
+        forward=args.forward,
         logger=logger
     )
 
@@ -73,8 +74,9 @@ def _cli():
     if not os_path.exists(args.outdir):
         os_mkdir(args.outdir)
     # Write out selected pathways
+    local_cache = {}
     for pathway in pathways:
-        pathway.to_rpSBML().write_to_file(
+        pathway.to_rpSBML(cache=cache, local_cache=local_cache).write_to_file(
             os_path.join(
                 args.outdir,
                 pathway.get_id()

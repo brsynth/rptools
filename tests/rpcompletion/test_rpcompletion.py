@@ -99,6 +99,11 @@ class Test_rpCompletion(TestCase):
                 f'rp_{pathway_id}.xml'
             )
             ref_pathway = rpPathway(ref_file)
+            print()
+            print(pathways[f'rp_{pathway_id}'])
+            print()
+            print(ref_pathway)
+            print()
             self.assertEqual(pathways[f'rp_{pathway_id}'], ref_pathway)
 
     def test_rp_completion_wo_cofactors(self):

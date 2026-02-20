@@ -141,4 +141,7 @@ class Test_rpExtractSink(TestCase):
         # for key, value in test_sink.items():
         #     print(f'"{key}","{value}"')
         # exit()
+        print('"Name","InChI"')
+        for cid, inchi in test_sink.items():
+            print(f'"{cid}","{inchi}"')
         self.assertDictEqual(test_sink, ref_sink)
