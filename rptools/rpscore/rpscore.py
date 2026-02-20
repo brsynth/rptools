@@ -203,18 +203,24 @@ def features_encoding (df, flag):
                     sub_smiles = rxn_smiles_list[0]
                     sub_m= Chem.MolFromSmiles(sub_smiles)
                     #print(m)
-                    sub_fp = AllChem.GetMorganFingerprintAsBitVect(sub_m, 2, nBits = 2048)
-                    sub_arr = np.array([])
-                    DataStructs.ConvertToNumpyArray(sub_fp, sub_arr)
-                    sub_fp= sub_arr.reshape(1,-1)
+                    if sub_m is not None:
+                        sub_fp = AllChem.GetMorganFingerprintAsBitVect(sub_m, 2, nBits = 2048)
+                        sub_arr = np.array([])
+                        DataStructs.ConvertToNumpyArray(sub_fp, sub_arr)
+                        sub_fp= sub_arr.reshape(1,-1)
+                    else:
+                        sub_fp = np.zeros((1, 2048))
 
                     pro_smiles = rxn_smiles_list[1]
                     pro_m= Chem.MolFromSmiles(pro_smiles)
                     #print(m)
-                    pro_fp = AllChem.GetMorganFingerprintAsBitVect(pro_m, 2, nBits = 2048)
-                    pro_arr = np.zeros((1,))
-                    DataStructs.ConvertToNumpyArray(pro_fp, pro_arr)
-                    pro_fp= pro_arr.reshape(1,-1)
+                    if pro_m is not None:
+                        pro_fp = AllChem.GetMorganFingerprintAsBitVect(pro_m, 2, nBits = 2048)
+                        pro_arr = np.zeros((1,))
+                        DataStructs.ConvertToNumpyArray(pro_fp, pro_arr)
+                        pro_fp= pro_arr.reshape(1,-1)
+                    else:
+                        pro_fp = np.zeros((1, 2048))
                     rxn_fp = np.concatenate([sub_fp , pro_fp]).reshape(1, -1)
 
                 elif len(rxn_smiles_list) < 2:
