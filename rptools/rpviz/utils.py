@@ -786,10 +786,11 @@ def annotate_chemical_svg(network: Dict) -> Dict:
     return network
 
 
-def get_autonomous_html(ifolder):
+def get_autonomous_html(ifolder, hide_side_panels=False):
     """Merge all needed file into a single HTML
 
     :param ifolder: folder containing the files to be merged
+    :param hide_side_panels: bool, whether to hide side panels by default
     :return html_str: string, the HTML
     """
     # find and open the index file
@@ -820,6 +821,12 @@ def get_autonomous_html(ifolder):
         ori = b'<link href="' + css_file.encode() + b'" rel="stylesheet" type="text/css"/>'
         rep = b'<style type="text/css">' + css_bytes + b'</style>'
         html_string = html_string.replace(ori, rep)
+    
+    # Add CSS to hide side panels if requested
+    if hide_side_panels:
+        hide_panels_js = b'<script type="text/javascript">document.addEventListener("DOMContentLoaded", function() { $("#interaction, #info").addClass("panel-hidden"); $("#viewer").addClass("panels-hidden"); });</script>'
+        html_string = html_string.replace(b'</head>', hide_panels_js + b'</head>')
+    
     # replace the network
     net_string = open(ifolder + '/network.json', 'rb').read()
     ori = b'src="' + 'network.json'.encode() + b'">'

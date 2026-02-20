@@ -8,7 +8,7 @@ __license__ = 'MIT'
 
 
 import pandas
-import distutils.dir_util
+from shutil import copytree
 from pathlib import Path
 
 from bs4 import BeautifulSoup
@@ -33,11 +33,11 @@ class Viewer(object):
 
         :return: None
         """
-        distutils.dir_util.copy_tree(
-            str(self.template_folder),
-            str(self.out_folder)
-            )
-
+        copytree(
+            self.template_folder,
+            self.out_folder,
+            dirs_exist_ok=True
+        )
     def write_json_deprecated(self, dict_paths, scores):
         """
         Write the html file, according the html template.

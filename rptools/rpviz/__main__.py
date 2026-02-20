@@ -77,6 +77,14 @@ def __build_arg_parser(prog='python -m rpviz.cli'):
             " containing all dependencies."
         )
     )
+    parser.add_argument(
+        "--hide-panels",
+        action="store_true",
+        help=(
+            "If set, the panels will be hidden by default in the visualiser. "
+            "The user can then choose to show them or not."
+        )
+    )
 
     return parser
 
@@ -167,7 +175,7 @@ def __run(args):
 
     # Write single HTML if requested
     if args.autonomous_html is not None:
-        str_html = get_autonomous_html(args.output_folder)
+        str_html = get_autonomous_html(args.output_folder, hide_side_panels=args.hide_panels)
         with open(args.autonomous_html, 'wb') as ofh:
             ofh.write(str_html)
 

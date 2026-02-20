@@ -137,6 +137,8 @@ def runThermo(
             )
         # Else, take search values from rpCompound
         else:
+            # print(spe.get_name(), spe.get_id(), spe.get_inchikey(), spe.get_inchi(), spe.get_smiles())
+            # exit()
             cc_species[spe.get_id()] = search_equilibrator_compound(
                 cc=cc,
                 id=spe.get_id(),
@@ -203,15 +205,24 @@ def runThermo(
             logger=logger
         )
 
-    ## THERMO
+    ## PATHWAY
     print_title(
         txt='Computing thermodynamics (eQuilibrator)...',
         logger=logger,
         waiting=True
     )
 
+    # Compute thermo for the net reaction of the pathway
+    # Remove reactions from the net reaction with no thermo info
+    # to avoid errors in eQuilibrator
+    _reactions = []
+    for rxn in reactions:
+        if results['reactions'][rxn.get_id()]['dG0_prime']['value'] == 'NaN':
+            logger.warning(f"Reaction {rxn.get_id()} has been removed from the net reaction as it has no thermo info")
+        else:
+            _reactions.append(rxn)
     results['net_reaction'] = eQuilibrator(
-        species_stoichio=Reaction.sum_stoichio(reactions),
+        species_stoichio=Reaction.sum_stoichio(_reactions),
         species_ids=species_cc_ids,
         cc=cc,
         logger=logger
@@ -282,6 +293,8 @@ def search_equilibrator_compound(
             compound = cc.get_compound(val)
             # If compound is found in eQuilibrator, then...
             if compound is not None:
+                # print(f'Compound {val} found in eQuilibrator with {key} as key')
+                # exit()
                 # ...copy initial data into result compound
                 _compound = copy_data(compound, data)
                 return _compound
