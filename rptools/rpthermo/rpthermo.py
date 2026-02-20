@@ -293,8 +293,8 @@ def search_equilibrator_compound(
             compound = cc.get_compound(val)
             # If compound is found in eQuilibrator, then...
             if compound is not None:
-                print(f'Compound {val} found in eQuilibrator with {key} as key')
-                exit()
+                # print(f'Compound {val} found in eQuilibrator with {key} as key')
+                # exit()
                 # ...copy initial data into result compound
                 _compound = copy_data(compound, data)
                 return _compound
