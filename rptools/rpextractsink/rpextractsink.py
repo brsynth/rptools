@@ -191,6 +191,86 @@ def get_inchi_from_url(
         return ''
 
 
+def bigg_to_mnxid(bigg_id: str, cache: rrCache, logger: Logger = getLogger(__name__)):
+    '''
+    Convert a BiGG ID to a MetaNetX ID using the cache.
+
+    :param bigg_id: BiGG ID of the metabolite
+    :type bigg_id: str
+    :param cache: cache object
+    :type cache: rrCache
+    :param logger: logger object, by default getLogger(__name__)
+    :type logger: Logger, optional
+    :return: InChI string or None if not found
+    :rtype: str or None
+    '''
+    logger.debug(f'Converting BiGG ID {bigg_id} to MetaNetX ID...')
+
+    # Cleanup BiGG ID if it has compartment suffix
+    # Detect if compartment suffix is present, i.e. '_' is the penultimate character,
+    # then remove it
+    if len(bigg_id) > 2 and bigg_id[-2] == '_':
+        bigg_id = bigg_id[:-2]
+        logger.debug(f'Removed compartment suffix from BiGG ID, new ID: {bigg_id}')
+    bigg_ids = [bigg_id]
+    # Detect if M_ prefix is present, then add to the list without M_
+    if bigg_id.startswith('M_'):
+        bigg_ids.append(bigg_id[2:])
+        logger.debug(f'Also considering BiGG ID without M_ prefix: {bigg_id[2:]}')
+
+    mnx_id = ''
+    for bigg_id in bigg_ids:
+        if mnx_id != '':
+            break
+        logger.debug(f'Trying BiGG ID: {bigg_id}')
+        mnx_id = cache.get('cid_xref').get('biggM', {}).get(bigg_id, '')
+        if mnx_id == '':
+            mnx_id = cache.get('cid_xref').get('bigg.metabolite', {}).get(bigg_id, '')
+        logger.debug(f'MetaNetX ID from BiGG ID {bigg_id}: {mnx_id}')
+
+    if mnx_id == '':
+        logger.warning(f'Could not find MetaNetX ID for BiGG ID {bigg_id}')
+
+    return mnx_id
+
+
+def get_inchi_from_mnxid(
+    mnx_id: str,
+    cache: rrCache,
+    standalone: bool = False,
+    logger: Logger = getLogger(__name__)
+) -> str:
+    '''
+    Get the InChI from a given MetaNetX ID using the cache.
+    
+    :param mnx_id: MetaNetX ID
+    :type mnx_id: str
+    :param cache: cache object
+    :type cache: rrCache
+    :param standalone: do not use MetaNetX, by default False
+    :type standalone: bool, optional
+    :param logger: logger object, by default getLogger(__name__)
+    :type logger: Logger, optional
+    :return: InChI
+    :rtype: str
+    '''
+    logger.debug(f'Retrieving InChI from MetaNetX ID {mnx_id} using cache...')
+    inchi = ''
+    # Get InChI from cache
+    if mnx_id in cache.get('cid_strc'):
+        inchi = cache.get('cid_strc')[mnx_id]['inchi']
+    else:
+        logger.debug(f'Could not retrieve InChI for {mnx_id} from cache')
+        if not standalone:
+            # Get InChI from MetaNetX
+            inchi = get_inchi_from_url(
+                f'https://www.metanetx.org/chem_info/{mnx_id}',
+                logger
+            )
+            logger.debug(f'InChI from MetaNetX: {inchi}')
+    return inchi
+
+
 def genSink(
     cache: rrCache,
     input_sbml: str,
@@ -240,7 +320,10 @@ def genSink(
     for i in rpsbml.getModel().getListOfSpecies():
         if (i.getCompartment() == compartment_id and
             i.id not in dead_ends):
+            logger.debug(f'Adding species: {i.getId()} (Compartment: {i.getCompartment()})')
             species.append(i)
+        else:
+            logger.warning(f'Skipping species: {i.getId()} (Compartment: {i.getCompartment()})')
     if not species:
         logger.warning(f'Could not retrieve any species in the compartment: {compartment_id}')
 
@@ -254,18 +337,15 @@ def genSink(
         # Find MNX ID from MIRIAM
         mnx_id = find_mnx_id(miriam)
 
+        # print(f"spe = {spe.getId()}, mnx_id = {mnx_id}")
+        # print(get_inchi_from_url(
+        #                 f'https://www.metanetx.org/chem_info/{spe.getId()}',
+        #                 logger
+        #             ))
+        # exit(0)
+
         if mnx_id:
-            # Get InChI from cache
-            if mnx_id in cache.get('cid_strc'):
-                inchi = cache.get('cid_strc')[mnx_id]['inchi']
-            else:
-                logger.debug(f'Could not retrieve InChI for {mnx_id} from cache')
-                if not standalone:
-                    # Get InChI from MetaNetX
-                    inchi = get_inchi_from_url(
-                        f'https://www.metanetx.org/chem_info/{mnx_id}',
-                        logger
-                    )
+            inchi = get_inchi_from_mnxid(mnx_id, cache, standalone, logger)
         elif not standalone:
             # Search on MetaNetX with MIRIAM cross-references
             i = 0
@@ -274,14 +354,21 @@ def genSink(
                 id = url.split('/')[-1]
                 inchi = get_inchi_from_crossid(id, logger)
                 i += 1
+            if not inchi:
+                mnx_id = bigg_to_mnxid(spe.getId(), cache, logger)
+                if mnx_id:
+                    inchi = get_inchi_from_mnxid(mnx_id, cache, standalone, logger)
 
-        if not inchi:
-            logger.warning(f'Could not retrieve any InChI for {spe.getId()}')
-        else:
+        if inchi:
             logger.debug(f'InChI: {inchi}')
             if spe.getId() in sink:
                 logger.warning(f'MetaNetX ID {spe.getId()} already in sink')
+            # if mnx_id:
+            #     sink[mnx_id] = inchi
+            # else:
             sink[spe.getId()] = inchi
+        else:
+            logger.warning(f'Could not retrieve any InChI for {spe.getId()}')
 
     return sink
 

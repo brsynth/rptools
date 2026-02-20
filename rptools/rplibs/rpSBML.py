@@ -1209,20 +1209,24 @@ class rpSBML:
                     source_member,
                     f'Retrieving the source species: {source_spe_id}'
                 )
-                rpSBML.checklibSBML(
-                    target_member.getAnnotation(
-                        ).getChild(
-                            'RDF'
-                        ).addChild(
-                            source_member.getAnnotation(
+                if target_member.getAnnotation() is not None:
+                    self.logger.debug(f'Found annotation for target species: {corr_species[source_spe_id]}')
+                    rpSBML.checklibSBML(
+                        target_member.getAnnotation(
                             ).getChild(
                                 'RDF'
-                            ).getChild(
-                                'BRSynth'
-                            )
-                    ),
-                    'Replacing the annotations'
-                )
+                            ).addChild(
+                                source_member.getAnnotation(
+                                ).getChild(
+                                    'RDF'
+                                ).getChild(
+                                    'BRSynth'
+                                )
+                        ),
+                        'Replacing the annotations'
+                    )
+                else:
+                    self.logger.debug(f'No annotation found for target species: {corr_species[source_spe_id]}')
                 source_member.setId(corr_species[source_spe_id])
                 # print('-------------------------------------')
                 # print(target_member.toXMLNode().toXMLString())
@@ -1757,6 +1761,10 @@ class rpSBML:
 
         return list(self.getPlugin('groups').getListOfGroups())
 
+
+    def getListOfSpeciesIds(self) -> List[str]:
+
+        return [spe.getId() for spe in self.getModel().getListOfSpecies()]
 
     def getGroup(
         self,
@@ -4080,10 +4088,40 @@ class rpSBML:
         bounds: Tuple[float, float]
             Tuple of lower and upper flux bounds
         """
+        self.logger.debug(f'Getting reaction constraints for reaction: {rxn_id}')
         reac_fbc = self.getModel().getReaction(rxn_id).getPlugin('fbc')
-        old_lower_value = self.getModel().getParameter(reac_fbc.getLowerFluxBound()).value
-        old_upper_value = self.getModel().getParameter(reac_fbc.getUpperFluxBound()).value
-        return old_lower_value, old_upper_value
+        self.logger.debug(f'Getting reaction plugin: {reac_fbc}')
+        self.logger.debug(f'Getting lower flux bound parameter: {reac_fbc.getLowerFluxBound()}')
+        self.logger.debug(f'Getting upper flux bound parameter: {reac_fbc.getUpperFluxBound()}')
+
+        lb_id = reac_fbc.getLowerFluxBound()
+        ub_id = reac_fbc.getUpperFluxBound()
+
+        # Default COBRA-style bounds
+        DEFAULT_LB = 0.0
+        DEFAULT_UB = 1000.0
+
+        # Lower bound
+        if lb_id is None:
+            old_lower_value = DEFAULT_LB
+        else:
+            lb_param = self.getModel().getParameter(lb_id)
+            if lb_param is None:
+                old_lower_value = DEFAULT_LB
+            else:
+                old_lower_value = lb_param.value
+
+        # Upper bound
+        if ub_id is None:
+            old_upper_value = DEFAULT_UB
+        else:
+            ub_param = self.getModel().getParameter(ub_id)
+            if ub_param is None:
+                old_upper_value = DEFAULT_UB
+            else:
+                old_upper_value = ub_param.value
+
+        return old_upper_value, old_lower_value
 
     def setReactionConstraints(
         self,
@@ -4472,6 +4510,10 @@ class rpSBML:
             meta_id=meta_id
         )
         for key, value in infos.items():
+            # Rewriting Reaction Rules w/o ':' since it used in XML tags
+            # If value is a list of string, replace ':' by '_' in each string
+            if isinstance(value, list):
+                value = [v.replace(':', '_') for v in value]
             self.updateBRSynth(
                 sbase_obj=reac,
                 annot_header=key,
@@ -4545,6 +4587,17 @@ class rpSBML:
         :rtype: None
         :return: None
         """
+        self.logger.debug(f'Species ID: {species_id}')
+        self.logger.debug(f'Species Name: {species_name}')
+        self.logger.debug(f'Chemical Xref: {chemXref}')
+        self.logger.debug(f'InChI: {inchi}')
+        self.logger.debug(f'InChIKey: {inchikey}')
+        self.logger.debug(f'SMILES: {smiles}')
+        self.logger.debug(f'Compartment: {compartment}')
+        self.logger.debug(f'Meta ID: {meta_id}')
+        self.logger.debug(f'Additional Infos: {infos}')
+        self.logger.debug(f'Is Boundary: {is_boundary}')
+
         spe = self.getModel().createSpecies()
         rpSBML.checklibSBML(spe, 'create species')
 
@@ -4782,9 +4835,12 @@ class rpSBML:
         # compartments
         for comp_id, comp in compartments.items():
             comp_lst = []
-            for db, comps in comp['annot'].items():
-                for comp_name in comps:
-                    comp_lst += [f"http://identifiers.org/{self.miriam_header['compartment'][db]}{comp_name}"]
+            if type(comp['annot']) == dict:
+                for db, comps in comp['annot'].items():
+                    for comp_name in comps:
+                        comp_lst += [f"http://identifiers.org/{self.miriam_header['compartment'][db]}{comp_name}"]
+            else:
+                comp_lst = comp['annot']
             self.createCompartment(1, comp_id, comp['name'], comp_lst)
             # self.createCompartment(1, comp_id, comp['name'], comp['annot'])
 

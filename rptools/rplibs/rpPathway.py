@@ -41,6 +41,7 @@ from chemlite import (
     Pathway,
     Compound
 )
+from rr_cache import rrCache
 from numpy import isin
 from .rpSBML import rpSBML
 from .rpReaction import (
@@ -72,7 +73,6 @@ class rpPathway(Pathway, rpObject):
         self,
         infile: str = None,
         id: str = '',
-        cache: Cache = None,
         logger: Logger = getLogger(__name__)
     ):
         """Create a rpPathway object with default settings.
@@ -83,8 +83,6 @@ class rpPathway(Pathway, rpObject):
             ID of the reaction
         infile: str
             Path to the input file (SBML)
-        cache: Cache, optional
-            Cache to store compounds once over reactions
         logger : Logger, optional
         """
         self.__rpsbml = rpSBML(inFile=infile, logger=logger)
@@ -92,7 +90,7 @@ class rpPathway(Pathway, rpObject):
         Pathway.__init__(
             self,
             id=id,
-            cache=cache,
+            # cache=cache,
             logger=logger
         )
         rpObject.__init__(self, logger)
@@ -730,9 +728,16 @@ class rpPathway(Pathway, rpObject):
         """Get the rpSBML object."""
         return self.__rpsbml
 
-    def to_rpSBML(self) -> rpSBML:
+    def to_rpSBML(self, cache: rrCache = None, local_cache: dict = {}) -> rpSBML:
         """Convert the current rpPathway object
         into a rpSBML object.
+
+        Parameters
+        ----------
+        cache: rrCache, optional
+            Cache to use for the conversion
+        local_cache: dict, optional
+            Local cache to use for the conversion
 
         Returns
         -------
@@ -751,6 +756,112 @@ class rpPathway(Pathway, rpObject):
             # lower_flux_bound
         )
 
+        ## Add species to the model
+        for specie in self.get_species():
+            if not isinstance(specie, rpCompound):
+                specie = rpCompound.from_compound(specie)
+            # Convert into MetaNetX ID if possible
+            old_species_id = species_id = specie.get_id()
+            if not specie.get_id().startswith('MNX') and cache is not None:
+                # If present in the cache, use the cached value
+                if local_cache.get(old_species_id, '') != '':
+                    self.get_logger().debug(
+                        f'Species {old_species_id} already converted into {species_id} for MetaNetX annotation, using cached value.'
+                    )
+                    species_id = local_cache[old_species_id]
+                # BiGG
+                elif species_id.startswith('M_'):
+                    # Remove 'M_' prefix and compartment suffix if exist
+                    species_id = species_id[2:]
+                    if species_id[-2] == '_':
+                        species_id = species_id[:-2]
+                    # collect all keys strating with 'bigg'
+                    bigg_keys = [k for k in cache.get('cid_xref').keys() if k.startswith('bigg')]
+                    for bigg_key in bigg_keys:
+                        # print(cache.get('cid_xref')[bigg_key].keys())
+                        if species_id in cache.get('cid_xref')[bigg_key]:
+                            species_id = cache.get('cid_xref')[bigg_key][species_id]
+                            break
+                # ChEBI
+                elif species_id.startswith('CHEBI:'):
+                    # Remove 'CHEBI:' prefix
+                    species_id = species_id[6:]
+                    # collect all keys strating with 'chebi'
+                    chebi_keys = [k for k in cache.get('cid_xref').keys() if k.startswith('chebi')]
+                    for chebi_key in chebi_keys:
+                        if species_id in cache.get('cid_xref')[chebi_key]:
+                            species_id = cache.get('cid_xref')[chebi_key][species_id]
+                            break
+                # # KEGG
+                # elif species_id.startswith('C'):
+                #     # Remove 'C' prefix
+                #     species_id = species_id[1:]
+                #     # collect all keys strating with 'kegg'
+                #     kegg_keys = [k for k in cache.get('cid_xref').keys() if k.startswith('kegg')]
+                #     for kegg_key in kegg_keys:
+                #         if species_id in cache.get('cid_xref')[kegg_key]:
+                #             species_id = cache.get('cid_xref')[kegg_key][species_id]
+                #             break
+                if old_species_id != species_id:
+                    local_cache[old_species_id] = species_id
+                    self.get_logger().debug(
+                        f'Species {old_species_id} converted into {species_id} for MetaNetX annotation.'
+                    )
+
+            # To not add twice the same compound under different notations,
+            # e.g. the transfo to complete has O=O species under M_h2o_c notation and
+            # has been completed by another O=O under CHEBI:15379
+            if species_id not in rpsbml.getListOfSpeciesIds():
+                rpsbml.createSpecies(
+                    species_id=species_id,
+                    species_name=specie.get_name(),
+                    inchi=specie.get_inchi(),
+                    inchikey=specie.get_inchikey(),
+                    smiles=specie.get_smiles(),
+                    compartment=specie.get_compartment(),
+                    infos=self.get_specie(specie.get_id())._to_dict(full=False)
+                )
+            else:
+                self.get_logger().debug(
+                    f'Species {species_id} already exist in the rpSBML model, nothing added.'
+                )
+
+        ## Add reactions to the model
+        for rxn in self.get_list_of_reactions():
+            xref = {
+                'ec-code': rxn.get_ec_numbers(),
+                'miriam': rxn.get_miriam()
+            }
+            xref = [f'http://identifiers.org/ec-code/{ec}' for ec in xref['ec-code'] if ec != '']
+            # Convert reactants and products compounds IDs into cache format for MetaNetX annotation
+            self.get_logger().debug(f'rxn {rxn.get_id()} before conversion: reactants {rxn.get_reactants()}, products {rxn.get_products()}')
+            reactants = dict(rxn.get_reactants())
+            products = dict(rxn.get_products())
+            # Apply local cache transformation to both reactants and products
+            for species_dict in (reactants, products):
+                for id in list(species_dict.keys()):
+                    if id in local_cache:
+                        cached_id = local_cache[id]
+                        # If the cached ID is not already in the species dict, replace the ID by the cached ID
+                        if cached_id not in species_dict:
+                            species_dict[cached_id] = species_dict.pop(id)
+                        else: # If the cached ID is already in the species dict, sum the stoichiometry of the two IDs and replace the ID by the cached ID
+                            species_dict[cached_id] += species_dict.pop(id)
+            self.get_logger().debug(f'rxn {rxn.get_id()} after conversion: reactants {reactants}, products {products}')
+            # Add the reaction in the model
+            rpsbml.createReaction(
+                id=rxn.get_id(),
+                reactants=reactants,
+                products=products,
+                smiles=rxn.get_smiles(),
+                fbc_upper=rxn.get_fbc_upper(),
+                fbc_lower=rxn.get_fbc_lower(),
+                fbc_units=rxn.get_fbc_units(),
+                reversible=rxn.reversible(),
+                reacXref=xref, 
+                infos=rxn._to_dict(full=False)
+            )
+
         ## Create the groups (pathway, species, sink species)
         rpsbml.create_enriched_group(
             group_id='rp_pathway',
@@ -761,44 +872,10 @@ class rpPathway(Pathway, rpObject):
             }
         )
         for group_id, group_members in self.get_species_groups().items():
+            _members = [local_cache.get(spe_id, spe_id) for spe_id in group_members]
             rpsbml.create_enriched_group(
                 group_id=f'rp_{group_id}_species',
-                members=group_members
-            )
-
-        ## Add species to the model
-        for specie in self.get_species():
-            if not isinstance(specie, rpCompound):
-                specie = rpCompound.from_compound(specie)
-            rpsbml.createSpecies(
-                species_id=specie.get_id(),
-                species_name=specie.get_name(),
-                inchi=specie.get_inchi(),
-                inchikey=specie.get_inchikey(),
-                smiles=specie.get_smiles(),
-                compartment=specie.get_compartment(),
-                infos=self.get_specie(specie.get_id())._to_dict(full=False)
-            )
-
-        ## Add reactions to the model
-        for rxn in self.get_list_of_reactions():
-            xref = {
-                'ec-code': rxn.get_ec_numbers(),
-                'miriam': rxn.get_miriam()
-            }
-            xref = [f'http://identifiers.org/ec-code/{ec}' for ec in xref['ec-code'] if ec != '']
-            # Add the reaction in the model
-            rpsbml.createReaction(
-                id=rxn.get_id(),
-                reactants=rxn.get_reactants(),
-                products=rxn.get_products(),
-                smiles=rxn.get_smiles(),
-                fbc_upper=rxn.get_fbc_upper(),
-                fbc_lower=rxn.get_fbc_lower(),
-                fbc_units=rxn.get_fbc_units(),
-                reversible=rxn.reversible(),
-                reacXref=xref, 
-                infos=rxn._to_dict(full=False)
+                members=_members
             )
 
         return rpsbml
