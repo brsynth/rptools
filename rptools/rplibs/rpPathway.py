@@ -89,6 +89,9 @@ class rpPathway(Pathway, rpObject):
         """
         self.__rpsbml = rpSBML(inFile=infile, logger=logger)
         id = id if id else self.get_rpsbml().getName()
+        # Must be set before Pathway.__init__(), which calls set_target_id(None)
+        # and thus __build_intermediate_species(), which reads __species_groups.
+        self.__species_groups = {}
         Pathway.__init__(
             self,
             id=id,
@@ -96,7 +99,6 @@ class rpPathway(Pathway, rpObject):
             logger=logger
         )
         rpObject.__init__(self, logger)
-        self.__species_groups = {}
         self.set_target_id(None)
         self.__unit_def = {}
         self.__compartments = {}
