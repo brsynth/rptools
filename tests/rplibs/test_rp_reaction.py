@@ -7,7 +7,7 @@ Created on May 28 2021
 from copy import deepcopy
 from unittest import TestCase
 
-from rptools.rplibs import rpReaction
+from rptools.rplibs import rpReaction, rpSBML
 
 
 class Test_rpReaction(TestCase):
@@ -124,3 +124,51 @@ class Test_rpReaction(TestCase):
         xref = "bigg_ID"
         self.rxn.add_miriam(db, xref)
         self.assertDictEqual(self.rxn.get_miriam(), {**self.miriam, db: xref})
+
+    def test_build_miriam(self):
+        for annotations, expected in [
+            ([], {}),
+            (
+                [
+                    "http://identifiers.org/ec-code/4.1.1.63",
+                    "https://identifiers.org/ec-code:6.2.2.34",
+                    "https://identifiers.org/uniprot/P21684",
+                    "http://identifiers.org/metanetx.reaction/MNXR96458",
+                ],
+                {
+                    "ec-code": ["4.1.1.63", "6.2.2.34"],
+                    "uniprot": ["P21684"],
+                    "metanetx.reaction": ["MNXR96458"],
+                },
+            ),
+        ]:
+            with self.subTest(annotations=annotations):
+                infos = {
+                    "miriam": annotations,
+                    "left": self.reactants,
+                    "right": self.products,
+                    "fbc_lower_value": -10000,
+                    "fbc_upper_value": 10000,
+                    "fbc_units": rpReaction.get_default_fbc_units(),
+                    "reversible": False,
+                    "brsynth": {},
+                }
+                reaction, _ = rpReaction.build(self.id, infos)
+                self.assertEqual(reaction.get_miriam(), expected)
+                self.assertEqual(reaction.get_ec_numbers(), expected.get("ec-code", []))
+                reaction.add_miriam("uniprot", ["P21683"])
+                self.assertEqual(
+                    reaction.get_miriam(), {**expected, "uniprot": ["P21683"]}
+                )
+
+    def test_convert_miriam_to_dict(self):
+        self.assertEqual(
+            rpSBML.convert_miriam_to_dict(
+                [
+                    "https://identifiers.org/chebi:CHEBI:12345",
+                    "http://identifiers.org/ec-code/4.1.1.-",
+                    "https://other.example/uniprot/P21684",
+                ]
+            ),
+            {"chebi": ["CHEBI:12345"], "ec-code": ["4.1.1.-"]},
+        )

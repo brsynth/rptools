@@ -113,6 +113,10 @@ class Test_rpCompletion(TestCase):
         for pathway_id in ref_files_wo_cofactors:
             ref_file = os_path.join(output_path, f"rp_{pathway_id}.xml")
             ref_pathway = rpPathway(ref_file)
+            # These pathways consume the target rather than produce it.
+            self.assertEqual(
+                pathways[f"rp_{pathway_id}"].get_target_id(), "TARGET_0000000001"
+            )
             self.assertEqual(pathways[f"rp_{pathway_id}"], ref_pathway)
 
         # print(pathways[0].get_id())
