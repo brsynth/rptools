@@ -1,52 +1,47 @@
 #!/usr/bin/env python
 
-from .rpextractsink import genSink
-from .Args import add_arguments
+from rr_cache import rrCache
+
 from rptools import build_args_parser
 
-from rr_cache import rrCache
+from .args import add_arguments
+from .rpextractsink import genSink
 
 
 def _cli():
     parser = build_args_parser(
-        prog = 'rpextractsink',
-        description = 'Generate the sink from a model SBML by specifying the compartment',
-        m_add_args = add_arguments
+        prog="rpextractsink",
+        description="Generate the sink from a model SBML by specifying the compartment",
+        m_add_args=add_arguments,
     )
-    args  = parser.parse_args()
+    args = parser.parse_args()
 
     from rptools.__main__ import init
+
     logger = init(parser, args)
 
     if args.cache_dir is None:
-        cache = rrCache(
-            cspace=args.cspace,
-            logger=logger
-        )
+        cache = rrCache(cspace=args.cspace, logger=logger)
     else:
-        cache = rrCache(
-            cspace=args.cspace,
-            install_dir=args.cache_dir,
-            logger=logger
-        )
+        cache = rrCache(cspace=args.cspace, install_dir=args.cache_dir, logger=logger)
     sink = genSink(
         cache,
         args.input_sbml,
         args.remove_dead_end,
         args.compartment_id,
         args.standalone,
-        logger=logger
+        logger=logger,
     )
-    
-    logger.debug(f'Writing sink to {args.output_sink}...')
+
+    logger.debug(f"Writing sink to {args.output_sink}...")
     # Write the sink file
-    with open(args.output_sink, 'w', encoding='utf-8') as outS:
-        write(outS, ['Name', 'InChI'])
+    with open(args.output_sink, "w", encoding="utf-8") as outS:
+        write(outS, ["Name", "InChI"])
         for _mnx_id, _inchi in sink.items():
             write(outS, [_mnx_id, _inchi])
 
 
-def write(outFile, elts, delimiter=',', quotechar='"'):
+def write(outFile, elts, delimiter=",", quotechar='"'):
     """
     Write elements of elts list into file as 'csv' would do
 
@@ -56,11 +51,11 @@ def write(outFile, elts, delimiter=',', quotechar='"'):
     :param quotechar: character to put around each element
     """
     if elts:
-        outFile.write(quotechar+elts[0]+quotechar)
+        outFile.write(quotechar + elts[0] + quotechar)
         for elt in elts[1:]:
-            outFile.write(delimiter+quotechar+elt+quotechar)
-    outFile.write('\n')
+            outFile.write(delimiter + quotechar + elt + quotechar)
+    outFile.write("\n")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     _cli()

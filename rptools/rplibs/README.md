@@ -2,7 +2,7 @@
 
 Libraries for rpTools, contains:
 * rpSBML
-* inchikeyMIRIAM
+* inchikey_miriam
 
 ## rpSBML
 Defines SBML structure with additional fields relative to [RetroPath2](https://github.com/brsynth/RetroPath2-wrapper) objects.
@@ -30,7 +30,7 @@ rpSBML class allows the merging between txo rpSBML objects. We use this method t
 #### Compartments
 The compartment of the pathway to each compartment of the model. The comparison is done by ID, name or MIRIAM annotations. If a model compartment matches, then we rename the compartment of each species of the pathway to the name of the model matched compartment. Otherwise, the pathway compartment is added to the model.
 
-## inchikeyMIRIAM
+## inchikey_miriam
 Uses the rrCache to parse an SBML file to find all the chemical species, and try to recover the inchikey and add it to the MIRIAM annotation.
 
 ## Statisticis

@@ -1,59 +1,52 @@
-from os import (
-    path as os_path,
-    mkdir as os_mkdir
-)
+import sys
 from logging import (
-    StreamHandler,
     Logger,
+    StreamHandler,
     getLogger,
 )
-from colored import fg, attr
+from os import mkdir as os_mkdir
+from os import path as os_path
+
+from colored import attr, fg
 from rr_cache import rrCache
+
 from rptools import build_args_parser
 from rptools.rpcompletion import rp_completion
-from rptools.rpcompletion.Args import add_arguments
+from rptools.rpcompletion.args import add_arguments
 
 
 def _cli():
     parser = build_args_parser(
-        prog='rpcompletion',
-        description='Parse RP2 pathways to generate rpSBML collection of unique and complete (cofactors) pathways',
-        m_add_args=add_arguments
+        prog="rpcompletion",
+        description="Parse RP2 pathways to generate rpSBML collection of unique and complete (cofactors) pathways",
+        m_add_args=add_arguments,
     )
-    args  = parser.parse_args()
+    args = parser.parse_args()
 
     from rptools.__main__ import init
+
     logger = init(parser, args)
 
-    logger.debug('Parameters')
-    logger.debug('   |--> rp2_metnet: '+str(args.rp2_metnet))
-    logger.debug('   |--> sink: '+str(args.sink))
-    logger.debug('   |--> rp2paths_compounds: '+str(args.rp2paths_compounds))
-    logger.debug('   |--> rp2paths_pathways: '+str(args.rp2paths_pathways))
-    logger.debug('   |--> outdir: '+str(args.outdir))
-    logger.debug('   |--> upper_flux_bound: '+str(args.upper_flux_bound))
-    logger.debug('   |--> lower_flux_bound: '+str(args.lower_flux_bound))
-    logger.debug('   |--> maxsubpaths: '+str(args.maxsubpaths))
+    logger.debug("Parameters")
+    logger.debug("   |--> rp2_metnet: " + str(args.rp2_metnet))
+    logger.debug("   |--> sink: " + str(args.sink))
+    logger.debug("   |--> rp2paths_compounds: " + str(args.rp2paths_compounds))
+    logger.debug("   |--> rp2paths_pathways: " + str(args.rp2paths_pathways))
+    logger.debug("   |--> outdir: " + str(args.outdir))
+    logger.debug("   |--> upper_flux_bound: " + str(args.upper_flux_bound))
+    logger.debug("   |--> lower_flux_bound: " + str(args.lower_flux_bound))
+    logger.debug("   |--> maxsubpaths: " + str(args.maxsubpaths))
 
-
-    check_args(
-        args.maxsubpaths,
-        args.outdir,
-        logger
-    )
+    check_args(args.maxsubpaths, args.outdir, logger)
 
     if args.cache_dir is None:
-        cache = rrCache(
-            cspace=args.cspace,
-            interactive=False,
-            logger=logger
-        )
+        cache = rrCache(cspace=args.cspace, interactive=False, logger=logger)
     else:
         cache = rrCache(
             cspace=args.cspace,
             install_dir=args.cache_dir,
             interactive=False,
-            logger=logger
+            logger=logger,
         )
 
     pathways = rp_completion(
@@ -66,7 +59,7 @@ def _cli():
         lower_flux_bound=int(args.lower_flux_bound),
         maxsubpaths=args.maxsubpaths,
         cofile=args.cofactors,
-        logger=logger
+        logger=logger,
     )
 
     # WRITE OUT
@@ -75,37 +68,24 @@ def _cli():
     # Write out selected pathways
     for pathway in pathways:
         pathway.to_rpSBML().write_to_file(
-            os_path.join(
-                args.outdir,
-                pathway.get_id()
-            ) + '.xml'
+            os_path.join(args.outdir, pathway.get_id()) + ".xml"
         )
 
     StreamHandler.terminator = ""
     logger.info(
-        '{color}{typo}Results are stored in {rst}'.format(
-            color=fg('white'),
-            typo=attr('bold'),
-            rst=attr('reset')
+        "{color}{typo}Results are stored in {rst}".format(
+            color=fg("white"), typo=attr("bold"), rst=attr("reset")
         )
     )
     StreamHandler.terminator = "\n"
-    logger.info(
-        '{color}{outdir}\n'.format(
-            color=fg('grey_70'),
-            outdir=args.outdir
-        )
-    )
+    logger.info("{color}{outdir}\n".format(color=fg("grey_70"), outdir=args.outdir))
 
 
-def check_args(
-    max_subpaths_filter: int,
-    outdir: str,
-    logger: Logger = getLogger(__name__)
-):
-    logger.debug('Checking arguments...')
-    logger.debug('   |--> max_subpaths_filter: '+str(max_subpaths_filter))
-    logger.debug('   |--> outdir: '+str(outdir))
+def check_args(max_subpaths_filter: int, outdir: str, logger: Logger | None = None):
+    logger = logger or getLogger(__name__)
+    logger.debug("Checking arguments...")
+    logger.debug("   |--> max_subpaths_filter: " + str(max_subpaths_filter))
+    logger.debug("   |--> outdir: " + str(outdir))
     # out_format = out_format.upper()
     # if out_format not in FORMATS.keys():
     #     raise ValueError(
@@ -117,12 +97,18 @@ def check_args(
     #     exit(-1)
 
     if max_subpaths_filter < 0:
-        raise ValueError('Max number of subpaths cannot be less than 0: '+str(max_subpaths_filter))
+        raise ValueError(
+            "Max number of subpaths cannot be less than 0: " + str(max_subpaths_filter)
+        )
 
     if os_path.exists(outdir) and os_path.isfile(outdir):
-        logger.error('Outdir name '+outdir+' already exists and is actually file. Stopping the process...')
-        exit(-1)
+        logger.error(
+            "Outdir name "
+            + outdir
+            + " already exists and is actually file. Stopping the process..."
+        )
+        sys.exit(-1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     _cli()

@@ -1,13 +1,12 @@
 from glob import glob
-from zipfile import ZipFile
-from types import SimpleNamespace
-from tempfile import NamedTemporaryFile
-
 from os import path as os_path
+from types import SimpleNamespace
+from zipfile import ZipFile
+
+from main_rpfba import Main_rpfba
 
 from rptools.rpfba.rpfba import preprocess, runFBA
-from rptools.rplibs import rpPathway, rpSBML
-from main_rpfba import Main_rpfba
+from rptools.rplibs import rpPathway
 
 
 class Test_rpFBA(Main_rpfba):
@@ -40,7 +39,9 @@ class Test_rpFBA(Main_rpfba):
                 res["reactions"][rid] = rp_pathway.get_reaction(rid).get_fba()
             return res
 
-        def _format_dict(old, new={}):
+        def _format_dict(old, new=None):
+            if new is None:
+                new = {}
             print("old", old, "new", new)
             for k, v in old.items():
                 if isinstance(v, dict):
@@ -62,22 +63,18 @@ class Test_rpFBA(Main_rpfba):
             with_orphan_species=False,
             sim="fraction",
             fraction_of=0.75,
-            merge=""
+            merge="",
         )
         for ix in range(len(files)):
             args.pathway_file = os_path.join(self.temp_d, "cr_fba", names[ix] + ".xml")
-            (
-                merged_model,
-                pathway,
-                ids
-            ) = preprocess(args=args)
+            merged_model, _pathway, ids = preprocess(args=args)
             results = runFBA(
                 model=merged_model,
-                compartment_id=ids['comp_id'],
-                biomass_rxn_id=ids['biomass_rxn_id'],
-                objective_rxn_id=ids['obj_rxn_id'],
+                compartment_id=ids["comp_id"],
+                biomass_rxn_id=ids["biomass_rxn_id"],
+                objective_rxn_id=ids["obj_rxn_id"],
                 sim_type=sims[ix],
-                fraction_coeff=args.fraction_of
+                fraction_coeff=args.fraction_of,
             )
 
             res_previous = _format_dict(_extract_res_from_file(files[ix]))

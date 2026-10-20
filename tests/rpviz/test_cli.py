@@ -1,64 +1,67 @@
 """Test cases for the rpviz CLI module."""
+
 import json
-from typing import Dict
 from pathlib import Path
 
-import pytest
 import deepdiff
+import pytest
 
 from rptools.rpviz.__main__ import (
     __build_arg_parser,
     __run,
 )
 
+REF_IN_DIR = Path(__file__).resolve().parent / "inputs" / "as_dir"
+REF_IN_TAR = Path(__file__).resolve().parent / "inputs" / "as_tar.tgz"
+COF_FILE = Path(__file__).resolve().parent / "inputs" / "cofactors_mnx_202507.tsv"
+REF_OUT_DIR = Path(__file__).resolve().parent / "outputs"
 
-REF_IN_DIR = Path(__file__).resolve().parent / 'inputs' / 'as_dir'
-REF_IN_TAR = Path(__file__).resolve().parent / 'inputs' / 'as_tar.tgz'
-COF_FILE = Path(__file__).resolve().parent / 'inputs' / 'cofactors_mnx_202507.tsv'
-REF_OUT_DIR = Path(__file__).resolve().parent / 'outputs'
+# 'svg' is RDKit's rendered depiction of a molecule: its exact markup varies
+# across RDKit versions (attributes, styling) even for an unchanged molecule,
+# so it is excluded from the network diff below to avoid false failures.
+SVG_PATH_REGEX = r"\['svg'\]$"
 
 
-def __dump_file(path: str, data: Dict) -> None:
+def __dump_file(path: str, data: dict) -> None:
     """Dump a dictionary to a file."""
-    with open(path, 'w', encoding='utf-8') as fh:
+    with open(path, "w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=2, ensure_ascii=False)
 
 
-def __read_and_sort(path: str, skip=[]) -> list:
-    with open(path, encoding='utf-8') as fh:
+def __read_and_sort(path: str, skip=None) -> list:
+    if skip is None:
+        skip = []
+    with open(path, encoding="utf-8") as fh:
         lines = []
-        for line in fh.readlines():
-            if not any(
-                skip_item in line
-                for skip_item in skip
-            ):
+        for line in fh:
+            if not any(skip_item in line for skip_item in skip):
                 lines.append(line.strip())
     return sorted(lines)
 
 
-def __read_multi_object_json(path: str) -> Dict:
+def __read_multi_object_json(path: str) -> dict:
     """Read a JSON-like file containing multiple JSON objects."""
     objects = {}
-    with open(path, encoding='utf-8') as fh:
-        obj_name = ''
-        obj_content = ''
+    with open(path, encoding="utf-8") as fh:
+        obj_name = ""
+        obj_content = ""
         curly_count = 0
         for line in fh:
             for char in line.strip():
-                if char == '{':
+                if char == "{":
                     if curly_count == 0:
                         # Start of a new object
                         obj_name = line.strip().split()[0]
-                        obj_content = ''
+                        obj_content = ""
                     obj_content += char
                     curly_count += 1
-                elif char == '}':
+                elif char == "}":
                     obj_content += char
                     if curly_count == 1:
                         # End of the current object
                         objects[obj_name] = json.loads(obj_content)
-                        obj_name = ''
-                        obj_content = ''
+                        obj_name = ""
+                        obj_content = ""
                     curly_count -= 1
                 else:
                     obj_content += char
@@ -70,8 +73,8 @@ def __read_multi_object_json(path: str) -> Dict:
 
 def test_build_arg_parser(mocker):
     """Test the argument parser."""
-    args = ['prog']  # no arguments
-    mocker.patch('sys.argv', args)
+    args = ["prog"]  # no arguments
+    mocker.patch("sys.argv", args)
     parser = __build_arg_parser()
     with pytest.raises(SystemExit):
         args = parser.parse_args()
@@ -79,45 +82,55 @@ def test_build_arg_parser(mocker):
 
 def test_dir_input(mocker, tmpdir):
     """Test the CLI with a directory input."""
-    args = ['prog', str(REF_IN_DIR), str(tmpdir), '--no-cofactor-detection']
-    mocker.patch('sys.argv', args)
+    args = ["prog", str(REF_IN_DIR), str(tmpdir), "--no-cofactor-detection"]
+    mocker.patch("sys.argv", args)
     parser = __build_arg_parser()
     args = parser.parse_args()
     __run(args)
-    ref_file = REF_OUT_DIR / 'network.json'
-    test_file = tmpdir / 'network.json'
+    ref_file = REF_OUT_DIR / "network.json"
+    test_file = tmpdir / "network.json"
     ref_objects = __read_multi_object_json(ref_file)
     test_objects = __read_multi_object_json(test_file)
-    assert not deepdiff.DeepDiff(ref_objects, test_objects, ignore_order=True)
+    assert not deepdiff.DeepDiff(
+        ref_objects,
+        test_objects,
+        ignore_order=True,
+        exclude_regex_paths=[SVG_PATH_REGEX],
+    )
 
 
 def test_tar_input(mocker, tmpdir):
     """Test the CLI with a tar input."""
-    args = ['prog', str(REF_IN_TAR), str(tmpdir), '--no-cofactor-detection']
-    mocker.patch('sys.argv', args)
+    args = ["prog", str(REF_IN_TAR), str(tmpdir), "--no-cofactor-detection"]
+    mocker.patch("sys.argv", args)
     parser = __build_arg_parser()
     args = parser.parse_args()
     __run(args)
-    ref_file = REF_OUT_DIR / 'network.json'
-    test_file = tmpdir / 'network.json'
+    ref_file = REF_OUT_DIR / "network.json"
+    test_file = tmpdir / "network.json"
     ref_objects = __read_multi_object_json(ref_file)
     test_objects = __read_multi_object_json(test_file)
-    assert not deepdiff.DeepDiff(ref_objects, test_objects, ignore_order=True)
+    assert not deepdiff.DeepDiff(
+        ref_objects,
+        test_objects,
+        ignore_order=True,
+        exclude_regex_paths=[SVG_PATH_REGEX],
+    )
 
 
 def test_with_cofactors(mocker, tmpdir):
     """Test the CLI with no cofactor file."""
-    args = ['prog', str(REF_IN_TAR), str(tmpdir), '--cofactor-file', str(COF_FILE)]
-    mocker.patch('sys.argv', args)
+    args = ["prog", str(REF_IN_TAR), str(tmpdir), "--cofactor-file", str(COF_FILE)]
+    mocker.patch("sys.argv", args)
     parser = __build_arg_parser()
     args = parser.parse_args()
     __run(args)
-    test_file = tmpdir / 'network.json'
+    test_file = tmpdir / "network.json"
     test_objects = __read_multi_object_json(test_file)
     assert any(
-        node['data']['cofactor']
-        for node in test_objects['network']['elements']['nodes']
-        if node['data']['type'] == 'chemical'
+        node["data"]["cofactor"]
+        for node in test_objects["network"]["elements"]["nodes"]
+        if node["data"]["type"] == "chemical"
     )
 
 
@@ -125,29 +138,29 @@ def test_without_cofactors(mocker, tmpdir):
     """Test the CLI without a cofactor file."""
 
     # Case 1: with cofactor file set to None
-    args = ['prog', str(REF_IN_TAR), str(tmpdir), '--cofactor-file', 'None']
-    mocker.patch('sys.argv', args)
+    args = ["prog", str(REF_IN_TAR), str(tmpdir), "--cofactor-file", "None"]
+    mocker.patch("sys.argv", args)
     parser = __build_arg_parser()
     args = parser.parse_args()
     __run(args)
-    test_file = tmpdir / 'network.json'
+    test_file = tmpdir / "network.json"
     test_objects = __read_multi_object_json(test_file)
     assert not any(
-        node['data']['cofactor']
-        for node in test_objects['network']['elements']['nodes']
-        if node['data']['type'] == 'chemical'
+        node["data"]["cofactor"]
+        for node in test_objects["network"]["elements"]["nodes"]
+        if node["data"]["type"] == "chemical"
     )
 
     # Case 2: with no cofactor detection switch
-    args = ['prog', str(REF_IN_TAR), str(tmpdir), '--no-cofactor-detection']
-    mocker.patch('sys.argv', args)
+    args = ["prog", str(REF_IN_TAR), str(tmpdir), "--no-cofactor-detection"]
+    mocker.patch("sys.argv", args)
     parser = __build_arg_parser()
     args = parser.parse_args()
     __run(args)
-    test_file = tmpdir / 'network.json'
+    test_file = tmpdir / "network.json"
     test_objects = __read_multi_object_json(test_file)
     assert not any(
-        node['data']['cofactor']
-        for node in test_objects['network']['elements']['nodes']
-        if node['data']['type'] == 'chemical'
+        node["data"]["cofactor"]
+        for node in test_objects["network"]["elements"]["nodes"]
+        if node["data"]["type"] == "chemical"
     )

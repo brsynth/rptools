@@ -1,16 +1,13 @@
-from os import path as os_path, makedirs as os_makedirs
-from sys import exit as sys_exit
-from tempfile import NamedTemporaryFile
 from errno import EEXIST as errno_EEXIST
+from os import makedirs as os_makedirs
+from os import path as os_path
+from sys import exit as sys_exit
+
 from rptools import build_args_parser
 from rptools.__main__ import init
-from .Args import add_arguments
-from .rpfba import (
-    preprocess,
-    runFBA,
-    build_results,
-    write_results_to_pathway
-)
+
+from .args import add_arguments
+from .rpfba import build_results, preprocess, runFBA, write_results_to_pathway
 
 
 def _make_dir(filename):
@@ -34,21 +31,14 @@ def entry_point():
     logger = init(parser, args)
 
     # PREPROCESSING
-    (
-        merged_model,
-        pathway,
-        ids
-    ) = preprocess(
-        args=args,
-        logger=logger
-    )
+    merged_model, pathway, ids = preprocess(args=args, logger=logger)
 
     # FBA
     results = runFBA(
         model=merged_model,
-        compartment_id=ids['comp_id'],
-        biomass_rxn_id=ids['biomass_rxn_id'],
-        objective_rxn_id=ids['obj_rxn_id'],
+        compartment_id=ids["comp_id"],
+        biomass_rxn_id=ids["biomass_rxn_id"],
+        objective_rxn_id=ids["obj_rxn_id"],
         sim_type=args.sim,
         fraction_coeff=args.fraction_of,
         logger=logger,
@@ -71,7 +61,7 @@ def entry_point():
     results = build_results(
         results=results,
         pathway=pathway,
-        compartment_id=ids['comp_id'],
+        compartment_id=ids["comp_id"],
         hidden_species=hidden_species,
         logger=logger,
     )
@@ -93,6 +83,7 @@ def entry_point():
         logger.info("   |--> written in " + args.outfile)
 
     return 0
+
 
 if __name__ == "__main__":
     sys_exit(entry_point())

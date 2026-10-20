@@ -6,4 +6,7 @@ dependencies:
   - pytest
   - pytest-cov
   - pytest-mock
-  - deepdiff
+  - pytest-monitor
+  - black
+  - ruff
+  - deepdiff # rpviz

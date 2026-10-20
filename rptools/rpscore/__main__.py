@@ -1,34 +1,25 @@
-from typing import (
-    Dict,
-    List
-)
-from logging import (
-    Logger,
-    getLogger
-)
-from os import (
-    path as os_path,
-    makedirs as os_makedirs
-)
-from .rpscore import (
-    predict_score,
-    ThermoError,
-    FBAError
-)
-from .Args import add_arguments
-from rptools.rplibs import rpPathway
+import sys
+from os import makedirs as os_makedirs
+from os import path as os_path
+
 from rptools import build_args_parser
+from rptools.rplibs import rpPathway
+
+from .args import add_arguments
+from .rpscore import FBAError, ThermoError, predict_score
+
 
 def entry_point():
-  
+
     parser = build_args_parser(
-        prog = 'rpscore',
-        description = 'Calculate global score by combining all scores (rules, FBA, Thermo)',
-        m_add_args = add_arguments
+        prog="rpscore",
+        description="Calculate global score by combining all scores (rules, FBA, Thermo)",
+        m_add_args=add_arguments,
     )
     args = parser.parse_args()
 
     from rptools.__main__ import init
+
     logger = init(parser, args)
 
     # if len(args.pathways) == 1:
@@ -45,10 +36,7 @@ def entry_point():
     #         )
     #     )
 
-    pathway = rpPathway(
-        infile=args.infile,
-        logger=logger
-    )
+    pathway = rpPathway(infile=args.infile, logger=logger)
 
     try:
         score = predict_score(
@@ -56,14 +44,14 @@ def entry_point():
             # data_train_file=args.data_train_file,
             # models_path=models_path,
             no_of_rxns_thres=args.no_of_rxns_thres,
-            logger=logger
+            logger=logger,
         )
     except ThermoError as e:
         logger.error(e)
-        exit(1)
+        sys.exit(1)
     except FBAError as e:
         logger.error(e)
-        exit(2)
+        sys.exit(2)
 
     # if len(pathways) > 1:
     #     if not os_path.exists(args.outdir):
@@ -86,10 +74,8 @@ def entry_point():
     # Write pathway into file
     # Create the output directory if not exists
     os_makedirs(os_path.dirname(args.outfile), exist_ok=True)
-    pathway.to_rpSBML().write_to_file(
-        args.outfile
-    )
+    pathway.to_rpSBML().write_to_file(args.outfile)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     entry_point()

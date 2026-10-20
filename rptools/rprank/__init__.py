@@ -5,3 +5,5 @@ Created on Sep 6 2021
 """
 
 from rptools.rprank.rprank import rank
+
+__all__ = ["rank"]
