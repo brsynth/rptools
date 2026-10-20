@@ -773,7 +773,9 @@ def __build_all_pathways(
                 # to have the pathway in forward direction
                 # Search for the target in the current reaction
                 target_id = [
-                    spe_id for spe_id in rxn.get_products_ids() if "TARGET" in spe_id
+                    spe_id
+                    for spe_id in rxn.get_products_ids() + rxn.get_reactants_ids()
+                    if "TARGET" in spe_id
                 ]
                 if target_id != []:
                     target_id = target_id[0]
