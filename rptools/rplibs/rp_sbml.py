@@ -3815,10 +3815,10 @@ class rpSBML:
         for xref in miriam:
             try:
                 m = re.match(
-                    r"^http(s)?://identifiers.org/(\w+\.?\w+)[:/](\w+:?\w*)", xref
+                    r"^https?://identifiers\.org/([^/:]+)[:/](.+)$", xref
                 ).groups()
-                db = m[1]
-                ref = m[2]
+                db = m[0]
+                ref = m[1]
                 if db in res_dict:
                     res_dict[db].append(ref)
                 else:

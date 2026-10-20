@@ -31,6 +31,7 @@ from typing import TypeVar
 from chemlite import Reaction
 
 from .rp_object import rpObject
+from .rp_sbml import rpSBML
 
 
 class rpReaction(Reaction, rpObject):
@@ -64,22 +65,18 @@ class rpReaction(Reaction, rpObject):
     def build(
         rxn_id: str, infos: dict, logger: Logger | None = None
     ) -> tuple["rpReaction", str | None]:
-        # Extract EC numbers from miriam
         logger = logger or getLogger(__name__)
-        ec_numbers = []
-        for info in infos["miriam"]:
-            if "ec-code" in info:
-                ec_numbers.append(info.split("/")[-1])
+        # Store SBML annotation URLs in the dictionary expected by rpReaction.
+        miriam = rpSBML.convert_miriam_to_dict(infos["miriam"])
         reaction = rpReaction(
             id=rxn_id,
-            ec_numbers=ec_numbers,
             reactants=infos["left"],
             products=infos["right"],
             lower_flux_bound=infos["fbc_lower_value"],
             upper_flux_bound=infos["fbc_upper_value"],
             flux_bound_units=infos["fbc_units"],
             reversible=infos["reversible"],
-            miriam=infos["miriam"],
+            miriam=miriam,
             logger=logger,
         )
         # Add additional infos
