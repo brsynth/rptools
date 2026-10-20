@@ -1,8 +1,16 @@
 # Changelog
 
+## [6.8.3](https://github.com/brsynth/rptools/tree/6.8.3) (2026-10-20)
+
+[Full Changelog](https://github.com/brsynth/rptools/compare/6.8.2...6.8.3)
+
 ## [6.8.2](https://github.com/brsynth/rptools/tree/6.8.2) (2026-10-20)
 
 [Full Changelog](https://github.com/brsynth/rptools/compare/6.8.1...6.8.2)
+
+**Merged pull requests:**
+
+- Rplibs [\#50](https://github.com/brsynth/rptools/pull/50) ([breakthewall](https://github.com/breakthewall))
 
 ## [6.8.1](https://github.com/brsynth/rptools/tree/6.8.1) (2026-01-05)
 
