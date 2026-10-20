@@ -17,6 +17,11 @@ REF_IN_TAR = Path(__file__).resolve().parent / 'inputs' / 'as_tar.tgz'
 COF_FILE = Path(__file__).resolve().parent / 'inputs' / 'cofactors_mnx_202507.tsv'
 REF_OUT_DIR = Path(__file__).resolve().parent / 'outputs'
 
+# 'svg' is RDKit's rendered depiction of a molecule: its exact markup varies
+# across RDKit versions (attributes, styling) even for an unchanged molecule,
+# so it is excluded from the network diff below to avoid false failures.
+SVG_PATH_REGEX = r"\['svg'\]$"
+
 
 def __dump_file(path: str, data: Dict) -> None:
     """Dump a dictionary to a file."""
@@ -88,7 +93,11 @@ def test_dir_input(mocker, tmpdir):
     test_file = tmpdir / 'network.json'
     ref_objects = __read_multi_object_json(ref_file)
     test_objects = __read_multi_object_json(test_file)
-    assert not deepdiff.DeepDiff(ref_objects, test_objects, ignore_order=True)
+    assert not deepdiff.DeepDiff(
+        ref_objects, test_objects,
+        ignore_order=True,
+        exclude_regex_paths=[SVG_PATH_REGEX],
+    )
 
 
 def test_tar_input(mocker, tmpdir):
@@ -102,7 +111,11 @@ def test_tar_input(mocker, tmpdir):
     test_file = tmpdir / 'network.json'
     ref_objects = __read_multi_object_json(ref_file)
     test_objects = __read_multi_object_json(test_file)
-    assert not deepdiff.DeepDiff(ref_objects, test_objects, ignore_order=True)
+    assert not deepdiff.DeepDiff(
+        ref_objects, test_objects,
+        ignore_order=True,
+        exclude_regex_paths=[SVG_PATH_REGEX],
+    )
 
 
 def test_with_cofactors(mocker, tmpdir):
