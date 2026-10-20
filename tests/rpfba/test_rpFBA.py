@@ -5,7 +5,7 @@ from zipfile import ZipFile
 
 from main_rpfba import Main_rpfba
 
-from rptools.rpfba.rpfba import preprocess, runFBA
+from rptools.rpfba.rpfba import build_results, preprocess, runFBA
 from rptools.rplibs import rpPathway
 
 
@@ -39,13 +39,11 @@ class Test_rpFBA(Main_rpfba):
                 res["reactions"][rid] = rp_pathway.get_reaction(rid).get_fba()
             return res
 
-        def _format_dict(old, new=None):
-            if new is None:
-                new = {}
-            print("old", old, "new", new)
+        def _format_dict(old):
+            new = {}
             for k, v in old.items():
                 if isinstance(v, dict):
-                    new[k] = _format_dict(old.get(k, {}), v)
+                    new[k] = _format_dict(v)
                 else:
                     if isinstance(v, str):
                         new[k] = v
@@ -67,7 +65,7 @@ class Test_rpFBA(Main_rpfba):
         )
         for ix in range(len(files)):
             args.pathway_file = os_path.join(self.temp_d, "cr_fba", names[ix] + ".xml")
-            merged_model, _pathway, ids = preprocess(args=args)
+            merged_model, pathway, ids = preprocess(args=args)
             results = runFBA(
                 model=merged_model,
                 compartment_id=ids["comp_id"],
@@ -75,6 +73,12 @@ class Test_rpFBA(Main_rpfba):
                 objective_rxn_id=ids["obj_rxn_id"],
                 sim_type=sims[ix],
                 fraction_coeff=args.fraction_of,
+            )
+            results = build_results(
+                results=results,
+                pathway=pathway,
+                compartment_id=ids["comp_id"],
+                hidden_species=merged_model.get_isolated_species(),
             )
 
             res_previous = _format_dict(_extract_res_from_file(files[ix]))
