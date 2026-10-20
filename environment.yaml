@@ -3,7 +3,8 @@ channels:
   - conda-forge
 dependencies:
   - python <=3.10
-  - brs_utils # rpcompletion, rpfba, Args
+  - brs_utils<1.26.0 # rpcompletion, rpfba, Args
+  - deepdiff # rpviz
   - cobra >=0.26.3 # rpfba, rpextractsink, rplibs
   - timeout-decorator # rpextractsink
   - rdkit # rpextractsink, rplibs, rpcompletion
