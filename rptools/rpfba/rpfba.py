@@ -1,25 +1,24 @@
-import pandas as pd
+from argparse import Namespace as arg_nspace
+from json import dumps as json_dumps
 from logging import Logger, getLogger
 from os import remove
-from argparse import Namespace as arg_nspace
-from pandas.core.series import Series as np_series
-from typing import List, Dict, Tuple
 from tempfile import NamedTemporaryFile
-from json import dumps as json_dumps
-from cobra.flux_analysis import pfba
+
+import pandas as pd
 from cobra import io as cobra_io
-from cobra.io.sbml import validate_sbml_model, CobraSBMLError
 from cobra.core.model import Model as cobra_model
 from cobra.core.solution import Solution as cobra_solution
+from cobra.flux_analysis import pfba
+from cobra.io.sbml import CobraSBMLError, validate_sbml_model
+from pandas.core.series import Series as np_series
 
-from rptools.rplibs import (
-    rpSBML,
-    rpPathway
-)
+from rptools.rplibs import rpPathway, rpSBML
+
+from .args import DEFAULT_ARGS as DEFAULT_RPFBA_ARGS
 from .cobra_format import cobraize, to_cobra
-from .Args import DEFAULT_ARGS as DEFAULT_RPFBA_ARGS
 
 # TODO: add the pareto frontier optimisation as an automatic way to calculate the optimal fluxes
+
 
 class ModelError(Exception):
     pass
@@ -27,8 +26,9 @@ class ModelError(Exception):
 
 def preprocess(
     args: arg_nspace,
-    logger: Logger = getLogger(__name__),
+    logger: Logger | None = None,
 ):
+    logger = logger or getLogger(__name__)
     pathway = rpPathway(args.pathway_file, logger=logger)
     pathway.setup_pathway_fba()
     model = rpSBML(inFile=args.model_file, logger=logger)
@@ -47,16 +47,11 @@ def preprocess(
         return 1
 
     # MERGE
-    (
-        merged_model,
-        reactions_in_both,
-        missing_species,
-        compartment_id
-    ) = rpSBML.merge(
+    merged_model, reactions_in_both, missing_species, _compartment_id = rpSBML.merge(
         pathway=pathway.get_rpsbml(),
         model=model,
-        compartment_id=ids['comp_id'],
-        logger=logger
+        compartment_id=ids["comp_id"],
+        logger=logger,
     )
     logger.debug(f"model: {model}")
     logger.debug(f"reactions_in_both: {reactions_in_both}")
@@ -81,34 +76,37 @@ def check_ids(
     objective_rxn_id: str,
     biomass_rxn_id: str,
     compartment_id: str,
-    logger: Logger = getLogger(__name__)
-) -> Dict:
-    '''Check the IDs of the pathway and the model.
+    logger: Logger | None = None,
+) -> dict:
+    """Check the IDs of the pathway and the model.
     If the IDs are not found, then raise ModelError exception.
-    
+
     :param pathway: The pathway rpSBML object
     :param model: The model rpSBML object
     :param objective_rxn_id: The objective reaction ID
     :param biomass_rxn_id: The biomass reaction ID
     :param compartment_id: The SBML compartment ID
     :param logger: The logger object
-    
+
     :type pathway: rpPathway
     :type model: rpSBML
     :type objective_rxn_id: str
     :type biomass_rxn_id: str
     :type compartment_id: str
     :type logger: Logger
-    
+
     :return: The objective reaction ID, the model compartment ID, and the biomass reaction ID
     :rtype: Dict
-    '''
+    """
 
     # PATHWAY
     # Check objective reaction ID
+    logger = logger or getLogger(__name__)
     objective_rxn_id = pathway.get_rpsbml().check_SBML_rxnid(objective_rxn_id)
     if objective_rxn_id is None:
-        raise ModelError(f"No objective reaction ID found in the pathway {pathway.get_id()}.")
+        raise ModelError(
+            f"No objective reaction ID found in the pathway {pathway.get_id()}."
+        )
 
     # MODEL
     # Check compartment ID
@@ -121,9 +119,9 @@ def check_ids(
         raise ModelError(f"No biomass reaction ID found in the model {model.get_id()}.")
 
     return {
-    'obj_rxn_id': objective_rxn_id,
-    'comp_id': compartment_id,
-    'biomass_rxn_id': biomass_rxn_id
+        "obj_rxn_id": objective_rxn_id,
+        "comp_id": compartment_id,
+        "biomass_rxn_id": biomass_rxn_id,
     }
 
 
@@ -134,9 +132,9 @@ def runFBA_fromFile(
     biomass_rxn_id: str = DEFAULT_RPFBA_ARGS["biomass_rxn_id"],
     sim_type: str = DEFAULT_RPFBA_ARGS["sim"],
     fraction_coeff: float = DEFAULT_RPFBA_ARGS["fraction_coeff"],
-    hidden_species: List[str] = [],
-    logger: Logger = getLogger(__name__),
-) -> Dict:
+    hidden_species: list[str] | None = None,
+    logger: Logger | None = None,
+) -> dict:
     """Single rpSBML simulation
 
     :param model_file: Path to the model file (SBML)
@@ -161,6 +159,9 @@ def runFBA_fromFile(
     :rtype: Dict
     """
 
+    logger = logger or getLogger(__name__)
+    if hidden_species is None:
+        hidden_species = []
     logger.debug("           model_file: " + str(model_file))
     logger.debug("             sim_type: " + str(sim_type))
     logger.debug("     objective_rxn_id: " + str(objective_rxn_id))
@@ -177,7 +178,7 @@ def runFBA_fromFile(
         sim_type=sim_type,
         fraction_coeff=fraction_coeff,
         hidden_species=hidden_species,
-        logger=logger
+        logger=logger,
     )
 
 
@@ -188,8 +189,8 @@ def runFBA(
     biomass_rxn_id: str = DEFAULT_RPFBA_ARGS["biomass_rxn_id"],
     sim_type: str = DEFAULT_RPFBA_ARGS["sim"],
     fraction_coeff: float = DEFAULT_RPFBA_ARGS["fraction_coeff"],
-    logger: Logger = getLogger(__name__),
-) -> Dict:
+    logger: Logger | None = None,
+) -> dict:
     """Single rpSBML simulation
 
     :param model_file: Path to the model file (SBML)
@@ -214,6 +215,7 @@ def runFBA(
     :rtype: Dict
     """
 
+    logger = logger or getLogger(__name__)
     logger.debug("                model: " + str(model))
     logger.debug("             sim_type: " + str(sim_type))
     logger.debug("     objective_rxn_id: " + str(objective_rxn_id))
@@ -254,7 +256,7 @@ def runFBA(
             logger=logger,
         )
     else:
-        (cobra_results, results_biomass, objective_id) = rp_fraction(
+        cobra_results, results_biomass, objective_id = rp_fraction(
             rpsbml=model,
             objective_rxn_id=objective_rxn_id,
             biomass_rxn_id=biomass_rxn_id,
@@ -331,12 +333,13 @@ def runFBA(
 
 
 def build_results(
-    results: Dict,
+    results: dict,
     pathway: rpPathway,
     compartment_id: str,
-    hidden_species: List[str],
-    logger: Logger = getLogger(__name__),
-) -> Dict:
+    hidden_species: list[str],
+    logger: Logger | None = None,
+) -> dict:
+    logger = logger or getLogger(__name__)
     _results = {
         "species": {},
         "reactions": {},
@@ -379,9 +382,10 @@ def build_results(
 
 
 def write_results_to_pathway(
-    pathway: rpPathway, results: Dict, logger: Logger = getLogger(__name__)
+    pathway: rpPathway, results: dict, logger: Logger | None = None
 ) -> None:
     # Write species results
+    logger = logger or getLogger(__name__)
     for spe_id, score in results["species"].items():
         for k, v in score.items():
             pathway.get_specie(spe_id).add_fba_info(key=k, value=v)
@@ -600,7 +604,7 @@ def rp_fraction(
     objective_rxn_id: str,
     biomass_rxn_id: str,
     fraction_coeff: float = DEFAULT_RPFBA_ARGS["fraction_coeff"],
-    logger: Logger = getLogger(__name__),
+    logger: Logger | None = None,
 ) -> cobra_solution:
     """Optimise for a target reaction while fixing a source reaction to the fraction of its optimum
 
@@ -626,6 +630,7 @@ def rp_fraction(
     :rtype: tuple
     """
 
+    logger = logger or getLogger(__name__)
     logger.debug("rpsbml:       " + str(rpsbml))
     logger.debug("objective_rxn_id:   " + objective_rxn_id)
     logger.debug("biomass_rxn_id: " + str(biomass_rxn_id))
@@ -747,8 +752,8 @@ def runCobra(
     rpsbml: rpSBML,
     objective_id: str,
     fraction_coeff: float = 0.95,
-    logger: Logger = getLogger(__name__),
-) -> Tuple[cobra_solution, pd.DataFrame]:
+    logger: Logger | None = None,
+) -> tuple[cobra_solution, pd.DataFrame]:
     """Run Cobra to optimize model.
 
     :param sim_type: The type of simulation to use. Available simulation types include: fraction, fba, rpfba
@@ -769,6 +774,7 @@ def runCobra(
     :rtype: cobra.Solution
     """
 
+    logger = logger or getLogger(__name__)
     cobraModel = build_cobra_model(
         rpsbml=rpsbml,
         objective_id=objective_id,
@@ -797,7 +803,7 @@ def runCobra(
 def build_cobra_model(
     rpsbml: rpSBML,
     objective_id: str,
-    logger: Logger = getLogger(__name__),
+    logger: Logger | None = None,
 ) -> cobra_model:
     """Convert the rpSBML object to cobra object
 
@@ -805,6 +811,7 @@ def build_cobra_model(
     :rtype: bool
     """
 
+    logger = logger or getLogger(__name__)
     rpsbml.logger.info("Creating Cobra object from rpSBML...")
     logger.debug(f"objective_id: {objective_id}")
 
@@ -819,7 +826,7 @@ def build_cobra_model(
             cobraModel = cobra_io.read_sbml_model(temp_f.name, use_fbc_package=True)
         except CobraSBMLError:
             logger.error("Something went wrong reading the SBML model")
-            (model, errors) = validate_sbml_model(temp_f.name)
+            _model, errors = validate_sbml_model(temp_f.name)
             logger.error(str(json_dumps(errors, indent=4)))
             error = True
 
@@ -847,7 +854,7 @@ def write_results_to_rpsbml(
     sim_type: str,
     cobra_results: cobra_solution,
     pathway_id: str = "rp_pathway",
-    logger: Logger = getLogger(__name__),
+    logger: Logger | None = None,
 ) -> None:
     """Method to hardcode into BRSynth annotations the results of a COBRA analysis
 
@@ -862,6 +869,7 @@ def write_results_to_rpsbml(
     :return: None
     :rtype: None
     """
+    logger = logger or getLogger(__name__)
     rpsbml.logger.debug("----- Setting the results for " + str(objective_id) + " -----")
     rpsbml.logger.debug("rpsbml: " + str(rpsbml))
     rpsbml.logger.debug("sim_type: " + str(sim_type))
@@ -900,7 +908,7 @@ def write_fluxes_to_objectives(
     objective_value: float,
     rpsbml: rpSBML,
     objective_id: str,
-    logger: Logger = getLogger(__name__),
+    logger: Logger | None = None,
 ) -> None:
     """
     Write Cobra results to the reactions of pathway with id pathway_id in rpsbml object.
@@ -917,6 +925,7 @@ def write_fluxes_to_objectives(
         The id of the objective to optimise
     """
 
+    logger = logger or getLogger(__name__)
     rpsbml.logger.debug(
         "Set the objective "
         + str(objective_id)
@@ -939,7 +948,7 @@ def write_fluxes_to_objectives(
         # sometimes flux cannot be returned
         if flux is None:
             rpsbml.logger.warning(
-                f"Cannot retrieve reaction ID {str(rxn_id)} flux from cobrapy... setting to 0.0"
+                f"Cannot retrieve reaction ID {rxn_id!s} flux from cobrapy... setting to 0.0"
             )
             flux = 0.0
 
@@ -954,7 +963,7 @@ def write_fluxes_to_reactions(
     rpsbml: rpSBML,
     pathway_id: str,
     sim_type: str,
-    logger: Logger = getLogger(__name__),
+    logger: Logger | None = None,
 ) -> None:
     """
     Write Cobra results to the reactions of pathway with id pathway_id in rpsbml object.
@@ -971,6 +980,7 @@ def write_fluxes_to_reactions(
         The id of the objective to optimise
     """
 
+    logger = logger or getLogger(__name__)
     rp_pathway = rpsbml.getGroup(pathway_id)
 
     for member in rp_pathway.getListOfMembers():
@@ -1002,7 +1012,7 @@ def write_objective_to_pathway(
     rpsbml: rpSBML,
     pathway_id: str,
     sim_type: str,
-    logger: Logger = getLogger(__name__),
+    logger: Logger | None = None,
 ) -> None:
     """
     Write Cobra results to the pathway with id pathway_id in rpsbml object.
@@ -1019,6 +1029,7 @@ def write_objective_to_pathway(
         The id of the objective to optimise
     """
 
+    logger = logger or getLogger(__name__)
     logger.debug(
         "Set "
         + str(pathway_id)

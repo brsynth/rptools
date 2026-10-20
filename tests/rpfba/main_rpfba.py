@@ -1,12 +1,13 @@
-from unittest import TestCase
 from os import path as os_path
 from shutil import rmtree
 from tempfile import mkdtemp
+from unittest import TestCase
 
 from brs_utils import (
     create_logger,
 )
-from rptools.rplibs.rpSBML import rpSBML
+
+from rptools.rplibs.rp_sbml import rpSBML
 
 
 class Main_rpfba(TestCase):

@@ -1,4 +1,5 @@
 """A class to represent a chemical species."""
+
 # The MIT License (MIT)
 #
 # Copyright (c) 2018 Institute for Molecular Systems Biology, ETH Zurich.
@@ -23,44 +24,40 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from typing import (
-    Dict,
-    TypeVar
-)
-from logging import (
-    Logger,
-    getLogger
-)
 from copy import deepcopy
+from logging import Logger, getLogger
+from typing import TypeVar
 
 
-class rpObject():
-    """A common class for classes which share same attributes.
-    """
+class rpObject:
+    """A common class for classes which share same attributes."""
 
-    __sep = '_'
-    __thermo_prefix = 'thermo'
-    __fba_prefix = 'fba'
-    __dG0_prime_str = 'dG0_prime'
-    __dGm_prime_str = 'dGm_prime'
-    __dG_prime_str = 'dG_prime'
-    __dG_str = 'dG'
-    __biomass_str = 'biomass'
-    __fraction_str = 'fraction'
-    __fba_str = 'fba'
-    __pfba_str = 'pfba'
+    __sep = "_"
+    __thermo_prefix = "thermo"
+    __fba_prefix = "fba"
+    __dG0_prime_str = "dG0_prime"
+    __dGm_prime_str = "dGm_prime"
+    __dG_prime_str = "dG_prime"
+    __dG_str = "dG"
+    __biomass_str = "biomass"
+    __fraction_str = "fraction"
+    __fba_str = "fba"
+    __pfba_str = "pfba"
 
     @staticmethod
-    def get_sep() -> str: return rpObject.__sep
-    @staticmethod
-    def get_fba_prefix() -> str: return rpObject.__fba_prefix
-    @staticmethod
-    def get_thermo_prefix() -> str: return rpObject.__thermo_prefix
+    def get_sep() -> str:
+        return rpObject.__sep
 
-    def __init__(
-        self,
-        logger: Logger = getLogger(__name__)
-    ):
+    @staticmethod
+    def get_fba_prefix() -> str:
+        return rpObject.__fba_prefix
+
+    @staticmethod
+    def get_thermo_prefix() -> str:
+        return rpObject.__thermo_prefix
+
+    def __init__(self, logger: Logger | None = None):
+        logger = logger or getLogger(__name__)
         self.__set_fba({})
         self.__set_thermo({})
         """Create a rpObject object with default settings.
@@ -70,30 +67,22 @@ class rpObject():
         logger : Logger, optional
         """
 
-
     ## OUT METHODS
     # def __repr__(self):
     #     return f'Compound {self.get_id()}'
 
-    def _to_dict(self) -> Dict:
+    def _to_dict(self) -> dict:
         """Get attributes as a dictionary.
         Implemented for compatibility with inherited classes."""
         fba_infos = {
-            rpObject.get_sep().join([
-                rpObject.get_fba_prefix(),
-                k
-            ]):v for k,v in self.get_fba().items()
+            rpObject.get_sep().join([rpObject.get_fba_prefix(), k]): v
+            for k, v in self.get_fba().items()
         }
         thermo_infos = {
-            rpObject.get_sep().join([
-                rpObject.get_thermo_prefix(),
-                k
-            ]):v for k,v in self.get_thermo().items()
+            rpObject.get_sep().join([rpObject.get_thermo_prefix(), k]): v
+            for k, v in self.get_thermo().items()
         }
-        return {
-            **fba_infos,
-            **thermo_infos
-        }
+        return {**fba_infos, **thermo_infos}
 
     def __eq__(self, other) -> bool:
         """Returns the equality between two rpObject objects."""
@@ -113,7 +102,7 @@ class rpObject():
 
     def get_thermo_info(self, key: str) -> TypeVar:
         """Get a specific thermodynamics value.
-        
+
         Parameters
         ----------
         key: str
@@ -203,7 +192,7 @@ class rpObject():
     ### THERMO ###
     def __set_thermo(self, thermo: TypeVar) -> None:
         """Set thermodynamics values.
-        
+
         Parameters
         ----------
         thermo: TypeVar
@@ -211,12 +200,9 @@ class rpObject():
         """
         self.__thermo = deepcopy(thermo)
 
-    def set_thermo_infos(
-        self,
-        infos: Dict[str, TypeVar]
-    ) -> None:
+    def set_thermo_infos(self, infos: dict[str, TypeVar]) -> None:
         """Set the thermodynamics infos.
-        
+
         Parameters
         ----------
         infos: Dict
@@ -226,14 +212,10 @@ class rpObject():
         for key, value in infos:
             self.add_thermo_info(key, value)
 
-    def add_thermo_info(
-        self,
-        key: str,
-        value: TypeVar
-    ) -> None:
+    def add_thermo_info(self, key: str, value: TypeVar) -> None:
         """Set a specific thermodynamics value
         within a dictionary object.
-        
+
         Parameters
         ----------
         key: str
@@ -246,7 +228,7 @@ class rpObject():
     ### FBA ###
     def __set_fba(self, fba: TypeVar) -> None:
         """Set flux balance analysis (FBA) values.
-        
+
         Parameters
         ----------
         fba: TypeVar
@@ -254,12 +236,9 @@ class rpObject():
         """
         self.__fba = deepcopy(fba)
 
-    def set_fba_infos(
-        self,
-        infos: Dict[str, TypeVar]
-    ) -> None:
+    def set_fba_infos(self, infos: dict[str, TypeVar]) -> None:
         """Set the FBA infos.
-        
+
         Parameters
         ----------
         infos: Dict
@@ -269,14 +248,10 @@ class rpObject():
         for key, value in infos:
             self.add_fba_info(key, value)
 
-    def add_fba_info(
-        self,
-        key: str,
-        value: TypeVar
-    ) -> None:
+    def add_fba_info(self, key: str, value: TypeVar) -> None:
         """Set a specific flux balance analysis (FBA)
         value within a dictionary object.
-        
+
         Parameters
         ----------
         key: str
@@ -289,7 +264,7 @@ class rpObject():
     def set_thermo_dG0_prime(self, value: float) -> None:
         """Set dG0 prime thermodynamics value
         within a dictionary object.
-        
+
         Parameters
         ----------
         value: TypeVar
@@ -300,7 +275,7 @@ class rpObject():
     def set_thermo_dGm_prime(self, value: float) -> None:
         """Set dGm prime thermodynamics value
         within a dictionary object.
-        
+
         Parameters
         ----------
         value: TypeVar
@@ -311,7 +286,7 @@ class rpObject():
     def set_thermo_dG_prime(self, value: float) -> None:
         """Set dG prime thermodynamics value
         within a dictionary object.
-        
+
         Parameters
         ----------
         value: TypeVar
@@ -322,7 +297,7 @@ class rpObject():
     def set_thermo_dG(self, value: float) -> None:
         """Set dG thermodynamics value
         within a dictionary object.
-        
+
         Parameters
         ----------
         value: TypeVar
@@ -333,7 +308,7 @@ class rpObject():
     def set_fba_biomass(self, value: float) -> None:
         """Set flux balance analysis value for
         biomass reaction.
-        
+
         Parameters
         ----------
         value: float
@@ -344,7 +319,7 @@ class rpObject():
     def set_fba_fraction(self, value: float) -> None:
         """Set flux balance value for
         fraction of reaction analysis.
-        
+
         Parameters
         ----------
         value: float
@@ -355,7 +330,7 @@ class rpObject():
     def set_fba_fba(self, value: float) -> None:
         """Set flux balance value for
         fba analysis.
-        
+
         Parameters
         ----------
         value: float
@@ -366,7 +341,7 @@ class rpObject():
     def set_fba_pfba(self, value: float) -> None:
         """Set flux balance value for
         parcimonious fba analysis.
-        
+
         Parameters
         ----------
         value: float

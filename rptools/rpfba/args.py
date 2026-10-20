@@ -1,9 +1,4 @@
 from argparse import ArgumentParser
-from typing import (
-    List,
-)
-from rptools._version import __version__
-
 
 DEFAULT_ARGS = {
     "pathway_file": "",
@@ -17,6 +12,7 @@ DEFAULT_ARGS = {
     "merge": "",
     "with_orphan_species": False,
 }
+
 
 def add_arguments(parser: ArgumentParser):
     parser.add_argument(

@@ -5,4 +5,4 @@ Created on April 9 2021
 
 from rptools.rpreport.rpreport import run_report
 
-__all__ = ['run_report']
+__all__ = ["run_report"]
